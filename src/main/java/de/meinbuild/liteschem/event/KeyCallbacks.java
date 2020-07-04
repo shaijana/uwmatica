@@ -6,7 +6,6 @@ import de.meinbuild.liteschem.materials.MaterialListBase;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.BlockPos;
 import de.meinbuild.liteschem.data.DataManager;
-import de.meinbuild.liteschem.gui.GuiAreaSelectionManager;
 import de.meinbuild.liteschem.gui.GuiConfigs;
 import de.meinbuild.liteschem.gui.GuiConfigs.ConfigGuiTab;
 import de.meinbuild.liteschem.gui.GuiMainMenu;
@@ -20,17 +19,13 @@ import de.meinbuild.liteschem.gui.GuiSubRegionConfiguration;
 import de.meinbuild.liteschem.schematic.placement.SchematicPlacement;
 import de.meinbuild.liteschem.schematic.placement.SubRegionPlacement;
 import de.meinbuild.liteschem.selection.AreaSelection;
-import de.meinbuild.liteschem.selection.CornerSelectionMode;
 import de.meinbuild.liteschem.selection.SelectionManager;
 import de.meinbuild.liteschem.tool.ToolMode;
-import de.meinbuild.liteschem.tool.ToolModeData;
 import de.meinbuild.liteschem.util.EntityUtils;
 import de.meinbuild.liteschem.util.InventoryUtils;
 import de.meinbuild.liteschem.util.PositionUtils;
-import de.meinbuild.liteschem.util.RayTraceUtils;
 import de.meinbuild.liteschem.util.SchematicUtils;
 import de.meinbuild.liteschem.util.SchematicWorldRefresher;
-import de.meinbuild.liteschem.util.ToolUtils;
 import de.meinbuild.liteschem.util.WorldUtils;
 import fi.dy.masa.malilib.config.IConfigBoolean;
 import fi.dy.masa.malilib.config.options.ConfigString;
@@ -185,7 +180,7 @@ public class KeyCallbacks
                         boolean grabModifier = Hotkeys.SELECTION_GRAB_MODIFIER.getKeybind().isKeybindHeld();
                         boolean moveEverything = grabModifier;
 
-                        if (grabModifier && mode == ToolMode.MOVE)
+/*                        if (grabModifier && mode == ToolMode.MOVE)
                         {
                             BlockPos pos = RayTraceUtils.getTargetedPosition(this.mc.world, this.mc.player, maxDistance, false);
 
@@ -202,7 +197,7 @@ public class KeyCallbacks
                         else if (Configs.Generic.SELECTION_CORNERS_MODE.getOptionListValue() == CornerSelectionMode.EXPAND)
                         {
                             sm.handleCuboidModeMouseClick(this.mc, maxDistance, isToolSecondary, moveEverything);
-                        }
+                        }*/
                     }
                     else if (mode.getUsesSchematic())
                     {
@@ -262,14 +257,14 @@ public class KeyCallbacks
             }
             else if (key == Hotkeys.OPEN_GUI_SELECTION_MANAGER.getKeybind())
             {
-                if (DataManager.getSchematicProjectsManager().hasProjectOpen() == false)
+                /*if (DataManager.getSchematicProjectsManager().hasProjectOpen() == false)
                 {
                     GuiBase.openGui(new GuiAreaSelectionManager());
                 }
                 else
                 {
                     InfoUtils.showGuiOrInGameMessage(MessageType.WARNING, "litematica.gui.button.hover.schematic_projects.area_browser_disabled_currently_in_projects_mode");
-                }
+                }*/
 
                 return true;
             }
@@ -467,27 +462,27 @@ public class KeyCallbacks
                     DataManager.getSchematicProjectsManager().pasteCurrentVersionToWorld();
                     return true;
                 }
-                else if (mode == ToolMode.PASTE_SCHEMATIC)
+/*                else if (mode == ToolMode.PASTE_SCHEMATIC)
                 {
                     DataManager.getSchematicPlacementManager().pasteCurrentPlacementToWorld(this.mc);
                     return true;
-                }
-                else if (mode == ToolMode.FILL && mode.getPrimaryBlock() != null)
+                }*/
+/*                else if (mode == ToolMode.FILL && mode.getPrimaryBlock() != null)
                 {
                     ToolUtils.fillSelectionVolumes(this.mc, mode.getPrimaryBlock(), null);
                     return true;
-                }
-                else if (mode == ToolMode.REPLACE_BLOCK && mode.getPrimaryBlock() != null && mode.getSecondaryBlock() != null)
+                }*/
+/*                else if (mode == ToolMode.REPLACE_BLOCK && mode.getPrimaryBlock() != null && mode.getSecondaryBlock() != null)
                 {
                     ToolUtils.fillSelectionVolumes(this.mc, mode.getPrimaryBlock(), mode.getSecondaryBlock());
                     return true;
-                }
-                else if (mode == ToolMode.DELETE)
+                }*/
+/*                else if (mode == ToolMode.DELETE)
                 {
                     boolean removeEntities = true; // TODO
                     ToolUtils.deleteSelectionVolumes(removeEntities, this.mc);
                     return true;
-                }
+                }*/
             }
             else if (key == Hotkeys.NUDGE_SELECTION_NEGATIVE.getKeybind() ||
                      key == Hotkeys.NUDGE_SELECTION_POSITIVE.getKeybind())
@@ -582,14 +577,14 @@ public class KeyCallbacks
                     {
                         BlockPos pos = new BlockPos(this.mc.player.getPos());
 
-                        if (mode == ToolMode.MOVE)
+/*                        if (mode == ToolMode.MOVE)
                         {
                             SchematicUtils.moveCurrentlySelectedWorldRegionTo(pos, this.mc);
                         }
                         else
                         {
                             selection.moveEntireSelectionTo(pos, true);
-                        }
+                        }*/
 
                         return true;
                     }
@@ -603,18 +598,18 @@ public class KeyCallbacks
             }
             else if (key == Hotkeys.SELECTION_MODE_CYCLE.getKeybind())
             {
-                if (mode == ToolMode.DELETE)
+/*                if (mode == ToolMode.DELETE)
                 {
                     ToolModeData.DELETE.toggleUsePlacement();
-                }
-                else if (mode == ToolMode.PASTE_SCHEMATIC)
+                }*/
+/*                else if (mode == ToolMode.PASTE_SCHEMATIC)
                 {
                     Configs.Generic.PASTE_REPLACE_BEHAVIOR.setOptionListValue(Configs.Generic.PASTE_REPLACE_BEHAVIOR.getOptionListValue().cycle(false));
                 }
                 else if (mode.getUsesAreaSelection())
                 {
                     Configs.Generic.SELECTION_CORNERS_MODE.setOptionListValue(Configs.Generic.SELECTION_CORNERS_MODE.getOptionListValue().cycle(false));
-                }
+                }*/
 
                 return true;
             }

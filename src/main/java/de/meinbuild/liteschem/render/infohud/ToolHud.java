@@ -143,11 +143,11 @@ public class ToolHud extends InfoHud
         String strYes = green + StringUtils.translate("litematica.label.yes") + rst;
         String strNo = GuiBase.TXT_RED + StringUtils.translate("litematica.label.no") + rst;
 
-        if (hasTool && mode == ToolMode.DELETE)
+/*        if (hasTool && mode == ToolMode.DELETE)
         {
             String strp = ToolModeData.DELETE.getUsePlacement() ? "litematica.hud.delete.target_mode.placement" : "litematica.hud.delete.target_mode.area";
             lines.add(StringUtils.translate("litematica.hud.delete.target_mode", green + StringUtils.translate(strp) + rst));
-        }
+        }*/
 
         if (hasTool && mode.getUsesAreaSelection())
         {
@@ -230,7 +230,7 @@ public class ToolHud extends InfoHud
             str = green + Configs.Generic.SELECTION_CORNERS_MODE.getOptionListValue().getDisplayName() + rst;
             lines.add(StringUtils.translate("litematica.hud.area_selection.selection_corners_mode", str));
         }
-        else if ((hasTool || mode == ToolMode.REBUILD) && mode.getUsesSchematic())
+/*        else if ((hasTool || mode == ToolMode.REBUILD) && mode.getUsesSchematic())
         {
             SchematicPlacement schematicPlacement = DataManager.getSchematicPlacementManager().getSelectedSchematicPlacement();
 
@@ -269,7 +269,7 @@ public class ToolHud extends InfoHud
                     lines.add(StringUtils.translate("litematica.hud.schematic_placement.sub_region_origin", green + str + rst));
                 }
 
-                if (mode == ToolMode.PASTE_SCHEMATIC)
+*//*                if (mode == ToolMode.PASTE_SCHEMATIC)
                 {
                     ReplaceBehavior replace = (ReplaceBehavior) Configs.Generic.PASTE_REPLACE_BEHAVIOR.getOptionListValue();
                     str = replace.getDisplayName();
@@ -284,7 +284,7 @@ public class ToolHud extends InfoHud
                     }
 
                     lines.add(StringUtils.translate("litematica.hud.misc.schematic_paste.replace_mode", str));
-                }
+                }*//*
             }
             else
             {
@@ -292,9 +292,9 @@ public class ToolHud extends InfoHud
                 str = StringUtils.translate("litematica.hud.schematic_placement.selected_placement");
                 lines.add(String.format("%s: %s%s%s", str, white, strTmp, rst));
             }
-        }
+        }*/
 
-        if (hasTool || mode == ToolMode.REBUILD)
+/*        if (hasTool || mode == ToolMode.REBUILD)
         {
             str = StringUtils.translate("litematica.hud.selected_mode");
             String modeName = mode.getName();
@@ -306,7 +306,7 @@ public class ToolHud extends InfoHud
 
             lines.add(String.format("%s [%s%d%s/%s%d%s]: %s%s%s", str, green, mode.ordinal() + 1, white,
                     green, ToolMode.values().length, white, green, modeName, rst));
-        }
+        }*/
     }
 
     protected String getBlockString(BlockState state)

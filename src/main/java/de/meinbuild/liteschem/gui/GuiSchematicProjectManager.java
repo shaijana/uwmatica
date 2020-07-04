@@ -141,8 +141,8 @@ public class GuiSchematicProjectManager extends GuiListBase<SchematicVersion, Wi
         {
             if (this.type == Type.OPEN_PROJECT_BROWSER)
             {
-                GuiSchematicProjectsBrowser gui = new GuiSchematicProjectsBrowser();
-                GuiBase.openGui(gui);
+/*                GuiSchematicProjectsBrowser gui = new GuiSchematicProjectsBrowser();
+                GuiBase.openGui(gui);*/
             }
             else if (this.type == Type.SAVE_VERSION)
             {
@@ -186,7 +186,7 @@ public class GuiSchematicProjectManager extends GuiListBase<SchematicVersion, Wi
             else if (this.type == Type.CLOSE_PROJECT)
             {
                 DataManager.getSchematicProjectsManager().closeCurrentProject();
-                GuiSchematicProjectsBrowser gui = new GuiSchematicProjectsBrowser();
+//                GuiSchematicProjectsBrowser gui = new GuiSchematicProjectsBrowser();
                 GuiBase.openGui(gui);
             }
         }

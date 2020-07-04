@@ -146,11 +146,11 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
                     area.moveEntireSelectionTo(old.offset(EntityUtils.getClosestLookingDirection(player), amount), false);
                     return true;
                 }
-                else if (mode == ToolMode.MOVE)
+/*                else if (mode == ToolMode.MOVE)
                 {
                     SchematicUtils.moveCurrentlySelectedWorldRegionToLookingDirection(amount, player, mc);
                     return true;
-                }
+                }*/
             }
         }
 
@@ -237,7 +237,7 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
 
     private boolean handleAttackKey(MinecraftClient mc)
     {
-        if (mc.player != null && DataManager.getToolMode() == ToolMode.REBUILD && KeybindMulti.getTriggeredCount() == 0)
+/*        if (mc.player != null && DataManager.getToolMode() == ToolMode.REBUILD && KeybindMulti.getTriggeredCount() == 0)
         {
             if (Hotkeys.SCHEMATIC_REBUILD_BREAK_DIRECTION.getKeybind().isKeybindHeld())
             {
@@ -251,7 +251,7 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
             {
                 return SchematicUtils.breakSchematicBlock(mc);
             }
-        }
+        }*/
 
         return false;
     }
@@ -260,7 +260,7 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
     {
         if (mc.player != null)
         {
-            if (DataManager.getToolMode() == ToolMode.REBUILD && KeybindMulti.getTriggeredCount() == 0)
+/*            if (DataManager.getToolMode() == ToolMode.REBUILD && KeybindMulti.getTriggeredCount() == 0)
             {
                 if (Hotkeys.SCHEMATIC_REBUILD_REPLACE_DIRECTION.getKeybind().isKeybindHeld())
                 {
@@ -294,7 +294,7 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
                 {
                     WorldUtils.doSchematicWorldPickBlock(false, mc);
                 }
-            }
+            }*/
 
             if (Configs.Generic.PLACEMENT_RESTRICTION.getBooleanValue())
             {

@@ -38,12 +38,13 @@ public class GuiMainMenu extends GuiBase
         this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.LOAD_SCHEMATICS);
         y += 44;
 
+/*
         this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.AREA_EDITOR);
         y += 22;
         this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.AREA_SELECTION_BROWSER);
         y += 22;
-
-        SelectionMode mode = DataManager.getSelectionManager().getSelectionMode();
+*/
+        /*SelectionMode mode = DataManager.getSelectionManager().getSelectionMode();
         String label = StringUtils.translate("litematica.gui.button.area_selection_mode", mode.getDisplayName());
         ButtonGeneric button = new ButtonGeneric(x, y, width, 20, label);
         this.addButton(button, new ButtonListenerCycleAreaMode(this));
@@ -54,6 +55,7 @@ public class GuiMainMenu extends GuiBase
         y = this.height - 26;
         button = new ButtonGeneric(x, y, width2, 20, label);
         this.addButton(button, new ButtonListenerCycleToolMode(this));
+*/
 
         x += width + 20;
         y = 30;
@@ -65,8 +67,8 @@ public class GuiMainMenu extends GuiBase
 
         y += 22;
         this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.TASK_MANAGER);
-        y += 22;
-        this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.SCHEMATIC_PROJECTS_MANAGER);
+/*        y += 22;
+        this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.SCHEMATIC_PROJECTS_MANAGER);*/
     }
 
     private void createChangeMenuButton(int x, int y, int width, ButtonListenerChangeMenu.ButtonType type)
@@ -123,9 +125,9 @@ public class GuiMainMenu extends GuiBase
                 case AREA_EDITOR:
                     gui = DataManager.getSelectionManager().getEditGui();
                     break;
-                case AREA_SELECTION_BROWSER:
+/*                case AREA_SELECTION_BROWSER:
                     gui = new GuiAreaSelectionManager();
-                    break;
+                    break;*/
                 case CONFIGURATION:
                     GuiBase.openGui(new GuiConfigs());
                     return;

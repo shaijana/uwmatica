@@ -339,7 +339,7 @@ public class DataManager implements IDirectoryCache
 
             if (this.operationMode == null)
             {
-                this.operationMode = ToolMode.AREA_SELECTION;
+//                this.operationMode = ToolMode.AREA_SELECTION;
             }
         }
 
@@ -401,7 +401,7 @@ public class DataManager implements IDirectoryCache
         return dir;
     }
 
-    public static File getAreaSelectionsBaseDirectory()
+/*    public static File getAreaSelectionsBaseDirectory()
     {
         File dir;
         String name = StringUtils.getWorldOrServerName();
@@ -423,7 +423,7 @@ public class DataManager implements IDirectoryCache
         }
 
         return dir;
-    }
+    }*/
 
     private static File getCurrentStorageFile(boolean globalData)
     {

@@ -7,7 +7,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import net.minecraft.client.MinecraftClient;
 import de.meinbuild.liteschem.gui.GuiSchematicProjectManager;
-import de.meinbuild.liteschem.gui.GuiSchematicProjectsBrowser;
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.util.GuiUtils;
@@ -30,12 +29,12 @@ public class SchematicProjectsManager
             gui.setParent(GuiUtils.getCurrentScreen());
             GuiBase.openGui(gui);
         }
-        else
+/*        else
         {
             GuiSchematicProjectsBrowser gui = new GuiSchematicProjectsBrowser();
             gui.setParent(GuiUtils.getCurrentScreen());
             GuiBase.openGui(gui);
-        }
+        }*/
     }
 
     @Nullable

@@ -56,7 +56,7 @@ public class ToolUtils
     {
         AreaSelection area = null;
 
-        if (DataManager.getToolMode() == ToolMode.DELETE && ToolModeData.DELETE.getUsePlacement())
+/*        if (DataManager.getToolMode() == ToolMode.DELETE && ToolModeData.DELETE.getUsePlacement())
         {
             SchematicPlacement placement = DataManager.getSchematicPlacementManager().getSelectedSchematicPlacement();
 
@@ -68,7 +68,7 @@ public class ToolUtils
         else
         {
             area = DataManager.getSelectionManager().getCurrentSelection();
-        }
+        }*/
 
         deleteSelectionVolumes(area, removeEntities, mc);
     }
