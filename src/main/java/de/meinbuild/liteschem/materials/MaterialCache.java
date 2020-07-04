@@ -29,7 +29,7 @@ import net.minecraft.nbt.NbtIo;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
-import de.meinbuild.liteschem.Litematica;
+import de.meinbuild.liteschem.Liteschem;
 import de.meinbuild.liteschem.Reference;
 import de.meinbuild.liteschem.util.WorldUtils;
 import de.meinbuild.liteschem.world.SchematicWorldHandler;
@@ -293,7 +293,7 @@ public class MaterialCache
         {
             if (dir.exists() == false && dir.mkdirs() == false)
             {
-                Litematica.logger.warn("Failed to write the material list cache to file '{}'", file.getAbsolutePath());
+                Liteschem.logger.warn("Failed to write the material list cache to file '{}'", file.getAbsolutePath());
                 return false;
             }
 
@@ -306,7 +306,7 @@ public class MaterialCache
         }
         catch (Exception e)
         {
-            Litematica.logger.warn("Failed to write the material list cache to file '{}'", file.getAbsolutePath(), e);
+            Liteschem.logger.warn("Failed to write the material list cache to file '{}'", file.getAbsolutePath(), e);
         }
 
         return false;
@@ -336,7 +336,7 @@ public class MaterialCache
         }
         catch (Exception e)
         {
-            Litematica.logger.warn("Failed to read the material list cache from file '{}'", file.getAbsolutePath(), e);
+            Liteschem.logger.warn("Failed to read the material list cache from file '{}'", file.getAbsolutePath(), e);
         }
     }
 }

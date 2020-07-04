@@ -24,7 +24,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
-import de.meinbuild.liteschem.Litematica;
+import de.meinbuild.liteschem.Liteschem;
 import de.meinbuild.liteschem.Reference;
 import de.meinbuild.liteschem.gui.GuiConfigs.ConfigGuiTab;
 import de.meinbuild.liteschem.schematic.placement.SchematicPlacementManager;
@@ -395,7 +395,7 @@ public class DataManager implements IDirectoryCache
 
         if (dir.exists() == false && dir.mkdirs() == false)
         {
-            Litematica.logger.warn("Failed to create the schematic directory '{}'", dir.getAbsolutePath());
+            Liteschem.logger.warn("Failed to create the schematic directory '{}'", dir.getAbsolutePath());
         }
 
         return dir;
@@ -419,7 +419,7 @@ public class DataManager implements IDirectoryCache
 
         if (dir.exists() == false && dir.mkdirs() == false)
         {
-            Litematica.logger.warn("Failed to create the area selections base directory '{}'", dir.getAbsolutePath());
+            Liteschem.logger.warn("Failed to create the area selections base directory '{}'", dir.getAbsolutePath());
         }
 
         return dir;
@@ -431,7 +431,7 @@ public class DataManager implements IDirectoryCache
 
         if (dir.exists() == false && dir.mkdirs() == false)
         {
-            Litematica.logger.warn("Failed to create the config directory '{}'", dir.getAbsolutePath());
+            Liteschem.logger.warn("Failed to create the config directory '{}'", dir.getAbsolutePath());
         }
 
         return new File(dir, StringUtils.getStorageFileName(globalData, Reference.MOD_ID + "_", ".json", "default"));

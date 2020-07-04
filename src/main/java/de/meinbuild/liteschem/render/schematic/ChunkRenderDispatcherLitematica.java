@@ -20,12 +20,12 @@ import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
-import de.meinbuild.liteschem.Litematica;
+import de.meinbuild.liteschem.Liteschem;
 import de.meinbuild.liteschem.render.schematic.ChunkRendererSchematicVbo.OverlayRenderType;
 
 public class ChunkRenderDispatcherLitematica
 {
-    private static final Logger LOGGER = Litematica.logger;
+    private static final Logger LOGGER = Liteschem.logger;
     private static final ThreadFactory THREAD_FACTORY = (new ThreadFactoryBuilder()).setNameFormat("Litematica Chunk Batcher %d").setDaemon(true).build();
 
     private final List<Thread> listWorkerThreads = Lists.<Thread>newArrayList();

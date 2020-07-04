@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 import de.meinbuild.liteschem.data.DataManager;
 import de.meinbuild.liteschem.schematic.LitematicaSchematic;
 import de.meinbuild.liteschem.util.FileType;
-import de.meinbuild.liteschem.Litematica;
+import de.meinbuild.liteschem.Liteschem;
 import fi.dy.masa.malilib.config.IConfigOptionList;
 import fi.dy.masa.malilib.config.IConfigOptionListEntry;
 import fi.dy.masa.malilib.gui.GuiConfirmAction;
@@ -414,7 +414,7 @@ public class GuiSchematicManager extends GuiSchematicBrowserBase implements ISel
                 }
                 catch (Exception e)
                 {
-                    Litematica.logger.warn("Exception while creating preview image", e);
+                    Liteschem.logger.warn("Exception while creating preview image", e);
                 }
             }
             else

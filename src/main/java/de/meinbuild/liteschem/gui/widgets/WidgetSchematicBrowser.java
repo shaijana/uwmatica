@@ -19,7 +19,7 @@ import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3i;
-import de.meinbuild.liteschem.Litematica;
+import de.meinbuild.liteschem.Liteschem;
 import de.meinbuild.liteschem.gui.GuiSchematicBrowserBase;
 import fi.dy.masa.malilib.gui.interfaces.ISelectionListener;
 import fi.dy.masa.malilib.gui.widgets.WidgetFileBrowserBase;
@@ -267,7 +267,7 @@ public class WidgetSchematicBrowser extends WidgetFileBrowserBase
                 }
                 catch (Exception e)
                 {
-                    Litematica.logger.warn("Failed to create a preview image", e);
+                    Liteschem.logger.warn("Failed to create a preview image", e);
                 }
             }
         }

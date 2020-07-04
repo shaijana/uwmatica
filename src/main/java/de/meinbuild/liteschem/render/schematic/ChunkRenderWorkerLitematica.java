@@ -14,12 +14,12 @@ import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.crash.CrashReport;
-import de.meinbuild.liteschem.Litematica;
+import de.meinbuild.liteschem.Liteschem;
 import de.meinbuild.liteschem.render.schematic.ChunkRendererSchematicVbo.OverlayRenderType;
 
 public class ChunkRenderWorkerLitematica implements Runnable
 {
-    private static final Logger LOGGER = Litematica.logger;
+    private static final Logger LOGGER = Liteschem.logger;
 
     private final ChunkRenderDispatcherLitematica chunkRenderDispatcher;
     private final BufferBuilderCache bufferCache;

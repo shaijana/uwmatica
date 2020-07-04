@@ -8,7 +8,7 @@ import javax.annotation.Nullable;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import de.meinbuild.liteschem.Litematica;
+import de.meinbuild.liteschem.Liteschem;
 import de.meinbuild.liteschem.config.Configs;
 import de.meinbuild.liteschem.data.DataManager;
 import de.meinbuild.liteschem.gui.GuiAreaSelectionEditorNormal;
@@ -251,7 +251,7 @@ public class SelectionManager
                     catch (Exception e)
                     {
                         feedback.addMessage(MessageType.ERROR, "litematica.error.area_selection.copy_failed");
-                        Litematica.logger.warn("Copy failed", e);
+                        Liteschem.logger.warn("Copy failed", e);
                         return false;
                     }
 
@@ -762,7 +762,7 @@ public class SelectionManager
         }
         catch (Exception e)
         {
-            Litematica.logger.warn("Exception while writing area selections to disk", e);
+            Liteschem.logger.warn("Exception while writing area selections to disk", e);
         }
 
         AreaSelection current = this.currentSelectionId != null ? this.selections.get(this.currentSelectionId) : null;

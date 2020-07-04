@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
 
-import de.meinbuild.liteschem.Litematica;
+import de.meinbuild.liteschem.Liteschem;
 import de.meinbuild.liteschem.data.DataManager;
 import de.meinbuild.liteschem.data.SchematicHolder;
 import de.meinbuild.liteschem.materials.MaterialListBase;
@@ -440,7 +440,7 @@ public class SchematicPlacement
 
             if (areaSize == null)
             {
-                Litematica.logger.warn("SchematicPlacement.getSubRegionBoxes(): Size for sub-region '{}' not found in the schematic '{}'", name, this.schematic.getMetadata().getName());
+                Liteschem.logger.warn("SchematicPlacement.getSubRegionBoxes(): Size for sub-region '{}' not found in the schematic '{}'", name, this.schematic.getMetadata().getName());
                 continue;
             }
 
@@ -486,7 +486,7 @@ public class SchematicPlacement
                 }
                 else
                 {
-                    Litematica.logger.warn("SchematicPlacement.getSubRegionBoxFor(): Size for sub-region '{}' not found in the schematic '{}'", regionName, this.schematic.getMetadata().getName());
+                    Liteschem.logger.warn("SchematicPlacement.getSubRegionBoxFor(): Size for sub-region '{}' not found in the schematic '{}'", regionName, this.schematic.getMetadata().getName());
                 }
             }
         }
@@ -950,7 +950,7 @@ public class SchematicPlacement
 
             if (schematic == null)
             {
-                Litematica.logger.warn("Failed to load schematic '{}'", file.getAbsolutePath());
+                Liteschem.logger.warn("Failed to load schematic '{}'", file.getAbsolutePath());
                 return null;
             }
 
@@ -958,7 +958,7 @@ public class SchematicPlacement
 
             if (posArr.size() != 3)
             {
-                Litematica.logger.warn("Failed to load schematic placement for '{}', invalid origin position", file.getAbsolutePath());
+                Liteschem.logger.warn("Failed to load schematic placement for '{}', invalid origin position", file.getAbsolutePath());
                 return null;
             }
 

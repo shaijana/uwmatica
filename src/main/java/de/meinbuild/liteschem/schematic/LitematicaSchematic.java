@@ -38,7 +38,7 @@ import net.minecraft.util.registry.Registry;
 import net.minecraft.world.ScheduledTick;
 import net.minecraft.world.TickPriority;
 import net.minecraft.world.World;
-import de.meinbuild.liteschem.Litematica;
+import de.meinbuild.liteschem.Liteschem;
 import de.meinbuild.liteschem.config.Configs;
 import de.meinbuild.liteschem.schematic.container.LitematicaBlockStateContainer;
 import de.meinbuild.liteschem.schematic.placement.SchematicPlacement;
@@ -274,7 +274,7 @@ public class LitematicaSchematic
                 }
                 else
                 {
-                    Litematica.logger.warn("Invalid/missing schematic data in schematic '{}' for sub-region '{}'", this.metadata.getName(), regionName);
+                    Liteschem.logger.warn("Invalid/missing schematic data in schematic '{}' for sub-region '{}'", this.metadata.getName(), regionName);
                 }
 
                 if (schematicPlacement.ignoreEntities() == false && placement.ignoreEntities() == false && entityList != null)
@@ -400,7 +400,7 @@ public class LitematicaSchematic
                             }
                             catch (Exception e)
                             {
-                                Litematica.logger.warn("Failed to load TileEntity data for {} @ {}", state, pos);
+                                Liteschem.logger.warn("Failed to load TileEntity data for {} @ {}", state, pos);
                             }
                         }
                     }
@@ -519,7 +519,7 @@ public class LitematicaSchematic
                 }
                 else
                 {
-                    Litematica.logger.warn("Invalid/missing schematic data in schematic '{}' for sub-region '{}'", this.metadata.getName(), regionName);
+                    Liteschem.logger.warn("Invalid/missing schematic data in schematic '{}' for sub-region '{}'", this.metadata.getName(), regionName);
                 }
 
                 if (schematicPlacement.ignoreEntities() == false && placement.ignoreEntities() == false && entityList != null)
@@ -662,7 +662,7 @@ public class LitematicaSchematic
                             }
                             catch (Exception e)
                             {
-                                Litematica.logger.warn("Failed to load TileEntity data for {} @ {}", state, pos);
+                                Liteschem.logger.warn("Failed to load TileEntity data for {} @ {}", state, pos);
                             }
                         }
                     }
@@ -934,7 +934,7 @@ public class LitematicaSchematic
 
             if (box == null)
             {
-                Litematica.logger.error("null Box for sub-region '{}' while trying to save chunk-wise schematic", regionName);
+                Liteschem.logger.error("null Box for sub-region '{}' while trying to save chunk-wise schematic", regionName);
                 continue;
             }
 
@@ -945,7 +945,7 @@ public class LitematicaSchematic
 
             if (container == null || tileEntityMap == null || blockTickMap == null || fluidTickMap == null)
             {
-                Litematica.logger.error("null map(s) for sub-region '{}' while trying to save chunk-wise schematic", regionName);
+                Liteschem.logger.error("null map(s) for sub-region '{}' while trying to save chunk-wise schematic", regionName);
                 continue;
             }
 

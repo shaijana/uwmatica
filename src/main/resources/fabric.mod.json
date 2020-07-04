@@ -1,12 +1,12 @@
 {
     "schemaVersion": 1,
-    "id": "litematica",
-    "name": "Litematica",
+    "id": "liteschem",
+    "name": "Liteschem",
     "version": "${mod_version}",
 
-    "description": "A modern schematic mod for LiteLoader, Rift, Fabric etc.",
+    "description": "Schematica für uwmc.de",
     "authors": [
-        "masa"
+        "meinbuild"
     ],
     "contact": {
         "homepage": "https://www.curseforge.com/minecraft/mc-mods/litematica",
@@ -21,15 +21,15 @@
     "environment": "client",
     "entrypoints": {
         "main": [
-            "fi.dy.masa.litematica.Litematica"
+            "de.meinbuild.liteschem.Liteschem"
         ],
         "modmenu": [
-            "fi.dy.masa.litematica.compat.modmenu.ModMenuImpl"
+            "de.meinbuild.liteschem.compat.modmenu.ModMenuImpl"
         ]
     },
 
     "mixins": [
-        "mixins.litematica.json"
+        "mixins.liteschem.json"
     ],
 
     "depends": {
