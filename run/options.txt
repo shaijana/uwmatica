@@ -34,7 +34,7 @@ renderClouds:true
 resourcePacks:[]
 incompatibleResourcePacks:[]
 lastServer:meinbuild.de
-lang:en_us
+lang:de_de
 chatVisibility:0
 chatOpacity:1.0
 chatLineSpacing:0.0

@@ -94,7 +94,7 @@
     "litematica.gui.button.change_menu.show_loaded_schematics": "Loaded Schematics",
     "litematica.gui.button.change_menu.show_schematic_placements": "Schematic Placements",
     "litematica.gui.button.change_menu.task_manager": "Task Manager",
-    "litematica.gui.button.change_menu.to_main_menu": "Litematica menu",
+    "litematica.gui.button.change_menu.to_main_menu": "Liteschem menu",
 
     "litematica.gui.button.config_gui.colors": "Colors",
     "litematica.gui.button.config_gui.generic": "Generic",
@@ -331,7 +331,7 @@
     "litematica.gui.title.create_directory": "Create a new directory",
     "litematica.gui.title.create_in_memory_schematic": "Create an in-memory Schematic",
     "litematica.gui.title.create_schematic_project": "Create a new schematic project",
-    "litematica.gui.title.litematica_main_menu": "Litematica %s",
+    "litematica.gui.title.litematica_main_menu": "Liteschem %s",
     "litematica.gui.title.load_schematic": "Load Schematic",
     "litematica.gui.title.manage_loaded_schematics": "Manage loaded Schematics",
     "litematica.gui.title.manage_schematic_placements": "Manage Schematic Placements",

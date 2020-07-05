@@ -427,7 +427,7 @@ public class WorldUtils
     public static void easyPlaceOnUseTick(MinecraftClient mc)
     {
         if (mc.player != null &&
-            Configs.Generic.EASY_PLACE_HOLD_ENABLED.getBooleanValue() &&
+            /*Configs.Generic.EASY_PLACE_HOLD_ENABLED.getBooleanValue() &&*/
             Configs.Generic.EASY_PLACE_MODE.getBooleanValue() &&
             Hotkeys.EASY_PLACE_ACTIVATION.getKeybind().isKeybindHeld() &&
             KeybindMulti.isKeyDown(KeybindMulti.getKeyCode(mc.options.keyUse)))

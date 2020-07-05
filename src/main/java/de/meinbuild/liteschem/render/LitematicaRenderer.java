@@ -284,7 +284,7 @@ public class LitematicaRenderer
 
     public void piecewisePrepareAndUpdate(Frustum frustum)
     {
-        this.renderPiecewise = Configs.Generic.BETTER_RENDER_ORDER.getBooleanValue() &&
+        this.renderPiecewise = /*Configs.Generic.BETTER_RENDER_ORDER.getBooleanValue() &&*/
                                Configs.Visuals.ENABLE_RENDERING.getBooleanValue() &&
                                this.mc.getCameraEntity() != null;
         this.renderPiecewisePrepared = false;

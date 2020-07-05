@@ -5,12 +5,12 @@
   "placements": {
     "placements": [
       {
-        "schematic": "D:\\Users\\fabia\\Documents\\Minecraft\\Eigene Plugins\\Fabric\\Liteschem\\run\\schematics\\Test.litematic",
-        "name": "Test",
+        "schematic": "D:\\Users\\fabia\\Documents\\Minecraft\\Eigene Plugins\\Fabric\\Liteschem\\run\\schematics\\Gepardenbaby-Gesamt.litematic",
+        "name": "Gepardenbaby-Gesamt",
         "origin": [
-          262,
-          70,
-          -117
+          331,
+          124,
+          24
         ],
         "rotation": "NONE",
         "mirror": "NONE",
@@ -20,18 +20,18 @@
         "render_enclosing_box": false,
         "locked": false,
         "locked_coords": 0,
-        "bb_color": 16757504,
+        "bb_color": 8404597,
         "verifier_type": "all",
         "placements": [
           {
-            "name": "Test",
+            "name": "Gepardenbaby-Gesamt",
             "placement": {
               "pos": [
                 0,
                 0,
-                0
+                255
               ],
-              "name": "Test",
+              "name": "Gepardenbaby-Gesamt",
               "rotation": "NONE",
               "mirror": "NONE",
               "locked_coords": 0,

@@ -123,8 +123,8 @@ public class ToolHud extends InfoHud
                 }
             }
 
-            str = green + Configs.Generic.SELECTION_CORNERS_MODE.getOptionListValue().getDisplayName() + rst;
-            lines.add(StringUtils.translate("litematica.hud.area_selection.selection_corners_mode", str));
+/*            str = green + Configs.Generic.SELECTION_CORNERS_MODE.getOptionListValue().getDisplayName() + rst;
+            lines.add(StringUtils.translate("litematica.hud.area_selection.selection_corners_mode", str));*/
 
             // The Projects Mode indicator gets rendered via the status info HUD, if it's enabled.
             // If it's not enabled, then it gets rendered here if the player is currently holding the tool
@@ -227,8 +227,8 @@ public class ToolHud extends InfoHud
                 }
             }
 
-            str = green + Configs.Generic.SELECTION_CORNERS_MODE.getOptionListValue().getDisplayName() + rst;
-            lines.add(StringUtils.translate("litematica.hud.area_selection.selection_corners_mode", str));
+/*            str = green + Configs.Generic.SELECTION_CORNERS_MODE.getOptionListValue().getDisplayName() + rst;
+            lines.add(StringUtils.translate("litematica.hud.area_selection.selection_corners_mode", str));*/
         }
 /*        else if ((hasTool || mode == ToolMode.REBUILD) && mode.getUsesSchematic())
         {

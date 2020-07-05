@@ -297,11 +297,11 @@ public class GuiAreaSelectionEditorNormal extends GuiListBase<String, WidgetSele
             SelectionMode mode = DataManager.getSelectionManager().getSelectionMode();
             label = type.getDisplayName(mode.getDisplayName());
         }
-        else if (type == ButtonListener.Type.CHANGE_CORNER_MODE)
+/*        else if (type == ButtonListener.Type.CHANGE_CORNER_MODE)
         {
             String name = Configs.Generic.SELECTION_CORNERS_MODE.getOptionListValue().getDisplayName();
             label = type.getDisplayName(name);
-        }
+        }*/
         else if (type == ButtonListener.Type.CREATE_SCHEMATIC && projectsMode)
         {
             label = StringUtils.translate("litematica.gui.button.save_new_schematic_version");
@@ -470,9 +470,9 @@ public class GuiAreaSelectionEditorNormal extends GuiListBase<String, WidgetSele
 
                     break;
 
-                case CHANGE_CORNER_MODE:
+/*                case CHANGE_CORNER_MODE:
                     Configs.Generic.SELECTION_CORNERS_MODE.setOptionListValue(Configs.Generic.SELECTION_CORNERS_MODE.getOptionListValue().cycle(false));
-                    break;
+                    break;*/
 
                 case CREATE_SCHEMATIC:
                     SchematicUtils.saveSchematic(GuiBase.isShiftDown());
