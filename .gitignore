@@ -6,3 +6,61 @@ eclipse/
 .classpath
 .project
 build.number
+/.idea/runConfigurations/Minecraft_Client.xml
+/.idea/runConfigurations/Minecraft_Server.xml
+/.idea/shelf/Default_Changelist/gradle-wrapper.jar
+/.idea/shelf/Default_Changelist/shelved.patch
+/.idea/shelf/Default_Changelist.xml
+/.idea/compiler.xml
+/.idea/gradle.xml
+/.idea/Liteschem.iml
+/.idea/misc.xml
+/.idea/vcs.xml
+/.idea/workspace.xml
+/run/logs/2020-07-04-2.log.gz
+/run/logs/2020-07-04-6.log.gz
+/run/logs/2020-07-05-1.log.gz
+/run/logs/2020-07-05-2.log.gz
+/run/logs/debug-2.log.gz
+/run/saves/New World (1)/advancements/0e2a8643-40df-3a07-bffe-aa9fb0809920.json
+/run/saves/New World (1)/advancements/93bfa0b6-cc14-3c0c-8efa-0bcc48245274.json
+/run/saves/New World (1)/advancements/3247b050-58df-3a7e-91f5-44a3d807681c.json
+/run/saves/New World (1)/advancements/6130f4bb-8300-3783-bbd4-302f5fef0fc2.json
+/run/saves/New World (1)/advancements/7328fbd9-6879-3343-b321-ed1f1a1e9892.json
+/run/saves/New World (1)/advancements/99963b1e-252d-3ba6-8126-9071dd762e6c.json
+/run/saves/New World (1)/advancements/a7507e7e-f998-31cf-a2de-0cc0fd0a4de6.json
+/run/saves/New World (1)/advancements/baf6de3a-5bd7-32fc-ab9f-e6b63b25393f.json
+/run/saves/New World (1)/advancements/c016ab36-f8ab-3a42-9127-a875f53562d0.json
+/run/saves/New World (1)/advancements/cc8f980e-8ea7-381a-8715-01149d418cfb.json
+/run/saves/New World (1)/advancements/d6021e41-7343-3bee-bb0e-33bf78c6e47d.json
+/run/saves/New World (1)/playerdata/0e2a8643-40df-3a07-bffe-aa9fb0809920.dat
+/run/saves/New World (1)/playerdata/0e2a8643-40df-3a07-bffe-aa9fb0809920.dat_old
+/run/saves/New World (1)/playerdata/5f4ed3be-2938-3b6b-81a5-bfd57bf6a88f.dat_old
+/run/saves/New World (1)/playerdata/93bfa0b6-cc14-3c0c-8efa-0bcc48245274.dat
+/run/saves/New World (1)/playerdata/3247b050-58df-3a7e-91f5-44a3d807681c.dat
+/run/saves/New World (1)/playerdata/3247b050-58df-3a7e-91f5-44a3d807681c.dat_old
+/run/saves/New World (1)/playerdata/6130f4bb-8300-3783-bbd4-302f5fef0fc2.dat
+/run/saves/New World (1)/playerdata/7328fbd9-6879-3343-b321-ed1f1a1e9892.dat
+/run/saves/New World (1)/playerdata/7328fbd9-6879-3343-b321-ed1f1a1e9892.dat_old
+/run/saves/New World (1)/playerdata/99963b1e-252d-3ba6-8126-9071dd762e6c.dat
+/run/saves/New World (1)/playerdata/a7507e7e-f998-31cf-a2de-0cc0fd0a4de6.dat
+/run/saves/New World (1)/playerdata/a7507e7e-f998-31cf-a2de-0cc0fd0a4de6.dat_old
+/run/saves/New World (1)/playerdata/baf6de3a-5bd7-32fc-ab9f-e6b63b25393f.dat
+/run/saves/New World (1)/playerdata/baf6de3a-5bd7-32fc-ab9f-e6b63b25393f.dat_old
+/run/saves/New World (1)/playerdata/c016ab36-f8ab-3a42-9127-a875f53562d0.dat
+/run/saves/New World (1)/playerdata/c016ab36-f8ab-3a42-9127-a875f53562d0.dat_old
+/run/saves/New World (1)/playerdata/cc8f980e-8ea7-381a-8715-01149d418cfb.dat
+/run/saves/New World (1)/playerdata/cc8f980e-8ea7-381a-8715-01149d418cfb.dat_old
+/run/saves/New World (1)/playerdata/d6021e41-7343-3bee-bb0e-33bf78c6e47d.dat
+/run/saves/New World (1)/stats/0e2a8643-40df-3a07-bffe-aa9fb0809920.json
+/run/saves/New World (1)/stats/93bfa0b6-cc14-3c0c-8efa-0bcc48245274.json
+/run/saves/New World (1)/stats/3247b050-58df-3a7e-91f5-44a3d807681c.json
+/run/saves/New World (1)/stats/6130f4bb-8300-3783-bbd4-302f5fef0fc2.json
+/run/saves/New World (1)/stats/7328fbd9-6879-3343-b321-ed1f1a1e9892.json
+/run/saves/New World (1)/stats/99963b1e-252d-3ba6-8126-9071dd762e6c.json
+/run/saves/New World (1)/stats/a7507e7e-f998-31cf-a2de-0cc0fd0a4de6.json
+/run/saves/New World (1)/stats/baf6de3a-5bd7-32fc-ab9f-e6b63b25393f.json
+/run/saves/New World (1)/stats/c016ab36-f8ab-3a42-9127-a875f53562d0.json
+/run/saves/New World (1)/stats/cc8f980e-8ea7-381a-8715-01149d418cfb.json
+/run/saves/New World (1)/stats/d6021e41-7343-3bee-bb0e-33bf78c6e47d.json
+/run/schematics/Test.litematic
