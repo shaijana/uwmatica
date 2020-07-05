@@ -64,3 +64,6 @@ build.number
 /run/saves/New World (1)/stats/cc8f980e-8ea7-381a-8715-01149d418cfb.json
 /run/saves/New World (1)/stats/d6021e41-7343-3bee-bb0e-33bf78c6e47d.json
 /run/schematics/Test.litematic
+/run
+/.idea
+/.gitignore
