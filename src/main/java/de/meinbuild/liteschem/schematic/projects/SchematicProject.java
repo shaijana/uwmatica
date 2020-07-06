@@ -12,12 +12,12 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import de.meinbuild.liteschem.data.DataManager;
 import de.meinbuild.liteschem.scheduler.TaskScheduler;
-import de.meinbuild.liteschem.scheduler.tasks.TaskSaveSchematic;
+//import de.meinbuild.liteschem.scheduler.tasks.TaskSaveSchematic;
 import de.meinbuild.liteschem.schematic.LitematicaSchematic;
 import de.meinbuild.liteschem.schematic.placement.SchematicPlacement;
-import de.meinbuild.liteschem.selection.AreaSelection;
+/*import de.meinbuild.liteschem.selection.AreaSelection;
 import de.meinbuild.liteschem.selection.AreaSelectionSimple;
-import de.meinbuild.liteschem.selection.SelectionManager;
+import de.meinbuild.liteschem.selection.SelectionManager;*/
 import de.meinbuild.liteschem.selection.SelectionMode;
 import de.meinbuild.liteschem.util.ToolUtils;
 import fi.dy.masa.malilib.gui.Message.MessageType;
@@ -28,6 +28,7 @@ import fi.dy.masa.malilib.util.JsonUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.BlockPos;
 
+/*
 public class SchematicProject
 {
     private final List<SchematicVersion> versions = new ArrayList<>();
@@ -35,9 +36,11 @@ public class SchematicProject
     private File projectFile;
     private BlockPos origin = BlockPos.ORIGIN;
     private String projectName = "unnamed";
-    private AreaSelection selection = new AreaSelection();
+*/
+/*    private AreaSelection selection = new AreaSelection();
     private AreaSelection lastSeenArea = new AreaSelection();
-    private AreaSelectionSimple selectionSimple = new AreaSelectionSimple(true);
+    private AreaSelectionSimple selectionSimple = new AreaSelectionSimple(true);*//*
+
     private SelectionMode selectionMode = SelectionMode.SIMPLE;
     private int currentVersionId = -1;
     private int lastCheckedOutVersion = -1;
@@ -75,7 +78,7 @@ public class SchematicProject
     public String getCurrentVersionName()
     {
         SchematicVersion currentVersion = this.getCurrentVersion();
-        return currentVersion != null ? currentVersion.getName() : this.getSelection().getName();
+//        return currentVersion != null ? currentVersion.getName() : this.getSelection().getName();
     }
 
     public void setName(String name)
@@ -147,7 +150,8 @@ public class SchematicProject
         return this.origin;
     }
 
-    public AreaSelection getSelection()
+*/
+/*    public AreaSelection getSelection()
     {
         if (this.selectionMode == SelectionMode.SIMPLE)
         {
@@ -155,7 +159,8 @@ public class SchematicProject
         }
 
         return this.selection;
-    }
+    }*//*
+
 
     public SelectionMode getSelectionMode()
     {
@@ -320,14 +325,16 @@ public class SchematicProject
             String fileName = this.getNextFileName();
 
             AreaSelection selection = this.getSelection();
-            LitematicaSchematic schematic = LitematicaSchematic.createEmptySchematic(selection, author);
-            schematic.getMetadata().setName(name);
+//            LitematicaSchematic schematic = LitematicaSchematic.createEmptySchematic(selection, author);
+//            schematic.getMetadata().setName(name);
             BlockPos areaOffset = selection.getEffectiveOrigin().subtract(this.origin);
             SaveCompletionListener listener = new SaveCompletionListener(name, fileName, areaOffset);
 
-            TaskSaveSchematic task = new TaskSaveSchematic(this.directory, fileName, schematic, selection.copy(), true, false);
-            task.setCompletionListener(listener);
-            TaskScheduler.getServerInstanceIfExistsOrClient().scheduleTask(task, 2);
+*/
+/*            TaskSaveSchematic task = new TaskSaveSchematic(this.directory, fileName, schematic, selection.copy(), true, false);*//*
+
+//            task.setCompletionListener(listener);
+//            TaskScheduler.getServerInstanceIfExistsOrClient().scheduleTask(task, 2);
             this.saveInProgress = true;
             this.dirty = true;
             this.saveToFile();
@@ -567,3 +574,4 @@ public class SchematicProject
         }
     }
 }
+*/

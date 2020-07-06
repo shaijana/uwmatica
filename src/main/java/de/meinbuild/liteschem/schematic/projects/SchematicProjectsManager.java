@@ -1,5 +1,6 @@
 package de.meinbuild.liteschem.schematic.projects;
 
+/*
 import java.io.File;
 import javax.annotation.Nullable;
 import com.google.gson.JsonElement;
@@ -12,7 +13,9 @@ import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.util.GuiUtils;
 import fi.dy.masa.malilib.util.InfoUtils;
 import fi.dy.masa.malilib.util.JsonUtils;
+*/
 
+/*
 public class SchematicProjectsManager
 {
     //private static final Pattern PATTERN_NAME_NUMBER = Pattern.compile("(.*)([0-9]+)$");
@@ -29,12 +32,14 @@ public class SchematicProjectsManager
             gui.setParent(GuiUtils.getCurrentScreen());
             GuiBase.openGui(gui);
         }
+*/
 /*        else
         {
             GuiSchematicProjectsBrowser gui = new GuiSchematicProjectsBrowser();
             gui.setParent(GuiUtils.getCurrentScreen());
             GuiBase.openGui(gui);
-        }*/
+        }*//*
+
     }
 
     @Nullable
@@ -195,3 +200,4 @@ public class SchematicProjectsManager
         }
     }
 }
+*/

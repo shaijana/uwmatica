@@ -4,7 +4,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-import de.meinbuild.liteschem.schematic.projects.SchematicProject;
+//import de.meinbuild.liteschem.schematic.projects.SchematicProject;
 import de.meinbuild.liteschem.schematic.projects.SchematicVersion;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
@@ -13,9 +13,9 @@ import de.meinbuild.liteschem.config.Configs;
 import de.meinbuild.liteschem.data.DataManager;
 import de.meinbuild.liteschem.schematic.placement.SchematicPlacement;
 import de.meinbuild.liteschem.schematic.placement.SubRegionPlacement;
-import de.meinbuild.liteschem.selection.AreaSelection;
+//import de.meinbuild.liteschem.selection.AreaSelection;
 import de.meinbuild.liteschem.selection.Box;
-import de.meinbuild.liteschem.selection.SelectionManager;
+//import de.meinbuild.liteschem.selection.SelectionManager;
 import de.meinbuild.liteschem.selection.SelectionMode;
 import de.meinbuild.liteschem.tool.ToolMode;
 import de.meinbuild.liteschem.tool.ToolModeData;
@@ -89,7 +89,7 @@ public class ToolHud extends InfoHud
 
         List<String> lines = this.lineList;
 
-        if (hasTool && DataManager.getSchematicProjectsManager().hasProjectOpen())
+/*        if (hasTool && DataManager.getSchematicProjectsManager().hasProjectOpen())
         {
             SchematicProject project = DataManager.getSchematicProjectsManager().getCurrentProject();
 
@@ -123,8 +123,8 @@ public class ToolHud extends InfoHud
                 }
             }
 
-/*            str = green + Configs.Generic.SELECTION_CORNERS_MODE.getOptionListValue().getDisplayName() + rst;
-            lines.add(StringUtils.translate("litematica.hud.area_selection.selection_corners_mode", str));*/
+*//*            str = green + Configs.Generic.SELECTION_CORNERS_MODE.getOptionListValue().getDisplayName() + rst;
+            lines.add(StringUtils.translate("litematica.hud.area_selection.selection_corners_mode", str));*//*
 
             // The Projects Mode indicator gets rendered via the status info HUD, if it's enabled.
             // If it's not enabled, then it gets rendered here if the player is currently holding the tool
@@ -134,7 +134,7 @@ public class ToolHud extends InfoHud
             }
 
             return;
-        }
+        }*/
 
         ToolMode mode = DataManager.getToolMode();
         String orange = GuiBase.TXT_GOLD;
@@ -149,7 +149,7 @@ public class ToolHud extends InfoHud
             lines.add(StringUtils.translate("litematica.hud.delete.target_mode", green + StringUtils.translate(strp) + rst));
         }*/
 
-        if (hasTool && mode.getUsesAreaSelection())
+/*        if (hasTool && mode.getUsesAreaSelection())
         {
             SelectionManager sm = DataManager.getSelectionManager();
             AreaSelection selection = sm.getCurrentSelection();
@@ -227,9 +227,9 @@ public class ToolHud extends InfoHud
                 }
             }
 
-/*            str = green + Configs.Generic.SELECTION_CORNERS_MODE.getOptionListValue().getDisplayName() + rst;
-            lines.add(StringUtils.translate("litematica.hud.area_selection.selection_corners_mode", str));*/
-        }
+*//*            str = green + Configs.Generic.SELECTION_CORNERS_MODE.getOptionListValue().getDisplayName() + rst;
+            lines.add(StringUtils.translate("litematica.hud.area_selection.selection_corners_mode", str));*//*
+        }*/
 /*        else if ((hasTool || mode == ToolMode.REBUILD) && mode.getUsesSchematic())
         {
             SchematicPlacement schematicPlacement = DataManager.getSchematicPlacementManager().getSelectedSchematicPlacement();

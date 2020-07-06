@@ -90,10 +90,10 @@ public class StatusInfoRenderer implements IInfoHudRenderer
         String strSel = Configs.Visuals.ENABLE_AREA_SELECTION_RENDERING.getBooleanValue() ? strOn : strOff;
         lines.add(StringUtils.translate("litematica.hud.misc.renderer_status", strAll, strSch, strBlk, strOvl, strSel));
 
-        if (DataManager.getSchematicProjectsManager().hasProjectOpen())
+/*        if (DataManager.getSchematicProjectsManager().hasProjectOpen())
         {
             lines.add(StringUtils.translate("litematica.hud.schematic_projects_mode"));
-        }
+        }*/
 
         if (this.overrideEnabled && System.currentTimeMillis() - this.lastOverrideTime > this.overrideDelay)
         {

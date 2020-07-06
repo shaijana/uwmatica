@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 
-import de.meinbuild.liteschem.schematic.projects.SchematicProject;
+//import de.meinbuild.liteschem.schematic.projects.SchematicProject;
 import de.meinbuild.liteschem.schematic.verifier.SchematicVerifier;
 import org.lwjgl.opengl.GL11;
 import com.google.common.collect.ImmutableMap;
@@ -33,9 +33,9 @@ import de.meinbuild.liteschem.gui.widgets.WidgetSchematicVerificationResult.Bloc
 import de.meinbuild.liteschem.schematic.placement.SchematicPlacement;
 import de.meinbuild.liteschem.schematic.placement.SchematicPlacementManager;
 import de.meinbuild.liteschem.schematic.placement.SubRegionPlacement.RequiredEnabled;
-import de.meinbuild.liteschem.selection.AreaSelection;
+//import de.meinbuild.liteschem.selection.AreaSelection;
 import de.meinbuild.liteschem.selection.Box;
-import de.meinbuild.liteschem.selection.SelectionManager;
+//import de.meinbuild.liteschem.selection.SelectionManager;
 import de.meinbuild.liteschem.util.BlockInfoAlignment;
 import de.meinbuild.liteschem.util.ItemUtils;
 import de.meinbuild.liteschem.util.PositionUtils.Corner;
@@ -123,16 +123,16 @@ public class OverlayRenderer
 
     public void renderBoxes(MatrixStack matrices, float partialTicks)
     {
-        SelectionManager sm = DataManager.getSelectionManager();
-        AreaSelection currentSelection = sm.getCurrentSelection();
-        boolean renderAreas = currentSelection != null && Configs.Visuals.ENABLE_AREA_SELECTION_RENDERING.getBooleanValue();
+//        SelectionManager sm = DataManager.getSelectionManager();
+//        AreaSelection currentSelection = sm.getCurrentSelection();
+//        boolean renderAreas = currentSelection != null && Configs.Visuals.ENABLE_AREA_SELECTION_RENDERING.getBooleanValue();
         boolean renderPlacements = this.placements.isEmpty() == false && Configs.Visuals.ENABLE_PLACEMENT_BOXES_RENDERING.getBooleanValue();
-        boolean isProjectMode = DataManager.getSchematicProjectsManager().hasProjectOpen();
+//        boolean isProjectMode = DataManager.getSchematicProjectsManager().hasProjectOpen();
         float expand = 0.001f;
         float lineWidthBlockBox = 2f;
-        float lineWidthArea = isProjectMode ? 3f : 1.5f;
+//        float lineWidthArea = isProjectMode ? 3f : 1.5f;
 
-        if (renderAreas || renderPlacements || isProjectMode)
+/*        if (renderAreas || renderPlacements || isProjectMode)
         {
             RenderSystem.pushMatrix();
 
@@ -229,7 +229,7 @@ public class OverlayRenderer
             RenderSystem.popMatrix();
             RenderSystem.enableTexture();
             RenderSystem.depthMask(true);
-        }
+        }*/
     }
 
     public void renderSelectionBox(Box box, BoxType boxType, float expand,

@@ -7,7 +7,7 @@ import de.meinbuild.liteschem.scheduler.tasks.TaskDeleteArea;
 import de.meinbuild.liteschem.scheduler.tasks.TaskFillArea;
 import de.meinbuild.liteschem.data.DataManager;
 import de.meinbuild.liteschem.schematic.placement.SchematicPlacement;
-import de.meinbuild.liteschem.selection.AreaSelection;
+//import de.meinbuild.liteschem.selection.AreaSelection;
 import de.meinbuild.liteschem.selection.Box;
 import de.meinbuild.liteschem.tool.ToolMode;
 import de.meinbuild.liteschem.tool.ToolModeData;
@@ -21,7 +21,7 @@ public class ToolUtils
 {
     public static void fillSelectionVolumes(MinecraftClient mc, BlockState state, @Nullable BlockState stateToReplace)
     {
-        if (mc.player != null && mc.player.abilities.creativeMode)
+/*        if (mc.player != null && mc.player.abilities.creativeMode)
         {
             final AreaSelection area = DataManager.getSelectionManager().getCurrentSelection();
 
@@ -45,18 +45,18 @@ public class ToolUtils
             {
                 InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, "litematica.message.error.empty_area_selection");
             }
-        }
-        else
+        }*/
+/*        else
         {
             InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, "litematica.error.generic.creative_mode_only");
-        }
+        }*/
     }
 
-    public static void deleteSelectionVolumes(boolean removeEntities, MinecraftClient mc)
+/*    public static void deleteSelectionVolumes(boolean removeEntities, MinecraftClient mc)
     {
         AreaSelection area = null;
 
-/*        if (DataManager.getToolMode() == ToolMode.DELETE && ToolModeData.DELETE.getUsePlacement())
+*//*        if (DataManager.getToolMode() == ToolMode.DELETE && ToolModeData.DELETE.getUsePlacement())
         {
             SchematicPlacement placement = DataManager.getSchematicPlacementManager().getSelectedSchematicPlacement();
 
@@ -68,17 +68,17 @@ public class ToolUtils
         else
         {
             area = DataManager.getSelectionManager().getCurrentSelection();
-        }*/
+        }*//*
 
         deleteSelectionVolumes(area, removeEntities, mc);
-    }
+    }*/
 
-    public static void deleteSelectionVolumes(@Nullable final AreaSelection area, boolean removeEntities, MinecraftClient mc)
+/*    public static void deleteSelectionVolumes(@Nullable final AreaSelection area, boolean removeEntities, MinecraftClient mc)
     {
         deleteSelectionVolumes(area, removeEntities, null, mc);
-    }
+    }*/
 
-    public static void deleteSelectionVolumes(@Nullable final AreaSelection area, boolean removeEntities,
+/*    public static void deleteSelectionVolumes(@Nullable final AreaSelection area, boolean removeEntities,
             @Nullable ICompletionListener listener, MinecraftClient mc)
     {
         if (mc.player != null && mc.player.abilities.creativeMode)
@@ -114,5 +114,5 @@ public class ToolUtils
         {
             InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, "litematica.error.generic.creative_mode_only");
         }
-    }
+    }*/
 }

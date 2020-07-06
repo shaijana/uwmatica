@@ -25,7 +25,6 @@ public class BlockInfo
     private final List<String> props;
     private final int totalWidth;
     private final int totalHeight;
-    private final int columnWidth;
 
     public BlockInfo(BlockState state, String titleKey)
     {
@@ -42,10 +41,10 @@ public class BlockInfo
         int w = StringUtils.getStringWidth(this.stackName) + 20;
         w = Math.max(w, StringUtils.getStringWidth(this.blockRegistryname));
         w = Math.max(w, StringUtils.getStringWidth(this.title));
-        this.columnWidth = w;
+        int columnWidth = w;
 
         this.props = BlockUtils.getFormattedBlockStateProperties(this.state, " = ");
-        this.totalWidth = this.columnWidth + 40;
+        this.totalWidth = columnWidth + 40;
         this.totalHeight = this.props.size() * (StringUtils.getFontHeight() + 2) + 60;
     }
 

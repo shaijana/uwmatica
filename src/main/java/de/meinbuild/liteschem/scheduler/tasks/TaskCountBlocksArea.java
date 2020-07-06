@@ -1,11 +1,11 @@
 package de.meinbuild.liteschem.scheduler.tasks;
 
 import de.meinbuild.liteschem.materials.IMaterialList;
-import de.meinbuild.liteschem.selection.AreaSelection;
+//import de.meinbuild.liteschem.selection.AreaSelection;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 
-public class TaskCountBlocksArea extends TaskCountBlocksBase
+/*public class TaskCountBlocksArea extends TaskCountBlocksBase
 {
     protected final AreaSelection selection;
 
@@ -23,4 +23,4 @@ public class TaskCountBlocksArea extends TaskCountBlocksBase
         BlockState stateClient = this.worldClient.getBlockState(pos);
         this.countsTotal.addTo(stateClient, 1);
     }
-}
+}*/

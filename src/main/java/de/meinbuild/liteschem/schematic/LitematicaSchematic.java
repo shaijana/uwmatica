@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
-import java.util.Date;
+//import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,19 +43,19 @@ import de.meinbuild.liteschem.config.Configs;
 import de.meinbuild.liteschem.schematic.container.LitematicaBlockStateContainer;
 import de.meinbuild.liteschem.schematic.placement.SchematicPlacement;
 import de.meinbuild.liteschem.schematic.placement.SubRegionPlacement;
-import de.meinbuild.liteschem.selection.AreaSelection;
+//import de.meinbuild.liteschem.selection.AreaSelection;
 import de.meinbuild.liteschem.selection.Box;
 import de.meinbuild.liteschem.util.EntityUtils;
 import de.meinbuild.liteschem.util.PositionUtils;
 import de.meinbuild.liteschem.util.ReplaceBehavior;
 import de.meinbuild.liteschem.util.WorldUtils;
 import fi.dy.masa.malilib.gui.Message.MessageType;
-import fi.dy.masa.malilib.interfaces.IStringConsumer;
+//import fi.dy.masa.malilib.interfaces.IStringConsumer;
 import fi.dy.masa.malilib.util.Constants;
 import fi.dy.masa.malilib.util.InfoUtils;
 import fi.dy.masa.malilib.util.IntBoundingBox;
 import fi.dy.masa.malilib.util.NBTUtils;
-import fi.dy.masa.malilib.util.StringUtils;
+//import fi.dy.masa.malilib.util.StringUtils;
 
 public class LitematicaSchematic
 {
@@ -159,7 +159,7 @@ public class LitematicaSchematic
         return builder.build();
     }
 
-    @Nullable
+/*    @Nullable
     public static LitematicaSchematic createFromWorld(World world, AreaSelection area, boolean ignoreEntities, String author, IStringConsumer feedback)
     {
         List<Box> boxes = PositionUtils.getValidBoxes(area);
@@ -194,17 +194,17 @@ public class LitematicaSchematic
         schematic.metadata.setTotalBlocks(schematic.totalBlocks);
 
         return schematic;
-    }
+    }*/
 
     /**
      * Creates an empty schematic with all the maps and lists and containers already created.
      * This is intended to be used for the chunk-wise schematic creation.
      * @param area
      * @param author
-     * @param feedback
+//     * @param feedback
      * @return
      */
-    public static LitematicaSchematic createEmptySchematic(AreaSelection area, String author)
+/*    public static LitematicaSchematic createEmptySchematic(AreaSelection area, String author)
     {
         List<Box> boxes = PositionUtils.getValidBoxes(area);
 
@@ -239,7 +239,7 @@ public class LitematicaSchematic
         }
 
         return schematic;
-    }
+    }*/
 
     public void takeEntityDataFromSchematicaSchematic(SchematicaSchematic schematic, String subRegionName)
     {

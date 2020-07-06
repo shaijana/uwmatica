@@ -322,7 +322,6 @@ public class GuiSubRegionConfiguration extends GuiBase
             SLICE_TYPE              ("litematica.gui.button.placement_sub.slice_type");
 
             private final String translationKey;
-            @Nullable private final String hoverText;
 
             private Type(String translationKey)
             {
@@ -332,7 +331,6 @@ public class GuiSubRegionConfiguration extends GuiBase
             private Type(String translationKey, @Nullable String hoverText)
             {
                 this.translationKey = translationKey;
-                this.hoverText = hoverText;
             }
 
             public String getTranslationKey()

@@ -1,11 +1,12 @@
 package de.meinbuild.liteschem.gui.widgets;
 
+/*
 import java.util.ArrayList;
 import java.util.List;
 
 import de.meinbuild.liteschem.util.PositionUtils;
 import de.meinbuild.liteschem.gui.GuiAreaSelectionEditorSubRegion;
-import de.meinbuild.liteschem.selection.AreaSelection;
+//import de.meinbuild.liteschem.selection.AreaSelection;
 import de.meinbuild.liteschem.selection.Box;
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.GuiTextInputFeedback;
@@ -20,10 +21,11 @@ import fi.dy.masa.malilib.util.StringUtils;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.BlockPos;
 
-public class WidgetSelectionSubRegion extends WidgetListEntryBase<String>
+*/
+/*public class WidgetSelectionSubRegion extends WidgetListEntryBase<String>
 {
     private final WidgetListSelectionSubRegions parent;
-    private final AreaSelection selection;
+//    private final AreaSelection selection;
     private final Box box;
     private final boolean isOdd;
     private final int buttonsStartX;
@@ -201,4 +203,5 @@ public class WidgetSelectionSubRegion extends WidgetListEntryBase<String>
             return this.selection.renameSubRegionBox(oldName, string, this.widget.parent.getEditorGui());
         }
     }
-}
+}*/
+

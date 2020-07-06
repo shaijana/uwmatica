@@ -5,14 +5,14 @@ import java.util.Comparator;
 import java.util.List;
 import com.google.common.collect.ImmutableList;
 import de.meinbuild.liteschem.gui.Icons;
-import de.meinbuild.liteschem.gui.GuiAreaSelectionEditorNormal;
-import de.meinbuild.liteschem.selection.AreaSelection;
+//import de.meinbuild.liteschem.gui.GuiAreaSelectionEditorNormal;
+//import de.meinbuild.liteschem.selection.AreaSelection;
 import fi.dy.masa.malilib.gui.LeftRight;
 import fi.dy.masa.malilib.gui.widgets.WidgetListBase;
 import fi.dy.masa.malilib.gui.widgets.WidgetSearchBar;
 import fi.dy.masa.malilib.util.AlphaNumComparator.AlphaNumStringComparator;
 
-public class WidgetListSelectionSubRegions extends WidgetListBase<String, WidgetSelectionSubRegion>
+/*public class WidgetListSelectionSubRegions extends WidgetListBase<String, WidgetSelectionSubRegion>
 {
     private final GuiAreaSelectionEditorNormal gui;
     private final AreaSelection selection;
@@ -59,4 +59,4 @@ public class WidgetListSelectionSubRegions extends WidgetListBase<String, Widget
         return new WidgetSelectionSubRegion(x, y, this.browserEntryWidth, this.browserEntryHeight,
                 isOdd, entry, listIndex, this.selection, this);
     }
-}
+}*/

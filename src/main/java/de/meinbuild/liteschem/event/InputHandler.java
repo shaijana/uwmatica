@@ -9,9 +9,9 @@ import net.minecraft.util.math.Direction;
 import de.meinbuild.liteschem.Reference;
 import de.meinbuild.liteschem.data.DataManager;
 import de.meinbuild.liteschem.gui.GuiSchematicManager;
-import de.meinbuild.liteschem.selection.AreaSelection;
+//import de.meinbuild.liteschem.selection.AreaSelection;
 import de.meinbuild.liteschem.selection.Box;
-import de.meinbuild.liteschem.selection.SelectionManager;
+//import de.meinbuild.liteschem.selection.SelectionManager;
 import de.meinbuild.liteschem.tool.ToolMode;
 import de.meinbuild.liteschem.util.EntityUtils;
 import de.meinbuild.liteschem.util.PositionUtils;
@@ -128,7 +128,7 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
         final int amount = dWheel > 0 ? 1 : -1;
         ToolMode mode = DataManager.getToolMode();
 
-        if (Hotkeys.SELECTION_GRAB_MODIFIER.getKeybind().isKeybindHeld())
+/*        if (Hotkeys.SELECTION_GRAB_MODIFIER.getKeybind().isKeybindHeld())
         {
             if (mode.getUsesAreaSelection())
             {
@@ -146,13 +146,13 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
                     area.moveEntireSelectionTo(old.offset(EntityUtils.getClosestLookingDirection(player), amount), false);
                     return true;
                 }
-/*                else if (mode == ToolMode.MOVE)
+*//*                else if (mode == ToolMode.MOVE)
                 {
                     SchematicUtils.moveCurrentlySelectedWorldRegionToLookingDirection(amount, player, mc);
                     return true;
-                }*/
+                }*//*
             }
-        }
+        }*/
 
         if (Hotkeys.SELECTION_GROW_MODIFIER.getKeybind().isKeybindHeld())
         {
@@ -172,10 +172,10 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
 
         if (Hotkeys.SCHEMATIC_VERSION_CYCLE_MODIFIER.getKeybind().isKeybindHeld())
         {
-            if (DataManager.getSchematicProjectsManager().hasProjectOpen())
+/*            if (DataManager.getSchematicProjectsManager().hasProjectOpen())
             {
                 DataManager.getSchematicProjectsManager().cycleVersion(amount * -1);
-            }
+            }*/
             return true;
         }
 
@@ -184,7 +184,7 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
 
     public static boolean nudgeSelection(int amount, ToolMode mode, PlayerEntity player)
     {
-        if (mode.getUsesAreaSelection())
+/*        if (mode.getUsesAreaSelection())
         {
             SelectionManager sm = DataManager.getSelectionManager();
 
@@ -193,8 +193,8 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
                 sm.moveSelectedElement(EntityUtils.getClosestLookingDirection(player), amount);
                 return true;
             }
-        }
-        else if (mode.getUsesSchematic())
+        }*/
+        if (mode.getUsesSchematic())
         {
             Direction direction = EntityUtils.getClosestLookingDirection(player);
             DataManager.getSchematicPlacementManager().nudgePositionOfCurrentSelection(direction, amount);
@@ -206,7 +206,7 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
 
     private boolean growOrShrinkSelection(int amount, ToolMode mode)
     {
-        if (mode.getUsesAreaSelection())
+/*        if (mode.getUsesAreaSelection())
         {
             SelectionManager sm = DataManager.getSelectionManager();
             AreaSelection area = sm.getCurrentSelection();
@@ -230,7 +230,7 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
             {
                 InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, "litematica.message.error.no_area_selected");
             }
-        }
+        }*/
 
         return true;
     }
@@ -305,7 +305,7 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
         return false;
     }
 
-    public static void onTick(MinecraftClient mc)
+/*    public static void onTick(MinecraftClient mc)
     {
         SelectionManager sm = DataManager.getSelectionManager();
 
@@ -317,5 +317,5 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
         {
             WorldUtils.easyPlaceOnUseTick(mc);
         }
-    }
+    }*/
 }

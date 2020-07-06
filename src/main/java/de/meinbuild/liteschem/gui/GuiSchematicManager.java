@@ -219,7 +219,7 @@ public class GuiSchematicManager extends GuiSchematicBrowserBase implements ISel
 
             FileType fileType = FileType.fromFile(entry.getFullPath());
 
-            if (this.type == Type.EXPORT_SCHEMATIC)
+/*            if (this.type == Type.EXPORT_SCHEMATIC)
             {
                 if (fileType == FileType.LITEMATICA_SCHEMATIC)
                 {
@@ -231,8 +231,8 @@ public class GuiSchematicManager extends GuiSchematicBrowserBase implements ISel
                 {
                     this.gui.addMessage(MessageType.ERROR, "litematica.error.schematic_manager.schematic_export.unsupported_type", file.getName());
                 }
-            }
-            else if (this.type == Type.IMPORT_SCHEMATIC)
+            }*/
+             if (this.type == Type.IMPORT_SCHEMATIC)
             {
                 if (fileType == FileType.SCHEMATICA_SCHEMATIC ||
                     fileType == FileType.VANILLA_STRUCTURE)

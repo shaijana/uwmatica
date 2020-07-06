@@ -89,15 +89,15 @@ public class GuiSchematicSaveImported extends GuiSchematicSaveBase
 
                     if (fileType == FileType.SCHEMATICA_SCHEMATIC)
                     {
-                        if (WorldUtils.convertSchematicaSchematicToLitematicaSchematic(inDir, inFile, dir, fileName, ignoreEntities, override, this.gui))
+/*                        if (WorldUtils.convertSchematicaSchematicToLitematicaSchematic(inDir, inFile, dir, fileName, ignoreEntities, override, this.gui))
                         {
                             this.gui.addMessage(MessageType.SUCCESS, "litematica.message.schematic_saved_as", fileName);
                             this.gui.getListWidget().refreshEntries();
-                        }
+                        }*/
 
                         return;
                     }
-                    else if (fileType == FileType.VANILLA_STRUCTURE)
+/*                    else if (fileType == FileType.VANILLA_STRUCTURE)
                     {
                         if (WorldUtils.convertStructureToLitematicaSchematic(inDir, inFile, dir, fileName, ignoreEntities, override, this.gui))
                         {
@@ -106,7 +106,7 @@ public class GuiSchematicSaveImported extends GuiSchematicSaveBase
                         }
 
                         return;
-                    }
+                    }*/
                 }
 
                 this.gui.addMessage(MessageType.ERROR, "litematica.error.schematic_load.unsupported_type", this.gui.inputFileName);

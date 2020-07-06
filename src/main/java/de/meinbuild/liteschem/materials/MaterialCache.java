@@ -147,7 +147,6 @@ public class MaterialCache
         Block block = state.getBlock();
 
         if (block == Blocks.PISTON_HEAD ||
-            block == Blocks.PISTON_HEAD ||
             block == Blocks.NETHER_PORTAL ||
             block == Blocks.END_PORTAL ||
             block == Blocks.END_GATEWAY)

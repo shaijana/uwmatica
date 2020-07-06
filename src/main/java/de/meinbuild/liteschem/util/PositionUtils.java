@@ -26,9 +26,9 @@ import de.meinbuild.liteschem.data.DataManager;
 import de.meinbuild.liteschem.schematic.placement.SchematicPlacement;
 import de.meinbuild.liteschem.schematic.placement.SubRegionPlacement;
 import de.meinbuild.liteschem.schematic.placement.SubRegionPlacement.RequiredEnabled;
-import de.meinbuild.liteschem.selection.AreaSelection;
+//import de.meinbuild.liteschem.selection.AreaSelection;
 import de.meinbuild.liteschem.selection.Box;
-import de.meinbuild.liteschem.selection.SelectionManager;
+//import de.meinbuild.liteschem.selection.SelectionManager;
 import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.util.InfoUtils;
 import fi.dy.masa.malilib.util.IntBoundingBox;
@@ -196,7 +196,7 @@ public class PositionUtils
         return new BlockPos(x, y, z);
     }
 
-    public static List<Box> getValidBoxes(AreaSelection area)
+/*    public static List<Box> getValidBoxes(AreaSelection area)
     {
         List<Box> boxes = new ArrayList<>();
         Collection<Box> originalBoxes = area.getAllSubRegionBoxes();
@@ -210,17 +210,17 @@ public class PositionUtils
         }
 
         return boxes;
-    }
+    }*/
 
     public static boolean isBoxValid(Box box)
     {
         return box.getPos1() != null && box.getPos2() != null;
     }
 
-    public static BlockPos getEnclosingAreaSize(AreaSelection area)
+/*    public static BlockPos getEnclosingAreaSize(AreaSelection area)
     {
         return getEnclosingAreaSize(area.getAllSubRegionBoxes());
-    }
+    }*/
 
     public static BlockPos getEnclosingAreaSize(Collection<Box> boxes)
     {
@@ -528,7 +528,7 @@ public class PositionUtils
         return Pair.of(v1, v2);
     }
 
-    public static void growOrShrinkCurrentSelection(boolean grow)
+/*    public static void growOrShrinkCurrentSelection(boolean grow)
     {
         SelectionManager sm = DataManager.getSelectionManager();
         AreaSelection area = sm.getCurrentSelection();
@@ -625,7 +625,7 @@ public class PositionUtils
             area.setSelectedSubRegionCornerPos(boxNew.getPos1(), Corner.CORNER_1);
             area.setSelectedSubRegionCornerPos(boxNew.getPos2(), Corner.CORNER_2);
         }
-    }
+    }*/
 
     /**
      * Mirrors and then rotates the given position around the origin

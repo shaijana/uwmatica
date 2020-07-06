@@ -151,7 +151,7 @@ public class ChunkRenderTaskSchematic implements Comparable<ChunkRenderTaskSchem
         PENDING,
         COMPILING,
         UPLOADING,
-        DONE;
+        DONE,
     }
 
     public static enum Type

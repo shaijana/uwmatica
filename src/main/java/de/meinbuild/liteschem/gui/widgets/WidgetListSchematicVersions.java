@@ -5,9 +5,9 @@ import java.util.List;
 import com.google.common.collect.ImmutableList;
 import de.meinbuild.liteschem.gui.Icons;
 import de.meinbuild.liteschem.render.infohud.ToolHud;
-import de.meinbuild.liteschem.schematic.projects.SchematicProject;
+//import de.meinbuild.liteschem.schematic.projects.SchematicProject;
 import de.meinbuild.liteschem.schematic.projects.SchematicVersion;
-import de.meinbuild.liteschem.gui.GuiSchematicProjectManager;
+//import de.meinbuild.liteschem.gui.GuiSchematicProjectManager;
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.LeftRight;
 import fi.dy.masa.malilib.gui.widgets.WidgetListBase;
@@ -17,12 +17,14 @@ import fi.dy.masa.malilib.util.StringUtils;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.BlockPos;
 
+/*
 public class WidgetListSchematicVersions extends WidgetListBase<SchematicVersion, WidgetSchematicVersion>
 {
-    private final SchematicProject project;
+//    private final SchematicProject project;
     protected final int infoWidth;
 
-    public WidgetListSchematicVersions(int x, int y, int width, int height, SchematicProject project, GuiSchematicProjectManager parent)
+*/
+/*    public WidgetListSchematicVersions(int x, int y, int width, int height, SchematicProject project, GuiSchematicProjectManager parent)
     {
         super(x, y, width, height, parent);
 
@@ -31,7 +33,8 @@ public class WidgetListSchematicVersions extends WidgetListBase<SchematicVersion
         this.infoWidth = 180;
         this.widgetSearchBar = new WidgetSearchBar(x + 2, y + 4, width - 14, 14, 0, Icons.FILE_ICON_SEARCH, LeftRight.LEFT);
         this.browserEntriesOffsetY = this.widgetSearchBar.getHeight() + 3;
-    }
+    }*//*
+
 
     @Override
     public void drawContents(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks)
@@ -119,3 +122,4 @@ public class WidgetListSchematicVersions extends WidgetListBase<SchematicVersion
                 isOdd, entry, listIndex, this.project);
     }
 }
+*/

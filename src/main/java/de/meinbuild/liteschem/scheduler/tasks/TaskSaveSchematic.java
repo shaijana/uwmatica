@@ -1,6 +1,6 @@
 package de.meinbuild.liteschem.scheduler.tasks;
 
-import java.io.File;
+/*import java.io.File;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -10,7 +10,7 @@ import com.google.common.collect.ImmutableMap;
 import de.meinbuild.liteschem.schematic.LitematicaSchematic;
 import de.meinbuild.liteschem.data.SchematicHolder;
 import de.meinbuild.liteschem.render.infohud.InfoHud;
-import de.meinbuild.liteschem.selection.AreaSelection;
+//import de.meinbuild.liteschem.selection.AreaSelection;
 import de.meinbuild.liteschem.selection.Box;
 import de.meinbuild.liteschem.util.PositionUtils;
 import fi.dy.masa.malilib.gui.Message.MessageType;
@@ -30,12 +30,12 @@ public class TaskSaveSchematic extends TaskProcessChunkBase
     private final boolean takeEntities;
     private final boolean overrideFile;
 
-    public TaskSaveSchematic(LitematicaSchematic schematic, AreaSelection area, boolean takeEntities)
+*//*    public TaskSaveSchematic(LitematicaSchematic schematic, AreaSelection area, boolean takeEntities)
     {
         this(null, null, schematic, area, takeEntities, false);
-    }
+    }*//*
 
-    public TaskSaveSchematic(@Nullable File dir, @Nullable String fileName, LitematicaSchematic schematic, AreaSelection area, boolean takeEntities, boolean overrideFile)
+*//*    public TaskSaveSchematic(@Nullable File dir, @Nullable String fileName, LitematicaSchematic schematic, AreaSelection area, boolean takeEntities, boolean overrideFile)
     {
         super("litematica.gui.label.task_name.save_schematic");
 
@@ -49,7 +49,7 @@ public class TaskSaveSchematic extends TaskProcessChunkBase
 
         this.addBoxesPerChunks(area.getAllSubRegionBoxes());
         this.updateInfoHudLinesMissingChunks(this.requiredChunks);
-    }
+    }*//*
 
     @Override
     protected boolean canProcessChunk(ChunkPos pos)
@@ -116,4 +116,4 @@ public class TaskSaveSchematic extends TaskProcessChunkBase
 
         this.notifyListener();
     }
-}
+}*/

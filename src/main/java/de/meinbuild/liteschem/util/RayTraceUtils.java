@@ -29,7 +29,7 @@ import net.minecraft.world.World;
 import de.meinbuild.liteschem.data.DataManager;
 import de.meinbuild.liteschem.schematic.placement.SchematicPlacement;
 import de.meinbuild.liteschem.schematic.placement.SubRegionPlacement.RequiredEnabled;
-import de.meinbuild.liteschem.selection.AreaSelection;
+//import de.meinbuild.liteschem.selection.AreaSelection;
 import de.meinbuild.liteschem.selection.Box;
 import de.meinbuild.liteschem.util.RayTraceUtils.RayTraceWrapper.HitType;
 import fi.dy.masa.malilib.util.LayerRange;
@@ -78,14 +78,14 @@ public class RayTraceUtils
         HitResult result = getRayTraceFromEntity(world, entity, false, range);
         double closestVanilla = result.getType() != HitResult.Type.MISS ? result.getPos().distanceTo(eyesPos) : -1D;
 
-        AreaSelection area = DataManager.getSelectionManager().getCurrentSelection();
+//        AreaSelection area = DataManager.getSelectionManager().getCurrentSelection();
         RayTraceWrapper wrapper = null;
 
         clearTraceVars();
 
-        if (DataManager.getToolMode().getUsesSchematic() == false && area != null)
+/*        if (DataManager.getToolMode().getUsesSchematic() == false && area != null)
         {
-            for (Box box : area.getAllSubRegionBoxes())
+*//*            for (Box box : area.getAllSubRegionBoxes())
             {
                 boolean hitCorner = false;
                 hitCorner |= traceToSelectionBoxCorner(box, PositionUtils.Corner.CORNER_1, eyesPos, lookEndPos);
@@ -95,7 +95,7 @@ public class RayTraceUtils
                 {
                     traceToSelectionBoxBody(box, eyesPos, lookEndPos);
                 }
-            }
+            }*//*
 
             BlockPos origin = area.getExplicitOrigin();
 
@@ -103,7 +103,7 @@ public class RayTraceUtils
             {
                 traceToOrigin(origin, eyesPos, lookEndPos, HitType.SELECTION_ORIGIN, null);
             }
-        }
+        }*/
 
         if (DataManager.getToolMode().getUsesSchematic())
         {

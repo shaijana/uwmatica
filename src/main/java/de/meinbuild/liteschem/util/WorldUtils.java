@@ -55,7 +55,7 @@ import net.minecraft.world.chunk.ChunkStatus;
 import de.meinbuild.liteschem.data.DataManager;
 import de.meinbuild.liteschem.schematic.placement.SchematicPlacement;
 import de.meinbuild.liteschem.schematic.placement.SchematicPlacementManager;
-import de.meinbuild.liteschem.selection.AreaSelection;
+//import de.meinbuild.liteschem.selection.AreaSelection;
 import de.meinbuild.liteschem.selection.Box;
 import de.meinbuild.liteschem.tool.ToolMode;
 import de.meinbuild.liteschem.util.PositionUtils.Corner;
@@ -86,14 +86,14 @@ public class WorldUtils
         preventOnBlockAdded = prevent;
     }
 
-    public static boolean convertSchematicaSchematicToLitematicaSchematic(
+/*    public static boolean convertSchematicaSchematicToLitematicaSchematic(
             File inputDir, String inputFileName, File outputDir, String outputFileName, boolean ignoreEntities, boolean override, IStringConsumer feedback)
     {
         LitematicaSchematic litematicaSchematic = convertSchematicaSchematicToLitematicaSchematic(inputDir, inputFileName, ignoreEntities, feedback);
         return litematicaSchematic != null && litematicaSchematic.writeToFile(outputDir, outputFileName, override);
-    }
+    }*/
 
-    @Nullable
+    /*@Nullable
     public static LitematicaSchematic convertSchematicaSchematicToLitematicaSchematic(File inputDir, String inputFileName,
             boolean ignoreEntities, IStringConsumer feedback)
     {
@@ -113,36 +113,36 @@ public class WorldUtils
         schematic.placeSchematicDirectlyToChunks(world, BlockPos.ORIGIN, placementSettings);
 
         String subRegionName = FileUtils.getNameWithoutExtension(inputFileName) + " (Converted Schematic)";
-        AreaSelection area = new AreaSelection();
-        area.setName(subRegionName);
-        subRegionName = area.createNewSubRegionBox(BlockPos.ORIGIN, subRegionName);
-        area.setSelectedSubRegionBox(subRegionName);
-        Box box = area.getSelectedSubRegionBox();
-        area.setSubRegionCornerPos(box, Corner.CORNER_1, BlockPos.ORIGIN);
-        area.setSubRegionCornerPos(box, Corner.CORNER_2, (new BlockPos(schematic.getSize())).add(-1, -1, -1));
+//        AreaSelection area = new AreaSelection();
+//        area.setName(subRegionName);
+//        subRegionName = area.createNewSubRegionBox(BlockPos.ORIGIN, subRegionName);
+//        area.setSelectedSubRegionBox(subRegionName);
+//        Box box = area.getSelectedSubRegionBox();
+//        area.setSubRegionCornerPos(box, Corner.CORNER_1, BlockPos.ORIGIN);
+//        area.setSubRegionCornerPos(box, Corner.CORNER_2, (new BlockPos(schematic.getSize())).add(-1, -1, -1));
 
-        LitematicaSchematic litematicaSchematic = LitematicaSchematic.createFromWorld(world, area, false, "?", feedback);
+//        LitematicaSchematic litematicaSchematic = LitematicaSchematic.createFromWorld(world, area, false, "?", feedback);
 
-        if (litematicaSchematic != null && ignoreEntities == false)
+*//*        if (litematicaSchematic != null && ignoreEntities == false)
         {
             litematicaSchematic.takeEntityDataFromSchematicaSchematic(schematic, subRegionName);
         }
         else
         {
             feedback.setString("litematica.error.schematic_conversion.schematic_to_litematica.failed_to_create_schematic");
-        }
+        }*//*
 
         return litematicaSchematic;
-    }
+    }*/
 
-    public static boolean convertStructureToLitematicaSchematic(File structureDir, String structureFileName,
+/*    public static boolean convertStructureToLitematicaSchematic(File structureDir, String structureFileName,
             File outputDir, String outputFileName, boolean ignoreEntities, boolean override, IStringConsumer feedback)
     {
         LitematicaSchematic litematicaSchematic = convertStructureToLitematicaSchematic(structureDir, structureFileName, ignoreEntities, feedback);
         return litematicaSchematic != null && litematicaSchematic.writeToFile(outputDir, outputFileName, override);
-    }
+    }*/
 
-    @Nullable
+/*    @Nullable
     public static LitematicaSchematic convertStructureToLitematicaSchematic(File structureDir, String structureFileName,
             boolean ignoreEntities, IStringConsumer feedback)
     {
@@ -164,15 +164,15 @@ public class WorldUtils
             template.place(world, BlockPos.ORIGIN, BlockPos.ORIGIN, placementSettings, new Random(), 0x12);
 
             String subRegionName = FileUtils.getNameWithoutExtension(structureFileName) + " (Converted Structure)";
-            AreaSelection area = new AreaSelection();
-            area.setName(subRegionName);
-            subRegionName = area.createNewSubRegionBox(BlockPos.ORIGIN, subRegionName);
-            area.setSelectedSubRegionBox(subRegionName);
-            Box box = area.getSelectedSubRegionBox();
-            area.setSubRegionCornerPos(box, Corner.CORNER_1, BlockPos.ORIGIN);
-            area.setSubRegionCornerPos(box, Corner.CORNER_2, template.getSize().add(-1, -1, -1));
+//            AreaSelection area = new AreaSelection();
+//            area.setName(subRegionName);
+//            subRegionName = area.createNewSubRegionBox(BlockPos.ORIGIN, subRegionName);
+//            area.setSelectedSubRegionBox(subRegionName);
+//            Box box = area.getSelectedSubRegionBox();
+//            area.setSubRegionCornerPos(box, Corner.CORNER_1, BlockPos.ORIGIN);
+//            area.setSubRegionCornerPos(box, Corner.CORNER_2, template.getSize().add(-1, -1, -1));
 
-            LitematicaSchematic litematicaSchematic = LitematicaSchematic.createFromWorld(world, area, ignoreEntities, template.getAuthor(), feedback);
+//            LitematicaSchematic litematicaSchematic = LitematicaSchematic.createFromWorld(world, area, ignoreEntities, template.getAuthor(), feedback);
 
             if (litematicaSchematic != null)
             {
@@ -190,7 +190,7 @@ public class WorldUtils
         }
 
         return null;
-    }
+    }*/
 
     public static boolean convertLitematicaSchematicToSchematicaSchematic(
             File inputDir, String inputFileName, File outputDir, String outputFileName, boolean ignoreEntities, boolean override, IStringConsumer feedback)

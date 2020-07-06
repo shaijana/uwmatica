@@ -13,7 +13,7 @@ public class ClientTickHandler implements IClientTickHandler
     {
         if (mc.world != null && mc.player != null)
         {
-            InputHandler.onTick(mc);
+//            InputHandler.onTick(mc);
             WorldUtils.easyPlaceOnUseTick(mc);
 
             DataManager.getSchematicPlacementManager().processQueuedChunks();

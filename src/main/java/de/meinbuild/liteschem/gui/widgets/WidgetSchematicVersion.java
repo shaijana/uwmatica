@@ -3,26 +3,29 @@ package de.meinbuild.liteschem.gui.widgets;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.meinbuild.liteschem.schematic.projects.SchematicProject;
+//import de.meinbuild.liteschem.schematic.projects.SchematicProject;
 import de.meinbuild.liteschem.schematic.projects.SchematicVersion;
 import fi.dy.masa.malilib.gui.widgets.WidgetListEntryBase;
 import fi.dy.masa.malilib.render.RenderUtils;
 import fi.dy.masa.malilib.util.StringUtils;
 import net.minecraft.client.util.math.MatrixStack;
 
+/*
 public class WidgetSchematicVersion extends WidgetListEntryBase<SchematicVersion>
 {
-    private final SchematicProject project;
+//    private final SchematicProject project;
     private final boolean isOdd;
 
-    public WidgetSchematicVersion(int x, int y, int width, int height, boolean isOdd,
+*/
+/*    public WidgetSchematicVersion(int x, int y, int width, int height, boolean isOdd,
             SchematicVersion entry, int listIndex, SchematicProject project)
     {
         super(x, y, width, height, entry, listIndex);
 
         this.project = project;
         this.isOdd = isOdd;
-    }
+    }*//*
+
 
     @Override
     public void render(int mouseX, int mouseY, boolean selected, MatrixStack matrixStack)
@@ -59,7 +62,8 @@ public class WidgetSchematicVersion extends WidgetListEntryBase<SchematicVersion
     public void postRenderHovered(int mouseX, int mouseY, boolean selected, MatrixStack matrixStack)
     {
         List<String> text = new ArrayList<>();
-        /*
+        */
+/*
         text.add(StringUtils.translate("litematica.gui.label.schematic_placement.schematic_name", this.placement.getSchematic().getMetadata().getName()));
         text.add(StringUtils.translate("litematica.gui.label.schematic_placement.schematic_file", fileName));
         BlockPos o = this.placement.getOrigin();
@@ -70,8 +74,10 @@ public class WidgetSchematicVersion extends WidgetListEntryBase<SchematicVersion
         Vec3i size = this.placement.getSchematic().getTotalSize();
         String strSize = String.format("%d x %d x %d", size.getX(), size.getY(), size.getZ());
         text.add(StringUtils.translate("litematica.gui.label.schematic_placement.enclosing_size", strSize));
-        */
+        *//*
+
 
         RenderUtils.drawHoverText(mouseX, mouseY, text, matrixStack);
     }
 }
+*/

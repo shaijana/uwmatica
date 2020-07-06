@@ -150,16 +150,16 @@ public class GuiSchematicLoad extends GuiSchematicBrowserBase
             {
                 schematic = LitematicaSchematic.createFromFile(entry.getDirectory(), entry.getName());
             }
-            else if (fileType == FileType.SCHEMATICA_SCHEMATIC)
+/*            else if (fileType == FileType.SCHEMATICA_SCHEMATIC)
             {
                 schematic = WorldUtils.convertSchematicaSchematicToLitematicaSchematic(entry.getDirectory(), entry.getName(), false, this.gui);
                 warnType = true;
-            }
-            else if (fileType == FileType.VANILLA_STRUCTURE)
+            }*/
+/*            else if (fileType == FileType.VANILLA_STRUCTURE)
             {
                 schematic = WorldUtils.convertStructureToLitematicaSchematic(entry.getDirectory(), entry.getName(), false, this.gui);
                 warnType = true;
-            }
+            }*/
             else
             {
                 this.gui.addMessage(MessageType.ERROR, "litematica.error.schematic_load.unsupported_type", file.getName());

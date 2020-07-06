@@ -75,12 +75,12 @@ public class GuiMainMenu extends GuiBase
     {
         ButtonGeneric button = new ButtonGeneric(x, y, width, 20, type.getDisplayName(), type.getIcon());
 
-        if (type == ButtonListenerChangeMenu.ButtonType.AREA_SELECTION_BROWSER &&
+/*        if (type == ButtonListenerChangeMenu.ButtonType.AREA_SELECTION_BROWSER &&
             DataManager.getSchematicProjectsManager().hasProjectOpen())
         {
             button.setEnabled(false);
             button.setHoverStrings("litematica.gui.button.hover.schematic_projects.area_browser_disabled_currently_in_projects_mode");
-        }
+        }*/
 
         this.addButton(button, new ButtonListenerChangeMenu(type, this));
     }
@@ -123,7 +123,7 @@ public class GuiMainMenu extends GuiBase
             switch (this.type)
             {
                 case AREA_EDITOR:
-                    gui = DataManager.getSelectionManager().getEditGui();
+//                    gui = DataManager.getSelectionManager().getEditGui();
                     break;
 /*                case AREA_SELECTION_BROWSER:
                     gui = new GuiAreaSelectionManager();
@@ -150,7 +150,7 @@ public class GuiMainMenu extends GuiBase
                     gui = new GuiTaskManager();
                     break;
                 case SCHEMATIC_PROJECTS_MANAGER:
-                    DataManager.getSchematicProjectsManager().openSchematicProjectsGui();
+//                    DataManager.getSchematicProjectsManager().openSchematicProjectsGui();
                     return;
             }
 
@@ -240,7 +240,7 @@ public class GuiMainMenu extends GuiBase
         @Override
         public void actionPerformedWithButton(ButtonBase button, int mouseButton)
         {
-            DataManager.getSelectionManager().switchSelectionMode();
+//            DataManager.getSelectionManager().switchSelectionMode();
             this.gui.initGui();
         }
     }

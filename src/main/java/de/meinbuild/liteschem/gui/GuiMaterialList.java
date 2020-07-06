@@ -11,7 +11,7 @@ import de.meinbuild.liteschem.render.infohud.InfoHud;
 import de.meinbuild.liteschem.util.BlockInfoListType;
 import de.meinbuild.liteschem.Reference;
 import de.meinbuild.liteschem.materials.MaterialCache;
-import de.meinbuild.liteschem.materials.MaterialListAreaAnalyzer;
+//import de.meinbuild.liteschem.materials.MaterialListAreaAnalyzer;
 import de.meinbuild.liteschem.materials.MaterialListBase;
 import de.meinbuild.liteschem.materials.MaterialListEntry;
 import de.meinbuild.liteschem.materials.MaterialListHudRenderer;
@@ -128,7 +128,7 @@ public class GuiMaterialList extends GuiListBase<MaterialListEntry, WidgetMateri
         long missing = this.materialList.getCountMissing() - this.materialList.getCountMismatched();
         long mismatch = this.materialList.getCountMismatched();
 
-        if (total != 0 && (this.materialList instanceof MaterialListAreaAnalyzer) == false)
+        if (total != 0 /*&& (this.materialList instanceof MaterialListAreaAnalyzer) == false*/)
         {
             double pctDone = ((double) (total - (missing + mismatch)) / (double) total) * 100;
             double pctMissing = ((double) missing / (double) total) * 100;

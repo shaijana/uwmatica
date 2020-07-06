@@ -2,50 +2,7 @@
   "selections": {
     "mode": "NORMAL"
   },
-  "placements": {
-    "placements": [
-      {
-        "schematic": "D:\\Users\\fabia\\Documents\\Minecraft\\Eigene Plugins\\Fabric\\Liteschem\\run\\schematics\\Gepardenbaby-Gesamt.litematic",
-        "name": "Gepardenbaby-Gesamt",
-        "origin": [
-          331,
-          124,
-          24
-        ],
-        "rotation": "NONE",
-        "mirror": "NONE",
-        "ignore_entities": false,
-        "enabled": true,
-        "enable_render": true,
-        "render_enclosing_box": false,
-        "locked": false,
-        "locked_coords": 0,
-        "bb_color": 8404597,
-        "verifier_type": "all",
-        "placements": [
-          {
-            "name": "Gepardenbaby-Gesamt",
-            "placement": {
-              "pos": [
-                0,
-                0,
-                255
-              ],
-              "name": "Gepardenbaby-Gesamt",
-              "rotation": "NONE",
-              "mirror": "NONE",
-              "locked_coords": 0,
-              "enabled": true,
-              "rendering_enabled": true,
-              "ignore_entities": false
-            }
-          }
-        ]
-      }
-    ],
-    "selected": 0,
-    "origin_selected": true
-  },
+  "placements": {},
   "schematic_projects_manager": {},
   "operation_mode": "SCHEMATIC_PLACEMENT",
   "render_range": {
