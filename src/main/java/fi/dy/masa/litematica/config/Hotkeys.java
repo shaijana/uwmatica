@@ -28,7 +28,7 @@ public class Hotkeys
     public static final ConfigHotkey OPEN_GUI_LOADED_SCHEMATICS         = new ConfigHotkey("openGuiLoadedSchematics",           "",     "Open the Loaded Schematic GUI");
     public static final ConfigHotkey OPEN_GUI_MAIN_MENU                 = new ConfigHotkey("openGuiMainMenu",                   "M",    KeybindSettings.RELEASE_EXCLUSIVE, "Open the Litematica main menu");
     public static final ConfigHotkey OPEN_GUI_MATERIAL_LIST             = new ConfigHotkey("openGuiMaterialList",               "M,L",  "Open the Material List GUI for the currently\nselected schematic placement");
-    public static final ConfigHotkey OPEN_GUI_PLACEMENT_SETTINGS        = new ConfigHotkey("openGuiPlacementSettings",          "KP_SUBTRACT", "Open the Placement Settings GUI for the currently\nselected placement or sub-region");
+//SH    public static final ConfigHotkey OPEN_GUI_PLACEMENT_SETTINGS        = new ConfigHotkey("openGuiPlacementSettings",          "KP_SUBTRACT", "Open the Placement Settings GUI for the currently\nselected placement or sub-region");
     public static final ConfigHotkey OPEN_GUI_SCHEMATIC_PLACEMENTS      = new ConfigHotkey("openGuiSchematicPlacements",        "M,P",  "Open the Schematic Placements GUI");
 //SH    public static final ConfigHotkey OPEN_GUI_SCHEMATIC_PROJECTS        = new ConfigHotkey("openGuiSchematicProjects",          "",     "Open the Schematic Projects GUI");
     public static final ConfigHotkey OPEN_GUI_SCHEMATIC_VERIFIER        = new ConfigHotkey("openGuiSchematicVerifier",          "M,V",  "Open the Schematic Verifier GUI for the currently\nselected schematic placement");
@@ -101,7 +101,7 @@ public class Hotkeys
             OPEN_GUI_LOADED_SCHEMATICS,
             OPEN_GUI_MAIN_MENU,
             OPEN_GUI_MATERIAL_LIST,
-            OPEN_GUI_PLACEMENT_SETTINGS,
+//SH            OPEN_GUI_PLACEMENT_SETTINGS,
             OPEN_GUI_SCHEMATIC_PLACEMENTS,
 //SH            OPEN_GUI_SCHEMATIC_PROJECTS,
             OPEN_GUI_SCHEMATIC_VERIFIER,
