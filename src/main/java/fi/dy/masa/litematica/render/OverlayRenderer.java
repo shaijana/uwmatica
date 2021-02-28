@@ -127,7 +127,7 @@ public class OverlayRenderer
 //SH        SelectionManager sm = DataManager.getSelectionManager();
 //SH        AreaSelection currentSelection = sm.getCurrentSelection();
 //SH        boolean renderAreas = currentSelection != null && Configs.Visuals.ENABLE_AREA_SELECTION_RENDERING.getBooleanValue();
-        boolean renderPlacements = this.placements.isEmpty() == false && Configs.Visuals.ENABLE_PLACEMENT_BOXES_RENDERING.getBooleanValue();
+//SH        boolean renderPlacements = this.placements.isEmpty() == false && Configs.Visuals.ENABLE_PLACEMENT_BOXES_RENDERING.getBooleanValue();
 //SH        boolean isProjectMode = DataManager.getSchematicProjectsManager().hasProjectOpen();
         float expand = 0.001f;
         float lineWidthBlockBox = 2f;
@@ -283,21 +283,21 @@ public class OverlayRenderer
         {
             color1 = this.colorBoxPlacementSelected;
             color2 = color1;
-            float alpha = (float) Configs.Visuals.PLACEMENT_BOX_SIDE_ALPHA.getDoubleValue();
-            sideColor = new Color4f(color1.r, color1.g, color1.b, alpha);
+//SH            float alpha = (float) Configs.Visuals.PLACEMENT_BOX_SIDE_ALPHA.getDoubleValue();
+//SH            sideColor = new Color4f(color1.r, color1.g, color1.b, alpha);
         }
         else if (boxType == BoxType.PLACEMENT_UNSELECTED)
         {
             color1 = placement.getBoxesBBColor();
             color2 = color1;
-            float alpha = (float) Configs.Visuals.PLACEMENT_BOX_SIDE_ALPHA.getDoubleValue();
-            sideColor = new Color4f(color1.r, color1.g, color1.b, alpha);
+//SH            float alpha = (float) Configs.Visuals.PLACEMENT_BOX_SIDE_ALPHA.getDoubleValue();
+//SH            sideColor = new Color4f(color1.r, color1.g, color1.b, alpha);
         }
         else
         {
             color1 = box.getSelectedCorner() == Corner.CORNER_1 ? this.colorSelectedCorner : this.colorPos1;
             color2 = box.getSelectedCorner() == Corner.CORNER_2 ? this.colorSelectedCorner : this.colorPos2;
-            sideColor = Color4f.fromColor(Configs.Colors.AREA_SELECTION_BOX_SIDE_COLOR.getIntegerValue());
+//SH            sideColor = Color4f.fromColor(Configs.Colors.AREA_SELECTION_BOX_SIDE_COLOR.getIntegerValue());
         }
 
         if (pos1 != null && pos2 != null)
@@ -306,14 +306,14 @@ public class OverlayRenderer
             {
                 RenderUtils.renderAreaOutlineNoCorners(pos1, pos2, lineWidthArea, colorX, colorY, colorZ, this.mc);
 
-                if (((boxType == BoxType.AREA_SELECTED || boxType == BoxType.AREA_UNSELECTED) &&
+/*SH                if (((boxType == BoxType.AREA_SELECTED || boxType == BoxType.AREA_UNSELECTED) &&
                       Configs.Visuals.RENDER_AREA_SELECTION_BOX_SIDES.getBooleanValue())
                     ||
                      ((boxType == BoxType.PLACEMENT_SELECTED || boxType == BoxType.PLACEMENT_UNSELECTED) &&
                        Configs.Visuals.RENDER_PLACEMENT_BOX_SIDES.getBooleanValue()))
                 {
                     RenderUtils.renderAreaSides(pos1, pos2, sideColor, matrices, this.mc);
-                }
+                }*/
 
                 if (box.getSelectedCorner() == Corner.CORNER_1)
                 {
@@ -655,33 +655,33 @@ public class OverlayRenderer
         Color4f color = null;
         boolean direction = false;
 
-        if (Hotkeys.SCHEMATIC_REBUILD_BREAK_ALL.getKeybind().isKeybindHeld())
+/*SH        if (Hotkeys.SCHEMATIC_REBUILD_BREAK_ALL.getKeybind().isKeybindHeld())
         {
             traceWrapper = RayTraceUtils.getGenericTrace(this.mc.world, this.mc.player, 20, true);
             color = Configs.Colors.REBUILD_BREAK_OVERLAY_COLOR.getColor();
-        }
-        else if (Hotkeys.SCHEMATIC_REBUILD_BREAK_ALL_EXCEPT.getKeybind().isKeybindHeld())
+        }*/
+/*SH        else if (Hotkeys.SCHEMATIC_REBUILD_BREAK_ALL_EXCEPT.getKeybind().isKeybindHeld())
         {
             traceWrapper = RayTraceUtils.getGenericTrace(this.mc.world, this.mc.player, 20, true);
             color = Configs.Colors.REBUILD_BREAK_EXCEPT_OVERLAY_COLOR.getColor();
-        }
-        else if (Hotkeys.SCHEMATIC_REBUILD_BREAK_DIRECTION.getKeybind().isKeybindHeld())
+        }*/
+/*SH        else if (Hotkeys.SCHEMATIC_REBUILD_BREAK_DIRECTION.getKeybind().isKeybindHeld())
         {
             traceWrapper = RayTraceUtils.getGenericTrace(this.mc.world, this.mc.player, 20, true);
             color = Configs.Colors.REBUILD_BREAK_OVERLAY_COLOR.getColor();
             direction = true;
-        }
-        else if (Hotkeys.SCHEMATIC_REBUILD_REPLACE_ALL.getKeybind().isKeybindHeld())
+        }*/
+/*SH        else if (Hotkeys.SCHEMATIC_REBUILD_REPLACE_ALL.getKeybind().isKeybindHeld())
         {
             traceWrapper = RayTraceUtils.getGenericTrace(this.mc.world, this.mc.player, 20, true);
             color = Configs.Colors.REBUILD_REPLACE_OVERLAY_COLOR.getColor();
-        }
-        else if (Hotkeys.SCHEMATIC_REBUILD_REPLACE_DIRECTION.getKeybind().isKeybindHeld())
+        }*/
+/*SH        else if (Hotkeys.SCHEMATIC_REBUILD_REPLACE_DIRECTION.getKeybind().isKeybindHeld())
         {
             traceWrapper = RayTraceUtils.getGenericTrace(this.mc.world, this.mc.player, 20, true);
             color = Configs.Colors.REBUILD_REPLACE_OVERLAY_COLOR.getColor();
             direction = true;
-        }
+        }*/
 
         if (traceWrapper != null && traceWrapper.getHitType() == RayTraceWrapper.HitType.SCHEMATIC_BLOCK)
         {

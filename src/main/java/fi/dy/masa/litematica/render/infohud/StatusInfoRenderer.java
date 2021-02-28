@@ -60,8 +60,8 @@ public class StatusInfoRenderer implements IInfoHudRenderer
 /*SH        if (Configs.Generic.EASY_PLACE_MODE.getBooleanValue())
         {
             lines.add(StringUtils.translate("litematica.hud.misc.easy_place_mode_enabled"));
-        }
-        else if (Configs.Generic.PLACEMENT_RESTRICTION.getBooleanValue())
+        }*/
+/*SH        else if (Configs.Generic.PLACEMENT_RESTRICTION.getBooleanValue())
         {
             lines.add(StringUtils.translate("litematica.hud.misc.placement_restriction_mode_enabled"));
         }*/
@@ -87,8 +87,8 @@ public class StatusInfoRenderer implements IInfoHudRenderer
         String strSch = Configs.Visuals.ENABLE_SCHEMATIC_RENDERING.getBooleanValue() ? strOn : strOff;
         String strBlk = Configs.Visuals.ENABLE_SCHEMATIC_BLOCKS.getBooleanValue() ? strOn : strOff;
         String strOvl = Configs.Visuals.ENABLE_SCHEMATIC_OVERLAY.getBooleanValue() ? strOn : strOff;
-        String strSel = Configs.Visuals.ENABLE_AREA_SELECTION_RENDERING.getBooleanValue() ? strOn : strOff;
-        lines.add(StringUtils.translate("litematica.hud.misc.renderer_status", strAll, strSch, strBlk, strOvl, strSel));
+//SH        String strSel = Configs.Visuals.ENABLE_AREA_SELECTION_RENDERING.getBooleanValue() ? strOn : strOff;
+//SH        lines.add(StringUtils.translate("litematica.hud.misc.renderer_status", strAll, strSch, strBlk, strOvl, strSel));
 
 /*SH        if (DataManager.getSchematicProjectsManager().hasProjectOpen())
         {
@@ -114,7 +114,7 @@ public class StatusInfoRenderer implements IInfoHudRenderer
                 Configs.Visuals.ENABLE_RENDERING.getBooleanValue() == false ||
                 Configs.Visuals.ENABLE_SCHEMATIC_RENDERING.getBooleanValue() == false ||
                 Configs.Visuals.ENABLE_SCHEMATIC_BLOCKS.getBooleanValue() == false ||
-                Configs.Visuals.ENABLE_SCHEMATIC_OVERLAY.getBooleanValue() == false ||
-                Configs.Visuals.ENABLE_AREA_SELECTION_RENDERING.getBooleanValue() == false;
+                Configs.Visuals.ENABLE_SCHEMATIC_OVERLAY.getBooleanValue() == false; //SH||
+//SH                Configs.Visuals.ENABLE_AREA_SELECTION_RENDERING.getBooleanValue() == false;
     }
 }

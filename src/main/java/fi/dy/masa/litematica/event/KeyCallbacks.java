@@ -108,7 +108,7 @@ public class KeyCallbacks
         Hotkeys.TOGGLE_OVERLAY_OUTLINE_RENDERING.getKeybind().setCallback(new RenderToggle(Configs.Visuals.SCHEMATIC_OVERLAY_ENABLE_OUTLINES));
         Hotkeys.TOGGLE_OVERLAY_SIDE_RENDERING.getKeybind().setCallback(new RenderToggle(Configs.Visuals.SCHEMATIC_OVERLAY_ENABLE_SIDES));
 //SH        Hotkeys.TOGGLE_PLACEMENT_RESTRICTION.getKeybind().setCallback(new KeyCallbackToggleBooleanConfigWithMessage(Configs.Generic.PLACEMENT_RESTRICTION));
-        Hotkeys.TOGGLE_PLACEMENT_BOXES_RENDERING.getKeybind().setCallback(new KeyCallbackToggleBooleanConfigWithMessage(Configs.Visuals.ENABLE_PLACEMENT_BOXES_RENDERING));
+//SH        Hotkeys.TOGGLE_PLACEMENT_BOXES_RENDERING.getKeybind().setCallback(new KeyCallbackToggleBooleanConfigWithMessage(Configs.Visuals.ENABLE_PLACEMENT_BOXES_RENDERING));
         Hotkeys.TOGGLE_SCHEMATIC_BLOCK_RENDERING.getKeybind().setCallback(new KeyCallbackToggleBooleanConfigWithMessage(Configs.Visuals.ENABLE_SCHEMATIC_BLOCKS));
         Hotkeys.TOGGLE_TRANSLUCENT_RENDERING.getKeybind().setCallback(new RenderToggle(Configs.Visuals.RENDER_BLOCKS_AS_TRANSLUCENT));
         Hotkeys.TOGGLE_VERIFIER_OVERLAY_RENDERING.getKeybind().setCallback(new KeyCallbackToggleBooleanConfigWithMessage(Configs.InfoOverlays.VERIFIER_OVERLAY_ENABLED));
@@ -417,18 +417,18 @@ public class KeyCallbacks
                 DataManager.getRenderLayerRange().setLayerMode((LayerMode) DataManager.getRenderLayerRange().getLayerMode().cycle(false));
                 return true;
             }
-/*SH            else if (key == Hotkeys.PICK_BLOCK_FIRST.getKeybind())
+            else if (key == Hotkeys.PICK_BLOCK_FIRST.getKeybind())
             {
-                if (EntityUtils.shouldPickBlock(this.mc.player))
+/*SH                if (EntityUtils.shouldPickBlock(this.mc.player))
                 {
                     return WorldUtils.doSchematicWorldPickBlock(true, this.mc);
-                }
+                }*/
 
                 return false;
-            }*/
-/*SH            else if (key == Hotkeys.PICK_BLOCK_LAST.getKeybind())
+            }
+            else if (key == Hotkeys.PICK_BLOCK_LAST.getKeybind())
             {
-                if (EntityUtils.shouldPickBlock(this.mc.player))
+/*SH                if (EntityUtils.shouldPickBlock(this.mc.player))
                 {
                     // Only do the pick block here, if it's not bound to the use button.
                     // If it's bound to the use button, then it will be done from the input handling.
@@ -436,10 +436,10 @@ public class KeyCallbacks
                     {
                         WorldUtils.doSchematicWorldPickBlock(false, this.mc);
                     }
-                }
+                }*/
 
                 return false;
-            }*/
+            }
 /*SH            else if (key == Hotkeys.SAVE_AREA_AS_SCHEMATIC_TO_FILE.getKeybind())
             {
                 return SchematicUtils.saveSchematic(false);
@@ -469,36 +469,36 @@ public class KeyCallbacks
                 SchematicUtils.cloneSelectionArea(this.mc);
                 return true;
             }*/
-            else if (key == Hotkeys.EXECUTE_OPERATION.getKeybind() && ((hasTool && toolEnabled) /*SH|| Configs.Generic.EXECUTE_REQUIRE_TOOL.getBooleanValue() == false*/))
+/*SH            else if (key == Hotkeys.EXECUTE_OPERATION.getKeybind() && ((hasTool && toolEnabled) || Configs.Generic.EXECUTE_REQUIRE_TOOL.getBooleanValue() == false))
             {
-/*                if (DataManager.getSchematicProjectsManager().hasProjectOpen())
+*//*                if (DataManager.getSchematicProjectsManager().hasProjectOpen())
                 {
                     DataManager.getSchematicProjectsManager().pasteCurrentVersionToWorld();
                     return true;
-                }*/
+                }*//*
                 //changed from else if-SH
                 if (mode == ToolMode.PASTE_SCHEMATIC)
                 {
                     DataManager.getSchematicPlacementManager().pasteCurrentPlacementToWorld(this.mc);
                     return true;
                 }
-/*SH                else if (mode == ToolMode.FILL && mode.getPrimaryBlock() != null)
+*//*SH                else if (mode == ToolMode.FILL && mode.getPrimaryBlock() != null)
                 {
                     ToolUtils.fillSelectionVolumes(this.mc, mode.getPrimaryBlock(), null);
                     return true;
-                }*/
-/*SH                else if (mode == ToolMode.REPLACE_BLOCK && mode.getPrimaryBlock() != null && mode.getSecondaryBlock() != null)
+                }*//*
+*//*SH                else if (mode == ToolMode.REPLACE_BLOCK && mode.getPrimaryBlock() != null && mode.getSecondaryBlock() != null)
                 {
                     ToolUtils.fillSelectionVolumes(this.mc, mode.getPrimaryBlock(), mode.getSecondaryBlock());
                     return true;
-                }*/
-/*SH                else if (mode == ToolMode.DELETE)
+                }*//*
+*//*SH                else if (mode == ToolMode.DELETE)
                 {
                     boolean removeEntities = true; // TODO
                     ToolUtils.deleteSelectionVolumes(removeEntities, this.mc);
                     return true;
-                }*/
-            }
+                }*//*
+            }*/
             else if (key == Hotkeys.NUDGE_SELECTION_NEGATIVE.getKeybind() ||
                      key == Hotkeys.NUDGE_SELECTION_POSITIVE.getKeybind())
             {

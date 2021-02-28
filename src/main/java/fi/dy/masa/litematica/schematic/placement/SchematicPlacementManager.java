@@ -696,16 +696,16 @@ public class SchematicPlacementManager
                         InfoUtils.showGuiOrActionBarMessage(MessageType.INFO, "litematica.message.scheduled_task_added");
                     }
                 }
-                else
+/*SH                else
                 {
-//SH                    TaskPasteSchematicSetblock task = new TaskPasteSchematicSetblock(schematicPlacement, changedBlocksOnly);
-//SH                    TaskScheduler.getInstanceClient().scheduleTask(task, Configs.Generic.PASTE_COMMAND_INTERVAL.getIntegerValue());
+                    TaskPasteSchematicSetblock task = new TaskPasteSchematicSetblock(schematicPlacement, changedBlocksOnly);
+                    TaskScheduler.getInstanceClient().scheduleTask(task, Configs.Generic.PASTE_COMMAND_INTERVAL.getIntegerValue());
 
                     if (printMessage)
                     {
                         InfoUtils.showGuiOrActionBarMessage(MessageType.INFO, "litematica.message.scheduled_task_added");
                     }
-                }
+                }*/
             }
             else
             {
