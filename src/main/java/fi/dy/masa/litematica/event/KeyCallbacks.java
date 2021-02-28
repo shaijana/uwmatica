@@ -69,14 +69,14 @@ public class KeyCallbacks
         Hotkeys.OPEN_GUI_LOADED_SCHEMATICS.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.OPEN_GUI_MAIN_MENU.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.OPEN_GUI_MATERIAL_LIST.getKeybind().setCallback(callbackHotkeys);
-        Hotkeys.OPEN_GUI_PLACEMENT_SETTINGS.getKeybind().setCallback(callbackHotkeys);
+//SH        Hotkeys.OPEN_GUI_PLACEMENT_SETTINGS.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.OPEN_GUI_SCHEMATIC_PLACEMENTS.getKeybind().setCallback(callbackHotkeys);
 //SH        Hotkeys.OPEN_GUI_SCHEMATIC_PROJECTS.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.OPEN_GUI_SCHEMATIC_VERIFIER.getKeybind().setCallback(callbackHotkeys);
 //SH        Hotkeys.OPEN_GUI_SELECTION_MANAGER.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.OPEN_GUI_SETTINGS.getKeybind().setCallback(callbackHotkeys);
-        Hotkeys.PICK_BLOCK_FIRST.getKeybind().setCallback(callbackHotkeys);
-        Hotkeys.PICK_BLOCK_LAST.getKeybind().setCallback(callbackHotkeys);
+//SH        Hotkeys.PICK_BLOCK_FIRST.getKeybind().setCallback(callbackHotkeys);
+//SH        Hotkeys.PICK_BLOCK_LAST.getKeybind().setCallback(callbackHotkeys);
 //SH        Hotkeys.PICK_BLOCK_TOGGLE.getKeybind().setCallback(new KeyCallbackToggleBooleanConfigWithMessage(Configs.Generic.PICK_BLOCK_ENABLED));
         Hotkeys.RERENDER_SCHEMATIC.getKeybind().setCallback(callbackHotkeys);
 //SH        Hotkeys.SAVE_AREA_AS_IN_MEMORY_SCHEMATIC.getKeybind().setCallback(callbackHotkeys);
@@ -305,7 +305,7 @@ public class KeyCallbacks
 
                 return true;
             }
-            else if (key == Hotkeys.OPEN_GUI_PLACEMENT_SETTINGS.getKeybind())
+/*SH            else if (key == Hotkeys.OPEN_GUI_PLACEMENT_SETTINGS.getKeybind())
             {
                 SchematicPlacement schematicPlacement = DataManager.getSchematicPlacementManager().getSelectedSchematicPlacement();
 
@@ -328,7 +328,7 @@ public class KeyCallbacks
                 }
 
                 return true;
-            }
+            }*/
             else if (key == Hotkeys.OPEN_GUI_SCHEMATIC_VERIFIER.getKeybind())
             {
                 SchematicPlacement schematicPlacement = DataManager.getSchematicPlacementManager().getSelectedSchematicPlacement();
@@ -417,18 +417,18 @@ public class KeyCallbacks
                 DataManager.getRenderLayerRange().setLayerMode((LayerMode) DataManager.getRenderLayerRange().getLayerMode().cycle(false));
                 return true;
             }
-            else if (key == Hotkeys.PICK_BLOCK_FIRST.getKeybind())
+/*SH            else if (key == Hotkeys.PICK_BLOCK_FIRST.getKeybind())
             {
-/*SH                if (EntityUtils.shouldPickBlock(this.mc.player))
+*//*SH                if (EntityUtils.shouldPickBlock(this.mc.player))
                 {
                     return WorldUtils.doSchematicWorldPickBlock(true, this.mc);
-                }*/
+                }*//*
 
                 return false;
-            }
-            else if (key == Hotkeys.PICK_BLOCK_LAST.getKeybind())
+            }*/
+/*SH            else if (key == Hotkeys.PICK_BLOCK_LAST.getKeybind())
             {
-/*SH                if (EntityUtils.shouldPickBlock(this.mc.player))
+*//*SH                if (EntityUtils.shouldPickBlock(this.mc.player))
                 {
                     // Only do the pick block here, if it's not bound to the use button.
                     // If it's bound to the use button, then it will be done from the input handling.
@@ -436,10 +436,10 @@ public class KeyCallbacks
                     {
                         WorldUtils.doSchematicWorldPickBlock(false, this.mc);
                     }
-                }*/
+                }*//*
 
                 return false;
-            }
+            }*/
 /*SH            else if (key == Hotkeys.SAVE_AREA_AS_SCHEMATIC_TO_FILE.getKeybind())
             {
                 return SchematicUtils.saveSchematic(false);
