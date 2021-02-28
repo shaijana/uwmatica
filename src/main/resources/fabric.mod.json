@@ -1,6 +1,6 @@
 {
     "schemaVersion": 1,
-    "id": "UWmatica",
+    "id": "uwmatica",
     "name": "UWmatica",
     "version": "${mod_version}",
 
@@ -9,7 +9,7 @@
         "masa"
     ],
     "contact": {
-        "homepage": "https://unlimitedworld.de/members/shaijana.7644/",
+        "homepage": "https://unlimitedworld.de/members/shaijana.7644/"
     },
 
     "license": "LGPLv3",
@@ -17,7 +17,7 @@
     "environment": "client",
     "entrypoints": {
         "main": [
-            "fi.dy.masa.litematica.uwmatica"
+            "fi.dy.masa.litematica.Litematica"
         ],
         "modmenu": [
             "fi.dy.masa.litematica.compat.modmenu.ModMenuImpl"
