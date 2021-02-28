@@ -165,10 +165,10 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
             return this.growOrShrinkSelection(amount, mode);
         }*/
 
-        if (Hotkeys.SELECTION_NUDGE_MODIFIER.getKeybind().isKeybindHeld())
+/*SH        if (Hotkeys.SELECTION_NUDGE_MODIFIER.getKeybind().isKeybindHeld())
         {
             return nudgeSelection(amount, mode, player);
-        }
+        }*/
 
         if (Hotkeys.OPERATION_MODE_CHANGE_MODIFIER.getKeybind().isKeybindHeld())
         {
@@ -246,19 +246,19 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
     {
         if (mc.player != null && DataManager.getToolMode() == ToolMode.REBUILD && KeybindMulti.getTriggeredCount() == 0)
         {
-            if (Hotkeys.SCHEMATIC_REBUILD_BREAK_DIRECTION.getKeybind().isKeybindHeld())
+/*SH            if (Hotkeys.SCHEMATIC_REBUILD_BREAK_DIRECTION.getKeybind().isKeybindHeld())
             {
                 return SchematicUtils.breakSchematicBlocks(mc);
-            }
-            else if (Hotkeys.SCHEMATIC_REBUILD_BREAK_ALL_EXCEPT.getKeybind().isKeybindHeld())
+            }*/
+/*SH            else if (Hotkeys.SCHEMATIC_REBUILD_BREAK_ALL_EXCEPT.getKeybind().isKeybindHeld())
             {
                 return SchematicUtils.breakAllSchematicBlocksExceptTargeted(mc);
-            }
-            else if (Hotkeys.SCHEMATIC_REBUILD_BREAK_ALL.getKeybind().isKeybindHeld())
+            }*/
+/*SH            else if (Hotkeys.SCHEMATIC_REBUILD_BREAK_ALL.getKeybind().isKeybindHeld())
             {
                 return SchematicUtils.breakAllIdenticalSchematicBlocks(mc);
-            }
-            else
+            }*/
+//SH            else
             {
                 return SchematicUtils.breakSchematicBlock(mc);
             }
@@ -273,23 +273,23 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
         {
             if (DataManager.getToolMode() == ToolMode.REBUILD && KeybindMulti.getTriggeredCount() == 0)
             {
-                if (Hotkeys.SCHEMATIC_REBUILD_REPLACE_DIRECTION.getKeybind().isKeybindHeld())
+/*SH                if (Hotkeys.SCHEMATIC_REBUILD_REPLACE_DIRECTION.getKeybind().isKeybindHeld())
                 {
                     return SchematicUtils.replaceSchematicBlocksInDirection(mc);
-                }
-                else if (Hotkeys.SCHEMATIC_REBUILD_REPLACE_ALL.getKeybind().isKeybindHeld())
+                }*/
+/*SH                else if (Hotkeys.SCHEMATIC_REBUILD_REPLACE_ALL.getKeybind().isKeybindHeld())
                 {
                     return SchematicUtils.replaceAllIdenticalSchematicBlocks(mc);
-                }
-                else if (Hotkeys.SCHEMATIC_REBUILD_BREAK_DIRECTION.getKeybind().isKeybindHeld())
+                }*/
+/*SH                else if (Hotkeys.SCHEMATIC_REBUILD_BREAK_DIRECTION.getKeybind().isKeybindHeld())
                 {
                     return SchematicUtils.placeSchematicBlocksInDirection(mc);
-                }
-                else if (Hotkeys.SCHEMATIC_REBUILD_BREAK_ALL.getKeybind().isKeybindHeld())
+                }*/
+/*SH                else if (Hotkeys.SCHEMATIC_REBUILD_BREAK_ALL.getKeybind().isKeybindHeld())
                 {
                     return SchematicUtils.fillAirWithBlocks(mc);
-                }
-                else
+                }*/
+//SH                else
                 {
                     return SchematicUtils.placeSchematicBlock(mc);
                 }

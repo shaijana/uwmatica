@@ -81,13 +81,13 @@ public class KeyCallbacks
         Hotkeys.RERENDER_SCHEMATIC.getKeybind().setCallback(callbackHotkeys);
 //SH        Hotkeys.SAVE_AREA_AS_IN_MEMORY_SCHEMATIC.getKeybind().setCallback(callbackHotkeys);
 //SH        Hotkeys.SAVE_AREA_AS_SCHEMATIC_TO_FILE.getKeybind().setCallback(callbackHotkeys);
-        Hotkeys.SCHEMATIC_VERSION_CYCLE_NEXT.getKeybind().setCallback(callbackHotkeys);
-        Hotkeys.SCHEMATIC_VERSION_CYCLE_PREVIOUS.getKeybind().setCallback(callbackHotkeys);
+//SH        Hotkeys.SCHEMATIC_VERSION_CYCLE_NEXT.getKeybind().setCallback(callbackHotkeys);
+//SH        Hotkeys.SCHEMATIC_VERSION_CYCLE_PREVIOUS.getKeybind().setCallback(callbackHotkeys);
 //SH        Hotkeys.SELECTION_GROW_HOTKEY.getKeybind().setCallback(callbackHotkeys);
 //SH        Hotkeys.SELECTION_SHRINK_HOTKEY.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.TOOL_PLACE_CORNER_1.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.TOOL_PLACE_CORNER_2.getKeybind().setCallback(callbackHotkeys);
-        Hotkeys.TOOL_SELECT_ELEMENTS.getKeybind().setCallback(callbackHotkeys);
+//SH        Hotkeys.TOOL_SELECT_ELEMENTS.getKeybind().setCallback(callbackHotkeys);
 //SH        Hotkeys.TOOL_SELECT_MODIFIER_BLOCK_1.getKeybind().setCallback(callbackHotkeys);
 //SH        Hotkeys.TOOL_SELECT_MODIFIER_BLOCK_2.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.UNLOAD_CURRENT_SCHEMATIC.getKeybind().setCallback(callbackHotkeys);
@@ -171,9 +171,9 @@ public class KeyCallbacks
             boolean hasTool = EntityUtils.hasToolItem(this.mc.player);
             boolean isToolPrimary = key == Hotkeys.TOOL_PLACE_CORNER_1.getKeybind();
             boolean isToolSecondary = key == Hotkeys.TOOL_PLACE_CORNER_2.getKeybind();
-            boolean isToolSelect = key == Hotkeys.TOOL_SELECT_ELEMENTS.getKeybind();
+//SH            boolean isToolSelect = key == Hotkeys.TOOL_SELECT_ELEMENTS.getKeybind();
 
-            if (toolEnabled && isToolSelect)
+/*SH            if (toolEnabled && isToolSelect)
             {
                 if (mode.getUsesBlockPrimary() && Hotkeys.TOOL_SELECT_MODIFIER_BLOCK_1.getKeybind().isKeybindHeld())
                 {
@@ -185,7 +185,7 @@ public class KeyCallbacks
                     WorldUtils.setToolModeBlockState(mode, false, this.mc);
                     return true;
                 }
-            }
+            }*/
 
             if (toolEnabled && hasTool)
             {
@@ -227,9 +227,9 @@ public class KeyCallbacks
 
                     return true;
                 }
-                else if (isToolSelect)
+/*SH                else if (isToolSelect)
                 {
-/*SH                    if (mode.getUsesAreaSelection() || projectMode)
+*//*SH                    if (mode.getUsesAreaSelection() || projectMode)
                     {
                         SelectionManager sm = DataManager.getSelectionManager();
 
@@ -248,7 +248,7 @@ public class KeyCallbacks
                         {
                             sm.changeSelection(this.mc.world, this.mc.player, maxDistance);
                         }
-                    }*/
+                    }*//*
                     //changed from else if-SH
                     if (mode.getUsesSchematic())
                     {
@@ -256,7 +256,7 @@ public class KeyCallbacks
                     }
 
                     return true;
-                }
+                }*/
             }
 
             if (key == Hotkeys.OPEN_GUI_MAIN_MENU.getKeybind())

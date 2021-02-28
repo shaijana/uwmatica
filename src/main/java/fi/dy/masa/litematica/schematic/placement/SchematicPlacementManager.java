@@ -531,9 +531,9 @@ public class SchematicPlacementManager
             {
                 this.setSelectedSchematicPlacement(trace.getHitSchematicPlacement());
 
-                boolean selectSubRegion = Hotkeys.SELECTION_GRAB_MODIFIER.getKeybind().isKeybindHeld();
-                String subRegionName = selectSubRegion ? trace.getHitSchematicPlacementRegionName() : null;
-                this.getSelectedSchematicPlacement().setSelectedSubRegionName(subRegionName);
+//SH                boolean selectSubRegion = Hotkeys.SELECTION_GRAB_MODIFIER.getKeybind().isKeybindHeld();
+//SH                String subRegionName = selectSubRegion ? trace.getHitSchematicPlacementRegionName() : null;
+//SH                this.getSelectedSchematicPlacement().setSelectedSubRegionName(subRegionName);
 
                 return true;
             }
