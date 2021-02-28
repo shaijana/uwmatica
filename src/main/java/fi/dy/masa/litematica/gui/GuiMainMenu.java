@@ -35,24 +35,24 @@ public class GuiMainMenu extends GuiBase
         this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.LOADED_SCHEMATICS);
         y += 22;
         this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.LOAD_SCHEMATICS);
-        y += 44;
+//SH        y += 44;
 
-        this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.AREA_EDITOR);
-        y += 22;
-        this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.AREA_SELECTION_BROWSER);
-        y += 22;
+//SH        this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.AREA_EDITOR);
+//SH        y += 22;
+//SH        this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.AREA_SELECTION_BROWSER);
+//SH        y += 22;
 
-        SelectionMode mode = DataManager.getSelectionManager().getSelectionMode();
-        String label = StringUtils.translate("litematica.gui.button.area_selection_mode", mode.getDisplayName());
-        ButtonGeneric button = new ButtonGeneric(x, y, width, 20, label);
-        this.addButton(button, new ButtonListenerCycleAreaMode(this));
+//SH        SelectionMode mode = DataManager.getSelectionManager().getSelectionMode();
+//SH        String label = StringUtils.translate("litematica.gui.button.area_selection_mode", mode.getDisplayName());
+//SH        ButtonGeneric button = new ButtonGeneric(x, y, width, 20, label);
+//SH        this.addButton(button, new ButtonListenerCycleAreaMode(this));
 
-        label = StringUtils.translate("litematica.gui.button.tool_mode", DataManager.getToolMode().getName());
-        int width2 = this.getStringWidth(label) + 10;
+//SH        label = StringUtils.translate("litematica.gui.button.tool_mode", DataManager.getToolMode().getName());
+//SH        int width2 = this.getStringWidth(label) + 10;
 
-        y = this.height - 26;
-        button = new ButtonGeneric(x, y, width2, 20, label);
-        this.addButton(button, new ButtonListenerCycleToolMode(this));
+//SH        y = this.height - 26;
+//SH        button = new ButtonGeneric(x, y, width2, 20, label);
+//SH        this.addButton(button, new ButtonListenerCycleToolMode(this));
 
         x += width + 20;
         y = 30;
@@ -64,8 +64,8 @@ public class GuiMainMenu extends GuiBase
 
         y += 22;
         this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.TASK_MANAGER);
-        y += 22;
-        this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.SCHEMATIC_PROJECTS_MANAGER);
+//SH        y += 22;
+//SH        this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.SCHEMATIC_PROJECTS_MANAGER);
     }
 
     private void createChangeMenuButton(int x, int y, int width, ButtonListenerChangeMenu.ButtonType type)
