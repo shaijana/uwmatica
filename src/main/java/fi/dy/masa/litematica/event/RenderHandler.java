@@ -28,10 +28,10 @@ public class RenderHandler implements IRenderer
                 OverlayRenderer.getInstance().renderSchematicVerifierMismatches(matrices, partialTicks);
             }
 
-            if (DataManager.getToolMode() == ToolMode.REBUILD)
+/*SH            if (DataManager.getToolMode() == ToolMode.REBUILD)
             {
                 OverlayRenderer.getInstance().renderSchematicRebuildTargetingOverlay(matrices, partialTicks);
-            }
+            }*/
         }
     }
 

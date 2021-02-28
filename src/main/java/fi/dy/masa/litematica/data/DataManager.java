@@ -337,10 +337,10 @@ public class DataManager implements IDirectoryCache
             }
             catch (Exception e) {}
 
-            if (this.operationMode == null)
+/*SH            if (this.operationMode == null)
             {
                 this.operationMode = ToolMode.AREA_SELECTION;
-            }
+            }*/
         }
 
 /*SH        if (JsonUtils.hasObject(obj, "area_simple"))

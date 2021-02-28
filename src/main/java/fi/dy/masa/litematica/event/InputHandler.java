@@ -244,25 +244,25 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
 
     private boolean handleAttackKey(MinecraftClient mc)
     {
-        if (mc.player != null && DataManager.getToolMode() == ToolMode.REBUILD && KeybindMulti.getTriggeredCount() == 0)
+/*SH        if (mc.player != null && DataManager.getToolMode() == ToolMode.REBUILD && KeybindMulti.getTriggeredCount() == 0)
         {
-/*SH            if (Hotkeys.SCHEMATIC_REBUILD_BREAK_DIRECTION.getKeybind().isKeybindHeld())
+*//*SH            if (Hotkeys.SCHEMATIC_REBUILD_BREAK_DIRECTION.getKeybind().isKeybindHeld())
             {
                 return SchematicUtils.breakSchematicBlocks(mc);
-            }*/
-/*SH            else if (Hotkeys.SCHEMATIC_REBUILD_BREAK_ALL_EXCEPT.getKeybind().isKeybindHeld())
+            }*//*
+*//*SH            else if (Hotkeys.SCHEMATIC_REBUILD_BREAK_ALL_EXCEPT.getKeybind().isKeybindHeld())
             {
                 return SchematicUtils.breakAllSchematicBlocksExceptTargeted(mc);
-            }*/
-/*SH            else if (Hotkeys.SCHEMATIC_REBUILD_BREAK_ALL.getKeybind().isKeybindHeld())
+            }*//*
+*//*SH            else if (Hotkeys.SCHEMATIC_REBUILD_BREAK_ALL.getKeybind().isKeybindHeld())
             {
                 return SchematicUtils.breakAllIdenticalSchematicBlocks(mc);
-            }*/
+            }*//*
 //SH            else
             {
                 return SchematicUtils.breakSchematicBlock(mc);
             }
-        }
+        }*/
 
         return false;
     }
@@ -271,43 +271,43 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
     {
         if (mc.player != null)
         {
-            if (DataManager.getToolMode() == ToolMode.REBUILD && KeybindMulti.getTriggeredCount() == 0)
+/*SH            if (DataManager.getToolMode() == ToolMode.REBUILD && KeybindMulti.getTriggeredCount() == 0)
             {
-/*SH                if (Hotkeys.SCHEMATIC_REBUILD_REPLACE_DIRECTION.getKeybind().isKeybindHeld())
+                if (Hotkeys.SCHEMATIC_REBUILD_REPLACE_DIRECTION.getKeybind().isKeybindHeld())
                 {
                     return SchematicUtils.replaceSchematicBlocksInDirection(mc);
-                }*/
-/*SH                else if (Hotkeys.SCHEMATIC_REBUILD_REPLACE_ALL.getKeybind().isKeybindHeld())
+                }*//*
+                else if (Hotkeys.SCHEMATIC_REBUILD_REPLACE_ALL.getKeybind().isKeybindHeld())
                 {
                     return SchematicUtils.replaceAllIdenticalSchematicBlocks(mc);
-                }*/
-/*SH                else if (Hotkeys.SCHEMATIC_REBUILD_BREAK_DIRECTION.getKeybind().isKeybindHeld())
+                }*//*
+                else if (Hotkeys.SCHEMATIC_REBUILD_BREAK_DIRECTION.getKeybind().isKeybindHeld())
                 {
                     return SchematicUtils.placeSchematicBlocksInDirection(mc);
-                }*/
-/*SH                else if (Hotkeys.SCHEMATIC_REBUILD_BREAK_ALL.getKeybind().isKeybindHeld())
+                }*//*
+                else if (Hotkeys.SCHEMATIC_REBUILD_BREAK_ALL.getKeybind().isKeybindHeld())
                 {
                     return SchematicUtils.fillAirWithBlocks(mc);
-                }*/
-//SH                else
+                }*//*
+                else
                 {
                     return SchematicUtils.placeSchematicBlock(mc);
                 }
             }
-/*SH            else if (Configs.Generic.EASY_PLACE_MODE.getBooleanValue() &&
+            else if (Configs.Generic.EASY_PLACE_MODE.getBooleanValue() &&
                      Hotkeys.EASY_PLACE_ACTIVATION.getKeybind().isKeybindHeld())
             {
                 return WorldUtils.handleEasyPlace(mc);
-            }*/
-/*SH            else if (Configs.Generic.PICK_BLOCK_ENABLED.getBooleanValue())
+            }
+            else if (Configs.Generic.PICK_BLOCK_ENABLED.getBooleanValue())
             {
                 if (KeybindMulti.hotkeyMatchesKeybind(Hotkeys.PICK_BLOCK_LAST, mc.options.keyUse))
                 {
                     WorldUtils.doSchematicWorldPickBlock(false, mc);
                 }
-            }*/
+            }
 
-/*SH            if (Configs.Generic.PLACEMENT_RESTRICTION.getBooleanValue())
+            if (Configs.Generic.PLACEMENT_RESTRICTION.getBooleanValue())
             {
                 return WorldUtils.handlePlacementRestriction(mc);
             }*/

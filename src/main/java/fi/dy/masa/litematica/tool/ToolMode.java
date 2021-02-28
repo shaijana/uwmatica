@@ -8,15 +8,15 @@ import net.minecraft.entity.player.PlayerEntity;
 
 public enum ToolMode
 {
-    AREA_SELECTION      ("litematica.tool_mode.name.area_selection",        false, false),
-    SCHEMATIC_PLACEMENT ("litematica.tool_mode.name.schematic_placement",   false, true),
-    FILL                ("litematica.tool_mode.name.fill",                  true, false, true, false),
-    REPLACE_BLOCK       ("litematica.tool_mode.name.replace_block",         true, false, true, true),
-    PASTE_SCHEMATIC     ("litematica.tool_mode.name.paste_schematic",       true, true),
-    GRID_PASTE          ("litematica.tool_mode.name.grid_paste",            true, true),
-    MOVE                ("litematica.tool_mode.name.move",                  true, false),
-    DELETE              ("litematica.tool_mode.name.delete",                true, false),
-    REBUILD             ("litematica.tool_mode.name.rebuild",               false, true, true, false);
+//SH    AREA_SELECTION      ("litematica.tool_mode.name.area_selection",        false, false),
+    SCHEMATIC_PLACEMENT ("litematica.tool_mode.name.schematic_placement",   false, true);//SH,
+//SH    FILL                ("litematica.tool_mode.name.fill",                  true, false, true, false),
+//SH    REPLACE_BLOCK       ("litematica.tool_mode.name.replace_block",         true, false, true, true),
+//SH    PASTE_SCHEMATIC     ("litematica.tool_mode.name.paste_schematic",       true, true),
+//SH    GRID_PASTE          ("litematica.tool_mode.name.grid_paste",            true, true),
+//SH    MOVE                ("litematica.tool_mode.name.move",                  true, false),
+//SH    DELETE              ("litematica.tool_mode.name.delete",                true, false),
+//SH    REBUILD             ("litematica.tool_mode.name.rebuild",               false, true, true, false);
 
     private final String unlocName;
     private final boolean creativeOnly;
@@ -43,10 +43,10 @@ public enum ToolMode
 
     public boolean getUsesSchematic()
     {
-        if (this == ToolMode.DELETE && ToolModeData.DELETE.getUsePlacement())
+/*SH        if (this == ToolMode.DELETE && ToolModeData.DELETE.getUsePlacement())
         {
             return true;
-        }
+        }*/
 
         return this.usesSchematic;
     }
