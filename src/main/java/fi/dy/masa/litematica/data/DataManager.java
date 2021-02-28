@@ -24,10 +24,10 @@ import fi.dy.masa.litematica.materials.MaterialListHudRenderer;
 import fi.dy.masa.litematica.render.infohud.InfoHud;
 import fi.dy.masa.litematica.scheduler.TaskScheduler;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacementManager;
-import fi.dy.masa.litematica.schematic.projects.SchematicProjectsManager;
+//SHimport fi.dy.masa.litematica.schematic.projects.SchematicProjectsManager;
 import fi.dy.masa.litematica.schematic.verifier.SchematicVerifier;
 import fi.dy.masa.litematica.selection.AreaSelectionSimple;
-import fi.dy.masa.litematica.selection.SelectionManager;
+//SHimport fi.dy.masa.litematica.selection.SelectionManager;
 import fi.dy.masa.litematica.tool.ToolMode;
 import fi.dy.masa.litematica.tool.ToolModeData;
 import fi.dy.masa.litematica.util.SchematicWorldRefresher;
@@ -50,9 +50,9 @@ public class DataManager implements IDirectoryCache
     private static boolean canSave;
     private static long clientTickStart;
 
-    private final SelectionManager selectionManager = new SelectionManager();
+//SH    private final SelectionManager selectionManager = new SelectionManager();
     private final SchematicPlacementManager schematicPlacementManager = new SchematicPlacementManager();
-    private final SchematicProjectsManager schematicProjectsManager = new SchematicProjectsManager();
+    //SH    private final SchematicProjectsManager schematicProjectsManager = new SchematicProjectsManager();
     private LayerRange renderRange = new LayerRange(SchematicWorldRefresher.INSTANCE);
     private ToolMode operationMode = ToolMode.SCHEMATIC_PLACEMENT;
     private AreaSelectionSimple areaSimple = new AreaSelectionSimple(true);
@@ -108,20 +108,20 @@ public class DataManager implements IDirectoryCache
         configGuiTab = tab;
     }
 
-    public static SelectionManager getSelectionManager()
+/*SH    public static SelectionManager getSelectionManager()
     {
         return getInstance().selectionManager;
-    }
+    }*/
 
     public static SchematicPlacementManager getSchematicPlacementManager()
     {
         return getInstance().schematicPlacementManager;
     }
 
-    public static SchematicProjectsManager getSchematicProjectsManager()
+/*SH    public static SchematicProjectsManager getSchematicProjectsManager()
     {
         return getInstance().schematicProjectsManager;
-    }
+    }*/
 
     @Nullable
     public static MaterialListBase getMaterialList()
@@ -234,13 +234,13 @@ public class DataManager implements IDirectoryCache
         canSave = true;
     }
 
-    public static void save()
+/*SH    public static void save()
     {
         save(false);
         MaterialCache.getInstance().writeToFile();
-    }
+    }*/
 
-    public static void save(boolean forceSave)
+/*SH    public static void save(boolean forceSave)
     {
         if (canSave == false && forceSave == false)
         {
@@ -266,7 +266,7 @@ public class DataManager implements IDirectoryCache
         JsonUtils.writeJsonToFile(root, file);
 
         canSave = false;
-    }
+    }*/
 
     public static void clear()
     {
@@ -274,27 +274,27 @@ public class DataManager implements IDirectoryCache
         SchematicVerifier.clearActiveVerifiers();
 
         getSchematicPlacementManager().clear();
-        getSchematicProjectsManager().clear();
-        getSelectionManager().clear();
+//SH        getSchematicProjectsManager().clear();
+//SH        getSelectionManager().clear();
         setMaterialList(null);
 
         InfoHud.getInstance().reset(); // remove the line providers and clear the data
     }
 
-    private void savePerDimensionData()
+/*SH    private void savePerDimensionData()
     {
         this.schematicProjectsManager.saveCurrentProject();
         JsonObject root = this.toJson();
 
         File file = getCurrentStorageFile(false);
         JsonUtils.writeJsonToFile(root, file);
-    }
+    }*/
 
     private void loadPerDimensionData()
     {
-        this.selectionManager.clear();
+//SH        this.selectionManager.clear();
         this.schematicPlacementManager.clear();
-        this.schematicProjectsManager.clear();
+//SH        this.schematicProjectsManager.clear();
         this.materialList = null;
 
         File file = getCurrentStorageFile(false);
@@ -309,20 +309,20 @@ public class DataManager implements IDirectoryCache
 
     private void fromJson(JsonObject obj)
     {
-        if (JsonUtils.hasObject(obj, "selections"))
+/*SH        if (JsonUtils.hasObject(obj, "selections"))
         {
             this.selectionManager.loadFromJson(obj.get("selections").getAsJsonObject());
-        }
+        }*/
 
         if (JsonUtils.hasObject(obj, "placements"))
         {
             this.schematicPlacementManager.loadFromJson(obj.get("placements").getAsJsonObject());
         }
 
-        if (JsonUtils.hasObject(obj, "schematic_projects_manager"))
+/*SH        if (JsonUtils.hasObject(obj, "schematic_projects_manager"))
         {
             this.schematicProjectsManager.loadFromJson(obj.get("schematic_projects_manager").getAsJsonObject());
-        }
+        }*/
 
         if (JsonUtils.hasObject(obj, "render_range"))
         {
@@ -343,10 +343,10 @@ public class DataManager implements IDirectoryCache
             }
         }
 
-        if (JsonUtils.hasObject(obj, "area_simple"))
+/*SH        if (JsonUtils.hasObject(obj, "area_simple"))
         {
             this.areaSimple = AreaSelectionSimple.fromJson(obj.get("area_simple").getAsJsonObject());
-        }
+        }*/
 
         if (JsonUtils.hasObject(obj, "tool_mode_data"))
         {
@@ -358,9 +358,9 @@ public class DataManager implements IDirectoryCache
     {
         JsonObject obj = new JsonObject();
 
-        obj.add("selections", this.selectionManager.toJson());
+//SH        obj.add("selections", this.selectionManager.toJson());
         obj.add("placements", this.schematicPlacementManager.toJson());
-        obj.add("schematic_projects_manager", this.schematicProjectsManager.toJson());
+//SH        obj.add("schematic_projects_manager", this.schematicProjectsManager.toJson());
         obj.add("operation_mode", new JsonPrimitive(this.operationMode.name()));
         obj.add("render_range", this.renderRange.toJson());
         obj.add("area_simple", this.areaSimple.toJson());

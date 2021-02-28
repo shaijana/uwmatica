@@ -1,3 +1,4 @@
+/*SH
 package fi.dy.masa.litematica.gui.widgets;
 
 import java.io.File;
@@ -39,11 +40,13 @@ public class WidgetSchematicProjectBrowser extends WidgetFileBrowserBase impleme
         return DataManager.getSchematicsBaseDirectory();
     }
 
-    @Override
+*/
+/*SH    @Override
     protected FileFilter getFileFilter()
     {
         return WidgetAreaSelectionBrowser.JSON_FILTER;
-    }
+    }*//*
+
 
     @Override
     protected int getBrowserWidthForTotalWidth(int width)
@@ -111,3 +114,4 @@ public class WidgetSchematicProjectBrowser extends WidgetFileBrowserBase impleme
         }
     }
 }
+*/

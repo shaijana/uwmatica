@@ -7,7 +7,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.BlockPos;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.data.SchematicHolder;
-import fi.dy.masa.litematica.gui.GuiSchematicSave;
+//SHimport fi.dy.masa.litematica.gui.GuiSchematicSave;
 import fi.dy.masa.litematica.gui.Icons;
 import fi.dy.masa.litematica.schematic.LitematicaSchematic;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
@@ -152,13 +152,13 @@ public class WidgetSchematicEntry extends WidgetListEntryBase<LitematicaSchemati
                 manager.addSchematicPlacement(placement, true);
                 manager.setSelectedSchematicPlacement(placement);
             }
-            else if (this.type == Type.SAVE_TO_FILE)
+/*SH            else if (this.type == Type.SAVE_TO_FILE)
             {
                 LitematicaSchematic entry = this.widget.schematic;
                 GuiSchematicSave gui = new GuiSchematicSave(entry);
                 gui.setParent(GuiUtils.getCurrentScreen());
                 GuiBase.openGui(gui);
-            }
+            }*/
             else if (this.type == Type.UNLOAD)
             {
                 SchematicHolder.getInstance().removeSchematic(this.widget.schematic);

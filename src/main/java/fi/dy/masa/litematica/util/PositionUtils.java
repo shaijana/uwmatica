@@ -28,7 +28,7 @@ import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement;
 import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement.RequiredEnabled;
 import fi.dy.masa.litematica.selection.AreaSelection;
 import fi.dy.masa.litematica.selection.Box;
-import fi.dy.masa.litematica.selection.SelectionManager;
+//SHimport fi.dy.masa.litematica.selection.SelectionManager;
 import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.util.InfoUtils;
 import fi.dy.masa.malilib.util.IntBoundingBox;
@@ -528,7 +528,7 @@ public class PositionUtils
         return Pair.of(v1, v2);
     }
 
-    public static void growOrShrinkCurrentSelection(boolean grow)
+/*SH    public static void growOrShrinkCurrentSelection(boolean grow)
     {
         SelectionManager sm = DataManager.getSelectionManager();
         AreaSelection area = sm.getCurrentSelection();
@@ -625,7 +625,7 @@ public class PositionUtils
             area.setSelectedSubRegionCornerPos(boxNew.getPos1(), Corner.CORNER_1);
             area.setSelectedSubRegionCornerPos(boxNew.getPos2(), Corner.CORNER_2);
         }
-    }
+    }*/
 
     /**
      * Mirrors and then rotates the given position around the origin

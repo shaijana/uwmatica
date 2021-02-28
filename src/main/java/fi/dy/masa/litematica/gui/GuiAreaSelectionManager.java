@@ -1,3 +1,4 @@
+/*SH
 package fi.dy.masa.litematica.gui;
 
 import java.io.File;
@@ -113,11 +114,13 @@ public class GuiAreaSelectionManager extends GuiListBase<DirectoryEntry, WidgetD
         return x;
     }
 
-    /**
+    */
+/**
      * This is the string the DataManager uses for saving/loading/storing the last used directory
      * for each browser GUI type/contet.
      * @return
-     */
+     *//*
+
     public String getBrowserContext()
     {
         return "area_selections";
@@ -276,3 +279,4 @@ public class GuiAreaSelectionManager extends GuiListBase<DirectoryEntry, WidgetD
         }
     }
 }
+*/

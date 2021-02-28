@@ -1,3 +1,4 @@
+/*SH
 package fi.dy.masa.litematica.selection;
 
 import java.io.File;
@@ -299,10 +300,12 @@ public class SelectionManager
         }
     }
 
-    /**
+    */
+/**
      * Creates a new schematic selection and returns the name of it
      * @return
-     */
+     *//*
+
     public String createNewSelection(File dir, final String nameIn)
     {
         String name = nameIn;
@@ -826,3 +829,4 @@ public class SelectionManager
         }
     }
 }
+*/

@@ -51,10 +51,10 @@ public enum ToolMode
         return this.usesSchematic;
     }
 
-    public boolean getUsesAreaSelection()
+/*SH    public boolean getUsesAreaSelection()
     {
         return this.getUsesSchematic() == false || DataManager.getSchematicProjectsManager().hasProjectOpen();
-    }
+    }*/
 
     public boolean getUsesBlockPrimary()
     {

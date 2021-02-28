@@ -36,7 +36,7 @@ import fi.dy.masa.litematica.schematic.verifier.SchematicVerifier.BlockMismatch;
 import fi.dy.masa.litematica.schematic.verifier.SchematicVerifier.MismatchRenderPos;
 import fi.dy.masa.litematica.selection.AreaSelection;
 import fi.dy.masa.litematica.selection.Box;
-import fi.dy.masa.litematica.selection.SelectionManager;
+//SHimport fi.dy.masa.litematica.selection.SelectionManager;
 import fi.dy.masa.litematica.util.BlockInfoAlignment;
 import fi.dy.masa.litematica.util.ItemUtils;
 import fi.dy.masa.litematica.util.PositionUtils.Corner;
@@ -124,16 +124,16 @@ public class OverlayRenderer
 
     public void renderBoxes(MatrixStack matrices, float partialTicks)
     {
-        SelectionManager sm = DataManager.getSelectionManager();
-        AreaSelection currentSelection = sm.getCurrentSelection();
-        boolean renderAreas = currentSelection != null && Configs.Visuals.ENABLE_AREA_SELECTION_RENDERING.getBooleanValue();
+//SH        SelectionManager sm = DataManager.getSelectionManager();
+//SH        AreaSelection currentSelection = sm.getCurrentSelection();
+//SH        boolean renderAreas = currentSelection != null && Configs.Visuals.ENABLE_AREA_SELECTION_RENDERING.getBooleanValue();
         boolean renderPlacements = this.placements.isEmpty() == false && Configs.Visuals.ENABLE_PLACEMENT_BOXES_RENDERING.getBooleanValue();
-        boolean isProjectMode = DataManager.getSchematicProjectsManager().hasProjectOpen();
+//SH        boolean isProjectMode = DataManager.getSchematicProjectsManager().hasProjectOpen();
         float expand = 0.001f;
         float lineWidthBlockBox = 2f;
-        float lineWidthArea = isProjectMode ? 3f : 1.5f;
+//SH        float lineWidthArea = isProjectMode ? 3f : 1.5f;
 
-        if (renderAreas || renderPlacements || isProjectMode)
+/*SH        if (renderAreas || renderPlacements || isProjectMode)
         {
             RenderSystem.pushMatrix();
 
@@ -230,7 +230,7 @@ public class OverlayRenderer
             RenderSystem.popMatrix();
             RenderSystem.enableTexture();
             RenderSystem.depthMask(true);
-        }
+        }*/
     }
 
     public void renderSelectionBox(Box box, BoxType boxType, float expand,

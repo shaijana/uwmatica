@@ -220,7 +220,7 @@ public class GuiSchematicManager extends GuiSchematicBrowserBase implements ISel
 
             FileType fileType = FileType.fromFile(entry.getFullPath());
 
-            if (this.type == Type.EXPORT_SCHEMATIC)
+/*SH            if (this.type == Type.EXPORT_SCHEMATIC)
             {
                 if (fileType == FileType.LITEMATICA_SCHEMATIC)
                 {
@@ -232,8 +232,8 @@ public class GuiSchematicManager extends GuiSchematicBrowserBase implements ISel
                 {
                     this.gui.addMessage(MessageType.ERROR, "litematica.error.schematic_manager.schematic_export.unsupported_type", file.getName());
                 }
-            }
-            else if (this.type == Type.IMPORT_SCHEMATIC)
+            }*/
+/*SH            else if (this.type == Type.IMPORT_SCHEMATIC)
             {
                 if (fileType == FileType.SCHEMATICA_SCHEMATIC ||
                     fileType == FileType.VANILLA_STRUCTURE)
@@ -246,8 +246,9 @@ public class GuiSchematicManager extends GuiSchematicBrowserBase implements ISel
                 {
                     this.gui.addMessage(MessageType.ERROR, "litematica.error.schematic_manager.schematic_import.unsupported_type", file.getName());
                 }
-            }
-            else if (this.type == Type.RENAME_SCHEMATIC)
+            }*/
+            //changed from else if-SH
+            if (this.type == Type.RENAME_SCHEMATIC)
             {
                 LitematicaSchematic schematic = LitematicaSchematic.createFromFile(entry.getDirectory(), entry.getName());
                 String oldName = schematic != null ? schematic.getMetadata().getName() : "";

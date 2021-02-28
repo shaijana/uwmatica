@@ -1,3 +1,4 @@
+/*SH
 package fi.dy.masa.litematica.gui.widgets;
 
 import java.util.Collection;
@@ -60,3 +61,4 @@ public class WidgetListSelectionSubRegions extends WidgetListBase<String, Widget
                 isOdd, entry, listIndex, this.selection, this);
     }
 }
+*/

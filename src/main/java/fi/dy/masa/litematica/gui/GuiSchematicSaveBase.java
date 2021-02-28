@@ -1,3 +1,4 @@
+/*SH
 package fi.dy.masa.litematica.gui;
 
 import javax.annotation.Nullable;
@@ -215,3 +216,4 @@ public abstract class GuiSchematicSaveBase extends GuiSchematicBrowserBase imple
         }
     }
 }
+*/

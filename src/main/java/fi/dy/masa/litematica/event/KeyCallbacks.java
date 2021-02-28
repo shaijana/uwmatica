@@ -5,7 +5,7 @@ import net.minecraft.util.math.BlockPos;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.config.Hotkeys;
 import fi.dy.masa.litematica.data.DataManager;
-import fi.dy.masa.litematica.gui.GuiAreaSelectionManager;
+//SHimport fi.dy.masa.litematica.gui.GuiAreaSelectionManager;
 import fi.dy.masa.litematica.gui.GuiConfigs;
 import fi.dy.masa.litematica.gui.GuiConfigs.ConfigGuiTab;
 import fi.dy.masa.litematica.gui.GuiMainMenu;
@@ -21,7 +21,7 @@ import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
 import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement;
 import fi.dy.masa.litematica.selection.AreaSelection;
 import fi.dy.masa.litematica.selection.CornerSelectionMode;
-import fi.dy.masa.litematica.selection.SelectionManager;
+//SHimport fi.dy.masa.litematica.selection.SelectionManager;
 import fi.dy.masa.litematica.tool.ToolMode;
 import fi.dy.masa.litematica.tool.ToolModeData;
 import fi.dy.masa.litematica.util.EntityUtils;
@@ -56,7 +56,7 @@ public class KeyCallbacks
 
         Configs.Generic.PICK_BLOCKABLE_SLOTS.setValueChangeCallback(valueChangeCallback);
 
-        Hotkeys.CLONE_SELECTION.getKeybind().setCallback(callbackHotkeys);
+//SH        Hotkeys.CLONE_SELECTION.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.EXECUTE_OPERATION.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.LAYER_MODE_NEXT.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.LAYER_MODE_PREVIOUS.getKeybind().setCallback(callbackHotkeys);
@@ -65,43 +65,43 @@ public class KeyCallbacks
         Hotkeys.LAYER_SET_HERE.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.NUDGE_SELECTION_NEGATIVE.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.NUDGE_SELECTION_POSITIVE.getKeybind().setCallback(callbackHotkeys);
-        Hotkeys.OPEN_GUI_AREA_SETTINGS.getKeybind().setCallback(callbackHotkeys);
+//SH        Hotkeys.OPEN_GUI_AREA_SETTINGS.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.OPEN_GUI_LOADED_SCHEMATICS.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.OPEN_GUI_MAIN_MENU.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.OPEN_GUI_MATERIAL_LIST.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.OPEN_GUI_PLACEMENT_SETTINGS.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.OPEN_GUI_SCHEMATIC_PLACEMENTS.getKeybind().setCallback(callbackHotkeys);
-        Hotkeys.OPEN_GUI_SCHEMATIC_PROJECTS.getKeybind().setCallback(callbackHotkeys);
+//SH        Hotkeys.OPEN_GUI_SCHEMATIC_PROJECTS.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.OPEN_GUI_SCHEMATIC_VERIFIER.getKeybind().setCallback(callbackHotkeys);
-        Hotkeys.OPEN_GUI_SELECTION_MANAGER.getKeybind().setCallback(callbackHotkeys);
+//SH        Hotkeys.OPEN_GUI_SELECTION_MANAGER.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.OPEN_GUI_SETTINGS.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.PICK_BLOCK_FIRST.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.PICK_BLOCK_LAST.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.PICK_BLOCK_TOGGLE.getKeybind().setCallback(new KeyCallbackToggleBooleanConfigWithMessage(Configs.Generic.PICK_BLOCK_ENABLED));
         Hotkeys.RERENDER_SCHEMATIC.getKeybind().setCallback(callbackHotkeys);
-        Hotkeys.SAVE_AREA_AS_IN_MEMORY_SCHEMATIC.getKeybind().setCallback(callbackHotkeys);
-        Hotkeys.SAVE_AREA_AS_SCHEMATIC_TO_FILE.getKeybind().setCallback(callbackHotkeys);
+//SH        Hotkeys.SAVE_AREA_AS_IN_MEMORY_SCHEMATIC.getKeybind().setCallback(callbackHotkeys);
+//SH        Hotkeys.SAVE_AREA_AS_SCHEMATIC_TO_FILE.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.SCHEMATIC_VERSION_CYCLE_NEXT.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.SCHEMATIC_VERSION_CYCLE_PREVIOUS.getKeybind().setCallback(callbackHotkeys);
-        Hotkeys.SELECTION_GROW_HOTKEY.getKeybind().setCallback(callbackHotkeys);
-        Hotkeys.SELECTION_SHRINK_HOTKEY.getKeybind().setCallback(callbackHotkeys);
+//SH        Hotkeys.SELECTION_GROW_HOTKEY.getKeybind().setCallback(callbackHotkeys);
+//SH        Hotkeys.SELECTION_SHRINK_HOTKEY.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.TOOL_PLACE_CORNER_1.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.TOOL_PLACE_CORNER_2.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.TOOL_SELECT_ELEMENTS.getKeybind().setCallback(callbackHotkeys);
-        Hotkeys.TOOL_SELECT_MODIFIER_BLOCK_1.getKeybind().setCallback(callbackHotkeys);
-        Hotkeys.TOOL_SELECT_MODIFIER_BLOCK_2.getKeybind().setCallback(callbackHotkeys);
+//SH        Hotkeys.TOOL_SELECT_MODIFIER_BLOCK_1.getKeybind().setCallback(callbackHotkeys);
+//SH        Hotkeys.TOOL_SELECT_MODIFIER_BLOCK_2.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.UNLOAD_CURRENT_SCHEMATIC.getKeybind().setCallback(callbackHotkeys);
 
-        Hotkeys.ADD_SELECTION_BOX.getKeybind().setCallback(callbackMessage);
-        Hotkeys.DELETE_SELECTION_BOX.getKeybind().setCallback(callbackMessage);
+//SH        Hotkeys.ADD_SELECTION_BOX.getKeybind().setCallback(callbackMessage);
+//SH        Hotkeys.DELETE_SELECTION_BOX.getKeybind().setCallback(callbackMessage);
         Hotkeys.EASY_PLACE_TOGGLE.getKeybind().setCallback(new KeyCallbackToggleBooleanConfigWithMessage(Configs.Generic.EASY_PLACE_MODE));
-        Hotkeys.MOVE_ENTIRE_SELECTION.getKeybind().setCallback(callbackMessage);
-        Hotkeys.SELECTION_MODE_CYCLE.getKeybind().setCallback(callbackMessage);
+//SH        Hotkeys.MOVE_ENTIRE_SELECTION.getKeybind().setCallback(callbackMessage);
+//SH        Hotkeys.SELECTION_MODE_CYCLE.getKeybind().setCallback(callbackMessage);
         Hotkeys.SET_AREA_ORIGIN.getKeybind().setCallback(callbackMessage);
-        Hotkeys.SET_SELECTION_BOX_POSITION_1.getKeybind().setCallback(callbackMessage);
-        Hotkeys.SET_SELECTION_BOX_POSITION_2.getKeybind().setCallback(callbackMessage);
+//SH        Hotkeys.SET_SELECTION_BOX_POSITION_1.getKeybind().setCallback(callbackMessage);
+//SH        Hotkeys.SET_SELECTION_BOX_POSITION_2.getKeybind().setCallback(callbackMessage);
         Hotkeys.TOGGLE_ALL_RENDERING.getKeybind().setCallback(new RenderToggle(Configs.Visuals.ENABLE_RENDERING));
-        Hotkeys.TOGGLE_AREA_SELECTION_RENDERING.getKeybind().setCallback(new KeyCallbackToggleBooleanConfigWithMessage(Configs.Visuals.ENABLE_AREA_SELECTION_RENDERING));
+//SH        Hotkeys.TOGGLE_AREA_SELECTION_RENDERING.getKeybind().setCallback(new KeyCallbackToggleBooleanConfigWithMessage(Configs.Visuals.ENABLE_AREA_SELECTION_RENDERING));
         Hotkeys.TOGGLE_SCHEMATIC_RENDERING.getKeybind().setCallback(new RenderToggle(Configs.Visuals.ENABLE_SCHEMATIC_RENDERING));
         Hotkeys.TOGGLE_INFO_OVERLAY_RENDERING.getKeybind().setCallback(new KeyCallbackToggleBooleanConfigWithMessage(Configs.InfoOverlays.BLOCK_INFO_OVERLAY_ENABLED));
         Hotkeys.TOGGLE_OVERLAY_RENDERING.getKeybind().setCallback(new RenderToggle(Configs.Visuals.ENABLE_SCHEMATIC_OVERLAY));
@@ -190,13 +190,13 @@ public class KeyCallbacks
             if (toolEnabled && hasTool)
             {
                 int maxDistance = 200;
-                boolean projectMode =  DataManager.getSchematicProjectsManager().hasProjectOpen();
+//SH                boolean projectMode =  DataManager.getSchematicProjectsManager().hasProjectOpen();
 
                 if (isToolPrimary || isToolSecondary)
                 {
-                    if (mode.getUsesAreaSelection() || projectMode)
+/*Sh                    if (mode.getUsesAreaSelection() || projectMode)
                     {
-                        SelectionManager sm = DataManager.getSelectionManager();
+//SH                        SelectionManager sm = DataManager.getSelectionManager();
                         boolean grabModifier = Hotkeys.SELECTION_GRAB_MODIFIER.getKeybind().isKeybindHeld();
                         boolean moveEverything = grabModifier;
 
@@ -209,7 +209,7 @@ public class KeyCallbacks
                                 SchematicUtils.moveCurrentlySelectedWorldRegionTo(pos, mc);
                             }
                         }
-                        else if (Configs.Generic.SELECTION_CORNERS_MODE.getOptionListValue() == CornerSelectionMode.CORNERS)
+*//*SH                        else if (Configs.Generic.SELECTION_CORNERS_MODE.getOptionListValue() == CornerSelectionMode.CORNERS)
                         {
                             Corner corner = isToolPrimary ? Corner.CORNER_1 : Corner.CORNER_2;
                             sm.setPositionOfCurrentSelectionToRayTrace(this.mc, corner, moveEverything, maxDistance);
@@ -217,9 +217,10 @@ public class KeyCallbacks
                         else if (Configs.Generic.SELECTION_CORNERS_MODE.getOptionListValue() == CornerSelectionMode.EXPAND)
                         {
                             sm.handleCuboidModeMouseClick(this.mc, maxDistance, isToolSecondary, moveEverything);
-                        }
-                    }
-                    else if (mode.getUsesSchematic())
+                        }*//*
+                    }*/
+                    //changed from else if-SH
+                    if (mode.getUsesSchematic())
                     {
                         DataManager.getSchematicPlacementManager().setPositionOfCurrentSelectionToRayTrace(this.mc, maxDistance);
                     }
@@ -228,7 +229,7 @@ public class KeyCallbacks
                 }
                 else if (isToolSelect)
                 {
-                    if (mode.getUsesAreaSelection() || projectMode)
+/*SH                    if (mode.getUsesAreaSelection() || projectMode)
                     {
                         SelectionManager sm = DataManager.getSelectionManager();
 
@@ -247,8 +248,9 @@ public class KeyCallbacks
                         {
                             sm.changeSelection(this.mc.world, this.mc.player, maxDistance);
                         }
-                    }
-                    else if (mode.getUsesSchematic())
+                    }*/
+                    //changed from else if-SH
+                    if (mode.getUsesSchematic())
                     {
                         DataManager.getSchematicPlacementManager().changeSelection(this.mc.world, this.mc.player, maxDistance);
                     }
@@ -267,7 +269,7 @@ public class KeyCallbacks
                 GuiBase.openGui(new GuiSchematicLoadedList());
                 return true;
             }
-            else if (key == Hotkeys.OPEN_GUI_SELECTION_MANAGER.getKeybind())
+/*SH            else if (key == Hotkeys.OPEN_GUI_SELECTION_MANAGER.getKeybind())
             {
                 if (DataManager.getSchematicProjectsManager().hasProjectOpen() == false)
                 {
@@ -279,17 +281,17 @@ public class KeyCallbacks
                 }
 
                 return true;
-            }
+            }*/
             else if (key == Hotkeys.OPEN_GUI_SCHEMATIC_PLACEMENTS.getKeybind())
             {
                 GuiBase.openGui(new GuiSchematicPlacementsList());
                 return true;
             }
-            else if (key == Hotkeys.OPEN_GUI_SCHEMATIC_PROJECTS.getKeybind())
+/*SH            else if (key == Hotkeys.OPEN_GUI_SCHEMATIC_PROJECTS.getKeybind())
             {
                 DataManager.getSchematicProjectsManager().openSchematicProjectsGui();
                 return true;
-            }
+            }*/
             else if (key == Hotkeys.OPEN_GUI_SETTINGS.getKeybind())
             {
                 if (DataManager.getConfigGuiTab() == ConfigGuiTab.RENDER_LAYERS)
@@ -369,7 +371,7 @@ public class KeyCallbacks
 
                 return true;
             }
-            else if (key == Hotkeys.OPEN_GUI_AREA_SETTINGS.getKeybind())
+/*SH            else if (key == Hotkeys.OPEN_GUI_AREA_SETTINGS.getKeybind())
             {
                 SelectionManager manager = DataManager.getSelectionManager();
 
@@ -383,7 +385,7 @@ public class KeyCallbacks
                 }
 
                 return true;
-            }
+            }*/
             else if (key == Hotkeys.RERENDER_SCHEMATIC.getKeybind())
             {
                 SchematicWorldRefresher.INSTANCE.updateAll();
@@ -438,63 +440,64 @@ public class KeyCallbacks
 
                 return false;
             }
-            else if (key == Hotkeys.SAVE_AREA_AS_SCHEMATIC_TO_FILE.getKeybind())
+/*SH            else if (key == Hotkeys.SAVE_AREA_AS_SCHEMATIC_TO_FILE.getKeybind())
             {
                 return SchematicUtils.saveSchematic(false);
             }
             else if (key == Hotkeys.SAVE_AREA_AS_IN_MEMORY_SCHEMATIC.getKeybind())
             {
                 return SchematicUtils.saveSchematic(true);
-            }
-            else if (key == Hotkeys.SCHEMATIC_VERSION_CYCLE_NEXT.getKeybind())
+            }*/
+/*SH            else if (key == Hotkeys.SCHEMATIC_VERSION_CYCLE_NEXT.getKeybind())
             {
                 if (DataManager.getSchematicProjectsManager().hasProjectOpen())
                 {
                     DataManager.getSchematicProjectsManager().cycleVersion(1);
                 }
                 return true;
-            }
-            else if (key == Hotkeys.SCHEMATIC_VERSION_CYCLE_PREVIOUS.getKeybind())
+            }*/
+/*SH            else if (key == Hotkeys.SCHEMATIC_VERSION_CYCLE_PREVIOUS.getKeybind())
             {
                 if (DataManager.getSchematicProjectsManager().hasProjectOpen())
                 {
                     DataManager.getSchematicProjectsManager().cycleVersion(-1);
                 }
                 return true;
-            }
-            else if (key == Hotkeys.CLONE_SELECTION.getKeybind())
+            }*/
+/*SH            else if (key == Hotkeys.CLONE_SELECTION.getKeybind())
             {
                 SchematicUtils.cloneSelectionArea(this.mc);
                 return true;
-            }
+            }*/
             else if (key == Hotkeys.EXECUTE_OPERATION.getKeybind() && ((hasTool && toolEnabled) || Configs.Generic.EXECUTE_REQUIRE_TOOL.getBooleanValue() == false))
             {
-                if (DataManager.getSchematicProjectsManager().hasProjectOpen())
+/*                if (DataManager.getSchematicProjectsManager().hasProjectOpen())
                 {
                     DataManager.getSchematicProjectsManager().pasteCurrentVersionToWorld();
                     return true;
-                }
-                else if (mode == ToolMode.PASTE_SCHEMATIC)
+                }*/
+                //changed from else if-SH
+                if (mode == ToolMode.PASTE_SCHEMATIC)
                 {
                     DataManager.getSchematicPlacementManager().pasteCurrentPlacementToWorld(this.mc);
                     return true;
                 }
-                else if (mode == ToolMode.FILL && mode.getPrimaryBlock() != null)
+/*SH                else if (mode == ToolMode.FILL && mode.getPrimaryBlock() != null)
                 {
                     ToolUtils.fillSelectionVolumes(this.mc, mode.getPrimaryBlock(), null);
                     return true;
-                }
-                else if (mode == ToolMode.REPLACE_BLOCK && mode.getPrimaryBlock() != null && mode.getSecondaryBlock() != null)
+                }*/
+/*SH                else if (mode == ToolMode.REPLACE_BLOCK && mode.getPrimaryBlock() != null && mode.getSecondaryBlock() != null)
                 {
                     ToolUtils.fillSelectionVolumes(this.mc, mode.getPrimaryBlock(), mode.getSecondaryBlock());
                     return true;
-                }
-                else if (mode == ToolMode.DELETE)
+                }*/
+/*SH                else if (mode == ToolMode.DELETE)
                 {
                     boolean removeEntities = true; // TODO
                     ToolUtils.deleteSelectionVolumes(removeEntities, this.mc);
                     return true;
-                }
+                }*/
             }
             else if (key == Hotkeys.NUDGE_SELECTION_NEGATIVE.getKeybind() ||
                      key == Hotkeys.NUDGE_SELECTION_POSITIVE.getKeybind())
@@ -503,22 +506,22 @@ public class KeyCallbacks
                 InputHandler.nudgeSelection(amount, mode, this.mc.player);
                 return true;
             }
-            else if (key == Hotkeys.SELECTION_GROW_HOTKEY.getKeybind())
+/*            else if (key == Hotkeys.SELECTION_GROW_HOTKEY.getKeybind())
             {
                 if (mode.getUsesAreaSelection())
                 {
                     PositionUtils.growOrShrinkCurrentSelection(true);
                     return true;
                 }
-            }
-            else if (key == Hotkeys.SELECTION_SHRINK_HOTKEY.getKeybind())
+            }*/
+/*            else if (key == Hotkeys.SELECTION_SHRINK_HOTKEY.getKeybind())
             {
                 if (mode.getUsesAreaSelection())
                 {
                     PositionUtils.growOrShrinkCurrentSelection(false);
                     return true;
                 }
-            }
+            }*/
             else if (key == Hotkeys.UNLOAD_CURRENT_SCHEMATIC.getKeybind())
             {
                 SchematicUtils.unloadCurrentlySelectedSchematic();
@@ -543,7 +546,7 @@ public class KeyCallbacks
         {
             ToolMode mode = DataManager.getToolMode();
 
-            if (key == Hotkeys.ADD_SELECTION_BOX.getKeybind())
+/*SH            if (key == Hotkeys.ADD_SELECTION_BOX.getKeybind())
             {
                 if (mode.getUsesAreaSelection())
                 {
@@ -577,8 +580,8 @@ public class KeyCallbacks
                         }
                     }
                 }
-            }
-            else if (key == Hotkeys.MOVE_ENTIRE_SELECTION.getKeybind())
+            }*/
+/*SH            else if (key == Hotkeys.MOVE_ENTIRE_SELECTION.getKeybind())
             {
                 if (mode.getUsesAreaSelection())
                 {
@@ -607,8 +610,8 @@ public class KeyCallbacks
                     DataManager.getSchematicPlacementManager().setPositionOfCurrentSelectionTo(pos, this.mc);
                     return true;
                 }
-            }
-            else if (key == Hotkeys.SELECTION_MODE_CYCLE.getKeybind())
+            }*/
+/*SH            else if (key == Hotkeys.SELECTION_MODE_CYCLE.getKeybind())
             {
                 if (mode == ToolMode.DELETE)
                 {
@@ -624,8 +627,8 @@ public class KeyCallbacks
                 }
 
                 return true;
-            }
-            else if (key == Hotkeys.SET_AREA_ORIGIN.getKeybind())
+            }*/
+/*SH            else if (key == Hotkeys.SET_AREA_ORIGIN.getKeybind())
             {
                 if (mode.getUsesAreaSelection())
                 {
@@ -641,8 +644,8 @@ public class KeyCallbacks
                         return true;
                     }
                 }
-            }
-            else if (key == Hotkeys.SET_SELECTION_BOX_POSITION_1.getKeybind() ||
+            }*/
+/*SH            else if (key == Hotkeys.SET_SELECTION_BOX_POSITION_1.getKeybind() ||
                      key == Hotkeys.SET_SELECTION_BOX_POSITION_2.getKeybind())
             {
                 if (mode.getUsesAreaSelection())
@@ -661,7 +664,7 @@ public class KeyCallbacks
                         return true;
                     }
                 }
-            }
+            }*/
 
             return false;
         }

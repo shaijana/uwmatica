@@ -15,7 +15,7 @@ import fi.dy.masa.litematica.schematic.projects.SchematicProject;
 import fi.dy.masa.litematica.schematic.projects.SchematicVersion;
 import fi.dy.masa.litematica.selection.AreaSelection;
 import fi.dy.masa.litematica.selection.Box;
-import fi.dy.masa.litematica.selection.SelectionManager;
+//SHimport fi.dy.masa.litematica.selection.SelectionManager;
 import fi.dy.masa.litematica.selection.SelectionMode;
 import fi.dy.masa.litematica.tool.ToolMode;
 import fi.dy.masa.litematica.tool.ToolModeData;
@@ -89,7 +89,7 @@ public class ToolHud extends InfoHud
 
         List<String> lines = this.lineList;
 
-        if (hasTool && DataManager.getSchematicProjectsManager().hasProjectOpen())
+/*SH        if (hasTool && DataManager.getSchematicProjectsManager().hasProjectOpen())
         {
             SchematicProject project = DataManager.getSchematicProjectsManager().getCurrentProject();
 
@@ -134,7 +134,7 @@ public class ToolHud extends InfoHud
             }
 
             return;
-        }
+        }*/
 
         ToolMode mode = DataManager.getToolMode();
         String orange = GuiBase.TXT_GOLD;
@@ -149,7 +149,7 @@ public class ToolHud extends InfoHud
             lines.add(StringUtils.translate("litematica.hud.delete.target_mode", green + StringUtils.translate(strp) + rst));
         }
 
-        if (hasTool && mode.getUsesAreaSelection())
+/*SH        if (hasTool && mode.getUsesAreaSelection())
         {
             SelectionManager sm = DataManager.getSelectionManager();
             AreaSelection selection = sm.getCurrentSelection();
@@ -229,7 +229,7 @@ public class ToolHud extends InfoHud
 
             str = green + Configs.Generic.SELECTION_CORNERS_MODE.getOptionListValue().getDisplayName() + rst;
             lines.add(StringUtils.translate("litematica.hud.area_selection.selection_corners_mode", str));
-        }
+        }*/
         else if ((hasTool || mode == ToolMode.REBUILD) && mode.getUsesSchematic())
         {
             SchematicPlacement schematicPlacement = DataManager.getSchematicPlacementManager().getSelectedSchematicPlacement();

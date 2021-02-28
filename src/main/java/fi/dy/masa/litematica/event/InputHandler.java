@@ -12,7 +12,7 @@ import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.gui.GuiSchematicManager;
 import fi.dy.masa.litematica.selection.AreaSelection;
 import fi.dy.masa.litematica.selection.Box;
-import fi.dy.masa.litematica.selection.SelectionManager;
+//SHimport fi.dy.masa.litematica.selection.SelectionManager;
 import fi.dy.masa.litematica.tool.ToolMode;
 import fi.dy.masa.litematica.util.EntityUtils;
 import fi.dy.masa.litematica.util.PositionUtils;
@@ -134,7 +134,7 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
         final int amount = dWheel > 0 ? 1 : -1;
         ToolMode mode = DataManager.getToolMode();
 
-        if (Hotkeys.SELECTION_GRAB_MODIFIER.getKeybind().isKeybindHeld())
+/*SH        if (Hotkeys.SELECTION_GRAB_MODIFIER.getKeybind().isKeybindHeld())
         {
             if (mode.getUsesAreaSelection())
             {
@@ -158,12 +158,12 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
                     return true;
                 }
             }
-        }
+        }*/
 
-        if (Hotkeys.SELECTION_GROW_MODIFIER.getKeybind().isKeybindHeld())
+/*SH        if (Hotkeys.SELECTION_GROW_MODIFIER.getKeybind().isKeybindHeld())
         {
             return this.growOrShrinkSelection(amount, mode);
-        }
+        }*/
 
         if (Hotkeys.SELECTION_NUDGE_MODIFIER.getKeybind().isKeybindHeld())
         {
@@ -176,21 +176,21 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
             return true;
         }
 
-        if (Hotkeys.SCHEMATIC_VERSION_CYCLE_MODIFIER.getKeybind().isKeybindHeld())
+/*SH        if (Hotkeys.SCHEMATIC_VERSION_CYCLE_MODIFIER.getKeybind().isKeybindHeld())
         {
             if (DataManager.getSchematicProjectsManager().hasProjectOpen())
             {
                 DataManager.getSchematicProjectsManager().cycleVersion(amount * -1);
             }
             return true;
-        }
+        }*/
 
         return false;
     }
 
     public static boolean nudgeSelection(int amount, ToolMode mode, PlayerEntity player)
     {
-        if (mode.getUsesAreaSelection())
+/*        if (mode.getUsesAreaSelection())
         {
             SelectionManager sm = DataManager.getSelectionManager();
 
@@ -199,8 +199,9 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
                 sm.moveSelectedElement(EntityUtils.getClosestLookingDirection(player), amount);
                 return true;
             }
-        }
-        else if (mode.getUsesSchematic())
+        }*/
+        //changed from else if-SH
+        if (mode.getUsesSchematic())
         {
             Direction direction = EntityUtils.getClosestLookingDirection(player);
             DataManager.getSchematicPlacementManager().nudgePositionOfCurrentSelection(direction, amount);
@@ -210,7 +211,7 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
         return false;
     }
 
-    private boolean growOrShrinkSelection(int amount, ToolMode mode)
+/*SH    private boolean growOrShrinkSelection(int amount, ToolMode mode)
     {
         if (mode.getUsesAreaSelection())
         {
@@ -239,7 +240,7 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
         }
 
         return true;
-    }
+    }*/
 
     private boolean handleAttackKey(MinecraftClient mc)
     {
@@ -317,15 +318,15 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
 
     public static void onTick(MinecraftClient mc)
     {
-        SelectionManager sm = DataManager.getSelectionManager();
+//SH        SelectionManager sm = DataManager.getSelectionManager();
 
-        if (sm.hasGrabbedElement())
+/*SH        if (sm.hasGrabbedElement())
         {
             sm.moveGrabbedElement(mc.player);
         }
         else
-        {
+        {*/
             WorldUtils.easyPlaceOnUseTick(mc);
-        }
+//SH        }
     }
 }

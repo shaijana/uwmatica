@@ -24,8 +24,8 @@ import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.data.SchematicHolder;
-import fi.dy.masa.litematica.gui.GuiSchematicSave;
-import fi.dy.masa.litematica.gui.GuiSchematicSave.InMemorySchematicCreator;
+//SHimport fi.dy.masa.litematica.gui.GuiSchematicSave;
+//SHimport fi.dy.masa.litematica.gui.GuiSchematicSave.InMemorySchematicCreator;
 import fi.dy.masa.litematica.scheduler.TaskScheduler;
 import fi.dy.masa.litematica.scheduler.tasks.TaskBase;
 import fi.dy.masa.litematica.scheduler.tasks.TaskDeleteArea;
@@ -41,7 +41,7 @@ import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement;
 import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement.RequiredEnabled;
 import fi.dy.masa.litematica.schematic.projects.SchematicProject;
 import fi.dy.masa.litematica.selection.AreaSelection;
-import fi.dy.masa.litematica.selection.SelectionManager;
+//SHimport fi.dy.masa.litematica.selection.SelectionManager;
 import fi.dy.masa.litematica.tool.ToolMode;
 import fi.dy.masa.litematica.util.RayTraceUtils.RayTraceWrapper;
 import fi.dy.masa.litematica.world.SchematicWorldHandler;
@@ -59,7 +59,7 @@ public class SchematicUtils
 {
     private static long areaMovedTime;
 
-    public static boolean saveSchematic(boolean inMemoryOnly)
+/*SH    public static boolean saveSchematic(boolean inMemoryOnly)
     {
         SelectionManager sm = DataManager.getSelectionManager();
         AreaSelection area = sm.getCurrentSelection();
@@ -90,7 +90,7 @@ public class SchematicUtils
         }
 
         return false;
-    }
+    }*/
 
     public static void unloadCurrentlySelectedSchematic()
     {
@@ -764,7 +764,7 @@ public class SchematicUtils
         return true;
     }
 
-    public static void moveCurrentlySelectedWorldRegionToLookingDirection(int amount, PlayerEntity player, MinecraftClient mc)
+/*SH    public static void moveCurrentlySelectedWorldRegionToLookingDirection(int amount, PlayerEntity player, MinecraftClient mc)
     {
         SelectionManager sm = DataManager.getSelectionManager();
         AreaSelection area = sm.getCurrentSelection();
@@ -774,7 +774,7 @@ public class SchematicUtils
             BlockPos pos = area.getEffectiveOrigin().offset(EntityUtils.getClosestLookingDirection(player), amount);
             moveCurrentlySelectedWorldRegionTo(pos, mc);
         }
-    }
+    }*/
 
     public static void moveCurrentlySelectedWorldRegionTo(BlockPos pos, MinecraftClient mc)
     {
@@ -801,10 +801,10 @@ public class SchematicUtils
             return;
         }
 
-        SelectionManager sm = DataManager.getSelectionManager();
-        AreaSelection area = sm.getCurrentSelection();
+//SH        SelectionManager sm = DataManager.getSelectionManager();
+//SH        AreaSelection area = sm.getCurrentSelection();
 
-        if (area != null && area.getAllSubRegionBoxes().size() > 0)
+/*SH        if (area != null && area.getAllSubRegionBoxes().size() > 0)
         {
             LitematicaSchematic schematic = LitematicaSchematic.createEmptySchematic(area, "");
             LitematicaSchematic.SchematicSaveInfo info = new LitematicaSchematic.SchematicSaveInfo(false, false);
@@ -855,10 +855,10 @@ public class SchematicUtils
         else
         {
             InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, "litematica.message.error.no_area_selected");
-        }
+        }*/
     }
 
-    public static void cloneSelectionArea(MinecraftClient mc)
+/*SH    public static void cloneSelectionArea(MinecraftClient mc)
     {
         SelectionManager sm = DataManager.getSelectionManager();
         AreaSelection area = sm.getCurrentSelection();
@@ -898,7 +898,7 @@ public class SchematicUtils
         {
             InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, "litematica.message.error.no_area_selected");
         }
-    }
+    }*/
 
     @Nullable
     public static BlockPos getSchematicContainerPositionFromWorldPosition(BlockPos worldPos, LitematicaSchematic schematic, String regionName,
@@ -1027,7 +1027,8 @@ public class SchematicUtils
         @Override
         public boolean setString(String string)
         {
-            return DataManager.getSchematicProjectsManager().commitNewVersion(string);
+//SH            return DataManager.getSchematicProjectsManager().commitNewVersion(string);
+                return true;
         }
     }
 }
