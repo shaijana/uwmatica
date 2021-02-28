@@ -278,7 +278,7 @@ public class ToolHud extends InfoHud
                     lines.add(StringUtils.translate("litematica.hud.schematic_placement.sub_region_origin", green + str + rst));
                 }
 
-                if (mode == ToolMode.PASTE_SCHEMATIC)
+/*SH                if (mode == ToolMode.PASTE_SCHEMATIC)
                 {
                     ReplaceBehavior replace = (ReplaceBehavior) Configs.Generic.PASTE_REPLACE_BEHAVIOR.getOptionListValue();
                     str = replace.getDisplayName();
@@ -295,9 +295,9 @@ public class ToolHud extends InfoHud
                     lines.add(StringUtils.translate("litematica.hud.misc.schematic_paste.replace_mode", str));
                     String strVal = Configs.Generic.PASTE_IGNORE_INVENTORY.getBooleanValue() ? strYes : strNo;
                     lines.add(String.format("Ignore inventory contents: %s", strVal));
-                }
+                }*/
             }
-            else
+//SH            else
             {
                 String strTmp = "<" + StringUtils.translate("litematica.label.none_lower") + ">";
                 str = StringUtils.translate("litematica.hud.schematic_placement.selected_placement");

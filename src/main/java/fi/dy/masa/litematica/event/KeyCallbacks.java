@@ -54,7 +54,7 @@ public class KeyCallbacks
         IHotkeyCallback callbackMessage = new KeyCallbackToggleMessage(mc);
         ValueChangeCallback valueChangeCallback = new ValueChangeCallback();
 
-        Configs.Generic.PICK_BLOCKABLE_SLOTS.setValueChangeCallback(valueChangeCallback);
+//SH        Configs.Generic.PICK_BLOCKABLE_SLOTS.setValueChangeCallback(valueChangeCallback);
 
 //SH        Hotkeys.CLONE_SELECTION.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.EXECUTE_OPERATION.getKeybind().setCallback(callbackHotkeys);
@@ -77,7 +77,7 @@ public class KeyCallbacks
         Hotkeys.OPEN_GUI_SETTINGS.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.PICK_BLOCK_FIRST.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.PICK_BLOCK_LAST.getKeybind().setCallback(callbackHotkeys);
-        Hotkeys.PICK_BLOCK_TOGGLE.getKeybind().setCallback(new KeyCallbackToggleBooleanConfigWithMessage(Configs.Generic.PICK_BLOCK_ENABLED));
+//SH        Hotkeys.PICK_BLOCK_TOGGLE.getKeybind().setCallback(new KeyCallbackToggleBooleanConfigWithMessage(Configs.Generic.PICK_BLOCK_ENABLED));
         Hotkeys.RERENDER_SCHEMATIC.getKeybind().setCallback(callbackHotkeys);
 //SH        Hotkeys.SAVE_AREA_AS_IN_MEMORY_SCHEMATIC.getKeybind().setCallback(callbackHotkeys);
 //SH        Hotkeys.SAVE_AREA_AS_SCHEMATIC_TO_FILE.getKeybind().setCallback(callbackHotkeys);
@@ -94,7 +94,7 @@ public class KeyCallbacks
 
 //SH        Hotkeys.ADD_SELECTION_BOX.getKeybind().setCallback(callbackMessage);
 //SH        Hotkeys.DELETE_SELECTION_BOX.getKeybind().setCallback(callbackMessage);
-        Hotkeys.EASY_PLACE_TOGGLE.getKeybind().setCallback(new KeyCallbackToggleBooleanConfigWithMessage(Configs.Generic.EASY_PLACE_MODE));
+//SH        Hotkeys.EASY_PLACE_TOGGLE.getKeybind().setCallback(new KeyCallbackToggleBooleanConfigWithMessage(Configs.Generic.EASY_PLACE_MODE));
 //SH        Hotkeys.MOVE_ENTIRE_SELECTION.getKeybind().setCallback(callbackMessage);
 //SH        Hotkeys.SELECTION_MODE_CYCLE.getKeybind().setCallback(callbackMessage);
         Hotkeys.SET_AREA_ORIGIN.getKeybind().setCallback(callbackMessage);
@@ -107,7 +107,7 @@ public class KeyCallbacks
         Hotkeys.TOGGLE_OVERLAY_RENDERING.getKeybind().setCallback(new RenderToggle(Configs.Visuals.ENABLE_SCHEMATIC_OVERLAY));
         Hotkeys.TOGGLE_OVERLAY_OUTLINE_RENDERING.getKeybind().setCallback(new RenderToggle(Configs.Visuals.SCHEMATIC_OVERLAY_ENABLE_OUTLINES));
         Hotkeys.TOGGLE_OVERLAY_SIDE_RENDERING.getKeybind().setCallback(new RenderToggle(Configs.Visuals.SCHEMATIC_OVERLAY_ENABLE_SIDES));
-        Hotkeys.TOGGLE_PLACEMENT_RESTRICTION.getKeybind().setCallback(new KeyCallbackToggleBooleanConfigWithMessage(Configs.Generic.PLACEMENT_RESTRICTION));
+//SH        Hotkeys.TOGGLE_PLACEMENT_RESTRICTION.getKeybind().setCallback(new KeyCallbackToggleBooleanConfigWithMessage(Configs.Generic.PLACEMENT_RESTRICTION));
         Hotkeys.TOGGLE_PLACEMENT_BOXES_RENDERING.getKeybind().setCallback(new KeyCallbackToggleBooleanConfigWithMessage(Configs.Visuals.ENABLE_PLACEMENT_BOXES_RENDERING));
         Hotkeys.TOGGLE_SCHEMATIC_BLOCK_RENDERING.getKeybind().setCallback(new KeyCallbackToggleBooleanConfigWithMessage(Configs.Visuals.ENABLE_SCHEMATIC_BLOCKS));
         Hotkeys.TOGGLE_TRANSLUCENT_RENDERING.getKeybind().setCallback(new RenderToggle(Configs.Visuals.RENDER_BLOCKS_AS_TRANSLUCENT));
@@ -120,10 +120,10 @@ public class KeyCallbacks
         @Override
         public void onValueChanged(ConfigString config)
         {
-            if (config == Configs.Generic.PICK_BLOCKABLE_SLOTS)
+/*SH            if (config == Configs.Generic.PICK_BLOCKABLE_SLOTS)
             {
                 InventoryUtils.setPickBlockableSlots(Configs.Generic.PICK_BLOCKABLE_SLOTS.getStringValue());
-            }
+            }*/
         }
     }
 
@@ -417,7 +417,7 @@ public class KeyCallbacks
                 DataManager.getRenderLayerRange().setLayerMode((LayerMode) DataManager.getRenderLayerRange().getLayerMode().cycle(false));
                 return true;
             }
-            else if (key == Hotkeys.PICK_BLOCK_FIRST.getKeybind())
+/*SH            else if (key == Hotkeys.PICK_BLOCK_FIRST.getKeybind())
             {
                 if (EntityUtils.shouldPickBlock(this.mc.player))
                 {
@@ -425,8 +425,8 @@ public class KeyCallbacks
                 }
 
                 return false;
-            }
-            else if (key == Hotkeys.PICK_BLOCK_LAST.getKeybind())
+            }*/
+/*SH            else if (key == Hotkeys.PICK_BLOCK_LAST.getKeybind())
             {
                 if (EntityUtils.shouldPickBlock(this.mc.player))
                 {
@@ -439,7 +439,7 @@ public class KeyCallbacks
                 }
 
                 return false;
-            }
+            }*/
 /*SH            else if (key == Hotkeys.SAVE_AREA_AS_SCHEMATIC_TO_FILE.getKeybind())
             {
                 return SchematicUtils.saveSchematic(false);
@@ -469,7 +469,7 @@ public class KeyCallbacks
                 SchematicUtils.cloneSelectionArea(this.mc);
                 return true;
             }*/
-            else if (key == Hotkeys.EXECUTE_OPERATION.getKeybind() && ((hasTool && toolEnabled) || Configs.Generic.EXECUTE_REQUIRE_TOOL.getBooleanValue() == false))
+            else if (key == Hotkeys.EXECUTE_OPERATION.getKeybind() && ((hasTool && toolEnabled) /*SH|| Configs.Generic.EXECUTE_REQUIRE_TOOL.getBooleanValue() == false*/))
             {
 /*                if (DataManager.getSchematicProjectsManager().hasProjectOpen())
                 {

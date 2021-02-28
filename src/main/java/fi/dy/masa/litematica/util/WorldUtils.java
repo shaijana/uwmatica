@@ -401,7 +401,7 @@ public class WorldUtils
                     {
                         InventoryUtils.setPickedItemToHand(stack, mc);
                     }
-                    else if (slot == -1 && Configs.Generic.PICK_BLOCK_SHULKERS.getBooleanValue())
+/*SH                    else if (slot == -1 && Configs.Generic.PICK_BLOCK_SHULKERS.getBooleanValue())
                     {
                         slot = InventoryUtils.findSlotWithBoxWithItem(mc.player.playerScreenHandler, stack, false);
 
@@ -410,7 +410,7 @@ public class WorldUtils
                             ItemStack boxStack = mc.player.playerScreenHandler.slots.get(slot).getStack();
                             InventoryUtils.setPickedItemToHand(boxStack, mc);
                         }
-                    }
+                    }*/
 
                     //return shouldPick == false || canPick;
                 }
@@ -422,7 +422,7 @@ public class WorldUtils
         return false;
     }
 
-    public static void easyPlaceOnUseTick(MinecraftClient mc)
+/*SH    public static void easyPlaceOnUseTick(MinecraftClient mc)
     {
         if (mc.player != null &&
             Configs.Generic.EASY_PLACE_HOLD_ENABLED.getBooleanValue() &&
@@ -432,7 +432,7 @@ public class WorldUtils
         {
             WorldUtils.doEasyPlaceAction(mc);
         }
-    }
+    }*/
 
     public static boolean handleEasyPlace(MinecraftClient mc)
     {

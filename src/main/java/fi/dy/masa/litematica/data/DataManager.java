@@ -401,7 +401,7 @@ public class DataManager implements IDirectoryCache
         return dir;
     }
 
-    public static File getAreaSelectionsBaseDirectory()
+/*SH    public static File getAreaSelectionsBaseDirectory()
     {
         File dir;
         String name = StringUtils.getWorldOrServerName();
@@ -423,7 +423,7 @@ public class DataManager implements IDirectoryCache
         }
 
         return dir;
-    }
+    }*/
 
     private static File getCurrentStorageFile(boolean globalData)
     {

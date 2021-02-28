@@ -15,7 +15,7 @@ public class ClientTickHandler implements IClientTickHandler
         if (mc.world != null && mc.player != null)
         {
             InputHandler.onTick(mc);
-            WorldUtils.easyPlaceOnUseTick(mc);
+//SH            WorldUtils.easyPlaceOnUseTick(mc);
 
             if (Configs.Generic.LAYER_MODE_DYNAMIC.getBooleanValue())
             {

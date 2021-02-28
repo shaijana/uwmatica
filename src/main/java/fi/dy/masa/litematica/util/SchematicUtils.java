@@ -30,7 +30,7 @@ import fi.dy.masa.litematica.scheduler.TaskScheduler;
 import fi.dy.masa.litematica.scheduler.tasks.TaskBase;
 import fi.dy.masa.litematica.scheduler.tasks.TaskDeleteArea;
 import fi.dy.masa.litematica.scheduler.tasks.TaskPasteSchematicDirect;
-import fi.dy.masa.litematica.scheduler.tasks.TaskPasteSchematicSetblock;
+//SHimport fi.dy.masa.litematica.scheduler.tasks.TaskPasteSchematicSetblock;
 import fi.dy.masa.litematica.scheduler.tasks.TaskSaveSchematic;
 import fi.dy.masa.litematica.schematic.LitematicaSchematic;
 import fi.dy.masa.litematica.schematic.container.LitematicaBlockStateContainer;
@@ -776,7 +776,7 @@ public class SchematicUtils
         }
     }*/
 
-    public static void moveCurrentlySelectedWorldRegionTo(BlockPos pos, MinecraftClient mc)
+/*SH    public static void moveCurrentlySelectedWorldRegionTo(BlockPos pos, MinecraftClient mc)
     {
         if (mc.player == null || mc.player.abilities.creativeMode == false)
         {
@@ -804,7 +804,7 @@ public class SchematicUtils
 //SH        SelectionManager sm = DataManager.getSelectionManager();
 //SH        AreaSelection area = sm.getCurrentSelection();
 
-/*SH        if (area != null && area.getAllSubRegionBoxes().size() > 0)
+*//*SH        if (area != null && area.getAllSubRegionBoxes().size() > 0)
         {
             LitematicaSchematic schematic = LitematicaSchematic.createEmptySchematic(area, "");
             LitematicaSchematic.SchematicSaveInfo info = new LitematicaSchematic.SchematicSaveInfo(false, false);
@@ -855,8 +855,8 @@ public class SchematicUtils
         else
         {
             InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, "litematica.message.error.no_area_selected");
-        }*/
-    }
+        }*//*
+    }*/
 
 /*SH    public static void cloneSelectionArea(MinecraftClient mc)
     {

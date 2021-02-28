@@ -57,14 +57,14 @@ public class StatusInfoRenderer implements IInfoHudRenderer
         String red = GuiBase.TXT_RED;
         String rst = GuiBase.TXT_RST;
 
-        if (Configs.Generic.EASY_PLACE_MODE.getBooleanValue())
+/*SH        if (Configs.Generic.EASY_PLACE_MODE.getBooleanValue())
         {
             lines.add(StringUtils.translate("litematica.hud.misc.easy_place_mode_enabled"));
         }
         else if (Configs.Generic.PLACEMENT_RESTRICTION.getBooleanValue())
         {
             lines.add(StringUtils.translate("litematica.hud.misc.placement_restriction_mode_enabled"));
-        }
+        }*/
 
         LayerRange range = DataManager.getRenderLayerRange();
         String strMode = range.getLayerMode().getDisplayName();

@@ -328,9 +328,9 @@ public class LitematicaSchematic
         final int sizeY = Math.abs(regionSize.getY());
         final int sizeZ = Math.abs(regionSize.getZ());
         final BlockState barrier = Blocks.BARRIER.getDefaultState();
-        final boolean ignoreInventories = Configs.Generic.PASTE_IGNORE_INVENTORY.getBooleanValue();
+//SH        final boolean ignoreInventories = Configs.Generic.PASTE_IGNORE_INVENTORY.getBooleanValue();
         BlockPos.Mutable posMutable = new BlockPos.Mutable();
-        ReplaceBehavior replace = (ReplaceBehavior) Configs.Generic.PASTE_REPLACE_BEHAVIOR.getOptionListValue();
+//SH        ReplaceBehavior replace = (ReplaceBehavior) Configs.Generic.PASTE_REPLACE_BEHAVIOR.getOptionListValue();
 
         final BlockRotation rotationCombined = schematicPlacement.getRotation().rotate(placement.getRotation());
         final BlockMirror mirrorMain = schematicPlacement.getMirror();
@@ -384,11 +384,11 @@ public class LitematicaSchematic
 
                     BlockState stateOld = world.getBlockState(pos);
 
-                    if ((replace == ReplaceBehavior.NONE && stateOld.isAir() == false) ||
+/*SH                    if ((replace == ReplaceBehavior.NONE && stateOld.isAir() == false) ||
                         (replace == ReplaceBehavior.WITH_NON_AIR && state.isAir()))
                     {
                         continue;
-                    }
+                    }*/
 
                     if (mirrorMain != BlockMirror.NONE) { state = state.mirror(mirrorMain); }
                     if (mirrorSub != BlockMirror.NONE)  { state = state.mirror(mirrorSub); }
@@ -422,19 +422,19 @@ public class LitematicaSchematic
                             teNBT.putInt("y", pos.getY());
                             teNBT.putInt("z", pos.getZ());
 
-                            if (ignoreInventories)
+/*SH                            if (ignoreInventories)
                             {
                                 teNBT.remove("Items");
-                            }
+                            }*/
 
                             try
                             {
                                 te.fromTag(state, teNBT);
 
-                                if (ignoreInventories && te instanceof Inventory)
+/*SH                                if (ignoreInventories && te instanceof Inventory)
                                 {
                                     ((Inventory) te).clear();
-                                }
+                                }*/
 
                                 if (mirrorMain != BlockMirror.NONE) { te.applyMirror(mirrorMain); }
                                 if (mirrorSub != BlockMirror.NONE)  { te.applyMirror(mirrorSub); }

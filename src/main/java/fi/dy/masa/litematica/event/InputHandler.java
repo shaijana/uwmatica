@@ -294,23 +294,23 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
                     return SchematicUtils.placeSchematicBlock(mc);
                 }
             }
-            else if (Configs.Generic.EASY_PLACE_MODE.getBooleanValue() &&
+/*SH            else if (Configs.Generic.EASY_PLACE_MODE.getBooleanValue() &&
                      Hotkeys.EASY_PLACE_ACTIVATION.getKeybind().isKeybindHeld())
             {
                 return WorldUtils.handleEasyPlace(mc);
-            }
-            else if (Configs.Generic.PICK_BLOCK_ENABLED.getBooleanValue())
+            }*/
+/*SH            else if (Configs.Generic.PICK_BLOCK_ENABLED.getBooleanValue())
             {
                 if (KeybindMulti.hotkeyMatchesKeybind(Hotkeys.PICK_BLOCK_LAST, mc.options.keyUse))
                 {
                     WorldUtils.doSchematicWorldPickBlock(false, mc);
                 }
-            }
+            }*/
 
-            if (Configs.Generic.PLACEMENT_RESTRICTION.getBooleanValue())
+/*SH            if (Configs.Generic.PLACEMENT_RESTRICTION.getBooleanValue())
             {
                 return WorldUtils.handlePlacementRestriction(mc);
-            }
+            }*/
         }
 
         return false;
@@ -326,7 +326,7 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
         }
         else
         {*/
-            WorldUtils.easyPlaceOnUseTick(mc);
+//SH            WorldUtils.easyPlaceOnUseTick(mc);
 //SH        }
     }
 }

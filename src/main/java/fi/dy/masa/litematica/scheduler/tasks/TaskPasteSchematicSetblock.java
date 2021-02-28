@@ -1,3 +1,4 @@
+/*SH
 package fi.dy.masa.litematica.scheduler.tasks;
 
 import java.util.ArrayList;
@@ -35,8 +36,8 @@ public class TaskPasteSchematicSetblock extends TaskBase implements IInfoHudRend
     private final ArrayListMultimap<ChunkPos, IntBoundingBox> boxesInChunks = ArrayListMultimap.create();
     private final List<IntBoundingBox> boxesInCurrentChunk = new ArrayList<>();
     private final List<ChunkPos> chunks = new ArrayList<>();
-    private final ChunkPosComparator comparator;
-    private final int maxCommandsPerTick;
+    //SH    private final ChunkPosComparator comparator;
+//SH    private final int maxCommandsPerTick;
     private final boolean changedBlockOnly;
     private final ReplaceBehavior replace;
     private int sentCommandsThisTick;
@@ -48,7 +49,8 @@ public class TaskPasteSchematicSetblock extends TaskBase implements IInfoHudRend
     private int boxVolume;
     private boolean boxInProgress;
 
-    public TaskPasteSchematicSetblock(SchematicPlacement placement, boolean changedBlocksOnly)
+*/
+/*SH    public TaskPasteSchematicSetblock(SchematicPlacement placement, boolean changedBlocksOnly)
     {
         this.changedBlockOnly = changedBlocksOnly;
         this.maxCommandsPerTick = Configs.Generic.PASTE_COMMAND_LIMIT.getIntegerValue();
@@ -69,7 +71,8 @@ public class TaskPasteSchematicSetblock extends TaskBase implements IInfoHudRend
 
         InfoHud.getInstance().addInfoHudRenderer(this, true);
         this.updateInfoHudLines();
-    }
+    }*//*
+
 
     @Override
     public boolean canExecute()
@@ -264,19 +267,23 @@ public class TaskPasteSchematicSetblock extends TaskBase implements IInfoHudRend
 
             if (id != null)
             {
-                /*
+                */
+/*
                 NBTTagCompound nbt = new NBTTagCompound();
                 entity.writeToNBTOptional(nbt);
                 String nbtString = nbt.toString();
-                */
+                *//*
+
 
                 String strCommand = String.format(Locale.ROOT, "/summon %s %f %f %f", id, entity.getX(), entity.getY(), entity.getZ());
-                /*
+                */
+/*
                 String strCommand = String.format("/summon %s %f %f %f %s", entityName, entity.posX, entity.posY, entity.posZ, nbtString);
                 System.out.printf("entity: %s\n", entity);
                 System.out.printf("%s\n", strCommand);
                 System.out.printf("nbt: %s\n", nbtString);
-                */
+                *//*
+
 
                 player.sendChatMessage(strCommand);
             }
@@ -285,11 +292,11 @@ public class TaskPasteSchematicSetblock extends TaskBase implements IInfoHudRend
 
     private void sendSetBlockCommand(int x, int y, int z, BlockState state, ClientPlayerEntity player)
     {
-        String cmdName = Configs.Generic.PASTE_COMMAND_SETBLOCK.getStringValue();
+//SH        String cmdName = Configs.Generic.PASTE_COMMAND_SETBLOCK.getStringValue();
         String blockString = BlockArgumentParser.stringifyBlockState(state);
-        String strCommand = String.format("/%s %d %d %d %s", cmdName, x, y, z, blockString);
+//SH        String strCommand = String.format("/%s %d %d %d %s", cmdName, x, y, z, blockString);
 
-        player.sendChatMessage(strCommand);
+//SH        player.sendChatMessage(strCommand);
         ++this.sentCommandsTotal;
     }
 
@@ -334,3 +341,4 @@ public class TaskPasteSchematicSetblock extends TaskBase implements IInfoHudRend
         this.infoHudLines = hudLines;
     }
 }
+*/
