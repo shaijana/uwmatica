@@ -10,6 +10,8 @@ import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
+
+import net.minecraft.block.Blocks;
 import org.lwjgl.opengl.GL11;
 import com.google.common.collect.Sets;
 import net.minecraft.block.Block;
@@ -76,6 +78,8 @@ public class ChunkRendererSchematicVbo
 
     private boolean needsUpdate;
     private boolean needsImmediateUpdate;
+
+    public static HashSet<Block> forbiddenBlocks = new HashSet<Block>();
 
     public ChunkRendererSchematicVbo(WorldSchematic world, WorldRendererSchematic worldRenderer)
     {
@@ -659,6 +663,18 @@ public class ChunkRendererSchematicVbo
         }
         else
         {
+            forbiddenBlocks.add(Blocks.DIAMOND_ORE);
+            forbiddenBlocks.add(Blocks.IRON_ORE);
+            forbiddenBlocks.add(Blocks.LAPIS_ORE);
+            forbiddenBlocks.add(Blocks.COAL_ORE);
+            forbiddenBlocks.add(Blocks.EMERALD_ORE);
+            forbiddenBlocks.add(Blocks.GOLD_ORE);
+            forbiddenBlocks.add(Blocks.NETHER_GOLD_ORE);
+            forbiddenBlocks.add(Blocks.REDSTONE_ORE);
+            forbiddenBlocks.add(Blocks.NETHER_QUARTZ_ORE);
+            if(forbiddenBlocks.contains(stateClient.getBlock()) ==false){
+
+
             boolean clientHasAir = stateClient.isAir();
             boolean schematicHasAir = stateSchematic.isAir();
 
@@ -684,6 +700,8 @@ public class ChunkRendererSchematicVbo
                 }
             }
         }
+            else{             return OverlayType.NONE;}
+    }
     }
 
     @Nullable
