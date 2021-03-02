@@ -7,4 +7,5 @@ logs/
 .classpath
 .project
 build.number
-/run
+run/
+.idea/
