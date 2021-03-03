@@ -1,7 +1,5 @@
 package fi.dy.masa.litematica.gui;
 
-import java.io.File;
-import javax.annotation.Nullable;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.gui.GuiMainMenu.ButtonListenerChangeMenu;
@@ -27,6 +25,9 @@ import fi.dy.masa.malilib.util.StringUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.util.ScreenshotUtils;
+
+import javax.annotation.Nullable;
+import java.io.File;
 
 public class GuiSchematicManager extends GuiSchematicBrowserBase implements ISelectionListener<DirectoryEntry>
 {
@@ -233,7 +234,8 @@ public class GuiSchematicManager extends GuiSchematicBrowserBase implements ISel
                     this.gui.addMessage(MessageType.ERROR, "litematica.error.schematic_manager.schematic_export.unsupported_type", file.getName());
                 }
             }*/
-/*SH            else if (this.type == Type.IMPORT_SCHEMATIC)
+            //changed from else if
+            if (this.type == Type.IMPORT_SCHEMATIC)
             {
                 if (fileType == FileType.SCHEMATICA_SCHEMATIC ||
                     fileType == FileType.VANILLA_STRUCTURE)
@@ -246,7 +248,7 @@ public class GuiSchematicManager extends GuiSchematicBrowserBase implements ISel
                 {
                     this.gui.addMessage(MessageType.ERROR, "litematica.error.schematic_manager.schematic_import.unsupported_type", file.getName());
                 }
-            }*/
+            }
             //changed from else if-SH
             if (this.type == Type.RENAME_SCHEMATIC)
             {
