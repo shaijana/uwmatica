@@ -82,7 +82,7 @@ public class GuiSchematicManager extends GuiSchematicBrowserBase implements ISel
             {
                 x = this.createButton(x, y, ButtonListener.Type.RENAME_SCHEMATIC);
                 x = this.createButton(x, y, ButtonListener.Type.SET_PREVIEW);
-                x = this.createButton(x, y, ButtonListener.Type.EXPORT_SCHEMATIC);
+//SH                x = this.createButton(x, y, ButtonListener.Type.EXPORT_SCHEMATIC);
                 x = this.createButton(x, y, ButtonListener.Type.EXPORT_TYPE);
                 x = this.createButton(x, y, ButtonListener.Type.DELETE_SCHEMATIC);
             }

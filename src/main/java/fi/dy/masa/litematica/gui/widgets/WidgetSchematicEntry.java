@@ -1,13 +1,9 @@
 package fi.dy.masa.litematica.gui.widgets;
 
-import java.io.File;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.BlockPos;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.data.SchematicHolder;
-//SHimport fi.dy.masa.litematica.gui.GuiSchematicSave;
 import fi.dy.masa.litematica.gui.Icons;
 import fi.dy.masa.litematica.schematic.LitematicaSchematic;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
@@ -18,8 +14,13 @@ import fi.dy.masa.malilib.gui.button.ButtonGeneric;
 import fi.dy.masa.malilib.gui.button.IButtonActionListener;
 import fi.dy.masa.malilib.gui.widgets.WidgetListEntryBase;
 import fi.dy.masa.malilib.render.RenderUtils;
-import fi.dy.masa.malilib.util.GuiUtils;
 import fi.dy.masa.malilib.util.StringUtils;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.util.math.BlockPos;
+
+import java.io.File;
+
+//SHimport fi.dy.masa.litematica.gui.GuiSchematicSave;
 
 public class WidgetSchematicEntry extends WidgetListEntryBase<LitematicaSchematic>
 {
@@ -51,11 +52,11 @@ public class WidgetSchematicEntry extends WidgetListEntryBase<LitematicaSchemati
         listener = new ButtonListener(ButtonListener.Type.UNLOAD, this);
         this.addButton(new ButtonGeneric(posX, y, len, 20, text), listener);
 
-        text = StringUtils.translate("litematica.gui.button.save_to_file");
+/*SH        text = StringUtils.translate("litematica.gui.button.save_to_file");
         len = this.getStringWidth(text) + 10;
         posX -= (len + 2);
         listener = new ButtonListener(ButtonListener.Type.SAVE_TO_FILE, this);
-        this.addButton(new ButtonGeneric(posX, y, len, 20, text), listener);
+        this.addButton(new ButtonGeneric(posX, y, len, 20, text), listener);*/
 
         text = StringUtils.translate("litematica.gui.button.create_placement");
         len = this.getStringWidth(text) + 10;
