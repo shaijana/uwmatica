@@ -4,7 +4,8 @@ import fi.dy.masa.malilib.util.StringUtils;
 
 public class Reference
 {
-    public static final String MOD_ID = "uwmatica";
+    public static final String MOD_ID = "litematica";
     public static final String MOD_NAME = "UWmatica";
-    public static final String MOD_VERSION = StringUtils.getModVersionString(MOD_ID);
+    public static final String Mod_aID = "uwmatica";
+    public static final String MOD_VERSION = StringUtils.getModVersionString(Mod_aID);
 }
