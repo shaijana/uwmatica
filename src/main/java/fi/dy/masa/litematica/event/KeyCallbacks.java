@@ -51,7 +51,7 @@ public class KeyCallbacks
         Hotkeys.OPEN_GUI_LOADED_SCHEMATICS.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.OPEN_GUI_MAIN_MENU.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.OPEN_GUI_MATERIAL_LIST.getKeybind().setCallback(callbackHotkeys);
-//SH        Hotkeys.OPEN_GUI_PLACEMENT_SETTINGS.getKeybind().setCallback(callbackHotkeys);
+        Hotkeys.OPEN_GUI_PLACEMENT_SETTINGS.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.OPEN_GUI_SCHEMATIC_PLACEMENTS.getKeybind().setCallback(callbackHotkeys);
 //SH        Hotkeys.OPEN_GUI_SCHEMATIC_PROJECTS.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.OPEN_GUI_SCHEMATIC_VERIFIER.getKeybind().setCallback(callbackHotkeys);
@@ -287,7 +287,7 @@ public class KeyCallbacks
 
                 return true;
             }
-/*SH            else if (key == Hotkeys.OPEN_GUI_PLACEMENT_SETTINGS.getKeybind())
+            else if (key == Hotkeys.OPEN_GUI_PLACEMENT_SETTINGS.getKeybind())
             {
                 SchematicPlacement schematicPlacement = DataManager.getSchematicPlacementManager().getSelectedSchematicPlacement();
 
@@ -310,7 +310,7 @@ public class KeyCallbacks
                 }
 
                 return true;
-            }*/
+            }
             else if (key == Hotkeys.OPEN_GUI_SCHEMATIC_VERIFIER.getKeybind())
             {
                 SchematicPlacement schematicPlacement = DataManager.getSchematicPlacementManager().getSelectedSchematicPlacement();
