@@ -1,9 +1,10 @@
 package fi.dy.masa.litematica.config;
 
-import java.util.List;
 import com.google.common.collect.ImmutableList;
 import fi.dy.masa.malilib.config.options.ConfigHotkey;
 import fi.dy.masa.malilib.hotkeys.KeybindSettings;
+
+import java.util.List;
 
 public class Hotkeys
 {
@@ -12,7 +13,7 @@ public class Hotkeys
 //SH    public static final ConfigHotkey DELETE_SELECTION_BOX               = new ConfigHotkey("deleteSelectionBox",                "",     "Delete the currently selected box");
 //SH    public static final ConfigHotkey EASY_PLACE_ACTIVATION              = new ConfigHotkey("easyPlaceActivation",               "",     KeybindSettings.MODIFIER_INGAME_EMPTY, "When the easyPlaceMode is enabled, this key must\nbe held to enable placing the blocks when\nusing the vanilla Use key");
 //SH    public static final ConfigHotkey EASY_PLACE_TOGGLE                  = new ConfigHotkey("easyPlaceToggle",                   "",     "Allows quickly toggling on/off the Easy Place mode");
-    public static final ConfigHotkey EXECUTE_OPERATION                  = new ConfigHotkey("executeOperation",                  "",     "Execute the currently selected tool operation with the\ncurrent selection or placement in the Fill, Replace,\nPaste Schematic etc. modes");
+//SH    public static final ConfigHotkey EXECUTE_OPERATION                  = new ConfigHotkey("executeOperation",                  "",     "Execute the currently selected tool operation with the\ncurrent selection or placement in the Fill, Replace,\nPaste Schematic etc. modes");
     public static final ConfigHotkey INVERT_GHOST_BLOCK_RENDER_STATE    = new ConfigHotkey("invertGhostBlockRenderState",       "",     "Inverts the schematic/ghost block rendering status\nwhile this keybind is held down");
     public static final ConfigHotkey INVERT_OVERLAY_RENDER_STATE        = new ConfigHotkey("invertOverlayRenderState",          "",     "Inverts the Overlay rendering status while this keybind is held down");
     public static final ConfigHotkey LAYER_MODE_NEXT                    = new ConfigHotkey("layerModeNext",                     "M,PAGE_UP",    "Cycle the rendering mode (all, layers) forward");
@@ -27,7 +28,7 @@ public class Hotkeys
     public static final ConfigHotkey OPEN_GUI_LOADED_SCHEMATICS         = new ConfigHotkey("openGuiLoadedSchematics",           "",     "Open the Loaded Schematic GUI");
     public static final ConfigHotkey OPEN_GUI_MAIN_MENU                 = new ConfigHotkey("openGuiMainMenu",                   "M",    KeybindSettings.RELEASE_EXCLUSIVE, "Open the Litematica main menu");
     public static final ConfigHotkey OPEN_GUI_MATERIAL_LIST             = new ConfigHotkey("openGuiMaterialList",               "M,L",  "Open the Material List GUI for the currently\nselected schematic placement");
-//SH    public static final ConfigHotkey OPEN_GUI_PLACEMENT_SETTINGS        = new ConfigHotkey("openGuiPlacementSettings",          "KP_SUBTRACT", "Open the Placement Settings GUI for the currently\nselected placement or sub-region");
+    public static final ConfigHotkey OPEN_GUI_PLACEMENT_SETTINGS        = new ConfigHotkey("openGuiPlacementSettings",          "KP_SUBTRACT", "Open the Placement Settings GUI for the currently\nselected placement or sub-region");
     public static final ConfigHotkey OPEN_GUI_SCHEMATIC_PLACEMENTS      = new ConfigHotkey("openGuiSchematicPlacements",        "M,P",  "Open the Schematic Placements GUI");
 //SH    public static final ConfigHotkey OPEN_GUI_SCHEMATIC_PROJECTS        = new ConfigHotkey("openGuiSchematicProjects",          "",     "Open the Schematic Projects GUI");
     public static final ConfigHotkey OPEN_GUI_SCHEMATIC_VERIFIER        = new ConfigHotkey("openGuiSchematicVerifier",          "M,V",  "Open the Schematic Verifier GUI for the currently\nselected schematic placement");
@@ -85,7 +86,7 @@ public class Hotkeys
 //SH            DELETE_SELECTION_BOX,
 //SH            EASY_PLACE_ACTIVATION,
 //SH            EASY_PLACE_TOGGLE,
-            EXECUTE_OPERATION,
+//SH            EXECUTE_OPERATION,
             INVERT_GHOST_BLOCK_RENDER_STATE,
             INVERT_OVERLAY_RENDER_STATE,
             LAYER_MODE_NEXT,
@@ -100,7 +101,7 @@ public class Hotkeys
             OPEN_GUI_LOADED_SCHEMATICS,
             OPEN_GUI_MAIN_MENU,
             OPEN_GUI_MATERIAL_LIST,
-//SH            OPEN_GUI_PLACEMENT_SETTINGS,
+            OPEN_GUI_PLACEMENT_SETTINGS,
             OPEN_GUI_SCHEMATIC_PLACEMENTS,
 //SH            OPEN_GUI_SCHEMATIC_PROJECTS,
             OPEN_GUI_SCHEMATIC_VERIFIER,
