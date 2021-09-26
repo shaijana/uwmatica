@@ -1,3 +1,4 @@
+/*SH
 package fi.dy.masa.litematica.gui;
 
 import java.io.File;
@@ -118,3 +119,4 @@ public class GuiSchematicSaveExported extends GuiSchematicSaveBase
         }
     }
 }
+*/

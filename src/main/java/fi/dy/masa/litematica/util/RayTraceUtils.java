@@ -79,12 +79,12 @@ public class RayTraceUtils
         HitResult result = getRayTraceFromEntity(world, entity, false, range);
         double closestVanilla = result.getType() != HitResult.Type.MISS ? result.getPos().distanceTo(eyesPos) : -1D;
 
-        AreaSelection area = DataManager.getSelectionManager().getCurrentSelection();
+//SH        AreaSelection area = DataManager.getSelectionManager().getCurrentSelection();
         RayTraceWrapper wrapper = null;
 
         clearTraceVars();
 
-        if (DataManager.getToolMode().getUsesSchematic() == false && area != null)
+/*SH        if (DataManager.getToolMode().getUsesSchematic() == false && area != null)
         {
             for (Box box : area.getAllSubRegionBoxes())
             {
@@ -104,7 +104,7 @@ public class RayTraceUtils
             {
                 traceToOrigin(origin, eyesPos, lookEndPos, HitType.SELECTION_ORIGIN, null);
             }
-        }
+        }*/
 
         if (DataManager.getToolMode().getUsesSchematic())
         {

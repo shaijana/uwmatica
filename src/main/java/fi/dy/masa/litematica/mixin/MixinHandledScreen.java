@@ -22,6 +22,6 @@ public abstract class MixinHandledScreen extends Screen
             target = "Lnet/minecraft/client/gui/screen/ingame/HandledScreen;drawBackground(Lnet/minecraft/client/util/math/MatrixStack;FII)V"))
     private void renderSlotHighlights(MatrixStack matrices, int mouseX, int mouseY, float delta, CallbackInfo ci)
     {
-        MaterialListHudRenderer.renderLookedAtBlockInInventory((HandledScreen<?>) (Object) this, this.client);
+//SH        MaterialListHudRenderer.renderLookedAtBlockInInventory((HandledScreen<?>) (Object) this, this.client);
     }
 }

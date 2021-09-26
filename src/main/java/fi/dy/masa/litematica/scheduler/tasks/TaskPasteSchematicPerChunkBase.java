@@ -1,29 +1,6 @@
 package fi.dy.masa.litematica.scheduler.tasks;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import javax.annotation.Nullable;
-import com.google.common.collect.ArrayListMultimap;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-import fi.dy.masa.litematica.config.Configs;
-import fi.dy.masa.litematica.data.DataManager;
-import fi.dy.masa.litematica.render.infohud.IInfoHudRenderer;
-import fi.dy.masa.litematica.render.infohud.InfoHud;
-import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
-import fi.dy.masa.litematica.util.PositionUtils.ChunkPosComparator;
-import fi.dy.masa.litematica.util.ReplaceBehavior;
-import fi.dy.masa.litematica.world.SchematicWorldHandler;
-import fi.dy.masa.litematica.world.WorldSchematic;
-import fi.dy.masa.malilib.gui.GuiBase;
-import fi.dy.masa.malilib.util.IntBoundingBox;
-import fi.dy.masa.malilib.util.LayerRange;
-import fi.dy.masa.malilib.util.StringUtils;
-
+/*SH
 public abstract class TaskPasteSchematicPerChunkBase extends TaskBase implements IInfoHudRenderer
 {
     protected final ArrayListMultimap<ChunkPos, IntBoundingBox> boxesInChunks = ArrayListMultimap.create();
@@ -35,7 +12,8 @@ public abstract class TaskPasteSchematicPerChunkBase extends TaskBase implements
     protected final boolean changedBlockOnly;
     protected final ReplaceBehavior replace;
 
-    public TaskPasteSchematicPerChunkBase(Collection<SchematicPlacement> placements, LayerRange range, boolean changedBlocksOnly)
+*/
+/*SH    public TaskPasteSchematicPerChunkBase(Collection<SchematicPlacement> placements, LayerRange range, boolean changedBlocksOnly)
     {
         this.placements = placements;
         this.layerRange = range;
@@ -44,7 +22,8 @@ public abstract class TaskPasteSchematicPerChunkBase extends TaskBase implements
         this.comparator.setClosestFirst(true);
         this.replace = (ReplaceBehavior) Configs.Generic.PASTE_REPLACE_BEHAVIOR.getOptionListValue();
         this.name = StringUtils.translate("litematica.gui.label.task_name.paste");
-    }
+    }*//*
+
 
     @Override
     public void init()
@@ -88,21 +67,25 @@ public abstract class TaskPasteSchematicPerChunkBase extends TaskBase implements
         }
     }
 
-    /**
+    */
+/**
      * Clamps the given box to the layer range bounds.
      * @param box
      * @return the clamped box, or null, if the range does not intersect the original box
-     */
+     *//*
+
     @Nullable
     public IntBoundingBox getClampedBox(IntBoundingBox box, LayerRange range)
     {
         return this.getClampedArea(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ, range);
     }
 
-    /**
+    */
+/**
      * Clamps the given box to the layer range bounds.
      * @return the clamped box, or null, if the range does not intersect the original box
-     */
+     *//*
+
     @Nullable
     public IntBoundingBox getClampedArea(BlockPos posMin, BlockPos posMax, LayerRange range)
     {
@@ -110,10 +93,12 @@ public abstract class TaskPasteSchematicPerChunkBase extends TaskBase implements
                                    posMax.getX(), posMax.getY(), posMax.getZ(), range);
     }
 
-    /**
+    */
+/**
      * Clamps the given box to the layer range bounds.
      * @return the clamped box, or null, if the range does not intersect the original box
-     */
+     *//*
+
     @Nullable
     public IntBoundingBox getClampedArea(int minX, int minY, int minZ, int maxX, int maxY, int maxZ, LayerRange range)
     {
@@ -209,3 +194,4 @@ public abstract class TaskPasteSchematicPerChunkBase extends TaskBase implements
         this.infoHudLines = hudLines;
     }
 }
+*/

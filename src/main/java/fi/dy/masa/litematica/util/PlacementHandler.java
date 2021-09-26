@@ -1,17 +1,8 @@
 package fi.dy.masa.litematica.util;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import javax.annotation.Nullable;
 import com.google.common.collect.ImmutableSet;
-import net.minecraft.block.BedBlock;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.ComparatorBlock;
-import net.minecraft.block.RepeaterBlock;
-import net.minecraft.block.StairsBlock;
-import net.minecraft.block.TrapdoorBlock;
+import fi.dy.masa.litematica.Litematica;
+import net.minecraft.block.*;
 import net.minecraft.block.enums.BlockHalf;
 import net.minecraft.block.enums.ComparatorMode;
 import net.minecraft.block.enums.SlabType;
@@ -26,8 +17,11 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import fi.dy.masa.litematica.Litematica;
-import fi.dy.masa.litematica.config.Configs;
+
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 public class PlacementHandler
 {
@@ -70,11 +64,11 @@ public class PlacementHandler
     @Nullable
     public static BlockState applyPlacementProtocolToPlacementState(BlockState state, UseContext context)
     {
-        if (Configs.Generic.EASY_PLACE_PROTOCOL_V3.getBooleanValue())
+/*SH        if (Configs.Generic.EASY_PLACE_PROTOCOL_V3.getBooleanValue())
         {
             return applyPlacementProtocolV3(state, context);
-        }
-        else
+        }*/
+//SH        else
         {
             return applyPlacementProtocolV2(state, context);
         }

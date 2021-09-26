@@ -1,20 +1,6 @@
 package fi.dy.masa.litematica.scheduler.tasks;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Collection;
-import java.util.Date;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.util.math.ChunkPos;
-import fi.dy.masa.litematica.data.DataManager;
-import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
-import fi.dy.masa.litematica.world.WorldSchematic;
-import fi.dy.masa.malilib.util.IntBoundingBox;
-import fi.dy.masa.malilib.util.LayerRange;
+/*SH
 
 public class TaskPasteSchematicSetblockToMcfunction extends TaskPasteSchematicPerChunkCommand
 {
@@ -101,3 +87,4 @@ public class TaskPasteSchematicSetblockToMcfunction extends TaskPasteSchematicPe
         catch (IOException ignore) {}
     }
 }
+*/

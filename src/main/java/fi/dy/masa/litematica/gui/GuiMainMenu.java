@@ -35,49 +35,49 @@ public class GuiMainMenu extends GuiBase
         this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.LOADED_SCHEMATICS);
         y += 22;
         this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.LOAD_SCHEMATICS);
-        y += 44;
+//SH        y += 44;
 
-        this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.AREA_EDITOR);
-        y += 22;
-        this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.AREA_SELECTION_BROWSER);
-        y += 22;
+//SH        this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.AREA_EDITOR);
+//SH        y += 22;
+//SH        this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.AREA_SELECTION_BROWSER);
+//SH        y += 22;
 
-        SelectionMode mode = DataManager.getSelectionManager().getSelectionMode();
-        String label = StringUtils.translate("litematica.gui.button.area_selection_mode", mode.getDisplayName());
-        ButtonGeneric button = new ButtonGeneric(x, y, width, 20, label);
-        this.addButton(button, new ButtonListenerCycleAreaMode(this));
+//SH        SelectionMode mode = DataManager.getSelectionManager().getSelectionMode();
+//SH        String label = StringUtils.translate("litematica.gui.button.area_selection_mode", mode.getDisplayName());
+//SH        ButtonGeneric button = new ButtonGeneric(x, y, width, 20, label);
+//SH        this.addButton(button, new ButtonListenerCycleAreaMode(this));
 
-        label = StringUtils.translate("litematica.gui.button.tool_mode", DataManager.getToolMode().getName());
-        int width2 = this.getStringWidth(label) + 10;
+//SH        label = StringUtils.translate("litematica.gui.button.tool_mode", DataManager.getToolMode().getName());
+//SH        int width2 = this.getStringWidth(label) + 10;
 
-        y = this.height - 26;
-        button = new ButtonGeneric(x, y, width2, 20, label);
-        this.addButton(button, new ButtonListenerCycleToolMode(this));
+//SH        y = this.height - 26;
+//SH        button = new ButtonGeneric(x, y, width2, 20, label);
+//SH        this.addButton(button, new ButtonListenerCycleToolMode(this));
 
         x += width + 20;
-        y = 30;
+//SH        y = 30;
         this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.CONFIGURATION);
         y += 44;
 
         this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.SCHEMATIC_MANAGER);
-        y += 44;
+//SH        y += 44;
 
-        y += 22;
-        this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.TASK_MANAGER);
-        y += 22;
-        this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.SCHEMATIC_PROJECTS_MANAGER);
+//SH        y += 22;
+//SH        this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.TASK_MANAGER);
+//SH        y += 22;
+//SH        this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.SCHEMATIC_PROJECTS_MANAGER);
     }
 
     private void createChangeMenuButton(int x, int y, int width, ButtonListenerChangeMenu.ButtonType type)
     {
         ButtonGeneric button = new ButtonGeneric(x, y, width, 20, type.getDisplayName(), type.getIcon());
 
-        if (type == ButtonListenerChangeMenu.ButtonType.AREA_SELECTION_BROWSER &&
+/*SH        if (type == ButtonListenerChangeMenu.ButtonType.AREA_SELECTION_BROWSER &&
             DataManager.getSchematicProjectsManager().hasProjectOpen())
         {
             button.setEnabled(false);
             button.setHoverStrings("litematica.gui.button.hover.schematic_projects.area_browser_disabled_currently_in_projects_mode");
-        }
+        }*/
 
         this.addButton(button, new ButtonListenerChangeMenu(type, this));
     }
@@ -119,12 +119,12 @@ public class GuiMainMenu extends GuiBase
 
             switch (this.type)
             {
-                case AREA_EDITOR:
+/*Shai                case AREA_EDITOR:
                     gui = DataManager.getSelectionManager().getEditGui();
                     break;
                 case AREA_SELECTION_BROWSER:
                     gui = new GuiAreaSelectionManager();
-                    break;
+                    break;*/
                 case CONFIGURATION:
                     GuiBase.openGui(new GuiConfigs());
                     return;
@@ -145,9 +145,9 @@ public class GuiMainMenu extends GuiBase
                     break;
                 case TASK_MANAGER:
                     gui = new GuiTaskManager();
-                    break;
+/*Shai                    break;
                 case SCHEMATIC_PROJECTS_MANAGER:
-                    DataManager.getSchematicProjectsManager().openSchematicProjectsGui();
+                    DataManager.getSchematicProjectsManager().openSchematicProjectsGui();*/
                     return;
             }
 
@@ -165,9 +165,9 @@ public class GuiMainMenu extends GuiBase
             // List Schematics placements
             SCHEMATIC_PLACEMENTS        ("litematica.gui.button.change_menu.show_schematic_placements", ButtonIcons.SCHEMATIC_PLACEMENTS),
             // Open the Area Selection browser
-            AREA_SELECTION_BROWSER      ("litematica.gui.button.change_menu.show_area_selections", ButtonIcons.AREA_SELECTION),
+//SH            AREA_SELECTION_BROWSER      ("litematica.gui.button.change_menu.show_area_selections", ButtonIcons.AREA_SELECTION),
             // Open the Area Editor GUI
-            AREA_EDITOR                 ("litematica.gui.button.change_menu.area_editor", ButtonIcons.AREA_EDITOR),
+//SH            AREA_EDITOR                 ("litematica.gui.button.change_menu.area_editor", ButtonIcons.AREA_EDITOR),
             // Load Schematics from file to memory
             LOAD_SCHEMATICS             ("litematica.gui.button.change_menu.load_schematics_to_memory", ButtonIcons.SCHEMATIC_BROWSER),
             // Edit Schematics (description or icon), or convert between formats
@@ -175,7 +175,7 @@ public class GuiMainMenu extends GuiBase
             // Open the Task Manager
             TASK_MANAGER                ("litematica.gui.button.change_menu.task_manager", ButtonIcons.TASK_MANAGER),
             // Open the Schematic Projects browser
-            SCHEMATIC_PROJECTS_MANAGER  ("litematica.gui.button.change_menu.schematic_projects_manager", ButtonIcons.SCHEMATIC_PROJECTS),
+//SH            SCHEMATIC_PROJECTS_MANAGER  ("litematica.gui.button.change_menu.schematic_projects_manager", ButtonIcons.SCHEMATIC_PROJECTS),
             // In-game Configuration GUI
             CONFIGURATION               ("litematica.gui.button.change_menu.configuration_menu", ButtonIcons.CONFIGURATION),
             // Switch to the Litematica main menu
@@ -225,7 +225,7 @@ public class GuiMainMenu extends GuiBase
         }
     }
 
-    private static class ButtonListenerCycleAreaMode implements IButtonActionListener
+/*SH    private static class ButtonListenerCycleAreaMode implements IButtonActionListener
     {
         private final GuiMainMenu gui;
 
@@ -240,5 +240,5 @@ public class GuiMainMenu extends GuiBase
             DataManager.getSelectionManager().switchSelectionMode();
             this.gui.initGui();
         }
-    }
+    }*/
 }

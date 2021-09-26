@@ -1,12 +1,19 @@
+/*SH
 package fi.dy.masa.litematica.scheduler.tasks;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
-import javax.annotation.Nullable;
+import fi.dy.masa.litematica.config.Configs;
+import fi.dy.masa.litematica.render.infohud.InfoHud;
+import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
+import fi.dy.masa.litematica.util.EntityUtils;
+import fi.dy.masa.litematica.util.PasteNbtBehavior;
+import fi.dy.masa.litematica.util.ReplaceBehavior;
+import fi.dy.masa.litematica.world.SchematicWorldHandler;
+import fi.dy.masa.litematica.world.WorldSchematic;
+import fi.dy.masa.malilib.gui.Message.MessageType;
+import fi.dy.masa.malilib.util.InfoUtils;
+import fi.dy.masa.malilib.util.IntBoundingBox;
+import fi.dy.masa.malilib.util.LayerRange;
+import fi.dy.masa.malilib.util.PositionUtils;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -24,19 +31,9 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
-import fi.dy.masa.litematica.config.Configs;
-import fi.dy.masa.litematica.render.infohud.InfoHud;
-import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
-import fi.dy.masa.litematica.util.EntityUtils;
-import fi.dy.masa.litematica.util.PasteNbtBehavior;
-import fi.dy.masa.litematica.util.ReplaceBehavior;
-import fi.dy.masa.litematica.world.SchematicWorldHandler;
-import fi.dy.masa.litematica.world.WorldSchematic;
-import fi.dy.masa.malilib.gui.Message.MessageType;
-import fi.dy.masa.malilib.util.InfoUtils;
-import fi.dy.masa.malilib.util.IntBoundingBox;
-import fi.dy.masa.malilib.util.LayerRange;
-import fi.dy.masa.malilib.util.PositionUtils;
+
+import javax.annotation.Nullable;
+import java.util.*;
 
 public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChunkBase
 {
@@ -255,19 +252,23 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
 
             if (id != null)
             {
-                /*
+                */
+/*
                 NBTTagCompound nbt = new NBTTagCompound();
                 entity.writeToNBTOptional(nbt);
                 String nbtString = nbt.toString();
-                */
+                *//*
+
 
                 String strCommand = String.format(Locale.ROOT, "summon %s %f %f %f", id, entity.getX(), entity.getY(), entity.getZ());
-                /*
+                */
+/*
                 String strCommand = String.format("/summon %s %f %f %f %s", entityName, entity.posX, entity.posY, entity.posZ, nbtString);
                 System.out.printf("entity: %s\n", entity);
                 System.out.printf("%s\n", strCommand);
                 System.out.printf("nbt: %s\n", nbtString);
-                */
+                *//*
+
 
                 this.sendCommand(strCommand, player);
             }
@@ -484,3 +485,4 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
         super.stop();
     }
 }
+*/

@@ -1,23 +1,25 @@
 package fi.dy.masa.litematica.util;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
-import javax.annotation.Nullable;
 import com.mojang.datafixers.DataFixer;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.ComparatorBlock;
-import net.minecraft.block.RepeaterBlock;
-import net.minecraft.block.SlabBlock;
-import net.minecraft.block.StairsBlock;
-import net.minecraft.block.TrapdoorBlock;
+import fi.dy.masa.litematica.Litematica;
+import fi.dy.masa.litematica.data.DataManager;
+import fi.dy.masa.litematica.materials.MaterialCache;
+import fi.dy.masa.litematica.schematic.LitematicaSchematic;
+import fi.dy.masa.litematica.schematic.SchematicaSchematic;
+import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
+import fi.dy.masa.litematica.schematic.placement.SchematicPlacementManager;
+import fi.dy.masa.litematica.selection.AreaSelection;
+import fi.dy.masa.litematica.selection.Box;
+import fi.dy.masa.litematica.tool.ToolMode;
+import fi.dy.masa.litematica.util.PositionUtils.Corner;
+import fi.dy.masa.litematica.util.RayTraceUtils.RayTraceWrapper;
+import fi.dy.masa.litematica.util.RayTraceUtils.RayTraceWrapper.HitType;
+import fi.dy.masa.litematica.world.SchematicWorldHandler;
+import fi.dy.masa.litematica.world.WorldSchematic;
+import fi.dy.masa.malilib.gui.Message.MessageType;
+import fi.dy.masa.malilib.interfaces.IStringConsumer;
+import fi.dy.masa.malilib.util.*;
+import net.minecraft.block.*;
 import net.minecraft.block.enums.BlockHalf;
 import net.minecraft.block.enums.ComparatorMode;
 import net.minecraft.block.enums.SlabType;
@@ -36,43 +38,23 @@ import net.minecraft.state.property.Properties;
 import net.minecraft.state.property.Property;
 import net.minecraft.structure.Structure;
 import net.minecraft.structure.StructurePlacementData;
-import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.util.math.*;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
-import fi.dy.masa.litematica.Litematica;
-import fi.dy.masa.litematica.config.Configs;
-import fi.dy.masa.litematica.config.Hotkeys;
-import fi.dy.masa.litematica.data.DataManager;
-import fi.dy.masa.litematica.materials.MaterialCache;
-import fi.dy.masa.litematica.schematic.LitematicaSchematic;
-import fi.dy.masa.litematica.schematic.SchematicaSchematic;
-import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
-import fi.dy.masa.litematica.schematic.placement.SchematicPlacementManager;
-import fi.dy.masa.litematica.selection.AreaSelection;
-import fi.dy.masa.litematica.selection.Box;
-import fi.dy.masa.litematica.tool.ToolMode;
-import fi.dy.masa.litematica.util.PositionUtils.Corner;
-import fi.dy.masa.litematica.util.RayTraceUtils.RayTraceWrapper;
-import fi.dy.masa.litematica.util.RayTraceUtils.RayTraceWrapper.HitType;
-import fi.dy.masa.litematica.world.SchematicWorldHandler;
-import fi.dy.masa.litematica.world.WorldSchematic;
-import fi.dy.masa.malilib.gui.Message.MessageType;
-import fi.dy.masa.malilib.interfaces.IStringConsumer;
-import fi.dy.masa.malilib.util.FileUtils;
-import fi.dy.masa.malilib.util.InfoUtils;
-import fi.dy.masa.malilib.util.IntBoundingBox;
-import fi.dy.masa.malilib.util.LayerRange;
-import fi.dy.masa.malilib.util.StringUtils;
-import fi.dy.masa.malilib.util.SubChunkPos;
+
+import javax.annotation.Nullable;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
 
 public class WorldUtils
 {
@@ -376,7 +358,7 @@ public class WorldUtils
         return false;
     }
 
-    public static void easyPlaceOnUseTick(MinecraftClient mc)
+/*SH    public static void easyPlaceOnUseTick(MinecraftClient mc)
     {
         if (mc.player != null && DataManager.getToolMode() != ToolMode.REBUILD &&
             Configs.Generic.EASY_PLACE_MODE.getBooleanValue() &&
@@ -385,9 +367,9 @@ public class WorldUtils
         {
             WorldUtils.doEasyPlaceAction(mc);
         }
-    }
+    }*/
 
-    public static boolean handleEasyPlace(MinecraftClient mc)
+/*SH    public static boolean handleEasyPlace(MinecraftClient mc)
     {
         if (Configs.Generic.EASY_PLACE_MODE.getBooleanValue() &&
             DataManager.getToolMode() != ToolMode.REBUILD)
@@ -404,9 +386,9 @@ public class WorldUtils
         }
 
         return false;
-    }
+    }*/
 
-    private static ActionResult doEasyPlaceAction(MinecraftClient mc)
+/*SH    private static ActionResult doEasyPlaceAction(MinecraftClient mc)
     {
         RayTraceWrapper traceWrapper;
 
@@ -533,7 +515,7 @@ public class WorldUtils
         }
 
         return ActionResult.PASS;
-    }
+    }*/
 
     private static boolean easyPlaceBlockChecksCancel(BlockState stateSchematic, BlockState stateClient,
             PlayerEntity player, HitResult trace, ItemStack stack)

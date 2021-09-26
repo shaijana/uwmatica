@@ -19,7 +19,7 @@ import fi.dy.masa.litematica.schematic.LitematicaSchematic;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
 import fi.dy.masa.litematica.selection.AreaSelection;
 import fi.dy.masa.litematica.selection.AreaSelectionSimple;
-import fi.dy.masa.litematica.selection.SelectionManager;
+//SHimport fi.dy.masa.litematica.selection.SelectionManager;
 import fi.dy.masa.litematica.selection.SelectionMode;
 import fi.dy.masa.litematica.util.EntityUtils;
 import fi.dy.masa.litematica.util.ToolUtils;
@@ -96,8 +96,8 @@ public class SchematicProject
                 this.projectFile = newFile;
                 this.selection.setName(name);
                 this.selectionSimple.setName(name);
-                SelectionManager.renameSubRegionBoxIfSingle(this.selection, name);
-                SelectionManager.renameSubRegionBoxIfSingle(this.selectionSimple, name);
+//SH                SelectionManager.renameSubRegionBoxIfSingle(this.selection, name);
+//SH                SelectionManager.renameSubRegionBoxIfSingle(this.selectionSimple, name);
                 this.dirty = true;
             }
             catch (Exception e)
@@ -243,17 +243,17 @@ public class SchematicProject
 
             this.cacheCurrentAreaFromPlacement();
 
-            ToolUtils.deleteSelectionVolumes(this.lastSeenArea, true, () ->
+/*SH            ToolUtils.deleteSelectionVolumes(this.lastSeenArea, true, () ->
             {
                 DataManager.getSchematicPlacementManager().pastePlacementToWorld(this.currentPlacement, false, mc);
-            }, mc);
+            }, mc);*/
         }
     }
 
-    public void deleteLastSeenArea(MinecraftClient mc)
+/*SH    public void deleteLastSeenArea(MinecraftClient mc)
     {
         ToolUtils.deleteSelectionVolumes(this.lastSeenArea, true, mc);
-    }
+    }*/
 
     public void removeCurrentPlacement()
     {

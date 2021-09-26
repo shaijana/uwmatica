@@ -22,13 +22,13 @@ public abstract class MixinMinecraftClient extends ReentrantThreadExecutor<Runna
             target = "Lnet/minecraft/item/ItemStack;getCount()I", ordinal = 0), cancellable = true)
     private void handlePlacementRestriction(CallbackInfo ci)
     {
-        if (Configs.Generic.PLACEMENT_RESTRICTION.getBooleanValue())
+/*SH        if (Configs.Generic.PLACEMENT_RESTRICTION.getBooleanValue())
         {
             if (WorldUtils.handlePlacementRestriction((MinecraftClient)(Object) this))
             {
                 ci.cancel();
             }
-        }
+        }*/
     }
 
     @Inject(method = "tick()V", at = @At("HEAD"))

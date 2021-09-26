@@ -27,6 +27,9 @@ import fi.dy.masa.malilib.interfaces.IStringConsumerFeedback;
 import fi.dy.masa.malilib.util.InfoUtils;
 import fi.dy.masa.malilib.util.StringUtils;
 
+import javax.annotation.Nullable;
+import java.io.File;
+
 public class GuiSchematicManager extends GuiSchematicBrowserBase implements ISelectionListener<DirectoryEntry>
 {
     private static PreviewGenerator previewGenerator;
@@ -80,7 +83,7 @@ public class GuiSchematicManager extends GuiSchematicBrowserBase implements ISel
             {
                 x = this.createButton(x, y, ButtonListener.Type.RENAME_SCHEMATIC);
                 x = this.createButton(x, y, ButtonListener.Type.SET_PREVIEW);
-                x = this.createButton(x, y, ButtonListener.Type.EXPORT_SCHEMATIC);
+//SH                x = this.createButton(x, y, ButtonListener.Type.EXPORT_SCHEMATIC);
                 x = this.createButton(x, y, ButtonListener.Type.EXPORT_TYPE);
                 x = this.createButton(x, y, ButtonListener.Type.DELETE_SCHEMATIC);
             }
@@ -219,7 +222,7 @@ public class GuiSchematicManager extends GuiSchematicBrowserBase implements ISel
 
             FileType fileType = FileType.fromFile(entry.getFullPath());
 
-            if (this.type == Type.EXPORT_SCHEMATIC)
+/*SH            if (this.type == Type.EXPORT_SCHEMATIC)
             {
                 if (fileType == FileType.LITEMATICA_SCHEMATIC)
                 {
@@ -231,8 +234,9 @@ public class GuiSchematicManager extends GuiSchematicBrowserBase implements ISel
                 {
                     this.gui.addMessage(MessageType.ERROR, "litematica.error.schematic_manager.schematic_export.unsupported_type", file.getName());
                 }
-            }
-            else if (this.type == Type.IMPORT_SCHEMATIC)
+            }*/
+            //changed from else if
+            if (this.type == Type.IMPORT_SCHEMATIC)
             {
                 if (fileType == FileType.SCHEMATICA_SCHEMATIC ||
                     fileType == FileType.VANILLA_STRUCTURE)
@@ -246,7 +250,8 @@ public class GuiSchematicManager extends GuiSchematicBrowserBase implements ISel
                     this.gui.addMessage(MessageType.ERROR, "litematica.error.schematic_manager.schematic_import.unsupported_type", file.getName());
                 }
             }
-            else if (this.type == Type.RENAME_SCHEMATIC)
+            //changed from else if-SH
+            if (this.type == Type.RENAME_SCHEMATIC)
             {
                 LitematicaSchematic schematic = LitematicaSchematic.createFromFile(entry.getDirectory(), entry.getName());
                 String oldName = schematic != null ? schematic.getMetadata().getName() : "";

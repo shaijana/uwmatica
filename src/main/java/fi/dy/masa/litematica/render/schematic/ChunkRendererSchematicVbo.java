@@ -1,20 +1,18 @@
 package fi.dy.masa.litematica.render.schematic;
 
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Supplier;
-import javax.annotation.Nullable;
 import com.google.common.collect.Sets;
 import com.mojang.blaze3d.systems.RenderSystem;
+import fi.dy.masa.litematica.config.Configs;
+import fi.dy.masa.litematica.data.DataManager;
+import fi.dy.masa.litematica.render.RenderUtils;
+import fi.dy.masa.litematica.util.OverlayType;
+import fi.dy.masa.litematica.util.PositionUtils;
+import fi.dy.masa.litematica.world.WorldSchematic;
+import fi.dy.masa.malilib.util.*;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.VertexBuffer;
@@ -30,17 +28,11 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.chunk.WorldChunk;
-import fi.dy.masa.litematica.config.Configs;
-import fi.dy.masa.litematica.data.DataManager;
-import fi.dy.masa.litematica.render.RenderUtils;
-import fi.dy.masa.litematica.util.OverlayType;
-import fi.dy.masa.litematica.util.PositionUtils;
-import fi.dy.masa.litematica.world.WorldSchematic;
-import fi.dy.masa.malilib.util.Color4f;
-import fi.dy.masa.malilib.util.EntityUtils;
-import fi.dy.masa.malilib.util.IntBoundingBox;
-import fi.dy.masa.malilib.util.LayerRange;
-import fi.dy.masa.malilib.util.SubChunkPos;
+
+import javax.annotation.Nullable;
+import java.util.*;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Supplier;
 
 public class ChunkRendererSchematicVbo
 {
@@ -72,6 +64,8 @@ public class ChunkRendererSchematicVbo
 
     private boolean needsUpdate;
     private boolean needsImmediateUpdate;
+
+    public static HashSet<Block> forbiddenBlocks = new HashSet<Block>();
 
     public ChunkRendererSchematicVbo(WorldSchematic world, WorldRendererSchematic worldRenderer)
     {
@@ -655,7 +649,39 @@ public class ChunkRendererSchematicVbo
             return OverlayType.NONE;
         }
         else
+//TODO-More Blocks
         {
+            forbiddenBlocks.add(Blocks.DIAMOND_ORE);
+            forbiddenBlocks.add(Blocks.IRON_ORE);
+            forbiddenBlocks.add(Blocks.LAPIS_ORE);
+            forbiddenBlocks.add(Blocks.COAL_ORE);
+            forbiddenBlocks.add(Blocks.EMERALD_ORE);
+            forbiddenBlocks.add(Blocks.GOLD_ORE);
+            forbiddenBlocks.add(Blocks.NETHER_GOLD_ORE);
+            forbiddenBlocks.add(Blocks.REDSTONE_ORE);
+            forbiddenBlocks.add(Blocks.NETHER_QUARTZ_ORE);
+            forbiddenBlocks.add(Blocks.DEEPSLATE_IRON_ORE);
+            forbiddenBlocks.add(Blocks.COPPER_ORE);
+            forbiddenBlocks.add(Blocks.DEEPSLATE_COPPER_ORE);
+            forbiddenBlocks.add(Blocks.DEEPSLATE_GOLD_ORE);
+            forbiddenBlocks.add(Blocks.DEEPSLATE_REDSTONE_ORE);
+            forbiddenBlocks.add(Blocks.DEEPSLATE_EMERALD_ORE);
+            forbiddenBlocks.add(Blocks.DEEPSLATE_LAPIS_ORE);
+            forbiddenBlocks.add(Blocks.DEEPSLATE_DIAMOND_ORE);
+            forbiddenBlocks.add(Blocks.ANCIENT_DEBRIS);
+            forbiddenBlocks.add(Blocks.AMETHYST_BLOCK);
+            forbiddenBlocks.add(Blocks.BUDDING_AMETHYST);
+            forbiddenBlocks.add(Blocks.END_PORTAL_FRAME);
+            forbiddenBlocks.add(Blocks.END_PORTAL);
+            forbiddenBlocks.add(Blocks.SPAWNER);
+            forbiddenBlocks.add(Blocks.SMALL_AMETHYST_BUD);
+            forbiddenBlocks.add(Blocks.MEDIUM_AMETHYST_BUD);
+            forbiddenBlocks.add(Blocks.LARGE_AMETHYST_BUD);
+            forbiddenBlocks.add(Blocks.AMETHYST_CLUSTER);
+            forbiddenBlocks.add(Blocks.POINTED_DRIPSTONE);
+            if(forbiddenBlocks.contains(stateClient.getBlock()) ==false){
+
+
             boolean clientHasAir = stateClient.isAir();
             boolean schematicHasAir = stateSchematic.isAir();
 
@@ -681,6 +707,8 @@ public class ChunkRendererSchematicVbo
                 }
             }
         }
+            else{             return OverlayType.NONE;}
+    }
     }
 
     @Nullable

@@ -1,7 +1,6 @@
 package fi.dy.masa.litematica.util;
 
-import java.util.ArrayList;
-import java.util.List;
+import fi.dy.masa.malilib.gui.GuiBase;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
@@ -14,8 +13,9 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import fi.dy.masa.litematica.config.Configs;
-import fi.dy.masa.malilib.gui.GuiBase;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class InventoryUtils
 {
@@ -128,7 +128,7 @@ public class InventoryUtils
                 {
                     setPickedItemToHand(stack, mc);
                 }
-                else if (slot == -1 && Configs.Generic.PICK_BLOCK_SHULKERS.getBooleanValue())
+/*SH                else if (slot == -1 && Configs.Generic.PICK_BLOCK_SHULKERS.getBooleanValue())
                 {
                     slot = findSlotWithBoxWithItem(mc.player.playerScreenHandler, stack, false);
 
@@ -137,7 +137,7 @@ public class InventoryUtils
                         ItemStack boxStack = mc.player.playerScreenHandler.slots.get(slot).getStack();
                         setPickedItemToHand(boxStack, mc);
                     }
-                }
+                }*/
 
                 //return shouldPick == false || canPick;
             }

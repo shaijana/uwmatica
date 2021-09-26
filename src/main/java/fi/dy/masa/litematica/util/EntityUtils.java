@@ -247,12 +247,12 @@ public class EntityUtils
         return world.getOtherEntities(null, bb, EntityUtils.NOT_PLAYER);
     }
 
-    public static boolean shouldPickBlock(PlayerEntity player)
+/*SH    public static boolean shouldPickBlock(PlayerEntity player)
     {
         return Configs.Generic.PICK_BLOCK_ENABLED.getBooleanValue() &&
                 (Configs.Generic.TOOL_ITEM_ENABLED.getBooleanValue() == false ||
                 hasToolItem(player) == false) &&
                 Configs.Visuals.ENABLE_RENDERING.getBooleanValue() &&
                 Configs.Visuals.ENABLE_SCHEMATIC_RENDERING.getBooleanValue();
-    }
+    }*/
 }

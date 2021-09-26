@@ -19,7 +19,7 @@ import fi.dy.masa.malilib.util.InfoUtils;
 
 public class ToolUtils
 {
-    public static void fillSelectionVolumes(MinecraftClient mc, BlockState state, @Nullable BlockState stateToReplace)
+/*SH    public static void fillSelectionVolumes(MinecraftClient mc, BlockState state, @Nullable BlockState stateToReplace)
     {
         if (mc.player != null && EntityUtils.isCreativeMode(mc.player))
         {
@@ -50,9 +50,9 @@ public class ToolUtils
         {
             InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, "litematica.error.generic.creative_mode_only");
         }
-    }
+    }*/
 
-    public static void deleteSelectionVolumes(boolean removeEntities, MinecraftClient mc)
+/*SH    public static void deleteSelectionVolumes(boolean removeEntities, MinecraftClient mc)
     {
         AreaSelection area = null;
 
@@ -71,14 +71,14 @@ public class ToolUtils
         }
 
         deleteSelectionVolumes(area, removeEntities, mc);
-    }
+    }*/
 
-    public static void deleteSelectionVolumes(@Nullable final AreaSelection area, boolean removeEntities, MinecraftClient mc)
+/*SH    public static void deleteSelectionVolumes(@Nullable final AreaSelection area, boolean removeEntities, MinecraftClient mc)
     {
         deleteSelectionVolumes(area, removeEntities, null, mc);
-    }
+    }*/
 
-    public static void deleteSelectionVolumes(@Nullable final AreaSelection area, boolean removeEntities,
+/*SH    public static void deleteSelectionVolumes(@Nullable final AreaSelection area, boolean removeEntities,
             @Nullable ICompletionListener listener, MinecraftClient mc)
     {
         if (mc.player != null && EntityUtils.isCreativeMode(mc.player))
@@ -114,5 +114,5 @@ public class ToolUtils
         {
             InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, "litematica.error.generic.creative_mode_only");
         }
-    }
+    }*/
 }

@@ -1,10 +1,11 @@
+/*SH
 package fi.dy.masa.litematica.gui;
 
 import java.io.File;
 import javax.annotation.Nullable;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.gui.GuiMainMenu.ButtonListenerChangeMenu;
-import fi.dy.masa.litematica.gui.widgets.WidgetSchematicProjectBrowser;
+//SHimport fi.dy.masa.litematica.gui.widgets.WidgetSchematicProjectBrowser;
 import fi.dy.masa.litematica.schematic.projects.SchematicProject;
 import fi.dy.masa.litematica.util.FileType;
 import fi.dy.masa.malilib.gui.GuiBase;
@@ -257,3 +258,4 @@ public class GuiSchematicProjectsBrowser extends GuiListBase<DirectoryEntry, Wid
         }
     }
 }
+*/

@@ -1,15 +1,14 @@
 package fi.dy.masa.litematica.schematic.verifier;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
+
+import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
+import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
+import net.minecraft.text.Text;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import com.google.common.collect.ArrayListMultimap;
@@ -82,6 +81,8 @@ public class SchematicVerifier extends TaskBase implements IInfoHudRenderer
     private int schematicBlocks;
     private int clientBlocks;
     private int correctStatesCount;
+    public static HashSet<Block> forbiddenBlocks = new HashSet<Block>();
+
 
     public SchematicVerifier()
     {
@@ -712,52 +713,53 @@ public class SchematicVerifier extends TaskBase implements IInfoHudRenderer
         return true;
     }
 
-    private void checkBlockStates(int x, int y, int z, BlockState stateSchematic, BlockState stateClient)
+    public void checkBlockStates(int x, int y, int z, BlockState stateSchematic, BlockState stateClient)
     {
         BlockPos pos = new BlockPos(x, y, z);
+//
+        if (stateClient != stateSchematic && (stateClient.isAir() == false || stateSchematic.isAir() == false)) {
+//            if (stateClient.getBlock() != Blocks.DIAMOND_ORE)
+            forbiddenBlocks.add(Blocks.DIAMOND_ORE);
+            forbiddenBlocks.add(Blocks.IRON_ORE);
+            forbiddenBlocks.add(Blocks.LAPIS_ORE);
+            forbiddenBlocks.add(Blocks.COAL_ORE);
+            forbiddenBlocks.add(Blocks.EMERALD_ORE);
+            forbiddenBlocks.add(Blocks.GOLD_ORE);
+            forbiddenBlocks.add(Blocks.NETHER_GOLD_ORE);
+            forbiddenBlocks.add(Blocks.REDSTONE_ORE);
+            forbiddenBlocks.add(Blocks.NETHER_QUARTZ_ORE);
+            if(forbiddenBlocks.contains(stateClient.getBlock()) ==false){
 
-        if (stateClient != stateSchematic && (stateClient.isAir() == false || stateSchematic.isAir() == false))
-        {
-            MUTABLE_PAIR.setLeft(stateSchematic);
-            MUTABLE_PAIR.setRight(stateClient);
+                MUTABLE_PAIR.setLeft(stateSchematic);
+                MUTABLE_PAIR.setRight(stateClient);
 
-            if (this.ignoredMismatches.contains(MUTABLE_PAIR) == false)
-            {
-                BlockMismatch mismatch = null;
+                if (this.ignoredMismatches.contains(MUTABLE_PAIR) == false) {
+                    BlockMismatch mismatch = null;
 
-                if (stateSchematic.isAir() == false)
-                {
-                    if (stateClient.isAir())
-                    {
-                        mismatch = new BlockMismatch(MismatchType.MISSING, stateSchematic, stateClient, 1);
-                        this.missingBlocksPositions.put(Pair.of(stateSchematic, stateClient), pos);
-                    }
-                    else
-                    {
-                        if (stateSchematic.getBlock() != stateClient.getBlock())
-                        {
-                            mismatch = new BlockMismatch(MismatchType.WRONG_BLOCK, stateSchematic, stateClient, 1);
-                            this.wrongBlocksPositions.put(Pair.of(stateSchematic, stateClient), pos);
+                    if (stateSchematic.isAir() == false) {
+                        if (stateClient.isAir()) {
+                            mismatch = new BlockMismatch(MismatchType.MISSING, stateSchematic, stateClient, 1);
+                            this.missingBlocksPositions.put(Pair.of(stateSchematic, stateClient), pos);
+                        } else {
+                            if (stateSchematic.getBlock() != stateClient.getBlock()) {
+                                mismatch = new BlockMismatch(MismatchType.WRONG_BLOCK, stateSchematic, stateClient, 1);
+                                this.wrongBlocksPositions.put(Pair.of(stateSchematic, stateClient), pos);
+                            } else {
+                                mismatch = new BlockMismatch(MismatchType.WRONG_STATE, stateSchematic, stateClient, 1);
+                                this.wrongStatesPositions.put(Pair.of(stateSchematic, stateClient), pos);
+                            }
                         }
-                        else
-                        {
-                            mismatch = new BlockMismatch(MismatchType.WRONG_STATE, stateSchematic, stateClient, 1);
-                            this.wrongStatesPositions.put(Pair.of(stateSchematic, stateClient), pos);
-                        }
+                    } else if (Configs.Visuals.IGNORE_EXISTING_FLUIDS.getBooleanValue() == false || stateClient.getMaterial().isLiquid() == false) {
+                        mismatch = new BlockMismatch(MismatchType.EXTRA, stateSchematic, stateClient, 1);
+                        this.extraBlocksPositions.put(Pair.of(stateSchematic, stateClient), pos);
                     }
-                }
-                else if (Configs.Visuals.IGNORE_EXISTING_FLUIDS.getBooleanValue() == false || stateClient.getMaterial().isLiquid() == false)
-                {
-                    mismatch = new BlockMismatch(MismatchType.EXTRA, stateSchematic, stateClient, 1);
-                    this.extraBlocksPositions.put(Pair.of(stateSchematic, stateClient), pos);
-                }
 
-                if (mismatch != null)
-                {
-                    this.blockMismatches.put(pos, mismatch);
+                    if (mismatch != null) {
+                        this.blockMismatches.put(pos, mismatch);
 
-                    ItemUtils.setItemForBlock(this.worldClient, pos, stateClient);
-                    ItemUtils.setItemForBlock(this.worldSchematic, pos, stateSchematic);
+                        ItemUtils.setItemForBlock(this.worldClient, pos, stateClient);
+                        ItemUtils.setItemForBlock(this.worldSchematic, pos, stateSchematic);
+                    }
                 }
             }
         }
@@ -770,8 +772,8 @@ public class SchematicVerifier extends TaskBase implements IInfoHudRenderer
             {
                 ++this.correctStatesCount;
             }
+            }
         }
-    }
 
     private void updateMismatchOverlays()
     {
@@ -931,6 +933,7 @@ public class SchematicVerifier extends TaskBase implements IInfoHudRenderer
     {
         this.updateInfoHudLinesMissingChunks(this.requiredChunks);
     }
+
 
     /**
      * Prepares/caches the strings, and returns a provider for the data.<br>

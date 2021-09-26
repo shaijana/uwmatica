@@ -6,6 +6,7 @@ import fi.dy.masa.litematica.event.InputHandler;
 import fi.dy.masa.litematica.event.KeyCallbacks;
 import fi.dy.masa.litematica.event.RenderHandler;
 import fi.dy.masa.litematica.event.WorldLoadListener;
+import fi.dy.masa.litematica.interfaces.network.UWPacketHandler;
 import fi.dy.masa.litematica.render.infohud.StatusInfoRenderer;
 import fi.dy.masa.litematica.scheduler.ClientTickHandler;
 import fi.dy.masa.litematica.schematic.conversion.SchematicConversionMaps;
@@ -42,8 +43,10 @@ public class InitHandler implements IInitializationHandler
         KeyCallbacks.init(MinecraftClient.getInstance());
         StatusInfoRenderer.init();
 
-        DataManager.getAreaSelectionsBaseDirectory();
+//SH        DataManager.getAreaSelectionsBaseDirectory();
         DataManager.getSchematicsBaseDirectory();
+
+       UWPacketHandler.init();//TODO-SH
 
         SchematicConversionMaps.computeMaps();
     }

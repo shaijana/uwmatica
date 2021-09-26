@@ -1,17 +1,24 @@
 package fi.dy.masa.litematica.schematic;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import javax.annotation.Nullable;
 import com.google.common.collect.ImmutableMap;
+import fi.dy.masa.litematica.Litematica;
+import fi.dy.masa.litematica.schematic.container.ILitematicaBlockStatePalette;
+import fi.dy.masa.litematica.schematic.container.LitematicaBlockStateContainer;
+import fi.dy.masa.litematica.schematic.conversion.SchematicConversionFixers;
+import fi.dy.masa.litematica.schematic.conversion.SchematicConversionMaps;
+import fi.dy.masa.litematica.schematic.conversion.SchematicConverter;
+import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
+import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement;
+import fi.dy.masa.litematica.selection.AreaSelection;
+import fi.dy.masa.litematica.selection.Box;
+import fi.dy.masa.litematica.util.BlockUtils;
+import fi.dy.masa.litematica.util.EntityUtils;
+import fi.dy.masa.litematica.util.PositionUtils;
+import fi.dy.masa.litematica.util.WorldUtils;
+import fi.dy.masa.litematica.util.*;
+import fi.dy.masa.malilib.gui.Message.MessageType;
+import fi.dy.masa.malilib.interfaces.IStringConsumer;
+import fi.dy.masa.malilib.util.*;
 import net.minecraft.SharedConstants;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -21,12 +28,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.inventory.Inventory;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtHelper;
-import net.minecraft.nbt.NbtIo;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtLongArray;
+import net.minecraft.nbt.*;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.BlockMirror;
 import net.minecraft.util.BlockRotation;
@@ -39,33 +41,11 @@ import net.minecraft.util.registry.Registry;
 import net.minecraft.world.ScheduledTick;
 import net.minecraft.world.TickPriority;
 import net.minecraft.world.World;
-import fi.dy.masa.litematica.Litematica;
-import fi.dy.masa.litematica.config.Configs;
-import fi.dy.masa.litematica.schematic.container.ILitematicaBlockStatePalette;
-import fi.dy.masa.litematica.schematic.container.LitematicaBlockStateContainer;
-import fi.dy.masa.litematica.schematic.conversion.SchematicConversionFixers;
-import fi.dy.masa.litematica.schematic.conversion.SchematicConversionMaps;
-import fi.dy.masa.litematica.schematic.conversion.SchematicConverter;
-import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
-import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement;
-import fi.dy.masa.litematica.selection.AreaSelection;
-import fi.dy.masa.litematica.selection.Box;
-import fi.dy.masa.litematica.util.BlockUtils;
-import fi.dy.masa.litematica.util.EntityUtils;
-import fi.dy.masa.litematica.util.FileType;
-import fi.dy.masa.litematica.util.NbtUtils;
-import fi.dy.masa.litematica.util.PositionUtils;
-import fi.dy.masa.litematica.util.ReplaceBehavior;
-import fi.dy.masa.litematica.util.SchematicPlacingUtils;
-import fi.dy.masa.litematica.util.WorldUtils;
-import fi.dy.masa.malilib.gui.Message.MessageType;
-import fi.dy.masa.malilib.interfaces.IStringConsumer;
-import fi.dy.masa.malilib.util.Constants;
-import fi.dy.masa.malilib.util.FileUtils;
-import fi.dy.masa.malilib.util.InfoUtils;
-import fi.dy.masa.malilib.util.IntBoundingBox;
-import fi.dy.masa.malilib.util.NBTUtils;
-import fi.dy.masa.malilib.util.StringUtils;
+
+import javax.annotation.Nullable;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.util.*;
 
 public class LitematicaSchematic
 {
@@ -342,9 +322,9 @@ public class LitematicaSchematic
         final int sizeY = Math.abs(regionSize.getY());
         final int sizeZ = Math.abs(regionSize.getZ());
         final BlockState barrier = Blocks.BARRIER.getDefaultState();
-        final boolean ignoreInventories = Configs.Generic.PASTE_IGNORE_INVENTORY.getBooleanValue();
+//SH        final boolean ignoreInventories = Configs.Generic.PASTE_IGNORE_INVENTORY.getBooleanValue();
         BlockPos.Mutable posMutable = new BlockPos.Mutable();
-        ReplaceBehavior replace = (ReplaceBehavior) Configs.Generic.PASTE_REPLACE_BEHAVIOR.getOptionListValue();
+//SH        ReplaceBehavior replace = (ReplaceBehavior) Configs.Generic.PASTE_REPLACE_BEHAVIOR.getOptionListValue();
 
         final BlockRotation rotationCombined = schematicPlacement.getRotation().rotate(placement.getRotation());
         final BlockMirror mirrorMain = schematicPlacement.getMirror();
@@ -400,11 +380,11 @@ public class LitematicaSchematic
 
                     BlockState stateOld = world.getBlockState(pos);
 
-                    if ((replace == ReplaceBehavior.NONE && stateOld.isAir() == false) ||
+/*SH                    if ((replace == ReplaceBehavior.NONE && stateOld.isAir() == false) ||
                         (replace == ReplaceBehavior.WITH_NON_AIR && state.isAir()))
                     {
                         continue;
-                    }
+                    }*/
 
                     if (mirrorMain != BlockMirror.NONE) { state = state.mirror(mirrorMain); }
                     if (mirrorSub != BlockMirror.NONE)  { state = state.mirror(mirrorSub); }
@@ -438,19 +418,19 @@ public class LitematicaSchematic
                             teNBT.putInt("y", pos.getY());
                             teNBT.putInt("z", pos.getZ());
 
-                            if (ignoreInventories)
+/*SH                            if (ignoreInventories)
                             {
                                 teNBT.remove("Items");
-                            }
+                            }*/
 
                             try
                             {
                                 te.readNbt(teNBT);
 
-                                if (ignoreInventories && te instanceof Inventory)
+/*SH                                if (ignoreInventories && te instanceof Inventory)
                                 {
                                     ((Inventory) te).clear();
-                                }
+                                }*/
                             }
                             catch (Exception e)
                             {

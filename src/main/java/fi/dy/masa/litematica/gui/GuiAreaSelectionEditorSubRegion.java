@@ -1,3 +1,4 @@
+/*SH
 package fi.dy.masa.litematica.gui;
 
 import javax.annotation.Nullable;
@@ -85,3 +86,4 @@ public class GuiAreaSelectionEditorSubRegion extends GuiAreaSelectionEditorSimpl
         // NO-OP
     }
 }
+*/

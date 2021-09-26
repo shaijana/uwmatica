@@ -1,23 +1,6 @@
 package fi.dy.masa.litematica.scheduler.tasks;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import com.google.common.collect.ArrayListMultimap;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.Util;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.World;
-import fi.dy.masa.litematica.render.infohud.InfoHud;
-import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
-import fi.dy.masa.litematica.util.SchematicPlacingUtils;
-import fi.dy.masa.litematica.world.SchematicWorldHandler;
-import fi.dy.masa.litematica.world.WorldSchematic;
-import fi.dy.masa.malilib.gui.Message.MessageType;
-import fi.dy.masa.malilib.util.InfoUtils;
-import fi.dy.masa.malilib.util.LayerRange;
-import fi.dy.masa.malilib.util.WorldUtils;
-
+/*SH
 public class TaskPasteSchematicPerChunkDirect extends TaskPasteSchematicPerChunkBase
 {
     private final ArrayListMultimap<ChunkPos, SchematicPlacement> placementsPerChunk = ArrayListMultimap.create();
@@ -124,3 +107,4 @@ public class TaskPasteSchematicPerChunkDirect extends TaskPasteSchematicPerChunk
         super.stop();
     }
 }
+*/

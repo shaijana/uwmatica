@@ -1,8 +1,12 @@
 package fi.dy.masa.litematica.util;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import fi.dy.masa.litematica.Litematica;
+import fi.dy.masa.litematica.schematic.LitematicaSchematic;
+import fi.dy.masa.litematica.schematic.LitematicaSchematic.EntityInfo;
+import fi.dy.masa.litematica.schematic.container.LitematicaBlockStateContainer;
+import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
+import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement;
+import fi.dy.masa.malilib.util.IntBoundingBox;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.Material;
@@ -17,14 +21,10 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
-import fi.dy.masa.litematica.Litematica;
-import fi.dy.masa.litematica.config.Configs;
-import fi.dy.masa.litematica.schematic.LitematicaSchematic;
-import fi.dy.masa.litematica.schematic.LitematicaSchematic.EntityInfo;
-import fi.dy.masa.litematica.schematic.container.LitematicaBlockStateContainer;
-import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
-import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement;
-import fi.dy.masa.malilib.util.IntBoundingBox;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class SchematicPlacingUtils
 {
@@ -152,7 +152,7 @@ public class SchematicPlacingUtils
         final BlockMirror mirrorMain = schematicPlacement.getMirror();
         final BlockState barrier = Blocks.BARRIER.getDefaultState();
         BlockMirror mirrorSub = placement.getMirror();
-        final boolean ignoreInventories = Configs.Generic.PASTE_IGNORE_INVENTORY.getBooleanValue();
+//SH        final boolean ignoreInventories = Configs.Generic.PASTE_IGNORE_INVENTORY.getBooleanValue();
 
         if (mirrorSub != BlockMirror.NONE &&
             (schematicPlacement.getRotation() == BlockRotation.CLOCKWISE_90 ||
@@ -219,12 +219,12 @@ public class SchematicPlacingUtils
                             teNBT.putInt("y", pos.getY());
                             teNBT.putInt("z", pos.getZ());
 
-                            if (ignoreInventories)
+/*SH                            if (ignoreInventories)
                             {
                                 teNBT.remove("Items");
-                            }
+                            }*/
 
-                            try
+/*SH                            try
                             {
                                 te.readNbt(teNBT);
 
@@ -232,11 +232,11 @@ public class SchematicPlacingUtils
                                 {
                                     ((Inventory) te).clear();
                                 }
-                            }
-                            catch (Exception e)
+                            }*/
+/*SH                            catch (Exception e)
                             {
                                 Litematica.logger.warn("Failed to load BlockEntity data for {} @ {}", state, pos);
-                            }
+                            }*/
                         }
                     }
                 }
