@@ -887,7 +887,7 @@ public class ChunkRendererSchematicVbo
     {
         this.finishCompileTask();
         this.chunkRenderData = ChunkRenderDataSchematic.EMPTY;
-        this.needsUpdate = true;
+        //this.needsUpdate = true;
     }
 
     public void setNeedsUpdate(boolean immediate)

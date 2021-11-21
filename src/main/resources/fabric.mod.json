@@ -12,23 +12,25 @@
         "homepage": "https://unlimitedworld.de/members/shaijana.7644/"
     },
 
-    "license": "LGPLv3",
+	"license": "LGPLv3",
+	"icon": "assets/litematica/icon.png",
 
-    "environment": "client",
-    "entrypoints": {
-        "main": [
-            "fi.dy.masa.litematica.Litematica"
-        ],
-        "modmenu": [
-            "fi.dy.masa.litematica.compat.modmenu.ModMenuImpl"
-        ]
-    },
+	"environment": "client",
+	"entrypoints": {
+		"main": [
+			"fi.dy.masa.litematica.Litematica"
+		],
+		"modmenu": [
+			"fi.dy.masa.litematica.compat.modmenu.ModMenuImpl"
+		]
+	},
 
-    "mixins": [
-        "mixins.litematica.json"
-    ],
+	"mixins": [
+		"mixins.litematica.json"
+	],
 
-    "depends": {
-        "malilib": ">=0.10.0-dev.24"
-    }
+	"depends": {
+		"minecraft": "1.17.1",
+		"malilib": ">=0.10.0-dev.25 <0.11"
+	}
 }
