@@ -6,10 +6,6 @@ import com.google.gson.JsonObject;
 import fi.dy.masa.litematica.Reference;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.util.BlockInfoAlignment;
-import fi.dy.masa.litematica.util.EasyPlaceProtocol;
-import fi.dy.masa.litematica.util.InventoryUtils;
-import fi.dy.masa.litematica.util.PasteNbtBehavior;
-import fi.dy.masa.litematica.util.ReplaceBehavior;
 import fi.dy.masa.malilib.config.ConfigUtils;
 import fi.dy.masa.malilib.config.HudAlignment;
 import fi.dy.masa.malilib.config.IConfigBase;
@@ -58,7 +54,7 @@ public class Configs implements IConfigHandler
         public static final ConfigBoolean       RENDER_MATERIALS_IN_GUI = new ConfigBoolean(    "renderMaterialListInGuis", true, "Whether or not the material list should\nbe rendered inside GUIs");
         public static final ConfigBoolean       RENDER_THREAD_NO_TIMEOUT = new ConfigBoolean(   "renderThreadNoTimeout", true, "Removes the timeout from the rendering worker threads.\nIf you get very stuttery rendering when moving around\nor dealing with large schematics, try disabling this. It will however make\nthe schematic rendering a lot slower in some cases.");
 //SH        public static final ConfigOptionList    SELECTION_CORNERS_MODE  = new ConfigOptionList( "selectionCornersMode", CornerSelectionMode.CORNERS, "The Area Selection corners mode to use (Corners, or Expand)");
-        public static final ConfigString        TOOL_ITEM               = new ConfigString(     "toolItem", "minecraft:stick", "The item to use as the \"tool\" for selections etc.");
+        public static final ConfigString        TOOL_ITEM               = new ConfigString(     "toolItem", "minecraft:wooden_sword", "The item to use as the \"tool\" for selections etc.");
         public static final ConfigBoolean       TOOL_ITEM_ENABLED       = new ConfigBoolean(    "toolItemEnabled", true, "If true, then the \"tool\" item can be used to control selections etc.", "Tool Item Enabled");
 
         public static final ImmutableList<IConfigBase> OPTIONS = ImmutableList.of(
