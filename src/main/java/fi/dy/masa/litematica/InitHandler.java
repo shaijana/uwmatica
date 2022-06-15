@@ -1,15 +1,16 @@
 package fi.dy.masa.litematica;
 
-import net.minecraft.client.MinecraftClient;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.event.InputHandler;
 import fi.dy.masa.litematica.event.KeyCallbacks;
 import fi.dy.masa.litematica.event.RenderHandler;
 import fi.dy.masa.litematica.event.WorldLoadListener;
+import fi.dy.masa.litematica.interfaces.network.UWPacketHandler;
 import fi.dy.masa.litematica.network.CarpetHelloPacketHandler;
 import fi.dy.masa.litematica.render.infohud.StatusInfoRenderer;
 import fi.dy.masa.litematica.scheduler.ClientTickHandler;
+import fi.dy.masa.litematica.schematic.conversion.SchematicConversionMaps;
 import fi.dy.masa.malilib.config.ConfigManager;
 import fi.dy.masa.malilib.event.InputEventHandler;
 import fi.dy.masa.malilib.event.RenderEventHandler;
@@ -18,25 +19,24 @@ import fi.dy.masa.malilib.event.WorldLoadHandler;
 import fi.dy.masa.malilib.interfaces.IInitializationHandler;
 import fi.dy.masa.malilib.interfaces.IRenderer;
 import fi.dy.masa.malilib.network.ClientPacketChannelHandler;
+import net.minecraft.client.MinecraftClient;
 
-public class InitHandler implements IInitializationHandler
-{
+public class InitHandler implements IInitializationHandler {
     @Override
-    public void registerModHandlers()
-    {
+    public void registerModHandlers() {
         ConfigManager.getInstance().registerConfigHandler(Reference.MOD_ID, new Configs());
 
         InputEventHandler.getKeybindManager().registerKeybindProvider(InputHandler.getInstance());
         InputEventHandler.getInputManager().registerKeyboardInputHandler(InputHandler.getInstance());
         InputEventHandler.getInputManager().registerMouseInputHandler(InputHandler.getInstance());
 
-        IRenderer renderer = new RenderHandler();
+        final IRenderer renderer = new RenderHandler();
         RenderEventHandler.getInstance().registerGameOverlayRenderer(renderer);
         RenderEventHandler.getInstance().registerWorldLastRenderer(renderer);
 
         TickHandler.getInstance().registerClientTickHandler(new ClientTickHandler());
 
-        WorldLoadListener listener = new WorldLoadListener();
+        final WorldLoadListener listener = new WorldLoadListener();
         WorldLoadHandler.getInstance().registerWorldLoadPreHandler(listener);
         WorldLoadHandler.getInstance().registerWorldLoadPostHandler(listener);
 
@@ -48,7 +48,7 @@ public class InitHandler implements IInitializationHandler
 //SH        DataManager.getAreaSelectionsBaseDirectory();
         DataManager.getSchematicsBaseDirectory();
 
-       UWPacketHandler.init();//TODO-SH
+        UWPacketHandler.init();//TODO-SH
 
         SchematicConversionMaps.computeMaps();
     }

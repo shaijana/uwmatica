@@ -1,5 +1,5 @@
 package fi.dy.masa.litematica.util;
-
+/*SH
 import javax.annotation.Nullable;
 import com.google.common.collect.ImmutableList;
 import net.minecraft.block.BlockState;
@@ -19,8 +19,7 @@ import fi.dy.masa.malilib.interfaces.ICompletionListener;
 import fi.dy.masa.malilib.util.InfoUtils;
 
 public class ToolUtils
-{
-/*SH    public static void fillSelectionVolumes(MinecraftClient mc, BlockState state, @Nullable BlockState stateToReplace)
+{    public static void fillSelectionVolumes(MinecraftClient mc, BlockState state, @Nullable BlockState stateToReplace)
     {
         if (mc.player != null && EntityUtils.isCreativeMode(mc.player))
         {
@@ -117,5 +116,5 @@ public class ToolUtils
         {
             InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, "litematica.error.generic.creative_mode_only");
         }
-    }*/
-}
+    }
+}*/
