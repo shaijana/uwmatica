@@ -1,23 +1,11 @@
 package fi.dy.masa.litematica.util;
 
-import fi.dy.masa.litematica.data.DataManager;
-import fi.dy.masa.litematica.data.SchematicHolder;
-import fi.dy.masa.litematica.schematic.LitematicaSchematic;
-import fi.dy.masa.litematica.schematic.SchematicMetadata;
-import fi.dy.masa.litematica.schematic.container.LitematicaBlockStateContainer;
-import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
-import fi.dy.masa.litematica.schematic.placement.SchematicPlacementManager;
-import fi.dy.masa.litematica.schematic.placement.SchematicPlacementManager.PlacementPart;
-import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement;
-import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement.RequiredEnabled;
-import fi.dy.masa.litematica.util.RayTraceUtils.RayTraceWrapper;
-import fi.dy.masa.litematica.world.SchematicWorldHandler;
-import fi.dy.masa.litematica.world.WorldSchematic;
-import fi.dy.masa.malilib.gui.Message.MessageType;
-import fi.dy.masa.malilib.interfaces.IStringConsumerFeedback;
-import fi.dy.masa.malilib.util.InfoUtils;
-import fi.dy.masa.malilib.util.LayerRange;
-import fi.dy.masa.malilib.util.SubChunkPos;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
+import javax.annotation.Nullable;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
@@ -26,20 +14,53 @@ import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUsageContext;
+import net.minecraft.state.property.Property;
 import net.minecraft.util.BlockMirror;
 import net.minecraft.util.BlockRotation;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.*;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
-
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.List;
-
-//SHimport fi.dy.masa.litematica.gui.GuiSchematicSave;
-//SHimport fi.dy.masa.litematica.gui.GuiSchematicSave.InMemorySchematicCreator;
-//SHimport fi.dy.masa.litematica.selection.SelectionManager;
+import fi.dy.masa.litematica.config.Configs;
+import fi.dy.masa.litematica.data.DataManager;
+import fi.dy.masa.litematica.data.SchematicHolder;
+import fi.dy.masa.litematica.gui.GuiSchematicSave;
+import fi.dy.masa.litematica.gui.GuiSchematicSave.InMemorySchematicCreator;
+import fi.dy.masa.litematica.scheduler.TaskScheduler;
+import fi.dy.masa.litematica.scheduler.tasks.TaskBase;
+import fi.dy.masa.litematica.scheduler.tasks.TaskDeleteArea;
+import fi.dy.masa.litematica.scheduler.tasks.TaskPasteSchematicPerChunkCommand;
+import fi.dy.masa.litematica.scheduler.tasks.TaskPasteSchematicPerChunkDirect;
+import fi.dy.masa.litematica.scheduler.tasks.TaskSaveSchematic;
+import fi.dy.masa.litematica.schematic.LitematicaSchematic;
+import fi.dy.masa.litematica.schematic.SchematicMetadata;
+import fi.dy.masa.litematica.schematic.container.LitematicaBlockStateContainer;
+import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
+import fi.dy.masa.litematica.schematic.placement.SchematicPlacementManager;
+import fi.dy.masa.litematica.schematic.placement.SchematicPlacementManager.PlacementPart;
+import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement;
+import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement.RequiredEnabled;
+import fi.dy.masa.litematica.schematic.projects.SchematicProject;
+import fi.dy.masa.litematica.selection.AreaSelection;
+import fi.dy.masa.litematica.selection.SelectionManager;
+import fi.dy.masa.litematica.tool.ToolMode;
+import fi.dy.masa.litematica.util.RayTraceUtils.RayTraceWrapper;
+import fi.dy.masa.litematica.world.SchematicWorldHandler;
+import fi.dy.masa.litematica.world.WorldSchematic;
+import fi.dy.masa.malilib.gui.GuiBase;
+import fi.dy.masa.malilib.gui.GuiTextInput;
+import fi.dy.masa.malilib.gui.Message.MessageType;
+import fi.dy.masa.malilib.interfaces.IStringConsumerFeedback;
+import fi.dy.masa.malilib.util.GuiUtils;
+import fi.dy.masa.malilib.util.InfoUtils;
+import fi.dy.masa.malilib.util.LayerRange;
+import fi.dy.masa.malilib.util.SubChunkPos;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 
 public class SchematicUtils
 {
@@ -146,6 +167,33 @@ public class SchematicUtils
         if (info != null && info.stateNew != null)
         {
             return setAllIdenticalSchematicBlockStates(info.pos, info.stateOriginal, info.stateNew, mc.world);
+        }
+
+        return false;
+    }
+
+    public static boolean replaceBlocksKeepingProperties(MinecraftClient mc)
+    {
+        ReplacementInfo info = getTargetInfo(mc);
+
+        // The state can be null in 1.13+
+        if (info != null && info.stateNew != null && info.stateNew != info.stateOriginal &&
+            BlockUtils.blocksHaveSameProperties(info.stateOriginal, info.stateNew))
+        {
+            Object2ObjectOpenHashMap<BlockState, BlockState> map = new Object2ObjectOpenHashMap<>();
+            BiPredicate<BlockState, BlockState> blockStateTest = (testedState, originalState) -> testedState.getBlock() == originalState.getBlock();
+            BiFunction<BlockState, BlockState, BlockState> blockModifier = (newState, originalState) ->  map.computeIfAbsent(originalState, (k) -> {
+                BlockState finalState = newState;
+
+                for (Property<?> prop : newState.getProperties())
+                {
+                    finalState = BlockUtils.getBlockStateWithProperty(finalState, prop, originalState.get(prop));
+                }
+
+                return finalState;
+            });
+
+            return setAllIdenticalSchematicBlockStates(info.pos, info.stateOriginal, info.stateNew, blockStateTest, blockModifier, mc.world);
         }
 
         return false;
@@ -486,6 +534,18 @@ public class SchematicUtils
                                                                BlockState stateNew,
                                                                World world)
     {
+        BiPredicate<BlockState, BlockState> blockStateTest = (testedState, originalState) -> testedState == originalState;
+        BiFunction<BlockState, BlockState, BlockState> blockModifier = (newState, originalState) -> newState;
+        return setAllIdenticalSchematicBlockStates(posStart, stateOriginal, stateNew, blockStateTest, blockModifier, world);
+    }
+
+    private static boolean setAllIdenticalSchematicBlockStates(BlockPos posStart,
+                                                               BlockState stateOriginal,
+                                                               BlockState stateNew,
+                                                               BiPredicate<BlockState, BlockState> blockStateTest,
+                                                               BiFunction<BlockState, BlockState, BlockState> blockModifier,
+                                                               World world)
+    {
         if (posStart != null)
         {
             SubChunkPos cpos = new SubChunkPos(posStart);
@@ -498,7 +558,8 @@ public class SchematicUtils
                 {
                     if (part.getBox().containsPos(posStart))
                     {
-                        if (replaceAllIdenticalBlocks(manager, part, stateOriginal, stateNew, world))
+                        if (replaceAllIdenticalBlocks(manager, part, stateOriginal, stateNew,
+                                                      blockStateTest, blockModifier, world))
                         {
                             manager.markAllPlacementsOfSchematicForRebuild(part.getPlacement().getSchematic());
                             return true;
@@ -655,6 +716,8 @@ public class SchematicUtils
                                                      PlacementPart part,
                                                      BlockState stateOriginalIn,
                                                      BlockState stateNewIn,
+                                                     BiPredicate<BlockState, BlockState> blockStateTest,
+                                                     BiFunction<BlockState, BlockState, BlockState> blockModifier,
                                                      World world)
     {
         SchematicPlacement schematicPlacement = part.getPlacement();
@@ -758,9 +821,12 @@ public class SchematicUtils
                 {
                     for (int x = startX; x <= endX; ++x)
                     {
-                        if (container.get(x, y, z) == stateOriginal)
+                        BlockState oldState = container.get(x, y, z);
+
+                        if (blockStateTest.test(oldState, stateOriginal))
                         {
-                            container.set(x, y, z, stateNew);
+                            BlockState finalState = blockModifier.apply(stateNew, oldState);
+                            container.set(x, y, z, finalState);
                             totalBlocks += increment;
                         }
                     }
@@ -883,11 +949,20 @@ public class SchematicUtils
             TaskSaveSchematic taskSave = new TaskSaveSchematic(schematic, area, info);
             taskSave.disableCompletionMessage();
             Entity entity = fi.dy.masa.malilib.util.EntityUtils.getCameraEntity();
-            BlockPos originTmp = RayTraceUtils.getTargetedPosition(mc.world, entity, 6, false);
+            BlockPos originTmp;
 
-            if (originTmp == null)
+            if (Configs.Generic.CLONE_AT_ORIGINAL_POS.getBooleanValue())
             {
-                originTmp = fi.dy.masa.malilib.util.PositionUtils.getEntityBlockPos(entity);
+                originTmp = area.getEffectiveOrigin();
+            }
+            else
+            {
+                originTmp = RayTraceUtils.getTargetedPosition(mc.world, entity, 6, false);
+
+                if (originTmp == null)
+                {
+                    originTmp = fi.dy.masa.malilib.util.PositionUtils.getEntityBlockPos(entity);
+                }
             }
 
             final BlockPos origin = originTmp;

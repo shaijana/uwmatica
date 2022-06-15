@@ -1,25 +1,21 @@
 package fi.dy.masa.litematica.util;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
+import javax.annotation.Nullable;
 import com.mojang.datafixers.DataFixer;
-import fi.dy.masa.litematica.Litematica;
-import fi.dy.masa.litematica.data.DataManager;
-import fi.dy.masa.litematica.materials.MaterialCache;
-import fi.dy.masa.litematica.schematic.LitematicaSchematic;
-import fi.dy.masa.litematica.schematic.SchematicaSchematic;
-import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
-import fi.dy.masa.litematica.schematic.placement.SchematicPlacementManager;
-import fi.dy.masa.litematica.selection.AreaSelection;
-import fi.dy.masa.litematica.selection.Box;
-import fi.dy.masa.litematica.tool.ToolMode;
-import fi.dy.masa.litematica.util.PositionUtils.Corner;
-import fi.dy.masa.litematica.util.RayTraceUtils.RayTraceWrapper;
-import fi.dy.masa.litematica.util.RayTraceUtils.RayTraceWrapper.HitType;
-import fi.dy.masa.litematica.world.SchematicWorldHandler;
-import fi.dy.masa.litematica.world.WorldSchematic;
-import fi.dy.masa.malilib.gui.Message.MessageType;
-import fi.dy.masa.malilib.interfaces.IStringConsumer;
-import fi.dy.masa.malilib.util.*;
-import net.minecraft.block.*;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.ComparatorBlock;
+import net.minecraft.block.RepeaterBlock;
+import net.minecraft.block.SlabBlock;
 import net.minecraft.block.enums.BlockHalf;
 import net.minecraft.block.enums.ComparatorMode;
 import net.minecraft.block.enums.SlabType;
@@ -38,23 +34,45 @@ import net.minecraft.state.property.Properties;
 import net.minecraft.state.property.Property;
 import net.minecraft.structure.Structure;
 import net.minecraft.structure.StructurePlacementData;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.*;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
-
-import javax.annotation.Nullable;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
+import fi.dy.masa.litematica.Litematica;
+import fi.dy.masa.litematica.config.Configs;
+import fi.dy.masa.litematica.config.Hotkeys;
+import fi.dy.masa.litematica.data.DataManager;
+import fi.dy.masa.litematica.materials.MaterialCache;
+import fi.dy.masa.litematica.schematic.LitematicaSchematic;
+import fi.dy.masa.litematica.schematic.SchematicaSchematic;
+import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
+import fi.dy.masa.litematica.schematic.placement.SchematicPlacementManager;
+import fi.dy.masa.litematica.selection.AreaSelection;
+import fi.dy.masa.litematica.selection.Box;
+import fi.dy.masa.litematica.tool.ToolMode;
+import fi.dy.masa.litematica.util.PositionUtils.Corner;
+import fi.dy.masa.litematica.util.RayTraceUtils.RayTraceWrapper;
+import fi.dy.masa.litematica.util.RayTraceUtils.RayTraceWrapper.HitType;
+import fi.dy.masa.litematica.world.SchematicWorldHandler;
+import fi.dy.masa.litematica.world.WorldSchematic;
+import fi.dy.masa.malilib.gui.Message;
+import fi.dy.masa.malilib.gui.Message.MessageType;
+import fi.dy.masa.malilib.interfaces.IStringConsumer;
+import fi.dy.masa.malilib.util.FileUtils;
+import fi.dy.masa.malilib.util.InfoUtils;
+import fi.dy.masa.malilib.util.IntBoundingBox;
+import fi.dy.masa.malilib.util.LayerRange;
+import fi.dy.masa.malilib.util.MessageOutputType;
+import fi.dy.masa.malilib.util.StringUtils;
+import fi.dy.masa.malilib.util.SubChunkPos;
 
 public class WorldUtils
 {
@@ -379,7 +397,17 @@ public class WorldUtils
 
             if (result == ActionResult.FAIL)
             {
-                InfoUtils.showGuiOrInGameMessage(MessageType.WARNING, "litematica.message.easy_place_fail");
+                MessageOutputType type = (MessageOutputType) Configs.Generic.PLACEMENT_RESTRICTION_WARN.getOptionListValue();
+
+                if (type == MessageOutputType.MESSAGE)
+                {
+                    InfoUtils.showGuiOrInGameMessage(Message.MessageType.WARNING, "litematica.message.easy_place_fail");
+                }
+                else if (type == MessageOutputType.ACTIONBAR)
+                {
+                    InfoUtils.printActionbarMessage("litematica.message.easy_place_fail");
+                }
+
                 return true;
             }
 
@@ -482,19 +510,20 @@ public class WorldUtils
                 }
 
                 Direction side = applyPlacementFacing(stateSchematic, sideOrig, stateClient);
+                EasyPlaceProtocol protocol = PlacementHandler.getEffectiveProtocolVersion();
 
-                if (Configs.Generic.EASY_PLACE_PROTOCOL.getOptionListValue() == EasyPlaceProtocol.V3)
+                if (protocol == EasyPlaceProtocol.V3)
                 {
                     hitPos = applyPlacementProtocolV3(pos, stateSchematic, hitPos);
                 }
-                else if (Configs.Generic.EASY_PLACE_PROTOCOL.getOptionListValue() == EasyPlaceProtocol.V2)
+                else if (protocol == EasyPlaceProtocol.V2)
                 {
-                    // Carpet Accurate Placement protocol support, plus BlockSlab support
+                    // Carpet Accurate Block Placement protocol support, plus slab support
                     hitPos = applyCarpetProtocolHitVec(pos, stateSchematic, hitPos);
                 }
-                else if (Configs.Generic.EASY_PLACE_PROTOCOL.getOptionListValue() == EasyPlaceProtocol.SLAB_ONLY)
+                else if (protocol == EasyPlaceProtocol.SLAB_ONLY)
                 {
-                    //BlockSlab support only
+                    // Slab support only
                     hitPos = applyBlockSlabProtocol(pos, stateSchematic, hitPos);
                 }
 
@@ -572,47 +601,69 @@ public class WorldUtils
         Block block = state.getBlock();
         Direction facing = fi.dy.masa.malilib.util.BlockUtils.getFirstPropertyFacingValue(state);
         final int propertyIncrement = 16;
-        double relX = hitVecIn.x - pos.getX();
+        boolean hasData = false;
+        int protocolValue = 0;
 
         if (facing != null)
         {
-            x = pos.getX() + relX + 2 + (facing.getId() * 2);
+            protocolValue = facing.getId();
+            hasData = true; // without this down rotation would not be detected >_>
+        }
+        else if (state.contains(Properties.AXIS))
+        {
+            Direction.Axis axis = state.get(Properties.AXIS);
+            protocolValue = axis.ordinal();
+            hasData = true; // without this id 0 would not be detected >_>
         }
 
         if (block instanceof RepeaterBlock)
         {
-            x += ((state.get(RepeaterBlock.DELAY)) - 1) * propertyIncrement;
-        }
-        else if (block instanceof TrapdoorBlock && state.get(TrapdoorBlock.HALF) == BlockHalf.TOP)
-        {
-            x += propertyIncrement;
+            protocolValue += state.get(RepeaterBlock.DELAY) * propertyIncrement;
         }
         else if (block instanceof ComparatorBlock && state.get(ComparatorBlock.MODE) == ComparatorMode.SUBTRACT)
         {
-            x += propertyIncrement;
+            protocolValue += propertyIncrement;
         }
-        else if (block instanceof StairsBlock && state.get(StairsBlock.HALF) == BlockHalf.TOP)
+        else if (state.contains(Properties.BLOCK_HALF) && state.get(Properties.BLOCK_HALF) == BlockHalf.TOP)
         {
-            x += propertyIncrement;
+            protocolValue += propertyIncrement;
         }
-        else if (block instanceof SlabBlock && state.get(SlabBlock.TYPE) != SlabType.DOUBLE)
+        else if (state.contains(Properties.SLAB_TYPE) && state.get(Properties.SLAB_TYPE) == SlabType.TOP)
         {
-            //x += 10; // Doesn't actually exist (yet?)
+            protocolValue += propertyIncrement;
+        }
 
-            // Do it via vanilla
-            y = getBlockSlabY(pos, state);
+        y = applySlabOrStairHitVecY(y, pos, state);
+
+        if (protocolValue != 0 || hasData)
+        {
+            x += (protocolValue * 2) + 2;
         }
 
         return new Vec3d(x, y, z);
     }
 
-    private static double getBlockSlabY(BlockPos pos, BlockState state)
+    private static double applySlabOrStairHitVecY(double origY, BlockPos pos, BlockState state)
     {
-        double y = pos.getY();
+        double y = origY;
 
-        if (state.get(SlabBlock.TYPE) == SlabType.TOP)
+        if (state.contains(Properties.SLAB_TYPE))
         {
-            y += 0.9;
+            y = pos.getY();
+
+            if (state.get(Properties.SLAB_TYPE) == SlabType.TOP)
+            {
+                y += 0.99;
+            }
+        }
+        else if (state.contains(Properties.BLOCK_HALF))
+        {
+            y = pos.getY();
+
+            if (state.get(Properties.BLOCK_HALF) == BlockHalf.TOP)
+            {
+                y += 0.99;
+            }
         }
 
         return y;
@@ -620,18 +671,8 @@ public class WorldUtils
 
     private static Vec3d applyBlockSlabProtocol(BlockPos pos, BlockState state, Vec3d hitVecIn)
     {
-        double x = hitVecIn.x;
-        double y = hitVecIn.y;
-        double z = hitVecIn.z;
-        Block block = state.getBlock();
-
-        if (block instanceof SlabBlock && state.get(SlabBlock.TYPE) != SlabType.DOUBLE)
-        {
-            // Do it via vanilla
-            y = getBlockSlabY(pos, state);
-        }
-
-        return new Vec3d(x, y, z);
+        double newY = applySlabOrStairHitVecY(hitVecIn.y, pos, state);
+        return newY != hitVecIn.y ? new Vec3d(hitVecIn.x, newY, hitVecIn.z) : hitVecIn;
     }
 
     public static <T extends Comparable<T>> Vec3d applyPlacementProtocolV3(BlockPos pos, BlockState state, Vec3d hitVecIn)
@@ -674,7 +715,7 @@ public class WorldUtils
                     List<T> list = new ArrayList<>(prop.getValues());
                     list.sort(Comparable::compareTo);
 
-                    int requiredBits = MathHelper.log2(MathHelper.smallestEncompassingPowerOfTwo(list.size()));
+                    int requiredBits = MathHelper.floorLog2(MathHelper.smallestEncompassingPowerOfTwo(list.size()));
                     int valueIndex = list.indexOf(state.get(prop));
 
                     if (valueIndex != -1)
@@ -728,6 +769,10 @@ public class WorldUtils
                 return Direction.NORTH;
             }
         }
+        else if (stateSchematic.contains(Properties.BLOCK_HALF))
+        {
+            side = stateSchematic.get(Properties.BLOCK_HALF) == BlockHalf.TOP ? Direction.DOWN : Direction.UP;
+        }
 
         return side;
     }
@@ -746,7 +791,16 @@ public class WorldUtils
 
         if (cancel)
         {
-            InfoUtils.showGuiOrInGameMessage(MessageType.WARNING, "litematica.message.placement_restriction_fail");
+            MessageOutputType type = (MessageOutputType) Configs.Generic.PLACEMENT_RESTRICTION_WARN.getOptionListValue();
+
+            if (type == MessageOutputType.MESSAGE)
+            {
+                InfoUtils.showGuiOrInGameMessage(Message.MessageType.WARNING, "litematica.message.placement_restriction_fail");
+            }
+            else if (type == MessageOutputType.ACTIONBAR)
+            {
+                InfoUtils.printActionbarMessage("litematica.message.placement_restriction_fail");
+            }
         }
 
         return cancel;

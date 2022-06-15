@@ -1,6 +1,19 @@
 package fi.dy.masa.litematica.scheduler.tasks;
 
 /*SH
+import java.util.ArrayList;
+import java.util.Collection;
+import com.google.common.collect.ArrayListMultimap;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.Util;
+import net.minecraft.util.math.ChunkPos;
+import fi.dy.masa.litematica.render.infohud.InfoHud;
+import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
+import fi.dy.masa.litematica.util.SchematicPlacingUtils;
+import fi.dy.masa.malilib.gui.Message.MessageType;
+import fi.dy.masa.malilib.util.InfoUtils;
+import fi.dy.masa.malilib.util.LayerRange;
+
 public class TaskPasteSchematicPerChunkDirect extends TaskPasteSchematicPerChunkBase
 {
     private final ArrayListMultimap<ChunkPos, SchematicPlacement> placementsPerChunk = ArrayListMultimap.create();
@@ -8,6 +21,14 @@ public class TaskPasteSchematicPerChunkDirect extends TaskPasteSchematicPerChunk
     public TaskPasteSchematicPerChunkDirect(Collection<SchematicPlacement> placements, LayerRange range, boolean changedBlocksOnly)
     {
         super(placements, range, changedBlocksOnly);
+    }
+
+    @Override
+    public boolean canExecute()
+    {
+        return super.canExecute() &&
+               this.mc.isIntegratedServerRunning() &&
+               this.world != null && this.world.isClient == false;
     }
 
     @Override
@@ -19,33 +40,22 @@ public class TaskPasteSchematicPerChunkDirect extends TaskPasteSchematicPerChunk
     }
 
     @Override
-    public boolean canExecute()
-    {
-        if (super.canExecute() == false || this.mc.isIntegratedServerRunning() == false)
-        {
-            return false;
-        }
-
-        World world = WorldUtils.getBestWorld(this.mc);
-        return world != null && world.isClient == false;
-    }
-
-    @Override
     public boolean execute()
     {
-        WorldSchematic worldSchematic = SchematicWorldHandler.getSchematicWorld();
-        ClientWorld worldClient = this.mc.world;
-        World world = WorldUtils.getBestWorld(this.mc);
-        int processed = 0;
+        // Nothing to do
+        if (this.ignoreBlocks && this.ignoreEntities)
+        {
+            return true;
+        }
+
         MinecraftServer server = this.mc.getServer();
-        long timeStart = Util.getMeasuringTimeNano();
-        long vanillaTickTime = server.lastTickLengths[server.getTicks() % 100];
+        final long vanillaTickTime = server.lastTickLengths[server.getTicks() % 100];
+        final long timeStart = Util.getMeasuringTimeNano();
 
         this.sortChunkList();
 
-        for (int chunkIndex = 0; chunkIndex < this.chunks.size(); ++chunkIndex)
+        for (int chunkIndex = 0; chunkIndex < this.pendingChunks.size(); ++chunkIndex)
         {
-            ChunkPos pos = this.chunks.get(chunkIndex);
             long currentTime = Util.getMeasuringTimeNano();
             long elapsedTickTime = vanillaTickTime + (currentTime - timeStart);
 
@@ -54,44 +64,47 @@ public class TaskPasteSchematicPerChunkDirect extends TaskPasteSchematicPerChunk
                 break;
             }
 
-            if (this.canProcessChunk(pos, worldSchematic, worldClient))
+            ChunkPos pos = this.pendingChunks.get(chunkIndex);
+
+            if (this.canProcessChunk(pos) && this.processChunk(pos))
             {
-                // New list to avoid CME
-                ArrayList<SchematicPlacement> placements = new ArrayList<>(this.placementsPerChunk.get(pos));
-
-                for (SchematicPlacement placement : placements)
-                {
-                    if (SchematicPlacingUtils.placeToWorldWithinChunk(world, pos, placement, this.replace, false))
-                    {
-                        this.placementsPerChunk.remove(pos, placement);
-                        ++processed;
-                    }
-                }
-
-                if (this.placementsPerChunk.containsKey(pos) == false)
-                {
-                    this.chunks.remove(chunkIndex);
-                    --chunkIndex;
-                }
+                this.pendingChunks.remove(chunkIndex);
+                --chunkIndex;
             }
         }
 
-        if (this.chunks.isEmpty())
+        if (this.pendingChunks.isEmpty())
         {
             this.finished = true;
             return true;
         }
 
-        if (processed > 0)
-        {
-            this.updateInfoHudLines();
-        }
+        this.updateInfoHudLines();
 
         return false;
     }
 
     @Override
-    public void stop()
+    protected boolean processChunk(ChunkPos pos)
+    {
+        // TODO ignoreBlocks and ignoreEntities
+
+        // New list to avoid CME
+        ArrayList<SchematicPlacement> placements = new ArrayList<>(this.placementsPerChunk.get(pos));
+
+        for (SchematicPlacement placement : placements)
+        {
+            if (SchematicPlacingUtils.placeToWorldWithinChunk(this.world, pos, placement, this.replace, false))
+            {
+                this.placementsPerChunk.remove(pos, placement);
+            }
+        }
+
+        return this.placementsPerChunk.containsKey(pos) == false;
+    }
+
+    @Override
+    protected void onStop()
     {
         if (this.finished)
         {
@@ -104,7 +117,7 @@ public class TaskPasteSchematicPerChunkDirect extends TaskPasteSchematicPerChunk
 
         InfoHud.getInstance().removeInfoHudRenderer(this, false);
 
-        super.stop();
+        super.onStop();
     }
 }
 */

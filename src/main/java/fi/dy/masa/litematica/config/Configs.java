@@ -1,20 +1,30 @@
 package fi.dy.masa.litematica.config;
 
+import java.io.File;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import fi.dy.masa.litematica.Reference;
-import fi.dy.masa.litematica.data.DataManager;
-import fi.dy.masa.litematica.util.BlockInfoAlignment;
 import fi.dy.masa.malilib.config.ConfigUtils;
 import fi.dy.masa.malilib.config.HudAlignment;
 import fi.dy.masa.malilib.config.IConfigBase;
 import fi.dy.masa.malilib.config.IConfigHandler;
-import fi.dy.masa.malilib.config.options.*;
+import fi.dy.masa.malilib.config.options.ConfigBoolean;
+import fi.dy.masa.malilib.config.options.ConfigColor;
+import fi.dy.masa.malilib.config.options.ConfigDouble;
+import fi.dy.masa.malilib.config.options.ConfigInteger;
+import fi.dy.masa.malilib.config.options.ConfigOptionList;
+import fi.dy.masa.malilib.config.options.ConfigString;
 import fi.dy.masa.malilib.util.FileUtils;
 import fi.dy.masa.malilib.util.JsonUtils;
-
-import java.io.File;
+import fi.dy.masa.malilib.util.MessageOutputType;
+import fi.dy.masa.litematica.Reference;
+import fi.dy.masa.litematica.data.DataManager;
+import fi.dy.masa.litematica.selection.CornerSelectionMode;
+import fi.dy.masa.litematica.util.BlockInfoAlignment;
+import fi.dy.masa.litematica.util.EasyPlaceProtocol;
+import fi.dy.masa.litematica.util.InventoryUtils;
+import fi.dy.masa.litematica.util.PasteNbtBehavior;
+import fi.dy.masa.litematica.util.ReplaceBehavior;
 
 public class Configs implements IConfigHandler
 {
@@ -25,42 +35,63 @@ public class Configs implements IConfigHandler
 //SH        public static final ConfigBoolean       AREAS_PER_WORLD         = new ConfigBoolean(    "areaSelectionsPerWorld", true, "Use per-world or server root directories for the area selections\n§6NOTE: Don't switch this OFF while you are live streaming,\n§6as then the Area Selection browser will show the server IP\n§6in the navigation widget and also in the current selection name/path\n§6until you change the current directory and selection again");
         public static final ConfigBoolean       BETTER_RENDER_ORDER     = new ConfigBoolean(    "betterRenderOrder", true, "If enabled, then the schematic rendering is done\nby injecting the different render call into the vanilla\nrendering code. This should result in better translucent block\nrendering/ordering and schematic blocks not getting rendered\nthrough the client world blocks/terrain.\nIf the rendering doesn't work (for example with Optifine),\ntry disabling this option.");
 //SH        public static final ConfigBoolean       CHANGE_SELECTED_CORNER  = new ConfigBoolean(    "changeSelectedCornerOnMove", true, "If true, then the selected corner of an area selection\nis always set to the last moved corner,\nwhen using the set corner hotkeys");
+//SH        public static final ConfigBoolean       CLONE_AT_ORIGINAL_POS   = new ConfigBoolean(    "cloneAtOriginalPosition", false, "If enabled, then using the Clone Selection hotkey will create\nthe placement at the original area selection position,\ninstead of at the player's current position");
+//SH        public static final ConfigBoolean       COMMAND_DISABLE_FEEDBACK = new ConfigBoolean(   "commandDisableFeedback", true, "If enabled, then command feedback is automatically disabled\nand then re-enabled for multiplayer Paste, Fill and Delete operations\n(which are using /setblock and /fill commands) by disabling and then\nre-enabling the sendCommandFeedback game rule when the task is finished");
+//SH        public static final ConfigInteger       COMMAND_FILL_MAX_VOLUME = new ConfigInteger(    "commandFillMaxVolume", 32768, 256, 60000000, "The maximum size/volume of each individual box\nthat can be filled via the command-based Fill/Delete\noperations. Bigger areas/volumes will get split to multiple commands.\nAll areas are also split to per-chunk boxes at first anyway.");
+//SH        public static final ConfigInteger       COMMAND_LIMIT           = new ConfigInteger(    "commandLimitPerTick", 64, 1, 1000000, "Maximum number of commands sent per game tick,\nwhen using the Paste, Fill and Delete features on a server,\nwhere they will use setblock and fill commands.\nNote that he Paste feature can overshoot this by a couple of commands\nwhen using the NBT restore functionality, which needs two additional commands for each block.");
+//SH        public static final ConfigString        COMMAND_NAME_CLONE      = new ConfigString(     "commandNameClone", "clone", "The clone command name to use when using the\ncommand-based creative mode functionality on servers.\nThis is currently only used by the Paste function if the NBT restore\nbehavior is set to 'Place & Clone'.");
+//SH        public static final ConfigString        COMMAND_NAME_FILL       = new ConfigString(     "commandNameFill", "fill", "The fill command name to use when using the\ncommand-based creative mode functionality on servers");
+//SH        public static final ConfigString        COMMAND_NAME_SETBLOCK   = new ConfigString(     "commandNameSetblock", "setblock", "The setblock command name to use when using the\ncommand-based creative mode functionality on servers,\nnamely the Paste Schematic in World function");
+//SH        public static final ConfigString        COMMAND_NAME_SUMMON     = new ConfigString(     "commandNameSummon", "summon", "The summon command name to use when using the\ncommand-based creative mode functionality on servers,\nnamely the Paste Schematic in World function");
+//SH        public static final ConfigInteger       COMMAND_TASK_INTERVAL   = new ConfigInteger(    "commandTaskInterval", 1, 1, 1000, "The interval in game ticks the Paste, Fill and Delete tasks\nare executed at. The commandLimitPerTick config sets the maximum\nnumber of commands to send per execution, and this config\nsets the interval in game ticks before the next execution.");
+//SH        public static final ConfigBoolean       COMMAND_USE_WORLDEDIT   = new ConfigBoolean(    "commandUseWorldEdit", false, "If enabled, instead of using the configured setblock and fill commands,\nthe World Edit //pos1, //pos2 and //set commands are used.\nNote that using World Edit commands is around 3x slower\nthan using vanilla commands due to the command limit per tick,\nand WE requiring multiple commands per block or area (//pos1 //pos2 //set).\n§6WARNING: The paste replace behavior option WILL NOT WORK if using\n§6the World Edit commands and fill volumes instead of individual setblock commands!\nThus it's recommended to use the vanilla commands, if you have the permission to run them.\nOne other thing that might make you prefer WE commands in some cases\nis that they can prevent block updates, if the server doesn't have\nthe Carpet mod and thus the '/carpet fillUpdates false' rule available.");
+//SH        public static final ConfigBoolean       CUSTOM_SCHEMATIC_BASE_DIRECTORY_ENABLED = new ConfigBoolean("customSchematicBaseDirectoryEnabled", false, "If enabled, then the directory set in 'customSchematicBaseDirectory'\nwill be used as the root/base schematic directory,\ninstead of the normal '.minecraft/schematics/' directory");
+//SH        public static final ConfigString        CUSTOM_SCHEMATIC_BASE_DIRECTORY         = new ConfigString( "customSchematicBaseDirectory", DataManager.getDefaultBaseSchematicDirectory().getAbsolutePath(), "The root/base schematic directory to use,\nif 'customSchematicBaseDirectoryEnabled' is enabled");
         public static final ConfigBoolean       DEBUG_LOGGING           = new ConfigBoolean(    "debugLogging", false, "Enables some debug log messages in the game console,\nfor debugging certain issues or crashes.");
-//SH        public static final ConfigBoolean       EASY_PLACE_FIRST        = new ConfigBoolean(    "easyPlaceFirst", true, "This causes the Easy Place mode to place the first/closest block\nyou are looking at first, instead of the furthest/bottom-most block.\nSetting this to false allows you to place multiple layers \"at once\",\nsince the furthest blocks would be placed before the closer ones block the line of sight.");
-//SH        public static final ConfigBoolean       EASY_PLACE_HOLD_ENABLED = new ConfigBoolean(    "easyPlaceHoldEnabled", true, "When enabled, then you can hold down the use key\nand look at different schematic blocks to place them,\nwithout having to click on every block individually.");
-//SH        public static final ConfigBoolean       EASY_PLACE_MODE         = new ConfigBoolean(    "easyPlaceMode", false, "When enabled, then simply trying to use an item/place a block\non schematic blocks will place that block in that position");
-//SH        public static final ConfigBoolean       EASY_PLACE_SP_HANDLING  = new ConfigBoolean(    "easyPlaceSinglePlayerHandling", true, "If enabled, then Litematica handles the so called\n\"Carpet mod Accurate Placement Protocol\" itself in single player.\nIf you also have Tweakeroo installed, then this can be disabled,\nas Tweakeroo's 'clientPlacementRotation' option does the exact same thing.");
-//SH        public static final ConfigOptionList    EASY_PLACE_PROTOCOL     = new ConfigOptionList( "easyPlaceProtocol", EasyPlaceProtocol.V3, "The type of \"accurate placement protocol\" to use.\n- Version 3: Only supported by Litematica itself (in single player).\n- Version 2: Compatible with Carpet mod.\n- Slabs only: Only fixes top slabs. Compatible with Paper servers.\n- None: Does not modify coordinates.");
-//SH        public static final ConfigInteger       EASY_PLACE_SWAP_INTERVAL = new ConfigInteger(    "easyPlaceSwapInterval", 0, 0, 10000, "The interval in milliseconds the Easy Place mode waits\nafter swapping inventory slots and placing a block.\nUseful to avoid placing wrong blocks when having high ping.");
-//SH        public static final ConfigBoolean       EASY_PLACE_VANILLA_REACH  = new ConfigBoolean(    "easyPlaceVanillaReach", false, "If enabled, reduces reach distance from 6 to 4.5\nso servers don't reject placement of far blocks.");
-//SH        public static final ConfigBoolean       EXECUTE_REQUIRE_TOOL    = new ConfigBoolean(    "executeRequireHoldingTool", true, "Require holding an enabled tool item\nfor the executeOperation hotkey to work");
+        public static final ConfigBoolean       EASY_PLACE_FIRST        = new ConfigBoolean(    "easyPlaceFirst", true, "This causes the Easy Place mode to place the first/closest block\nyou are looking at first, instead of the furthest/bottom-most block.\nSetting this to false allows you to place multiple layers \"at once\",\nsince the furthest blocks would be placed before the closer ones block the line of sight.");
+        public static final ConfigBoolean       EASY_PLACE_HOLD_ENABLED = new ConfigBoolean(    "easyPlaceHoldEnabled", true, "When enabled, then you can hold down the use key\nand look at different schematic blocks to place them,\nwithout having to click on every block individually.");
+        public static final ConfigBoolean       EASY_PLACE_MODE         = new ConfigBoolean(    "easyPlaceMode", false, "When enabled, then simply trying to use an item/place a block\non schematic blocks will place that block in that position");
+        public static final ConfigBoolean       EASY_PLACE_SP_HANDLING  = new ConfigBoolean(    "easyPlaceSinglePlayerHandling", true, "If enabled, then Litematica handles the so called\n\"Carpet mod Accurate Block Placement Protocol\" itself in single player.\nThis is recommended to be kept enabled if you\nare going to use Easy Place in single player.");
+        public static final ConfigOptionList    EASY_PLACE_PROTOCOL     = new ConfigOptionList( "easyPlaceProtocolVersion", EasyPlaceProtocol.AUTO, "The type of \"accurate placement protocol\" to use.\n- Auto: Uses v3 in single player, and by default Slabs-only in multiplayer,\n  unless the server has Carpet mod that sends a 'carpet:hello'\n  packet, in which case v2 is used on that server.\n- Version 3: Only supported by Litematica itself (in single player) for now.\n- Version 2: Compatible with servers with the Carpet mod\n  (either QuickCarpet by skyrising and DeadlyMC,\n  or CarpetExtra in addition to FabricCarpet.\n  And in both cases the 'accurateBlockPlacement' Carpet rule needs\n  to be enabled on the server).\n- Slabs only: Only fixes top slabs. Compatible with Paper servers.\n- None: Does not modify coordinates.");
+        public static final ConfigInteger       EASY_PLACE_SWAP_INTERVAL = new ConfigInteger(   "easyPlaceSwapInterval", 0, 0, 10000, "The interval in milliseconds the Easy Place mode waits\nafter swapping inventory slots and placing a block.\nUseful to avoid placing wrong blocks when having high ping.");
+        public static final ConfigBoolean       EASY_PLACE_VANILLA_REACH = new ConfigBoolean(   "easyPlaceVanillaReach", false, "If enabled, reduces reach distance from 6 to 4.5\nso servers don't reject placement of far blocks.");
+        public static final ConfigBoolean       EXECUTE_REQUIRE_TOOL    = new ConfigBoolean(    "executeRequireHoldingTool", true, "Require holding an enabled tool item\nfor the executeOperation hotkey to work");
         public static final ConfigBoolean       FIX_RAIL_ROTATION       = new ConfigBoolean(    "fixRailRotation", true, "If true, then a fix is applied for the vanilla bug in rails,\nwhere the 180 degree rotations of straight north-south and\neast-west rails rotate 90 degrees counterclockwise instead >_>");
         public static final ConfigBoolean       GENERATE_LOWERCASE_NAMES = new ConfigBoolean(   "generateLowercaseNames", false, "If enabled, then by default the suggested schematic names\nwill be lowercase and using underscores instead of spaces");
 //SH        public static final ConfigBoolean       HIGHLIGHT_BLOCK_IN_INV  = new ConfigBoolean(    "highlightBlockInInventory", false, "When enabled, highlights the item (including Shulker Boxes containing it)\nof the looked at block in the schematic");
+        public static final ConfigBoolean       ITEM_USE_PACKET_CHECK_BYPASS = new ConfigBoolean("itemUsePacketCheckBypass", true, "Bypass the new distance/coordinate check that was added in 1.18.2.\n\nThat check breaks the \"accurate placement protocol\" and causes\nany blocks placed with a rotation (or other property) request to just become ghost blocks.\n\nThere is basically no need to ever disable this.\nThe check didn't even exist ever before 1.18.2.");
         public static final ConfigBoolean       LAYER_MODE_DYNAMIC      = new ConfigBoolean(    "layerModeFollowsPlayer", false, "If true, then the render layer follows the player.\nNote: This currently collapses Layer Range type ranges unfortunately");
         public static final ConfigBoolean       LOAD_ENTIRE_SCHEMATICS  = new ConfigBoolean(    "loadEntireSchematics", false, "If true, then the entire schematic is always loaded at once.\nIf false, then only the part that is within the client's view distance is loaded.");
-//SH        public static final ConfigInteger       PASTE_COMMAND_INTERVAL  = new ConfigInteger(    "pasteCommandInterval", 1, 1, 1000, "The interval in game ticks the Paste schematic task runs at,\nin the command-based mode");
-//SH        public static final ConfigInteger       PASTE_COMMAND_LIMIT     = new ConfigInteger(    "pasteCommandLimit", 64, 1, 1000000, "Max number of commands sent per game tick,\nwhen using the Paste schematic feature in the\ncommand mode on a server");
-//SH        public static final ConfigString        PASTE_COMMAND_SETBLOCK  = new ConfigString(     "pasteCommandNameSetblock", "setblock", "The setblock command name to use for the\nPaste schematic feature on servers, when\nusing the command-based paste mode");
+//SH        public static final ConfigBoolean       PASTE_IGNORE_BE_ENTIRELY = new ConfigBoolean(   "pasteIgnoreBlockEntitiesEntirely", false, "If enabled, then block entities ae not pasted at all\nvia the command-based pasting in multiplayer.\nThis allows you to easier paste in two passes if you\nwant to use the NBT-restore option for inventories etc. in the second pass,\nwhich usually requires a lot slower pasting speed/command rate.");
+//SH        public static final ConfigBoolean       PASTE_IGNORE_BE_IN_FILL = new ConfigBoolean(    "pasteIgnoreBlockEntitiesFromFill", true, "If enabled, then all block entities are ignored from the fill\ncommands when pasting. This allows them to get pasted individually,\nwhich is required if the NBT restore option is being used.");
+//SH        public static final ConfigBoolean       PASTE_IGNORE_CMD_LIMIT  = new ConfigBoolean(    "pasteIgnoreCommandLimitWithNbtRestore", true, "If enabled, then the command limit is ignored when pasting\nblocks with a block entity with the NBT restore option enabled.\nThis seems to somehow fix an issue where the NBT restore\nwould otherwise fail for many blocks with a low command rate.");
 //SH        public static final ConfigBoolean       PASTE_IGNORE_ENTITIES   = new ConfigBoolean(    "pasteIgnoreEntities", false, "If enabled, then the Paste feature will not paste any entities");
 //SH        public static final ConfigBoolean       PASTE_IGNORE_INVENTORY  = new ConfigBoolean(    "pasteIgnoreInventories", false, "Don't paste inventory contents when pasting a schematic");
 //SH        public static final ConfigOptionList    PASTE_NBT_BEHAVIOR      = new ConfigOptionList( "pasteNbtRestoreBehavior", PasteNbtBehavior.NONE, "Whether or not the NBT data of blocks is attempted to be restored,\nand which method is used for that.\n- Place & Data Modify will try to place the \"NBT-picked\" block\n  near the player, and then use the data modify\n  command to transfer the NBT data to the setblock'ed block\n- Place & Clone will try to place the \"NBT-picked\" block\n  near the player, and then clone it to the final location.\n- Teleport & Place will try to teleport the player nearby and then\n  directly place the NBT-picked item in the correct position.\nNote that the teleport & place method doesn't currently work correctly/at all.\nThe recommended method is §ePlace & Data Modify§r, however for that to work\nyou will probably need to lower the pasteCommandLimit to 1 per tick and increase\nthe pasteCommandInterval to 1-4 ticks or something.\nThus you should only use this for pasting important blocks that need the data,\nfor example by making a schematic of just the inventories,\nand then paste that with replace behavior set to None.");
 //SH        public static final ConfigOptionList    PASTE_REPLACE_BEHAVIOR  = new ConfigOptionList( "pasteReplaceBehavior", ReplaceBehavior.NONE, "The behavior of replacing existing blocks\nin the Paste schematic tool mode");
 //SH        public static final ConfigBoolean       PASTE_TO_MCFUNCTION     = new ConfigBoolean(    "pasteToMcFunctionFiles", false, "If enabled, then instead of actually pasting schematics to the world,\nthey are written as setblock commands into text files.");
+//SH        public static final ConfigBoolean       PASTE_USE_FILL_COMMAND  = new ConfigBoolean(    "pasteUseFillCommand", true, "If enabled, then instead of only using individual /setblock commands,\nthe command-based Paste operation (which is used on servers)\nwill also try to use /fill commands for any continuous areas of the same block.\nThis has no effect in single player, since the mod sets the blocks directly\nin the integrated server's world in and doesn't use commands at all.");
 //SH        public static final ConfigBoolean       PICK_BLOCK_ENABLED      = new ConfigBoolean(    "pickBlockEnabled", true, "Enables the schematic world pick block hotkeys.\nThere is also a hotkey for toggling this option to toggle those hotkeys... o.o", "Pick Block Hotkeys");
 //SH        public static final ConfigBoolean       PICK_BLOCK_SHULKERS     = new ConfigBoolean(    "pickBlockShulkers", false, "If enabled, then if the required item for the pick bloc\nis not found directly in the player's inventory, but there\nis a Shulker box that contains it, the Shulker Box\nwill be switched to the player's hand instead");
 //SH        public static final ConfigString        PICK_BLOCKABLE_SLOTS    = new ConfigString(     "pickBlockableSlots", "1,2,3,4,5", "The hotbar slots that are allowed to be\nused for the schematic pick block");
 //SH        public static final ConfigBoolean       PLACEMENT_RESTRICTION   = new ConfigBoolean(    "placementRestriction", false, "When enabled, the use key can only be used\nwhen holding the correct item for the targeted position,\nand the targeted position must have a missing block in the schematic", "Placement Restriction");
+        public static final ConfigOptionList    PLACEMENT_RESTRICTION_WARN = new ConfigOptionList  ("placementRestrictionWarn", MessageOutputType.ACTIONBAR, "Selects which type of warning message to show (if any)\nwhen either the Easy Place mode or Placement Restriction prevent placing a block");
         public static final ConfigBoolean       RENDER_MATERIALS_IN_GUI = new ConfigBoolean(    "renderMaterialListInGuis", true, "Whether or not the material list should\nbe rendered inside GUIs");
         public static final ConfigBoolean       RENDER_THREAD_NO_TIMEOUT = new ConfigBoolean(   "renderThreadNoTimeout", true, "Removes the timeout from the rendering worker threads.\nIf you get very stuttery rendering when moving around\nor dealing with large schematics, try disabling this. It will however make\nthe schematic rendering a lot slower in some cases.");
 //SH        public static final ConfigOptionList    SELECTION_CORNERS_MODE  = new ConfigOptionList( "selectionCornersMode", CornerSelectionMode.CORNERS, "The Area Selection corners mode to use (Corners, or Expand)");
         public static final ConfigString        TOOL_ITEM               = new ConfigString(     "toolItem", "minecraft:wooden_sword", "The item to use as the \"tool\" for selections etc.");
         public static final ConfigBoolean       TOOL_ITEM_ENABLED       = new ConfigBoolean(    "toolItemEnabled", true, "If true, then the \"tool\" item can be used to control selections etc.", "Tool Item Enabled");
+        public static final ConfigBoolean       UNHIDE_SCHEMATIC_PROJECTS = new ConfigBoolean(  "unhideSchematicVCS", false, "Un-hides the Schematic VCS (Version Control System) menu button,\nand enables the hotkey and the VCS functionality in general.\n(This was called Schematic Projects before.)\n\nIn general you §6should not§r be using this feature,\nunless you really know how it works and what it does.\nIt somewhat changes how the area selections, placements and pasting works,\nin particular that there is also an area delete operation when pasting.\n\nBasically this feature is intended for §6iterative, in-place§r design work,\nand it allows you to easier create multiple versions/snapshots\nof the same build, and also to switch between the versions by deleting what is\nin the world first, and then pasting the next version in its place.");
 
         public static final ImmutableList<IConfigBase> OPTIONS = ImmutableList.of(
 //SH                AREAS_PER_WORLD,
                 //BETTER_RENDER_ORDER,
 //SH                CHANGE_SELECTED_CORNER,
+                CHANGE_SELECTED_CORNER,
+                CLONE_AT_ORIGINAL_POS,
+                COMMAND_DISABLE_FEEDBACK,
+                COMMAND_USE_WORLDEDIT,
+                CUSTOM_SCHEMATIC_BASE_DIRECTORY_ENABLED,
                 DEBUG_LOGGING,
 //SH                EASY_PLACE_FIRST,
 //SH                EASY_PLACE_HOLD_ENABLED,
@@ -71,6 +102,8 @@ public class Configs implements IConfigHandler
                 FIX_RAIL_ROTATION,
                 GENERATE_LOWERCASE_NAMES,
 //SH                HIGHLIGHT_BLOCK_IN_INV,
+                HIGHLIGHT_BLOCK_IN_INV,
+                ITEM_USE_PACKET_CHECK_BYPASS,
                 LAYER_MODE_DYNAMIC,
                 LOAD_ENTIRE_SCHEMATICS,
 //SH                PASTE_IGNORE_ENTITIES,
@@ -80,9 +113,23 @@ public class Configs implements IConfigHandler
 //SH                PICK_BLOCK_ENABLED,
 //SH                PICK_BLOCK_SHULKERS,
 //SH                PLACEMENT_RESTRICTION,
+                //LOAD_ENTIRE_SCHEMATICS,
+                PASTE_IGNORE_BE_ENTIRELY,
+                PASTE_IGNORE_BE_IN_FILL,
+                PASTE_IGNORE_CMD_LIMIT,
+                PASTE_IGNORE_ENTITIES,
+                PASTE_IGNORE_INVENTORY,
+                PASTE_NBT_BEHAVIOR,
+                PASTE_TO_MCFUNCTION,
+                PASTE_USE_FILL_COMMAND,
+                PICK_BLOCK_ENABLED,
+                PICK_BLOCK_SHULKERS,
+                PLACEMENT_RESTRICTION,
+                PLACEMENT_RESTRICTION_WARN,
                 RENDER_MATERIALS_IN_GUI,
                 RENDER_THREAD_NO_TIMEOUT,
                 TOOL_ITEM_ENABLED,
+                UNHIDE_SCHEMATIC_PROJECTS,
 
 //SH                PASTE_REPLACE_BEHAVIOR,
 //SH                SELECTION_CORNERS_MODE,
@@ -91,6 +138,16 @@ public class Configs implements IConfigHandler
 //SH                PASTE_COMMAND_LIMIT,
 //SH                PASTE_COMMAND_SETBLOCK,
 //SH                PICK_BLOCKABLE_SLOTS,
+                COMMAND_FILL_MAX_VOLUME,
+                COMMAND_LIMIT,
+                COMMAND_NAME_CLONE,
+                COMMAND_NAME_FILL,
+                COMMAND_NAME_SETBLOCK,
+                COMMAND_NAME_SUMMON,
+                COMMAND_TASK_INTERVAL,
+                CUSTOM_SCHEMATIC_BASE_DIRECTORY,
+                EASY_PLACE_SWAP_INTERVAL,
+                PICK_BLOCKABLE_SLOTS,
                 TOOL_ITEM
         );
     }

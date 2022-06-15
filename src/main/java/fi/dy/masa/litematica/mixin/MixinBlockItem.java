@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(value = BlockItem.class, priority = 999)
+@Mixin(value = BlockItem.class, priority = 980)
 public abstract class MixinBlockItem extends Item
 {
     private MixinBlockItem(Item.Settings builder)

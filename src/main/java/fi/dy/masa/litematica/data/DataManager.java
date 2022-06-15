@@ -1,6 +1,7 @@
 package fi.dy.masa.litematica.data;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -15,25 +16,26 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.StringNbtReader;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.Reference;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.gui.GuiConfigs.ConfigGuiTab;
-import fi.dy.masa.litematica.materials.MaterialCache;
 import fi.dy.masa.litematica.materials.MaterialListBase;
 import fi.dy.masa.litematica.materials.MaterialListHudRenderer;
 import fi.dy.masa.litematica.render.infohud.InfoHud;
 import fi.dy.masa.litematica.scheduler.TaskScheduler;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacementManager;
-//SHimport fi.dy.masa.litematica.schematic.projects.SchematicProjectsManager;
+import fi.dy.masa.litematica.schematic.projects.SchematicProjectsManager;
 import fi.dy.masa.litematica.schematic.verifier.SchematicVerifier;
 import fi.dy.masa.litematica.selection.AreaSelectionSimple;
-//SHimport fi.dy.masa.litematica.selection.SelectionManager;
+import fi.dy.masa.litematica.selection.SelectionManager;
 import fi.dy.masa.litematica.tool.ToolMode;
 import fi.dy.masa.litematica.tool.ToolModeData;
 import fi.dy.masa.litematica.util.SchematicWorldRefresher;
+import fi.dy.masa.litematica.util.ToBooleanFunction;
 import fi.dy.masa.malilib.gui.interfaces.IDirectoryCache;
 import fi.dy.masa.malilib.util.FileUtils;
 import fi.dy.masa.malilib.util.JsonUtils;
@@ -47,11 +49,13 @@ public class DataManager implements IDirectoryCache
     private static final Pattern PATTERN_ITEM_NBT = Pattern.compile("^(?<name>[a-z0-9\\._-]+:[a-z0-9\\._-]+)(?<nbt>\\{.*\\})$");
     private static final Pattern PATTERN_ITEM_BASE = Pattern.compile("^(?<name>(?:[a-z0-9\\._-]+:)[a-z0-9\\._-]+)$");
     private static final Map<String, File> LAST_DIRECTORIES = new HashMap<>();
+    private static final ArrayList<ToBooleanFunction<Text>> CHAT_LISTENERS = new ArrayList<>();
 
     private static ItemStack toolItem = new ItemStack(Items.STICK);
     private static ConfigGuiTab configGuiTab = ConfigGuiTab.GENERIC;
     private static boolean createPlacementOnLoad = true;
     private static boolean canSave;
+    private static boolean isCarpetServer;
     private static long clientTickStart;
 
 //SH    private final SelectionManager selectionManager = new SelectionManager();
@@ -90,6 +94,55 @@ public class DataManager implements IDirectoryCache
     public static ItemStack getToolItem()
     {
         return toolItem;
+    }
+
+    public static void setIsCarpetServer(boolean isCarpetServer)
+    {
+        DataManager.isCarpetServer = isCarpetServer;
+    }
+
+    public static boolean isCarpetServer()
+    {
+        return isCarpetServer;
+    }
+
+    public static void addChatListener(ToBooleanFunction<Text> listener)
+    {
+        synchronized (CHAT_LISTENERS)
+        {
+            CHAT_LISTENERS.add(listener);
+        }
+    }
+
+    public static void removeChatListener(ToBooleanFunction<Text> listener)
+    {
+        synchronized (CHAT_LISTENERS)
+        {
+            CHAT_LISTENERS.remove(listener);
+        }
+    }
+
+    public static void clearChatListeners()
+    {
+        synchronized (CHAT_LISTENERS)
+        {
+            CHAT_LISTENERS.clear();
+        }
+    }
+
+    public static boolean onChatMessage(Text text)
+    {
+        synchronized (CHAT_LISTENERS)
+        {
+            boolean cancel = false;
+
+            for (ToBooleanFunction<Text> listener : CHAT_LISTENERS)
+            {
+                cancel |= listener.applyAsBoolean(text);
+            }
+
+            return cancel;
+        }
     }
 
     public static boolean getCreatePlacementOnLoad()
@@ -241,10 +294,9 @@ public class DataManager implements IDirectoryCache
 /*SH    public static void save()
     {
         save(false);
-        MaterialCache.getInstance().writeToFile();
-    }*/
+    }
 
-/*SH    public static void save(boolean forceSave)
+    public static void save(boolean forceSave)
     {
         if (canSave == false && forceSave == false)
         {
@@ -281,8 +333,10 @@ public class DataManager implements IDirectoryCache
 //SH        getSchematicProjectsManager().clear();
 //SH        getSelectionManager().clear();
         setMaterialList(null);
+        clearChatListeners();
 
         InfoHud.getInstance().reset(); // remove the line providers and clear the data
+        setIsCarpetServer(false);
     }
 
 /*SH    private void savePerDimensionData()
@@ -388,6 +442,11 @@ public class DataManager implements IDirectoryCache
         }
     }
 
+    public static File getDefaultBaseSchematicDirectory()
+    {
+        return FileUtils.getCanonicalFileIfPossible(new File(FileUtils.getMinecraftDirectory(), "schematics"));
+    }
+
     public static File getCurrentConfigDirectory()
     {
         return new File(FileUtils.getConfigDirectory(), Reference.MOD_ID);
@@ -395,7 +454,16 @@ public class DataManager implements IDirectoryCache
 
     public static File getSchematicsBaseDirectory()
     {
-        File dir = FileUtils.getCanonicalFileIfPossible(new File(FileUtils.getMinecraftDirectory(), "schematics"));
+        File dir;
+
+        if (Configs.Generic.CUSTOM_SCHEMATIC_BASE_DIRECTORY_ENABLED.getBooleanValue())
+        {
+            dir = new File(Configs.Generic.CUSTOM_SCHEMATIC_BASE_DIRECTORY.getStringValue());
+        }
+        else
+        {
+            dir = getDefaultBaseSchematicDirectory();
+        }
 
         if (dir.exists() == false && dir.mkdirs() == false)
         {

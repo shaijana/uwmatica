@@ -5,8 +5,6 @@ import com.google.common.collect.ImmutableList;
 import fi.dy.masa.malilib.config.options.ConfigHotkey;
 import fi.dy.masa.malilib.hotkeys.KeybindSettings;
 
-import java.util.List;
-
 public class Hotkeys
 {
 //SH    public static final ConfigHotkey ADD_SELECTION_BOX                  = new ConfigHotkey("addSelectionBox",                   "M,A",  "Add a new selection box (position 1) here");
@@ -44,11 +42,12 @@ public class Hotkeys
     public static final ConfigHotkey RERENDER_SCHEMATIC                 = new ConfigHotkey("rerenderSchematic",                 "F3,M", "Hotkey to refresh/redraw only the schematic, instead of\nhaving to refresh the vanilla terrain too with F3 + A");
 //SH    public static final ConfigHotkey SAVE_AREA_AS_IN_MEMORY_SCHEMATIC   = new ConfigHotkey("saveAreaAsInMemorySchematic",       "",     "Save the current Area Selection as an in-memory Schematic");
 //SH    public static final ConfigHotkey SAVE_AREA_AS_SCHEMATIC_TO_FILE     = new ConfigHotkey("saveAreaAsSchematicToFile",         "LEFT_CONTROL,LEFT_ALT,S",  "Save the current Area Selection as a Schematic to a file");
-//SH    public static final ConfigHotkey SCHEMATIC_REBUILD_BREAK_ALL_EXCEPT = new ConfigHotkey("schematicRebuildBreakAllExcept",    "",     KeybindSettings.MODIFIER_INGAME, "Modifier key to activate the \"break everything except\"\nmode/function in the Schematic Rebuild tool mode.\nBasically when you hold this key and punch a schematic block,\nall other blocks except this block will be removed from the schematic.");
-//SH    public static final ConfigHotkey SCHEMATIC_REBUILD_BREAK_ALL        = new ConfigHotkey("schematicRebuildBreakPlaceAll",     "",     KeybindSettings.MODIFIER_INGAME, "Modifier key to activate the \"break all identical blocks\"\nfunction in the Schematic Rebuild tool mode");
-//SH    public static final ConfigHotkey SCHEMATIC_REBUILD_BREAK_DIRECTION  = new ConfigHotkey("schematicRebuildBreakPlaceDirection","",    KeybindSettings.MODIFIER_INGAME, "Modifier key to activate the directional/continuous\nbreak or place function in the Schematic Rebuild tool mode");
-//SH    public static final ConfigHotkey SCHEMATIC_REBUILD_REPLACE_ALL      = new ConfigHotkey("schematicRebuildReplaceAll",        "",     KeybindSettings.MODIFIER_INGAME, "Modifier key to activate the \"replace all identical\"\nreplace mode/function in the Schematic Rebuild tool mode");
-//SH    public static final ConfigHotkey SCHEMATIC_REBUILD_REPLACE_DIRECTION= new ConfigHotkey("schematicRebuildReplaceDirection",  "",     KeybindSettings.MODIFIER_INGAME, "Modifier key to activate the directional/continuous\nreplace mode/function in the Schematic Rebuild tool mode");
+//SH    public static final ConfigHotkey SCHEMATIC_EDIT_BREAK_ALL_EXCEPT    = new ConfigHotkey("schematicEditBreakAllExcept",       "", KeybindSettings.MODIFIER_INGAME, "Modifier key to activate the \"break everything except\"\nmode/function in the Schematic Edit tool mode.\nBasically when you hold this key and punch a schematic block,\nall other blocks except this block will be removed from the schematic.");
+//SH    public static final ConfigHotkey SCHEMATIC_EDIT_BREAK_ALL           = new ConfigHotkey("schematicEditBreakPlaceAll",        "", KeybindSettings.MODIFIER_INGAME, "Modifier key to activate the \"break all identical blocks\"\nfunction in the Schematic Edit tool mode");
+//SH    public static final ConfigHotkey SCHEMATIC_EDIT_BREAK_DIRECTION     = new ConfigHotkey("schematicEditBreakPlaceDirection",  "", KeybindSettings.MODIFIER_INGAME, "Modifier key to activate the directional/continuous\nbreak or place function in the Schematic Edit tool mode");
+//SH    public static final ConfigHotkey SCHEMATIC_EDIT_REPLACE_ALL         = new ConfigHotkey("schematicEditReplaceAll",           "", KeybindSettings.MODIFIER_INGAME, "Modifier key to activate the \"replace all identical\"\nreplace mode/function in the Schematic Edit tool mode");
+//SH    public static final ConfigHotkey SCHEMATIC_EDIT_REPLACE_BLOCK       = new ConfigHotkey("schematicEditReplaceBlock",         "", KeybindSettings.MODIFIER_INGAME, "Modifier key to activate the \"replace block type\"\nreplace mode/function in the Schematic Edit tool mode");
+//SH    public static final ConfigHotkey SCHEMATIC_EDIT_REPLACE_DIRECTION   = new ConfigHotkey("schematicEditReplaceDirection",     "", KeybindSettings.MODIFIER_INGAME, "Modifier key to activate the directional/continuous\nreplace mode/function in the Schematic Edit tool mode");
 //SH    public static final ConfigHotkey SCHEMATIC_VERSION_CYCLE_MODIFIER   = new ConfigHotkey("schematicVersionCycleModifier",     "",     KeybindSettings.MODIFIER_INGAME, "The modifier key to hold to be able to use the mouse wheel\nto cycle through the schematic versions in the Version Control tool mode");
 //SH    public static final ConfigHotkey SCHEMATIC_VERSION_CYCLE_NEXT       = new ConfigHotkey("schematicVersionCycleNext",         "",     "A hotkey to cycle to the next schematic version in the Version Control tool mode");
 //SH    public static final ConfigHotkey SCHEMATIC_VERSION_CYCLE_PREVIOUS   = new ConfigHotkey("schematicVersionCyclePrevious",     "",     "A hotkey to cycle to the next schematic version in the Version Control tool mode");
@@ -117,11 +116,12 @@ public class Hotkeys
             RERENDER_SCHEMATIC,
 //SH            SAVE_AREA_AS_IN_MEMORY_SCHEMATIC,
 //SH            SAVE_AREA_AS_SCHEMATIC_TO_FILE,
-//SH            SCHEMATIC_REBUILD_BREAK_ALL,
-//SH            SCHEMATIC_REBUILD_BREAK_ALL_EXCEPT,
-//SH            SCHEMATIC_REBUILD_BREAK_DIRECTION,
-//SH            SCHEMATIC_REBUILD_REPLACE_ALL,
-//SH            SCHEMATIC_REBUILD_REPLACE_DIRECTION,
+//SH            SCHEMATIC_EDIT_BREAK_ALL,
+//SH            SCHEMATIC_EDIT_BREAK_ALL_EXCEPT,
+//SH            SCHEMATIC_EDIT_BREAK_DIRECTION,
+//SH            SCHEMATIC_EDIT_REPLACE_ALL,
+//SH            SCHEMATIC_EDIT_REPLACE_BLOCK,
+//SH            SCHEMATIC_EDIT_REPLACE_DIRECTION,
 //SH            SCHEMATIC_VERSION_CYCLE_MODIFIER,
 //SH            SCHEMATIC_VERSION_CYCLE_NEXT,
 //SH            SCHEMATIC_VERSION_CYCLE_PREVIOUS,

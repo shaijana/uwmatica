@@ -10,7 +10,6 @@ import com.google.common.collect.ImmutableList;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.world.DummyClientTickScheduler;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
@@ -20,7 +19,6 @@ import net.minecraft.recipe.RecipeManager;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
-import net.minecraft.tag.TagManager;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.TypeFilter;
 import net.minecraft.util.math.BlockPos;
@@ -28,21 +26,24 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.profiler.Profiler;
+import net.minecraft.util.registry.BuiltinRegistries;
 import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.util.registry.RegistryEntry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.LightType;
 import net.minecraft.world.MutableWorldProperties;
-import net.minecraft.world.TickScheduler;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.BuiltinBiomes;
+import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.WorldChunk;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.entity.EntityLookup;
 import net.minecraft.world.event.GameEvent;
+import net.minecraft.world.tick.EmptyTickSchedulers;
+import net.minecraft.world.tick.QueryableTickScheduler;
 import fi.dy.masa.litematica.Reference;
 import fi.dy.masa.litematica.render.LitematicaRenderer;
 import fi.dy.masa.litematica.render.schematic.WorldRendererSchematic;
@@ -54,16 +55,20 @@ public class WorldSchematic extends World
     private final MinecraftClient mc;
     private final WorldRendererSchematic worldRenderer;
     private final ChunkManagerSchematic chunkManagerSchematic;
+    private final RegistryEntry<Biome> biome;
     private int nextEntityId;
     private int entityCount;
 
-    protected WorldSchematic(MutableWorldProperties mutableWorldProperties, DimensionType dimensionType, Supplier<Profiler> supplier)
+    protected WorldSchematic(MutableWorldProperties mutableWorldProperties,
+                             RegistryEntry<DimensionType> dimensionType,
+                             Supplier<Profiler> supplier)
     {
         super(mutableWorldProperties, REGISTRY_KEY, dimensionType, supplier, true, true, 0L);
 
         this.mc = MinecraftClient.getInstance();
         this.worldRenderer = LitematicaRenderer.getInstance().getWorldRenderer();
         this.chunkManagerSchematic = new ChunkManagerSchematic(this);
+        this.biome = RegistryEntry.of(BuiltinRegistries.BIOME.get(BiomeKeys.PLAINS));
     }
 
     public ChunkManagerSchematic getChunkProvider()
@@ -78,15 +83,15 @@ public class WorldSchematic extends World
     }
 
     @Override
-    public TickScheduler<Block> getBlockTickScheduler()
+    public QueryableTickScheduler<Block> getBlockTickScheduler()
     {
-        return DummyClientTickScheduler.get();
+        return EmptyTickSchedulers.getClientTickScheduler();
     }
 
     @Override
-    public TickScheduler<Fluid> getFluidTickScheduler()
+    public QueryableTickScheduler<Fluid> getFluidTickScheduler()
     {
-        return DummyClientTickScheduler.get();
+        return EmptyTickSchedulers.getClientTickScheduler();
     }
 
     public int getRegularEntityCount()
@@ -113,9 +118,9 @@ public class WorldSchematic extends World
     }
 
     @Override
-    public Biome getGeneratorStoredBiome(int biomeX, int biomeY, int biomeZ)
+    public RegistryEntry<Biome> getGeneratorStoredBiome(int biomeX, int biomeY, int biomeZ)
     {
-        return BuiltinBiomes.PLAINS;
+        return this.biome;
     }
 
     @Override
@@ -205,12 +210,6 @@ public class WorldSchematic extends World
     public RecipeManager getRecipeManager()
     {
         return this.mc.world != null ? this.mc.world.getRecipeManager() : null;
-    }
-
-    @Override
-    public TagManager getTagManager()
-    {
-        return this.mc.world != null ? this.mc.world.getTagManager() : null;
     }
 
     @Override

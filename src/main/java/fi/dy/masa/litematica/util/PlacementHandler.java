@@ -1,11 +1,19 @@
 package fi.dy.masa.litematica.util;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import javax.annotation.Nullable;
 import com.google.common.collect.ImmutableSet;
-import fi.dy.masa.litematica.Litematica;
-import net.minecraft.block.*;
+import net.minecraft.block.BedBlock;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.ComparatorBlock;
+import net.minecraft.block.RepeaterBlock;
 import net.minecraft.block.enums.BlockHalf;
 import net.minecraft.block.enums.ComparatorMode;
 import net.minecraft.block.enums.SlabType;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.state.property.DirectionProperty;
@@ -17,11 +25,9 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import fi.dy.masa.litematica.Litematica;
+import fi.dy.masa.litematica.config.Configs;
+import fi.dy.masa.litematica.data.DataManager;
 
 public class PlacementHandler
 {
@@ -61,14 +67,38 @@ public class PlacementHandler
             Properties.ROTATION
     );
 
+    public static EasyPlaceProtocol getEffectiveProtocolVersion()
+    {
+        EasyPlaceProtocol protocol = (EasyPlaceProtocol) Configs.Generic.EASY_PLACE_PROTOCOL.getOptionListValue();
+
+        if (protocol == EasyPlaceProtocol.AUTO)
+        {
+            if (MinecraftClient.getInstance().isInSingleplayer())
+            {
+                return EasyPlaceProtocol.V3;
+            }
+
+            if (DataManager.isCarpetServer())
+            {
+                return EasyPlaceProtocol.V2;
+            }
+
+            return EasyPlaceProtocol.SLAB_ONLY;
+        }
+
+        return protocol;
+    }
+
     @Nullable
 /*SH    public static BlockState applyPlacementProtocolToPlacementState(BlockState state, UseContext context)
     {
-        if (Configs.Generic.EASY_PLACE_PROTOCOL.getOptionListValue() == EasyPlaceProtocol.V3)
+        EasyPlaceProtocol protocol = getEffectiveProtocolVersion();
+
+        if (protocol == EasyPlaceProtocol.V3)
         {
             return applyPlacementProtocolV3(state, context);
         }
-        else if (Configs.Generic.EASY_PLACE_PROTOCOL.getOptionListValue() == EasyPlaceProtocol.V2)
+        else if (protocol == EasyPlaceProtocol.V2)
         {
             return applyPlacementProtocolV2(state, context);
         }
@@ -94,16 +124,26 @@ public class PlacementHandler
                 return null;
             }
         }
+        else if (state.contains(Properties.AXIS))
+        {
+            Direction.Axis axis = Direction.Axis.VALUES[((protocolValue >> 1) & 0x3) % 3];
 
-        protocolValue &= 0xFFFFFFF0;
+            if (Properties.AXIS.getValues().contains(axis))
+            {
+                state = state.with(Properties.AXIS, axis);
+            }
+        }
 
-        if (protocolValue >= 16)
+        // Divide by two, and then remove the 4 bits used for the facing
+        protocolValue >>>= 5;
+
+        if (protocolValue > 0)
         {
             Block block = state.getBlock();
 
             if (block instanceof RepeaterBlock)
             {
-                Integer delay = (protocolValue / 16) + 1;
+                Integer delay = protocolValue;
 
                 if (RepeaterBlock.DELAY.getValues().contains(delay))
                 {
@@ -114,14 +154,11 @@ public class PlacementHandler
             {
                 state = state.with(ComparatorBlock.MODE, ComparatorMode.SUBTRACT);
             }
-            else if (block instanceof TrapdoorBlock)
-            {
-                state = state.with(TrapdoorBlock.HALF, BlockHalf.TOP);
-            }
-            else if (block instanceof StairsBlock && state.get(StairsBlock.HALF) == BlockHalf.BOTTOM)
-            {
-                state = state.with(StairsBlock.HALF, BlockHalf.TOP);
-            }
+        }
+
+        if (state.contains(Properties.BLOCK_HALF))
+        {
+            state = state.with(Properties.BLOCK_HALF, protocolValue > 0 ? BlockHalf.TOP : BlockHalf.BOTTOM);
         }
 
         return state;
@@ -172,7 +209,7 @@ public class PlacementHandler
                     List<T> list = new ArrayList<>(prop.getValues());
                     list.sort(Comparable::compareTo);
 
-                    int requiredBits = MathHelper.log2(MathHelper.smallestEncompassingPowerOfTwo(list.size()));
+                    int requiredBits = MathHelper.floorLog2(MathHelper.smallestEncompassingPowerOfTwo(list.size()));
                     int bitMask = ~(0xFFFFFFFF << requiredBits);
                     int valueIndex = protocolValue & bitMask;
                     //System.out.printf("trying to apply valInd: %d, bits: %d, prot val: 0x%08X\n", valueIndex, requiredBits, protocolValue);

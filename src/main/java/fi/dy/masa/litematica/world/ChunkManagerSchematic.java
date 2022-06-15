@@ -42,11 +42,13 @@ public class ChunkManagerSchematic extends ChunkManager
         return this.loadedChunks.containsKey(ChunkPos.toLong(chunkX, chunkZ));
     }
 
+    @Override
     public String getDebugString()
     {
         return "Schematic Chunk Cache: " + this.getLoadedChunkCount();
     }
 
+    @Override
     public int getLoadedChunkCount()
     {
         return this.loadedChunks.size();
@@ -94,7 +96,7 @@ public class ChunkManagerSchematic extends ChunkManager
     }
 
     @Override
-    public void tick(BooleanSupplier booleanSupplier)
+    public void tick(BooleanSupplier shouldKeepTicking, boolean tickChunks)
     {
         // NO-OP
     }

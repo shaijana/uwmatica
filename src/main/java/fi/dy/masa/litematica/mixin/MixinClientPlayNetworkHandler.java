@@ -7,6 +7,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.network.packet.s2c.play.ChunkDeltaUpdateS2CPacket;
+import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket;
 import net.minecraft.network.packet.s2c.play.UnloadChunkS2CPacket;
 import net.minecraft.util.math.ChunkSectionPos;
 import fi.dy.masa.litematica.config.Configs;
@@ -25,6 +26,8 @@ public abstract class MixinClientPlayNetworkHandler
         {
             SchematicWorldRefresher.INSTANCE.markSchematicChunksForRenderUpdate(packetIn.getX(), packetIn.getZ());
         }
+
+        DataManager.getSchematicPlacementManager().onClientChunkLoad(packetIn.getX(), packetIn.getZ());
     }
 
     @Inject(method = "onChunkDeltaUpdate", at = @At("RETURN"))
@@ -45,6 +48,16 @@ public abstract class MixinClientPlayNetworkHandler
         if (Configs.Generic.LOAD_ENTIRE_SCHEMATICS.getBooleanValue() == false)
         {
             DataManager.getSchematicPlacementManager().onClientChunkUnload(packet.getX(), packet.getZ());
+        }
+    }
+
+    @Inject(method = "onGameMessage", cancellable = true, at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/client/gui/hud/InGameHud;addChatMessage(Lnet/minecraft/network/MessageType;Lnet/minecraft/text/Text;Ljava/util/UUID;)V"))
+    private void onGameMessage(GameMessageS2CPacket packet, CallbackInfo ci)
+    {
+        if (DataManager.onChatMessage(packet.getMessage()))
+        {
+            ci.cancel();
         }
     }
 }

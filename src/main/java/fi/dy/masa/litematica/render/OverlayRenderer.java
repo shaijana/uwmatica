@@ -34,7 +34,7 @@ import fi.dy.masa.litematica.schematic.verifier.SchematicVerifier.BlockMismatch;
 import fi.dy.masa.litematica.schematic.verifier.SchematicVerifier.MismatchRenderPos;
 import fi.dy.masa.litematica.selection.AreaSelection;
 import fi.dy.masa.litematica.selection.Box;
-//SHimport fi.dy.masa.litematica.selection.SelectionManager;
+import fi.dy.masa.litematica.selection.SelectionManager;
 import fi.dy.masa.litematica.util.BlockInfoAlignment;
 import fi.dy.masa.litematica.util.ItemUtils;
 import fi.dy.masa.litematica.util.PositionUtils.Corner;
@@ -643,28 +643,33 @@ public class OverlayRenderer
         boolean direction = false;
         Entity entity = fi.dy.masa.malilib.util.EntityUtils.getCameraEntity();
 
-/*SH        if (Hotkeys.SCHEMATIC_REBUILD_BREAK_ALL.getKeybind().isKeybindHeld())
+/*SH        if (Hotkeys.SCHEMATIC_EDIT_BREAK_ALL.getKeybind().isKeybindHeld())
         {
             traceWrapper = RayTraceUtils.getGenericTrace(this.mc.world, entity, 20);
             color = Configs.Colors.REBUILD_BREAK_OVERLAY_COLOR.getColor();
-        }*/
-/*SH        else if (Hotkeys.SCHEMATIC_REBUILD_BREAK_ALL_EXCEPT.getKeybind().isKeybindHeld())
+        }
+        else if (Hotkeys.SCHEMATIC_EDIT_BREAK_ALL_EXCEPT.getKeybind().isKeybindHeld())
         {
             traceWrapper = RayTraceUtils.getGenericTrace(this.mc.world, entity, 20);
             color = Configs.Colors.REBUILD_BREAK_EXCEPT_OVERLAY_COLOR.getColor();
-        }*/
-/*SH        else if (Hotkeys.SCHEMATIC_REBUILD_BREAK_DIRECTION.getKeybind().isKeybindHeld())
+        }
+        else if (Hotkeys.SCHEMATIC_EDIT_BREAK_DIRECTION.getKeybind().isKeybindHeld())
         {
             traceWrapper = RayTraceUtils.getGenericTrace(this.mc.world, entity, 20);
             color = Configs.Colors.REBUILD_BREAK_OVERLAY_COLOR.getColor();
             direction = true;
-        }*/
-/*SH        else if (Hotkeys.SCHEMATIC_REBUILD_REPLACE_ALL.getKeybind().isKeybindHeld())
+        }
+        else if (Hotkeys.SCHEMATIC_EDIT_REPLACE_ALL.getKeybind().isKeybindHeld())
         {
             traceWrapper = RayTraceUtils.getGenericTrace(this.mc.world, entity, 20);
             color = Configs.Colors.REBUILD_REPLACE_OVERLAY_COLOR.getColor();
-        }*/
-/*SH        else if (Hotkeys.SCHEMATIC_REBUILD_REPLACE_DIRECTION.getKeybind().isKeybindHeld())
+        }
+        else if (Hotkeys.SCHEMATIC_EDIT_REPLACE_BLOCK.getKeybind().isKeybindHeld())
+        {
+            traceWrapper = RayTraceUtils.getGenericTrace(this.mc.world, entity, 20);
+            color = Configs.Colors.REBUILD_REPLACE_OVERLAY_COLOR.getColor();
+        }
+        else if (Hotkeys.SCHEMATIC_EDIT_REPLACE_DIRECTION.getKeybind().isKeybindHeld())
         {
             traceWrapper = RayTraceUtils.getGenericTrace(this.mc.world, entity, 20);
             color = Configs.Colors.REBUILD_REPLACE_OVERLAY_COLOR.getColor();

@@ -302,10 +302,9 @@ public class WorldRendererSchematic
             this.displayListEntitiesDirty = false;
             this.renderInfos.clear();
 
-            Set<SubChunkPos> set = DataManager.getSchematicPlacementManager().getAllTouchedSubChunks();
-            List<SubChunkPos> positions = new ArrayList<>(set.size());
-            positions.addAll(set);
-            positions.sort(new SubChunkPos.DistanceComparator(viewSubChunk));
+            this.world.getProfiler().swap("sort");
+            List<SubChunkPos> positions = DataManager.getSchematicPlacementManager().getAndUpdateVisibleSubChunks(viewSubChunk);
+            //positions.sort(new SubChunkPos.DistanceComparator(viewSubChunk));
 
             //Queue<SubChunkPos> queuePositions = new PriorityQueue<>(new SubChunkPos.DistanceComparator(viewSubChunk));
             //queuePositions.addAll(set);
@@ -341,7 +340,7 @@ public class WorldRendererSchematic
                 }
             }
 
-            this.world.getProfiler().pop();
+            this.world.getProfiler().pop(); // fetch
         }
 
         this.world.getProfiler().swap("rebuild_near");
@@ -545,7 +544,7 @@ public class WorldRendererSchematic
     {
         for (int i = 0; i < 12; ++i) shader.addSampler("Sampler" + i, RenderSystem.getShaderTexture(i));
 
-        if (shader.modelViewMat != null) shader.modelViewMat.set(matrices.peek().getModel());
+        if (shader.modelViewMat != null) shader.modelViewMat.set(matrices.peek().getPositionMatrix());
         if (shader.projectionMat != null) shader.projectionMat.set(projMatrix);
         if (shader.colorModulator != null) shader.colorModulator.set(RenderSystem.getShaderColor());
         if (shader.fogStart != null) shader.fogStart.set(RenderSystem.getShaderFogStart());
@@ -603,7 +602,7 @@ public class WorldRendererSchematic
 
                     matrixStack.push();
                     matrixStack.translate(chunkOrigin.getX() - x, chunkOrigin.getY() - y, chunkOrigin.getZ() - z);
-                    buffer.setShader(matrixStack.peek().getModel(), projMatrix, shader);
+                    buffer.setShader(matrixStack.peek().getPositionMatrix(), projMatrix, shader);
                     matrixStack.pop();
                 }
             }
@@ -644,7 +643,7 @@ public class WorldRendererSchematic
 
     public boolean renderFluid(BlockRenderView world, FluidState state, BlockPos pos, BufferBuilder bufferBuilderIn)
     {
-        return this.blockRenderManager.renderFluid(pos, world, bufferBuilderIn, state);
+        return this.blockRenderManager.renderFluid(pos, world, bufferBuilderIn, state.getBlockState(), state);
     }
 
     public BakedModel getModelForState(BlockState state)
