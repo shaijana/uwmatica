@@ -1,51 +1,79 @@
 package fi.dy.masa.litematica.event;
 
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.entity.Entity;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import fi.dy.masa.malilib.gui.Message.MessageType;
+import fi.dy.masa.malilib.hotkeys.IHotkey;
+import fi.dy.masa.malilib.hotkeys.IKeybindManager;
+import fi.dy.masa.malilib.hotkeys.IKeybindProvider;
+import fi.dy.masa.malilib.hotkeys.IKeyboardInputHandler;
+import fi.dy.masa.malilib.hotkeys.IMouseInputHandler;
+import fi.dy.masa.malilib.hotkeys.KeybindMulti;
+import fi.dy.masa.malilib.util.GuiUtils;
+import fi.dy.masa.malilib.util.InfoUtils;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.Reference;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.config.Hotkeys;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.gui.GuiSchematicManager;
+import fi.dy.masa.litematica.selection.AreaSelection;
+import fi.dy.masa.litematica.selection.Box;
+import fi.dy.masa.litematica.selection.SelectionManager;
 import fi.dy.masa.litematica.tool.ToolMode;
 import fi.dy.masa.litematica.util.EntityUtils;
-import fi.dy.masa.malilib.hotkeys.*;
-import fi.dy.masa.malilib.util.GuiUtils;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.Direction;
+import fi.dy.masa.litematica.util.PositionUtils;
+import fi.dy.masa.litematica.util.PositionUtils.Corner;
+import fi.dy.masa.litematica.util.SchematicUtils;
+import fi.dy.masa.litematica.util.WorldUtils;
 
-public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IMouseInputHandler {
+public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IMouseInputHandler
+{
     private static final InputHandler INSTANCE = new InputHandler();
 
-    private InputHandler() {
+    private InputHandler()
+    {
     }
 
-    public static InputHandler getInstance() {
+    public static InputHandler getInstance()
+    {
         return INSTANCE;
     }
 
     @Override
-    public void addKeysToMap(final IKeybindManager manager) {
-        for (final IHotkey hotkey : Hotkeys.HOTKEY_LIST) {
+    public void addKeysToMap(IKeybindManager manager)
+    {
+        for (IHotkey hotkey : Hotkeys.HOTKEY_LIST)
+        {
             manager.addKeybindToMap(hotkey.getKeybind());
         }
     }
 
     @Override
-    public void addHotkeys(final IKeybindManager manager) {
+    public void addHotkeys(IKeybindManager manager)
+    {
         manager.addHotkeysForCategory(Reference.MOD_NAME, "litematica.hotkeys.category.generic_hotkeys", Hotkeys.HOTKEY_LIST);
     }
 
     @Override
-    public boolean onKeyInput(final int keyCode, final int scanCode, final int modifiers, final boolean eventKeyState) {
-        if (eventKeyState) {
-            final MinecraftClient mc = MinecraftClient.getInstance();
+    public boolean onKeyInput(int keyCode, int scanCode, int modifiers, boolean eventKeyState)
+    {
+        if (eventKeyState)
+        {
+            MinecraftClient mc = MinecraftClient.getInstance();
 
-            if (mc.options.useKey.matchesKey(keyCode, scanCode)) {
+            if (mc.options.useKey.matchesKey(keyCode, scanCode))
+            {
                 return this.handleUseKey(mc);
-            } else if (mc.options.attackKey.matchesKey(keyCode, scanCode)) {
+            }
+            else if (mc.options.attackKey.matchesKey(keyCode, scanCode))
+            {
                 return this.handleAttackKey(mc);
-            } else if (mc.options.screenshotKey.matchesKey(keyCode, scanCode) && GuiSchematicManager.hasPendingPreviewTask()) {
+            }
+            else if (mc.options.screenshotKey.matchesKey(keyCode, scanCode) && GuiSchematicManager.hasPendingPreviewTask())
+            {
                 return GuiSchematicManager.setPreviewImage();
             }
         }
@@ -54,14 +82,19 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
     }
 
     @Override
-    public boolean onMouseClick(final int mouseX, final int mouseY, final int eventButton, final boolean eventButtonState) {
-        final MinecraftClient mc = MinecraftClient.getInstance();
+    public boolean onMouseClick(int mouseX, int mouseY, int eventButton, boolean eventButtonState)
+    {
+        MinecraftClient mc = MinecraftClient.getInstance();
 
         // Tool enabled, and not in a GUI
-        if (GuiUtils.getCurrentScreen() == null && mc.world != null && mc.player != null && eventButtonState) {
-            if (eventButtonState && mc.options.useKey.matchesMouse(eventButton)) {
+        if (GuiUtils.getCurrentScreen() == null && mc.world != null && mc.player != null && eventButtonState)
+        {
+            if (eventButtonState && mc.options.useKey.matchesMouse(eventButton))
+            {
                 return this.handleUseKey(mc);
-            } else if (eventButtonState && mc.options.attackKey.matchesMouse(eventButton)) {
+            }
+            else if (eventButtonState && mc.options.attackKey.matchesMouse(eventButton))
+            {
                 return this.handleAttackKey(mc);
             }
         }
@@ -70,31 +103,32 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
     }
 
     @Override
-    public boolean onMouseScroll(final int mouseX, final int mouseY, final double dWheel) {
-        final MinecraftClient mc = MinecraftClient.getInstance();
-
-        if (Configs.Generic.DEBUG_LOGGING.getBooleanValue()) {
-            Litematica.logger.info("Mouse scroll: x: {}, y; {}, wheel: {}", mouseX, mouseY, dWheel);
-        }
+    public boolean onMouseScroll(int mouseX, int mouseY, double dWheel)
+    {
+        Litematica.debugLog("Mouse scroll: x: {}, y; {}, wheel: {}", mouseX, mouseY, dWheel);
+        MinecraftClient mc = MinecraftClient.getInstance();
 
         // Not in a GUI
-        if (GuiUtils.getCurrentScreen() == null && mc.world != null && mc.player != null) {
+        if (GuiUtils.getCurrentScreen() == null && mc.world != null && mc.player != null)
+        {
             return this.handleMouseScroll(dWheel, mc);
         }
 
         return false;
     }
 
-    private boolean handleMouseScroll(final double dWheel, final MinecraftClient mc) {
-        final boolean toolEnabled = Configs.Visuals.ENABLE_RENDERING.getBooleanValue() && Configs.Generic.TOOL_ITEM_ENABLED.getBooleanValue();
+    private boolean handleMouseScroll(double dWheel, MinecraftClient mc)
+    {
+        boolean toolEnabled = Configs.Visuals.ENABLE_RENDERING.getBooleanValue() && Configs.Generic.TOOL_ITEM_ENABLED.getBooleanValue();
 
-        if (toolEnabled == false || EntityUtils.hasToolItem(mc.player) == false) {
+        if (toolEnabled == false || EntityUtils.hasToolItem(mc.player) == false)
+        {
             return false;
         }
 
         final int amount = dWheel > 0 ? 1 : -1;
-        final ToolMode mode = DataManager.getToolMode();
-        final Entity entity = fi.dy.masa.malilib.util.EntityUtils.getCameraEntity();
+        ToolMode mode = DataManager.getToolMode();
+        Entity entity = fi.dy.masa.malilib.util.EntityUtils.getCameraEntity();
 
 /*SH        if (Hotkeys.SELECTION_GRAB_MODIFIER.getKeybind().isKeybindHeld())
         {
@@ -132,7 +166,8 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
             return nudgeSelection(amount, mode, entity);
         }*/
 
-        if (Hotkeys.OPERATION_MODE_CHANGE_MODIFIER.getKeybind().isKeybindHeld()) {
+        if (Hotkeys.OPERATION_MODE_CHANGE_MODIFIER.getKeybind().isKeybindHeld())
+        {
             DataManager.setToolMode(DataManager.getToolMode().cycle(mc.player, amount < 0));
             return true;
         }

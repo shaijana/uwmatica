@@ -1,9 +1,29 @@
 package fi.dy.masa.litematica.data;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.mojang.brigadier.StringReader;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.StringNbtReader;
+import net.minecraft.registry.Registries;
+import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
+import fi.dy.masa.malilib.gui.interfaces.IDirectoryCache;
+import fi.dy.masa.malilib.util.FileUtils;
+import fi.dy.masa.malilib.util.JsonUtils;
+import fi.dy.masa.malilib.util.LayerRange;
+import fi.dy.masa.malilib.util.StringUtils;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.Reference;
 import fi.dy.masa.litematica.config.Configs;
@@ -13,35 +33,17 @@ import fi.dy.masa.litematica.materials.MaterialListHudRenderer;
 import fi.dy.masa.litematica.render.infohud.InfoHud;
 import fi.dy.masa.litematica.scheduler.TaskScheduler;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacementManager;
+import fi.dy.masa.litematica.schematic.projects.SchematicProjectsManager;
 import fi.dy.masa.litematica.schematic.verifier.SchematicVerifier;
 import fi.dy.masa.litematica.selection.AreaSelectionSimple;
+import fi.dy.masa.litematica.selection.SelectionManager;
 import fi.dy.masa.litematica.tool.ToolMode;
 import fi.dy.masa.litematica.tool.ToolModeData;
 import fi.dy.masa.litematica.util.SchematicWorldRefresher;
 import fi.dy.masa.litematica.util.ToBooleanFunction;
-import fi.dy.masa.malilib.gui.interfaces.IDirectoryCache;
-import fi.dy.masa.malilib.util.FileUtils;
-import fi.dy.masa.malilib.util.JsonUtils;
-import fi.dy.masa.malilib.util.LayerRange;
-import fi.dy.masa.malilib.util.StringUtils;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.StringNbtReader;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
 
-import javax.annotation.Nullable;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-public class DataManager implements IDirectoryCache {
+public class DataManager implements IDirectoryCache
+{
     private static final DataManager INSTANCE = new DataManager();
 
     private static final Pattern PATTERN_ITEM_NBT = Pattern.compile("^(?<name>[a-z0-9\\._-]+:[a-z0-9\\._-]+)(?<nbt>\\{.*\\})$");
@@ -65,60 +67,77 @@ public class DataManager implements IDirectoryCache {
     @Nullable
     private MaterialListBase materialList;
 
-    private DataManager() {
+    private DataManager()
+    {
     }
 
-    private static DataManager getInstance() {
+    private static DataManager getInstance()
+    {
         return INSTANCE;
     }
 
-    public static IDirectoryCache getDirectoryCache() {
+    public static IDirectoryCache getDirectoryCache()
+    {
         return INSTANCE;
     }
 
-    public static void onClientTickStart() {
+    public static void onClientTickStart()
+    {
         clientTickStart = System.nanoTime();
     }
 
-    public static long getClientTickStartTime() {
+    public static long getClientTickStartTime()
+    {
         return clientTickStart;
     }
 
-    public static ItemStack getToolItem() {
+    public static ItemStack getToolItem()
+    {
         return toolItem;
     }
 
-    public static void setIsCarpetServer(final boolean isCarpetServer) {
+    public static void setIsCarpetServer(boolean isCarpetServer)
+    {
         DataManager.isCarpetServer = isCarpetServer;
     }
 
-    public static boolean isCarpetServer() {
+    public static boolean isCarpetServer()
+    {
         return isCarpetServer;
     }
 
-    public static void addChatListener(final ToBooleanFunction<Text> listener) {
-        synchronized (CHAT_LISTENERS) {
+    public static void addChatListener(ToBooleanFunction<Text> listener)
+    {
+        synchronized (CHAT_LISTENERS)
+        {
             CHAT_LISTENERS.add(listener);
         }
     }
 
-    public static void removeChatListener(final ToBooleanFunction<Text> listener) {
-        synchronized (CHAT_LISTENERS) {
+    public static void removeChatListener(ToBooleanFunction<Text> listener)
+    {
+        synchronized (CHAT_LISTENERS)
+        {
             CHAT_LISTENERS.remove(listener);
         }
     }
 
-    public static void clearChatListeners() {
-        synchronized (CHAT_LISTENERS) {
+    public static void clearChatListeners()
+    {
+        synchronized (CHAT_LISTENERS)
+        {
             CHAT_LISTENERS.clear();
         }
     }
 
-    public static boolean onChatMessage(final Text text) {
-        synchronized (CHAT_LISTENERS) {
+    public static boolean onChatMessage(Text text)
+    {
+        synchronized (CHAT_LISTENERS)
+        {
             boolean cancel = false;
 
-            for (final ToBooleanFunction<Text> listener : CHAT_LISTENERS) {
+            for (ToBooleanFunction<Text> listener : CHAT_LISTENERS)
+            {
                 cancel |= listener.applyAsBoolean(text);
             }
 
@@ -126,19 +145,23 @@ public class DataManager implements IDirectoryCache {
         }
     }
 
-    public static boolean getCreatePlacementOnLoad() {
+    public static boolean getCreatePlacementOnLoad()
+    {
         return createPlacementOnLoad;
     }
 
-    public static void setCreatePlacementOnLoad(final boolean create) {
+    public static void setCreatePlacementOnLoad(boolean create)
+    {
         createPlacementOnLoad = create;
     }
 
-    public static ConfigGuiTab getConfigGuiTab() {
+    public static ConfigGuiTab getConfigGuiTab()
+    {
         return configGuiTab;
     }
 
-    public static void setConfigGuiTab(final ConfigGuiTab tab) {
+    public static void setConfigGuiTab(ConfigGuiTab tab)
+    {
         configGuiTab = tab;
     }
 
@@ -147,7 +170,8 @@ public class DataManager implements IDirectoryCache {
         return getInstance().selectionManager;
     }*/
 
-    public static SchematicPlacementManager getSchematicPlacementManager() {
+    public static SchematicPlacementManager getSchematicPlacementManager()
+    {
         return getInstance().schematicPlacementManager;
     }
 
@@ -157,17 +181,21 @@ public class DataManager implements IDirectoryCache {
     }*/
 
     @Nullable
-    public static MaterialListBase getMaterialList() {
+    public static MaterialListBase getMaterialList()
+    {
         return getInstance().materialList;
     }
 
-    public static void setMaterialList(@Nullable final MaterialListBase materialList) {
-        final MaterialListBase old = getInstance().materialList;
+    public static void setMaterialList(@Nullable MaterialListBase materialList)
+    {
+        MaterialListBase old = getInstance().materialList;
 
-        if (old != null) {
-            final MaterialListHudRenderer renderer = old.getHudRenderer();
+        if (old != null)
+        {
+            MaterialListHudRenderer renderer = old.getHudRenderer();
 
-            if (renderer.getShouldRenderCustom()) {
+            if (renderer.getShouldRenderCustom())
+            {
                 renderer.toggleShouldRender();
                 InfoHud.getInstance().removeInfoHudRenderer(renderer, false);
             }
@@ -176,68 +204,83 @@ public class DataManager implements IDirectoryCache {
         getInstance().materialList = materialList;
     }
 
-    public static ToolMode getToolMode() {
+    public static ToolMode getToolMode()
+    {
         return getInstance().operationMode;
     }
 
-    public static void setToolMode(final ToolMode mode) {
+    public static void setToolMode(ToolMode mode)
+    {
         getInstance().operationMode = mode;
     }
 
-    public static LayerRange getRenderLayerRange() {
+    public static LayerRange getRenderLayerRange()
+    {
         return getInstance().renderRange;
     }
 
-    public static AreaSelectionSimple getSimpleArea() {
+    public static AreaSelectionSimple getSimpleArea()
+    {
         return getInstance().areaSimple;
     }
 
     @Override
     @Nullable
-    public File getCurrentDirectoryForContext(final String context) {
+    public File getCurrentDirectoryForContext(String context)
+    {
         return LAST_DIRECTORIES.get(context);
     }
 
     @Override
-    public void setCurrentDirectoryForContext(final String context, final File dir) {
+    public void setCurrentDirectoryForContext(String context, File dir)
+    {
         LAST_DIRECTORIES.put(context, dir);
     }
 
-    public static void load() {
+    public static void load()
+    {
         getInstance().loadPerDimensionData();
 
-        final File file = getCurrentStorageFile(true);
-        final JsonElement element = JsonUtils.parseJsonFile(file);
+        File file = getCurrentStorageFile(true);
+        JsonElement element = JsonUtils.parseJsonFile(file);
 
-        if (element != null && element.isJsonObject()) {
+        if (element != null && element.isJsonObject())
+        {
             LAST_DIRECTORIES.clear();
 
-            final JsonObject root = element.getAsJsonObject();
+            JsonObject root = element.getAsJsonObject();
 
-            if (JsonUtils.hasObject(root, "last_directories")) {
-                final JsonObject obj = root.get("last_directories").getAsJsonObject();
+            if (JsonUtils.hasObject(root, "last_directories"))
+            {
+                JsonObject obj = root.get("last_directories").getAsJsonObject();
 
-                for (final Map.Entry<String, JsonElement> entry : obj.entrySet()) {
-                    final String name = entry.getKey();
-                    final JsonElement el = entry.getValue();
+                for (Map.Entry<String, JsonElement> entry : obj.entrySet())
+                {
+                    String name = entry.getKey();
+                    JsonElement el = entry.getValue();
 
-                    if (el.isJsonPrimitive()) {
-                        final File dir = new File(el.getAsString());
+                    if (el.isJsonPrimitive())
+                    {
+                        File dir = new File(el.getAsString());
 
-                        if (dir.exists() && dir.isDirectory()) {
+                        if (dir.exists() && dir.isDirectory())
+                        {
                             LAST_DIRECTORIES.put(name, dir);
                         }
                     }
                 }
             }
 
-            if (JsonUtils.hasString(root, "config_gui_tab")) {
-                try {
+            if (JsonUtils.hasString(root, "config_gui_tab"))
+            {
+                try
+                {
                     configGuiTab = ConfigGuiTab.valueOf(root.get("config_gui_tab").getAsString());
-                } catch (final Exception e) {
                 }
+                catch (Exception e) {}
 
-                if (configGuiTab == null) {
+                if (configGuiTab == null)
+                {
                     configGuiTab = ConfigGuiTab.GENERIC;
                 }
             }
@@ -281,7 +324,8 @@ public class DataManager implements IDirectoryCache {
         canSave = false;
     }*/
 
-    public static void clear() {
+    public static void clear()
+    {
         TaskScheduler.getInstanceClient().clearTasks();
         SchematicVerifier.clearActiveVerifiers();
 
@@ -304,28 +348,32 @@ public class DataManager implements IDirectoryCache {
         JsonUtils.writeJsonToFile(root, file);
     }*/
 
-    private void loadPerDimensionData() {
+    private void loadPerDimensionData()
+    {
 //SH        this.selectionManager.clear();
         this.schematicPlacementManager.clear();
 //SH        this.schematicProjectsManager.clear();
         this.materialList = null;
 
-        final File file = getCurrentStorageFile(false);
-        final JsonElement element = JsonUtils.parseJsonFile(file);
+        File file = getCurrentStorageFile(false);
+        JsonElement element = JsonUtils.parseJsonFile(file);
 
-        if (element != null && element.isJsonObject()) {
-            final JsonObject root = element.getAsJsonObject();
+        if (element != null && element.isJsonObject())
+        {
+            JsonObject root = element.getAsJsonObject();
             this.fromJson(root);
         }
     }
 
-    private void fromJson(final JsonObject obj) {
+    private void fromJson(JsonObject obj)
+    {
 /*SH        if (JsonUtils.hasObject(obj, "selections"))
         {
             this.selectionManager.loadFromJson(obj.get("selections").getAsJsonObject());
         }*/
 
-        if (JsonUtils.hasObject(obj, "placements")) {
+        if (JsonUtils.hasObject(obj, "placements"))
+        {
             this.schematicPlacementManager.loadFromJson(obj.get("placements").getAsJsonObject());
         }
 
@@ -334,15 +382,18 @@ public class DataManager implements IDirectoryCache {
             this.schematicProjectsManager.loadFromJson(obj.get("schematic_projects_manager").getAsJsonObject());
         }*/
 
-        if (JsonUtils.hasObject(obj, "render_range")) {
+        if (JsonUtils.hasObject(obj, "render_range"))
+        {
             this.renderRange = LayerRange.createFromJson(JsonUtils.getNestedObject(obj, "render_range", false), SchematicWorldRefresher.INSTANCE);
         }
 
-        if (JsonUtils.hasString(obj, "operation_mode")) {
-            try {
+        if (JsonUtils.hasString(obj, "operation_mode"))
+        {
+            try
+            {
                 this.operationMode = ToolMode.valueOf(obj.get("operation_mode").getAsString());
-            } catch (final Exception e) {
             }
+            catch (Exception e) {}
 
 /*SH            if (this.operationMode == null)
             {
@@ -355,13 +406,15 @@ public class DataManager implements IDirectoryCache {
             this.areaSimple = AreaSelectionSimple.fromJson(obj.get("area_simple").getAsJsonObject());
         }*/
 
-        if (JsonUtils.hasObject(obj, "tool_mode_data")) {
+        if (JsonUtils.hasObject(obj, "tool_mode_data"))
+        {
             this.toolModeDataFromJson(obj.get("tool_mode_data").getAsJsonObject());
         }
     }
 
-    private JsonObject toJson() {
-        final JsonObject obj = new JsonObject();
+    private JsonObject toJson()
+    {
+        JsonObject obj = new JsonObject();
 
 //SH        obj.add("selections", this.selectionManager.toJson());
         obj.add("placements", this.schematicPlacementManager.toJson());
@@ -374,36 +427,46 @@ public class DataManager implements IDirectoryCache {
         return obj;
     }
 
-    private JsonObject toolModeDataToJson() {
-        final JsonObject obj = new JsonObject();
+    private JsonObject toolModeDataToJson()
+    {
+        JsonObject obj = new JsonObject();
         obj.add("delete", ToolModeData.DELETE.toJson());
         return obj;
     }
 
-    private void toolModeDataFromJson(final JsonObject obj) {
-        if (JsonUtils.hasObject(obj, "delete")) {
+    private void toolModeDataFromJson(JsonObject obj)
+    {
+        if (JsonUtils.hasObject(obj, "delete"))
+        {
             ToolModeData.DELETE.fromJson(obj.get("delete").getAsJsonObject());
         }
     }
 
-    public static File getDefaultBaseSchematicDirectory() {
+    public static File getDefaultBaseSchematicDirectory()
+    {
         return FileUtils.getCanonicalFileIfPossible(new File(FileUtils.getMinecraftDirectory(), "schematics"));
     }
 
-    public static File getCurrentConfigDirectory() {
+    public static File getCurrentConfigDirectory()
+    {
         return new File(FileUtils.getConfigDirectory(), Reference.MOD_ID);
     }
 
-    public static File getSchematicsBaseDirectory() {
-        final File dir;
+    public static File getSchematicsBaseDirectory()
+    {
+        File dir;
 
-        if (Configs.Generic.CUSTOM_SCHEMATIC_BASE_DIRECTORY_ENABLED.getBooleanValue()) {
+        if (Configs.Generic.CUSTOM_SCHEMATIC_BASE_DIRECTORY_ENABLED.getBooleanValue())
+        {
             dir = new File(Configs.Generic.CUSTOM_SCHEMATIC_BASE_DIRECTORY.getStringValue());
-        } else {
+        }
+        else
+        {
             dir = getDefaultBaseSchematicDirectory();
         }
 
-        if (dir.exists() == false && dir.mkdirs() == false) {
+        if (dir.exists() == false && dir.mkdirs() == false)
+        {
             Litematica.logger.warn("Failed to create the schematic directory '{}'", dir.getAbsolutePath());
         }
 
@@ -434,38 +497,47 @@ public class DataManager implements IDirectoryCache {
         return dir;
     }*/
 
-    private static File getCurrentStorageFile(final boolean globalData) {
-        final File dir = getCurrentConfigDirectory();
+    private static File getCurrentStorageFile(boolean globalData)
+    {
+        File dir = getCurrentConfigDirectory();
 
-        if (dir.exists() == false && dir.mkdirs() == false) {
+        if (dir.exists() == false && dir.mkdirs() == false)
+        {
             Litematica.logger.warn("Failed to create the config directory '{}'", dir.getAbsolutePath());
         }
 
         return new File(dir, StringUtils.getStorageFileName(globalData, Reference.MOD_ID + "_", ".json", "default"));
     }
 
-    public static void setToolItem(final String itemNameIn) {
-        if (itemNameIn.isEmpty() || itemNameIn.equals("empty")) {
+    public static void setToolItem(String itemNameIn)
+    {
+        if (itemNameIn.isEmpty() || itemNameIn.equals("empty"))
+        {
             toolItem = ItemStack.EMPTY;
             return;
         }
 
-        try {
-            final Matcher matcherNbt = PATTERN_ITEM_NBT.matcher(itemNameIn);
-            final Matcher matcherBase = PATTERN_ITEM_BASE.matcher(itemNameIn);
+        try
+        {
+            Matcher matcherNbt = PATTERN_ITEM_NBT.matcher(itemNameIn);
+            Matcher matcherBase = PATTERN_ITEM_BASE.matcher(itemNameIn);
 
             String itemName = null;
             NbtCompound nbt = null;
 
-            if (matcherNbt.matches()) {
+            if (matcherNbt.matches())
+            {
                 itemName = matcherNbt.group("name");
                 nbt = (new StringNbtReader(new StringReader(matcherNbt.group("nbt")))).parseCompound();
-            } else if (matcherBase.matches()) {
+            }
+            else if (matcherBase.matches())
+            {
                 itemName = matcherBase.group("name");
             }
 
-            if (itemName != null) {
-                final Item item = Registry.ITEM.get(new Identifier(itemName));
+            if (itemName != null)
+            {
+                Item item = Registries.ITEM.get(new Identifier(itemName));
 
                 if (item != null && item != Items.AIR) {
                     toolItem = new ItemStack(item);
@@ -478,6 +550,6 @@ public class DataManager implements IDirectoryCache {
 
         // Fall back to a stick
         toolItem = new ItemStack(Items.STICK);
-        Configs.Generic.TOOL_ITEM.setValueFromString(Registry.ITEM.getId(Items.STICK).toString());
+        Configs.Generic.TOOL_ITEM.setValueFromString(Registries.ITEM.getId(Items.STICK).toString());
     }
 }

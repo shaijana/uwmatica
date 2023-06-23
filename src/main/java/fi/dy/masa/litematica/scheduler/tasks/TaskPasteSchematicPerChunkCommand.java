@@ -10,8 +10,11 @@ import java.util.Set;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import com.google.common.collect.Queues;
+import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.block.entity.SignBlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.command.argument.BlockArgumentParser;
@@ -20,17 +23,24 @@ import net.minecraft.entity.decoration.ItemFrameEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.SkullItem;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.WorldChunk;
+import fi.dy.masa.malilib.gui.Message.MessageType;
+import fi.dy.masa.malilib.util.InfoUtils;
+import fi.dy.masa.malilib.util.IntBoundingBox;
+import fi.dy.masa.malilib.util.LayerRange;
+import fi.dy.masa.malilib.util.PositionUtils;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.render.infohud.InfoHud;
@@ -39,13 +49,6 @@ import fi.dy.masa.litematica.util.EntityUtils;
 import fi.dy.masa.litematica.util.PasteNbtBehavior;
 import fi.dy.masa.litematica.util.ReplaceBehavior;
 import fi.dy.masa.litematica.world.ChunkSchematic;
-import fi.dy.masa.malilib.gui.Message.MessageType;
-import fi.dy.masa.malilib.util.InfoUtils;
-import fi.dy.masa.malilib.util.IntBoundingBox;
-import fi.dy.masa.malilib.util.LayerRange;
-import fi.dy.masa.malilib.util.PositionUtils;
-import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
-import it.unimi.dsi.fastutil.longs.LongArrayList;
 
 public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChunkBase
 {
@@ -62,6 +65,7 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
     protected final boolean useFillCommand;
     protected final boolean useWorldEdit;
     protected int[][][] workArr;
+    protected int maxCommandLength = 255;
     protected int sentFillCommands;
     protected int sentSetblockCommands;
 
@@ -110,9 +114,9 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
     {
         super.init();
 
-        if (this.useWorldEdit && this.mc.player != null)
+        if (this.useWorldEdit && this.isInWorld())
         {
-            this.mc.player.sendChatMessage("//perf neighbors off");
+            this.sendCommand("/perf neighbors off");
         }
     }
 
@@ -161,13 +165,8 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
     {
         while (this.sentCommandsThisTick < this.maxCommandsPerTick && this.queuedCommands.isEmpty() == false)
         {
-            this.sendCommand(this.queuedCommands.poll(), this.mc.player);
+            this.sendCommand(this.queuedCommands.poll());
         }
-    }
-
-    protected void sendCommand(String cmd)
-    {
-        this.sendCommand(cmd, this.mc.player);
     }
 
     protected void processBlocksInCurrentBoxUsingSetBlockOnly()
@@ -253,6 +252,12 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
 
         if (this.shouldSetBlock(stateSchematic, stateClient))
         {
+            if (this.useSpecialPasting(stateSchematic))
+            {
+                this.specialPasteBlock(pos, stateSchematic, this.schematicWorld, this.queuedCommands::offer);
+                return;
+            }
+
             PasteNbtBehavior nbtBehavior = this.nbtBehavior;
             BlockEntity be = schematicChunk.getBlockEntity(pos);
 
@@ -275,6 +280,11 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
                 this.queueSetBlockCommand(pos.getX(), pos.getY(), pos.getZ(), stateSchematic);
             }
         }
+    }
+
+    protected boolean useSpecialPasting(BlockState state)
+    {
+        return state.isIn(BlockTags.ALL_SIGNS);
     }
 
     protected boolean shouldSetBlock(BlockState stateSchematic, BlockState stateClient)
@@ -318,7 +328,7 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
 
         if (stack.isEmpty() == false)
         {
-            Identifier itemId = Registry.ITEM.getId(stack.getItem());
+            Identifier itemId = Registries.ITEM.getId(stack.getItem());
             int facingId = itemFrame.getHorizontalFacing().getId();
             String nbtStr = String.format(" {Facing:%db,Item:{id:\"%s\",Count:1b}}", facingId, itemId);
             NbtCompound tag = stack.getNbt();
@@ -352,9 +362,9 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
 
         if (this.useWorldEdit)
         {
-            commandHandler.accept(String.format("//pos1 %d,%d,%d", x, y, z));
-            commandHandler.accept(String.format("//pos2 %d,%d,%d", x, y, z));
-            commandHandler.accept("//set " + blockString);
+            commandHandler.accept(String.format("/pos1 %d,%d,%d", x, y, z));
+            commandHandler.accept(String.format("/pos2 %d,%d,%d", x, y, z));
+            commandHandler.accept("/set " + blockString);
         }
         else
         {
@@ -404,9 +414,9 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
 
         if (this.useWorldEdit)
         {
-            this.queuedCommands.offer(String.format("//pos1 %d,%d,%d", minX, minY, minZ));
-            this.queuedCommands.offer(String.format("//pos2 %d,%d,%d", maxX, maxY, maxZ));
-            this.queuedCommands.offer("//set " + blockString);
+            this.queuedCommands.offer(String.format("/pos1 %d,%d,%d", minX, minY, minZ));
+            this.queuedCommands.offer(String.format("/pos2 %d,%d,%d", maxX, maxY, maxZ));
+            this.queuedCommands.offer("/set " + blockString);
         }
         else
         {
@@ -461,6 +471,59 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
         }
     }
 
+    protected void specialPasteBlock(BlockPos pos, BlockState state, World schematicWorld, Consumer<String> commandHandler)
+    {
+        if (state.isIn(BlockTags.ALL_SIGNS))
+        {
+            this.specialPasteSignBlock(pos, state, schematicWorld, commandHandler);
+        }
+    }
+
+    protected void specialPasteSignBlock(BlockPos pos, BlockState state, World schematicWorld, Consumer<String> commandHandler)
+    {
+        BlockEntity be = schematicWorld.getBlockEntity(pos);
+        String cmdName = this.setBlockCommand;
+        String blockString = BlockArgumentParser.stringifyBlockState(state);
+
+        if (be instanceof SignBlockEntity signBe)
+        {
+            NbtCompound tag = be.createNbt();
+
+            if (tag != null)
+            {
+                // Remove redundant tags to save on the command string length
+                if (signBe.getBackText().hasText(this.mc.player) == false)
+                {
+                    tag.remove("back_text");
+                }
+
+                if (signBe.getFrontText().hasText(this.mc.player) == false)
+                {
+                    tag.remove("front_text");
+                }
+
+                if (signBe.isWaxed() == false)
+                {
+                    tag.remove("is_waxed");
+                }
+
+                String cmd = String.format("%s %d %d %d %s%s",
+                                           cmdName, pos.getX(), pos.getY(), pos.getZ(), blockString, tag);
+
+                if (cmd.length() <= this.maxCommandLength)
+                {
+                    commandHandler.accept(cmd);
+                    ++this.sentSetblockCommands;
+                    return;
+                }
+            }
+        }
+
+        commandHandler.accept(String.format("%s %d %d %d %s",
+                                            cmdName, pos.getX(), pos.getY(), pos.getZ(), blockString));
+        ++this.sentSetblockCommands;
+    }
+
     protected void placeBlockViaClone(BlockPos pos, BlockState state, BlockEntity be,
                                       World schematicWorld, ClientWorld clientWorld,
                                       Consumer<String> commandHandler)
@@ -487,14 +550,15 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
     protected BlockPos placeNbtPickedBlock(BlockPos pos, BlockState state, BlockEntity be,
                                            World schematicWorld, ClientWorld clientWorld)
     {
-        BlockPos placementPos = this.findEmptyNearbyPosition(clientWorld, this.mc.player.getBlockPos(), 4);
+        double reach = this.mc.interactionManager.getReachDistance();
+        BlockPos placementPos = this.findEmptyNearbyPosition(clientWorld, this.mc.player.getPos(), 4, reach);
 
         if (placementPos != null && preparePickedStack(pos, state, be, schematicWorld, this.mc))
         {
             Vec3d posVec = new Vec3d(placementPos.getX() + 0.5, placementPos.getY() + 0.5, placementPos.getZ() + 0.5);
             BlockHitResult hitResult = new BlockHitResult(posVec, Direction.UP, placementPos, true);
 
-            this.mc.interactionManager.interactBlock(this.mc.player, clientWorld, Hand.OFF_HAND, hitResult);
+            this.mc.interactionManager.interactBlock(this.mc.player, Hand.OFF_HAND, hitResult);
             this.placedPositionTimestamps.put(placementPos.asLong(), System.nanoTime());
 
             return placementPos;
@@ -517,7 +581,8 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
 
         this.mutablePos.set(startX, startY, startZ);
 
-        if (endOffsetX > 0 || endOffsetY > 0 || endOffsetZ > 0)
+        if ((endOffsetX > 0 || endOffsetY > 0 || endOffsetZ > 0) ||
+            Configs.Generic.PASTE_ALWAYS_USE_FILL.getBooleanValue())
         {
             int endX = startX + endOffsetX;
             int endY = startY + endOffsetY;
@@ -800,16 +865,7 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
             InfoUtils.showGuiOrActionBarMessage(MessageType.ERROR, "litematica.message.error.schematic_paste_failed");
         }
 
-        if (this.useWorldEdit)
-        {
-            this.mc.player.sendChatMessage("//perf neighbors on");
-        }
-
-        if (this.mc.player != null && this.shouldEnableFeedback)
-        {
-            this.mc.player.sendChatMessage("/gamerule sendCommandFeedback true");
-        }
-
+        this.sendTaskEndCommands();
         DataManager.removeChatListener(this.gameRuleListener);
         InfoHud.getInstance().removeInfoHudRenderer(this, false);
 
@@ -863,23 +919,30 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
 
 
     @Nullable
-    public BlockPos findEmptyNearbyPosition(World world, BlockPos centerPos, int radius)
+    public BlockPos findEmptyNearbyPosition(World world, Vec3d centerPos, int radius, double reachDistance)
     {
         BlockPos.Mutable pos = new BlockPos.Mutable();
         BlockPos.Mutable sidePos = new BlockPos.Mutable();
         long currentTime = System.nanoTime();
-        long timeout = 2000000000L;
+        long timeout = 2000000000L; // 2 second timeout before trying to place again to the same position
+        double squaredReach = reachDistance * reachDistance;
         int radiusY = Math.min(radius, 2);
 
-        for (int y = centerPos.getY() - radiusY; y <= centerPos.getY() + radiusY; ++y)
+        for (double y = centerPos.getY() - radiusY; y <= centerPos.getY() + radiusY; ++y)
         {
-            for (int z = centerPos.getZ() - radius; z <= centerPos.getZ() + radius; ++z)
+            for (double z = centerPos.getZ() - radius; z <= centerPos.getZ() + radius; ++z)
             {
-                for (int x = centerPos.getX() - radius; x <= centerPos.getX() + radius; ++x)
+                for (double x = centerPos.getX() - radius; x <= centerPos.getX() + radius; ++x)
                 {
+                    // Don't try to place if block is too far (server rejects it)
+                    if (centerPos.squaredDistanceTo(x, y, z) > squaredReach)
+                    {
+                        continue;
+                    }
+
                     // Don't try to place a block intersecting the player
-                    if (Math.abs(centerPos.getX() - x) < 2 &&
-                        Math.abs(centerPos.getZ() - z) < 2 &&
+                    if (MathHelper.floor(MathHelper.abs((float)(centerPos.getX() - x))) < 2 &&
+                        MathHelper.floor(MathHelper.abs((float)(centerPos.getZ() - z))) < 2 &&
                         y >= centerPos.getY() - 2 && y <= centerPos.getY() + 2)
                     {
                         continue;

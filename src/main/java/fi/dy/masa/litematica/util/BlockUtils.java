@@ -6,15 +6,46 @@ import javax.annotation.Nullable;
 import com.google.common.base.Splitter;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.ChestBlock;
+import net.minecraft.block.enums.ChestType;
+import net.minecraft.registry.Registries;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.Property;
+import net.minecraft.util.BlockMirror;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.util.math.Direction;
 
 public class BlockUtils
 {
     private static final Splitter COMMA_SPLITTER = Splitter.on(',');
     private static final Splitter EQUAL_SPLITTER = Splitter.on('=').limit(2);
+
+    public static BlockState fixMirrorDoubleChest(BlockState state, BlockMirror mirror, ChestType type)
+    {
+        Direction facing = state.get(ChestBlock.FACING);
+        Direction.Axis axis = facing.getAxis();
+
+        if (mirror == BlockMirror.FRONT_BACK) // x
+        {
+            state = state.with(ChestBlock.CHEST_TYPE, type.getOpposite());
+
+            if (axis == Direction.Axis.X)
+            {
+                state = state.with(ChestBlock.FACING, facing.getOpposite());
+            }
+        }
+        else if (mirror == BlockMirror.LEFT_RIGHT) // z
+        {
+            state = state.with(ChestBlock.CHEST_TYPE, type.getOpposite());
+
+            if (axis == Direction.Axis.Z)
+            {
+                state = state.with(ChestBlock.FACING, facing.getOpposite());
+            }
+        }
+
+        return state;
+    }
 
     /**
      * Parses the provided string into the full block state.<br>
@@ -30,9 +61,9 @@ public class BlockUtils
         {
             Identifier id = new Identifier(blockName);
 
-            if (Registry.BLOCK.containsId(id))
+            if (Registries.BLOCK.containsId(id))
             {
-                Block block = Registry.BLOCK.get(id);
+                Block block = Registries.BLOCK.get(id);
                 BlockState state = block.getDefaultState();
 
                 if (index != -1 && str.length() > (index + 4) && str.charAt(str.length() - 1) == ']')

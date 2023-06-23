@@ -5,8 +5,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import javax.annotation.Nullable;
 import com.google.common.collect.ImmutableList;
+import org.jetbrains.annotations.Nullable;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
@@ -16,6 +17,12 @@ import net.minecraft.fluid.Fluid;
 import net.minecraft.item.map.MapState;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.recipe.RecipeManager;
+import net.minecraft.registry.BuiltinRegistries;
+import net.minecraft.registry.DynamicRegistryManager;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.resource.featuretoggle.FeatureSet;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
@@ -25,12 +32,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.profiler.Profiler;
-import net.minecraft.util.registry.BuiltinRegistries;
-import net.minecraft.util.registry.DynamicRegistryManager;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.util.registry.RegistryEntry;
-import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.LightType;
 import net.minecraft.world.MutableWorldProperties;
 import net.minecraft.world.World;
@@ -44,31 +47,32 @@ import net.minecraft.world.entity.EntityLookup;
 import net.minecraft.world.event.GameEvent;
 import net.minecraft.world.tick.EmptyTickSchedulers;
 import net.minecraft.world.tick.QueryableTickScheduler;
+
 import fi.dy.masa.litematica.Reference;
-import fi.dy.masa.litematica.render.LitematicaRenderer;
 import fi.dy.masa.litematica.render.schematic.WorldRendererSchematic;
 
 public class WorldSchematic extends World
 {
-    private static final RegistryKey<World> REGISTRY_KEY = RegistryKey.of(Registry.WORLD_KEY, new Identifier(Reference.MOD_ID, "schematic_world"));
+    protected static final RegistryKey<World> REGISTRY_KEY = RegistryKey.of(RegistryKeys.WORLD, new Identifier(Reference.MOD_ID, "schematic_world"));
 
-    private final MinecraftClient mc;
-    private final WorldRendererSchematic worldRenderer;
-    private final ChunkManagerSchematic chunkManagerSchematic;
-    private final RegistryEntry<Biome> biome;
-    private int nextEntityId;
-    private int entityCount;
+    protected final MinecraftClient mc;
+    protected final ChunkManagerSchematic chunkManagerSchematic;
+    protected final RegistryEntry<Biome> biome;
+    @Nullable protected final WorldRendererSchematic worldRenderer;
+    protected int nextEntityId;
+    protected int entityCount;
 
-    protected WorldSchematic(MutableWorldProperties mutableWorldProperties,
-                             RegistryEntry<DimensionType> dimensionType,
-                             Supplier<Profiler> supplier)
+    public WorldSchematic(MutableWorldProperties properties,
+                          RegistryEntry<DimensionType> dimension,
+                          Supplier<Profiler> supplier,
+                          @Nullable WorldRendererSchematic worldRenderer)
     {
-        super(mutableWorldProperties, REGISTRY_KEY, dimensionType, supplier, true, true, 0L);
+        super(properties, REGISTRY_KEY, MinecraftClient.getInstance().getNetworkHandler().getRegistryManager(), dimension, supplier, true, false, 0L, 0);
 
         this.mc = MinecraftClient.getInstance();
-        this.worldRenderer = LitematicaRenderer.getInstance().getWorldRenderer();
+        this.worldRenderer = worldRenderer;
         this.chunkManagerSchematic = new ChunkManagerSchematic(this);
-        this.biome = RegistryEntry.of(BuiltinRegistries.BIOME.get(BiomeKeys.PLAINS));
+        this.biome = this.mc.world.getRegistryManager().get(RegistryKeys.BIOME).entryOf(BiomeKeys.PLAINS);
     }
 
     public ChunkManagerSchematic getChunkProvider()
@@ -222,21 +226,16 @@ public class WorldSchematic extends World
     @Override
     public List<Entity> getOtherEntities(@Nullable final Entity except, final Box box, Predicate<? super Entity> predicate)
     {
-        final int minY = MathHelper.floor(box.minY / 16.0);
-        final int maxY = MathHelper.floor(box.maxY / 16.0);
         final List<Entity> entities = new ArrayList<>();
         List<ChunkSchematic> chunks = this.getChunksWithinBox(box);
 
         for (ChunkSchematic chunk : chunks)
         {
-            for (int cy = minY; cy <= maxY; ++cy)
-            {
-                chunk.getEntityListForSectionIfExists(cy).forEach((e) -> {
-                    if (e != except && box.intersects(e.getBoundingBox()) && predicate.test(e)) {
-                        entities.add(e);
-                    }
-                });
-            }
+            chunk.getEntityList().forEach((e) -> {
+                if (e != except && box.intersects(e.getBoundingBox()) && predicate.test(e)) {
+                    entities.add(e);
+                }
+            });
         }
 
         return entities;
@@ -277,46 +276,17 @@ public class WorldSchematic extends World
     @Override
     public void scheduleBlockRerenderIfNeeded(BlockPos pos, BlockState stateOld, BlockState stateNew)
     {
-        this.scheduleBlockRenders(pos.getX() >> 4, pos.getY() >> 4, pos.getZ() >> 4);
-    }
-
-    public void scheduleBlockRenders(int chunkX, int chunkY, int chunkZ)
-    {
-        this.worldRenderer.scheduleChunkRenders(chunkX, chunkY, chunkZ);
+        if (stateNew != stateOld)
+        {
+            this.scheduleChunkRenders(pos.getX() >> 4, pos.getZ() >> 4);
+        }
     }
 
     public void scheduleChunkRenders(int chunkX, int chunkZ)
     {
-        int startChunkY = this.getBottomSectionCoord();
-        int endChunkY = this.getTopSectionCoord() - 1;
-
-        for (int chunkY = startChunkY; chunkY <= endChunkY; ++chunkY)
+        if (this.worldRenderer != null)
         {
-            this.worldRenderer.scheduleChunkRenders(chunkX, chunkY, chunkZ);
-        }
-    }
-
-    public void scheduleChunkRenders(int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ)
-    {
-        minBlockY = Math.max(minBlockY, this.getBottomY());
-        maxBlockY = Math.min(maxBlockY, this.getTopY() - 1);
-
-        final int minChunkX = Math.min(minBlockX, maxBlockX) >> 4;
-        final int minChunkY = Math.min(minBlockY, maxBlockY) >> 4;
-        final int minChunkZ = Math.min(minBlockZ, maxBlockZ) >> 4;
-        final int maxChunkX = Math.max(minBlockX, maxBlockX) >> 4;
-        final int maxChunkY = Math.max(minBlockY, maxBlockY) >> 4;
-        final int maxChunkZ = Math.max(minBlockZ, maxBlockZ) >> 4;
-
-        for (int cz = minChunkZ; cz <= maxChunkZ; ++cz)
-        {
-            for (int cx = minChunkX; cx <= maxChunkX; ++cx)
-            {
-                for (int cy = minChunkY; cy <= maxChunkY; ++cy)
-                {
-                    this.worldRenderer.scheduleChunkRenders(cx, cy, cz);
-                }
-            }
+            this.worldRenderer.scheduleChunkRenders(chunkX, chunkZ);
         }
     }
 
@@ -430,7 +400,25 @@ public class WorldSchematic extends World
     }
 
     @Override
-    public void emitGameEvent(@org.jetbrains.annotations.Nullable Entity entity, GameEvent event, BlockPos pos)
+    public void emitGameEvent(GameEvent event, Vec3d pos, @Nullable GameEvent.Emitter emitter)
+    {
+        // NO-OP
+    }
+
+    @Override
+    public void playSound(@Nullable PlayerEntity except, double x, double y, double z, SoundEvent sound, SoundCategory category, float volume, float pitch, long seed)
+    {
+        // NO-OP
+    }
+
+    @Override
+    public void playSoundFromEntity(@javax.annotation.Nullable PlayerEntity except, Entity entity, RegistryEntry<SoundEvent> sound, SoundCategory category, float volume, float pitch, long seed)
+    {
+        // NO-OP
+    }
+
+    @Override
+    public void emitGameEvent(@Nullable Entity entity, GameEvent event, BlockPos pos)
     {
         // NO-OP
     }
@@ -472,6 +460,12 @@ public class WorldSchematic extends World
     }
 
     @Override
+    public void playSound(@javax.annotation.Nullable PlayerEntity except, double x, double y, double z, RegistryEntry<SoundEvent> sound, SoundCategory category, float volume, float pitch, long seed)
+    {
+        // NO-OP
+    }
+
+    @Override
     public void playSound(PlayerEntity player, double x, double y, double z, SoundEvent soundIn, SoundCategory category, float volume, float pitch)
     {
         // NO-OP
@@ -487,6 +481,12 @@ public class WorldSchematic extends World
     public DynamicRegistryManager getRegistryManager()
     {
         return this.mc.world.getRegistryManager();
+    }
+
+    @Override
+    public FeatureSet getEnabledFeatures()
+    {
+        return this.mc.world.getEnabledFeatures();
     }
 
     @Override

@@ -2,7 +2,6 @@ package fi.dy.masa.litematica.render.schematic;
 
 import java.util.BitSet;
 import java.util.List;
-import java.util.Random;
 import javax.annotation.Nullable;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -17,14 +16,16 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.random.BaseRandom;
+import net.minecraft.util.math.random.LocalRandom;
 import net.minecraft.world.BlockRenderView;
+import fi.dy.masa.malilib.util.PositionUtils;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
-import fi.dy.masa.malilib.util.PositionUtils;
 
 public class BlockModelRendererSchematic
 {
-    private final Random random = new Random();
+    private final LocalRandom random = new LocalRandom(0);
     private final BlockColors colorMap;
 
     public BlockModelRendererSchematic(BlockColors blockColorsIn)
@@ -32,8 +33,9 @@ public class BlockModelRendererSchematic
         this.colorMap = blockColorsIn;
     }
 
-    public boolean renderModel(BlockRenderView worldIn, BakedModel modelIn, BlockState stateIn, BlockPos posIn, MatrixStack matrices,
-            VertexConsumer vertexConsumer, long rand)
+    public boolean renderModel(BlockRenderView worldIn, BakedModel modelIn, BlockState stateIn,
+                               BlockPos posIn, MatrixStack matrices,
+                               VertexConsumer vertexConsumer, long rand)
     {
         boolean ao = MinecraftClient.isAmbientOcclusionEnabled() && stateIn.getLuminance() == 0 && modelIn.useAmbientOcclusion();
 
@@ -66,7 +68,7 @@ public class BlockModelRendererSchematic
     }
 
     public boolean renderModelSmooth(BlockRenderView worldIn, BakedModel modelIn, BlockState stateIn, BlockPos posIn, MatrixStack matrices,
-            VertexConsumer vertexConsumer, Random random, long seedIn, int overlay)
+                                     VertexConsumer vertexConsumer, BaseRandom random, long seedIn, int overlay)
     {
         boolean renderedSomething = false;
         float[] quadBounds = new float[PositionUtils.ALL_DIRECTIONS.length * 2];
@@ -100,8 +102,9 @@ public class BlockModelRendererSchematic
         return renderedSomething;
     }
 
-    public boolean renderModelFlat(BlockRenderView worldIn, BakedModel modelIn, BlockState stateIn, BlockPos posIn, MatrixStack matrices,
-            VertexConsumer vertexConsumer, Random random, long seedIn, int overlay)
+    public boolean renderModelFlat(BlockRenderView worldIn, BakedModel modelIn, BlockState stateIn,
+                                   BlockPos posIn, MatrixStack matrices,
+                                   VertexConsumer vertexConsumer, BaseRandom random, long seedIn, int overlay)
     {
         boolean renderedSomething = false;
         BitSet bitset = new BitSet(3);
@@ -134,15 +137,15 @@ public class BlockModelRendererSchematic
         return renderedSomething;
     }
 
-    private boolean shouldRenderModelSide(BlockRenderView worldIn, BlockState stateIn, BlockPos posIn, Direction side)
+    protected boolean shouldRenderModelSide(BlockRenderView worldIn, BlockState stateIn, BlockPos posIn, Direction side)
     {
         return DataManager.getRenderLayerRange().isPositionAtRenderEdgeOnSide(posIn, side) ||
                (Configs.Visuals.RENDER_BLOCKS_AS_TRANSLUCENT.getBooleanValue() && Configs.Visuals.RENDER_TRANSLUCENT_INNER_SIDES.getBooleanValue()) ||
                Block.shouldDrawSide(stateIn, worldIn, posIn, side ,posIn.offset(side));
     }
 
-    private void renderQuadsSmooth(BlockRenderView world, BlockState state, BlockPos pos, MatrixStack matrices,
-            VertexConsumer vertexConsumer, List<BakedQuad> list, float[] box, BitSet flags, AmbientOcclusionCalculator ambientOcclusionCalculator, int overlay)
+    protected void renderQuadsSmooth(BlockRenderView world, BlockState state, BlockPos pos, MatrixStack matrices,
+                                     VertexConsumer vertexConsumer, List<BakedQuad> list, float[] box, BitSet flags, AmbientOcclusionCalculator ambientOcclusionCalculator, int overlay)
     {
         final int size = list.size();
 
@@ -165,8 +168,8 @@ public class BlockModelRendererSchematic
         }
     }
 
-    private void renderQuadsFlat(BlockRenderView world, BlockState state, BlockPos pos,
-            int light, int overlay, boolean useWorldLight, MatrixStack matrices, VertexConsumer vertexConsumer, List<BakedQuad> list, BitSet flags)
+    protected void renderQuadsFlat(BlockRenderView world, BlockState state, BlockPos pos,
+                                   int light, int overlay, boolean useWorldLight, MatrixStack matrices, VertexConsumer vertexConsumer, List<BakedQuad> list, BitSet flags)
     {
         final int size = list.size();
 
@@ -185,9 +188,9 @@ public class BlockModelRendererSchematic
         }
     }
 
-    private void renderQuad(BlockRenderView world, BlockState state, BlockPos pos, VertexConsumer vertexConsumer, MatrixStack.Entry matrixEntry,
-            BakedQuad quad, float brightness0, float brightness1, float brightness2, float brightness3,
-            int light0, int light1, int light2, int light3, int overlay)
+    protected void renderQuad(BlockRenderView world, BlockState state, BlockPos pos, VertexConsumer vertexConsumer, MatrixStack.Entry matrixEntry,
+                              BakedQuad quad, float brightness0, float brightness1, float brightness2, float brightness3,
+                              int light0, int light1, int light2, int light3, int overlay)
     {
         float r;
         float g;
@@ -211,7 +214,7 @@ public class BlockModelRendererSchematic
                             r, g, b, new int[]{ light0, light1, light2, light3 }, overlay, true);
     }
 
-    private void getQuadDimensions(BlockRenderView world, BlockState state, BlockPos pos, int[] vertexData, Direction face, @Nullable float[] box, BitSet flags)
+    protected void getQuadDimensions(BlockRenderView world, BlockState state, BlockPos pos, int[] vertexData, Direction face, @Nullable float[] box, BitSet flags)
     {
         float minX = 32.0F;
         float minY = 32.0F;

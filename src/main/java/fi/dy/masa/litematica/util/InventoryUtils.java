@@ -1,11 +1,13 @@
 package fi.dy.masa.litematica.util;
 
-import fi.dy.masa.malilib.gui.GuiBase;
+import java.util.ArrayList;
+import java.util.List;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.ToolItem;
 import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
@@ -13,9 +15,10 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-
-import java.util.ArrayList;
-import java.util.List;
+import fi.dy.masa.malilib.gui.GuiBase;
+import fi.dy.masa.malilib.gui.Message.MessageType;
+import fi.dy.masa.malilib.util.InfoUtils;
+import fi.dy.masa.litematica.config.Configs;
 
 public class InventoryUtils
 {
@@ -31,16 +34,15 @@ public class InventoryUtils
         {
             try
             {
-                int slotNum = Integer.parseInt(str);
+                int slotNum = Integer.parseInt(str) - 1;
 
-                if (PlayerInventory.isValidHotbarIndex(slotNum) && PICK_BLOCKABLE_SLOTS.contains(slotNum) == false)
+                if (PlayerInventory.isValidHotbarIndex(slotNum) &&
+                    PICK_BLOCKABLE_SLOTS.contains(slotNum) == false)
                 {
                     PICK_BLOCKABLE_SLOTS.add(slotNum);
                 }
             }
-            catch (NumberFormatException e)
-            {
-            }
+            catch (NumberFormatException ignore) {}
         }
     }
 
@@ -63,6 +65,7 @@ public class InventoryUtils
         {
             if (PICK_BLOCKABLE_SLOTS.size() == 0)
             {
+                InfoUtils.showGuiOrInGameMessage(MessageType.WARNING, "litematica.message.warn.pickblock.no_valid_slots_configured");
                 return;
             }
 
@@ -92,6 +95,10 @@ public class InventoryUtils
                 }
 
                 WorldUtils.setEasyPlaceLastPickBlockTime();
+            }
+            else
+            {
+                InfoUtils.showGuiOrInGameMessage(MessageType.WARNING, "litematica.message.warn.pickblock.no_suitable_slot_found");
             }
         }
     }
@@ -146,41 +153,72 @@ public class InventoryUtils
         }
     }
 
+    private static boolean canPickToSlot(PlayerInventory inventory, int slotNum)
+    {
+        if (PICK_BLOCKABLE_SLOTS.contains(slotNum) == false)
+        {
+            return false;
+        }
+
+        ItemStack stack = inventory.getStack(slotNum);
+
+        if (stack.isEmpty())
+        {
+            return true;
+        }
+
+        return (Configs.Generic.PICK_BLOCK_AVOID_DAMAGEABLE.getBooleanValue() == false ||
+                stack.getItem().isDamageable() == false) &&
+               (Configs.Generic.PICK_BLOCK_AVOID_TOOLS.getBooleanValue() == false ||
+                (stack.getItem() instanceof ToolItem) == false);
+    }
+
     private static int getPickBlockTargetSlot(PlayerEntity player)
     {
-        int slotNum;
-
-        if (PICK_BLOCKABLE_SLOTS.contains(player.getInventory().selectedSlot + 1))
+        if (PICK_BLOCKABLE_SLOTS.isEmpty())
         {
-            slotNum = player.getInventory().selectedSlot;
+            return -1;
         }
-        else
-        {
-            if (nextPickSlotIndex >= PICK_BLOCKABLE_SLOTS.size())
-            {
-                nextPickSlotIndex = 0;
-            }
 
-            slotNum = PICK_BLOCKABLE_SLOTS.get(nextPickSlotIndex) - 1;
+        int slotNum = player.getInventory().selectedSlot;
+
+        if (canPickToSlot(player.getInventory(), slotNum))
+        {
+            return slotNum;
+        }
+
+        if (nextPickSlotIndex >= PICK_BLOCKABLE_SLOTS.size())
+        {
+            nextPickSlotIndex = 0;
+        }
+
+        for (int i = 0; i < PICK_BLOCKABLE_SLOTS.size(); ++i)
+        {
+            slotNum = PICK_BLOCKABLE_SLOTS.get(nextPickSlotIndex);
 
             if (++nextPickSlotIndex >= PICK_BLOCKABLE_SLOTS.size())
             {
                 nextPickSlotIndex = 0;
             }
+
+            if (canPickToSlot(player.getInventory(), slotNum))
+            {
+                return slotNum;
+            }
         }
 
-        return slotNum;
+        return -1;
     }
 
     private static int getEmptyPickBlockableHotbarSlot(PlayerInventory inventory)
     {
         for (int i = 0; i < PICK_BLOCKABLE_SLOTS.size(); ++i)
         {
-            int slotNum = PICK_BLOCKABLE_SLOTS.get(i) - 1;
+            int slotNum = PICK_BLOCKABLE_SLOTS.get(i);
 
-            if (slotNum >= 0 && slotNum < inventory.main.size())
+            if (PlayerInventory.isValidHotbarIndex(slotNum))
             {
-                ItemStack stack = inventory.main.get(slotNum);
+                ItemStack stack = inventory.getStack(slotNum);
 
                 if (stack.isEmpty())
                 {

@@ -12,12 +12,15 @@ import java.util.Set;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import com.google.common.collect.ImmutableMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+
 import net.minecraft.SharedConstants;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.decoration.AbstractDecorationEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.inventory.Inventory;
@@ -27,6 +30,9 @@ import net.minecraft.nbt.NbtHelper;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtLongArray;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.Registry;
+import net.minecraft.registry.RegistryEntryLookup;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.BlockMirror;
 import net.minecraft.util.BlockRotation;
@@ -35,13 +41,21 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.world.TickPriority;
 import net.minecraft.world.World;
 import net.minecraft.world.tick.ChunkTickScheduler;
 import net.minecraft.world.tick.OrderedTick;
+import net.minecraft.world.tick.TickPriority;
+import fi.dy.masa.malilib.gui.Message.MessageType;
+import fi.dy.masa.malilib.interfaces.IStringConsumer;
+import fi.dy.masa.malilib.util.Constants;
+import fi.dy.masa.malilib.util.FileUtils;
+import fi.dy.masa.malilib.util.InfoUtils;
+import fi.dy.masa.malilib.util.IntBoundingBox;
+import fi.dy.masa.malilib.util.NBTUtils;
+import fi.dy.masa.malilib.util.StringUtils;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.mixin.IMixinWorldTickScheduler;
@@ -62,15 +76,6 @@ import fi.dy.masa.litematica.util.PositionUtils;
 import fi.dy.masa.litematica.util.ReplaceBehavior;
 import fi.dy.masa.litematica.util.SchematicPlacingUtils;
 import fi.dy.masa.litematica.util.WorldUtils;
-import fi.dy.masa.malilib.gui.Message.MessageType;
-import fi.dy.masa.malilib.interfaces.IStringConsumer;
-import fi.dy.masa.malilib.util.Constants;
-import fi.dy.masa.malilib.util.FileUtils;
-import fi.dy.masa.malilib.util.InfoUtils;
-import fi.dy.masa.malilib.util.IntBoundingBox;
-import fi.dy.masa.malilib.util.NBTUtils;
-import fi.dy.masa.malilib.util.StringUtils;
-import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 
 public class LitematicaSchematic
 {
@@ -78,8 +83,11 @@ public class LitematicaSchematic
     public static final int SCHEMATIC_VERSION_1_13_2 = 5;
     public static final int MINECRAFT_DATA_VERSION_1_13_2 = 1631; // MC 1.13.2
 
-    public static final int SCHEMATIC_VERSION = 6;
     public static final int MINECRAFT_DATA_VERSION = SharedConstants.getGameVersion().getSaveVersion().getId();
+    public static final int SCHEMATIC_VERSION = 6;
+    // This is basically a "sub-version" for the schematic version,
+    // intended to help with possible data fix needs that are discovered.
+    public static final int SCHEMATIC_VERSION_SUB = 1; // Bump to one after the sleeping entity position fix
 
     private final Map<String, LitematicaBlockStateContainer> blockContainers = new HashMap<>();
     private final Map<String, Map<BlockPos, NbtCompound>> tileEntities = new HashMap<>();
@@ -614,6 +622,17 @@ public class LitematicaSchematic
                     if (entity.saveNbt(tag))
                     {
                         Vec3d posVec = new Vec3d(entity.getX() - regionPosAbs.getX(), entity.getY() - regionPosAbs.getY(), entity.getZ() - regionPosAbs.getZ());
+
+                        // Annoying special case for any hanging/decoration entities, to avoid the console
+                        // warning about invalid hanging position when loading the entity from NBT
+                        if (entity instanceof AbstractDecorationEntity decorationEntity)
+                        {
+                            BlockPos p = decorationEntity.getDecorationBlockPos();
+                            tag.putInt("TileX", p.getX() - regionPosAbs.getX());
+                            tag.putInt("TileY", p.getY() - regionPosAbs.getY());
+                            tag.putInt("TileZ", p.getZ() - regionPosAbs.getZ());
+                        }
+
                         NBTUtils.writeEntityPositionToTag(posVec, tag);
                         list.add(new EntityInfo(posVec, tag));
                         existingEntities.add(uuid);
@@ -758,7 +777,7 @@ public class LitematicaSchematic
             BlockState stateAdj = world.getBlockState(posAdj);
 
             if (stateAdj.isOpaque() == false ||
-                stateAdj.isSideSolidFullSquare(world, posAdj, dir) == false)
+                stateAdj.isSideSolidFullSquare(world, posAdj, dir.getOpposite()) == false)
             {
                 return true;
             }
@@ -917,8 +936,9 @@ public class LitematicaSchematic
     {
         NbtCompound nbt = new NbtCompound();
 
-        nbt.putInt("Version", SCHEMATIC_VERSION);
         nbt.putInt("MinecraftDataVersion", MINECRAFT_DATA_VERSION);
+        nbt.putInt("Version", SCHEMATIC_VERSION);
+        nbt.putInt("SubVersion", SCHEMATIC_VERSION_SUB);
         nbt.put("Metadata", this.metadata.writeToNBT());
         nbt.put("Regions", this.writeSubRegionsToNBT());
 
@@ -947,12 +967,12 @@ public class LitematicaSchematic
 
                 if (pendingBlockTicks != null)
                 {
-                    tag.put("PendingBlockTicks", this.writePendingTicksToNBT(pendingBlockTicks, Registry.BLOCK, "Block"));
+                    tag.put("PendingBlockTicks", this.writePendingTicksToNBT(pendingBlockTicks, Registries.BLOCK, "Block"));
                 }
 
                 if (pendingFluidTicks != null)
                 {
-                    tag.put("PendingFluidTicks", this.writePendingTicksToNBT(pendingFluidTicks, Registry.FLUID, "Fluid"));
+                    tag.put("PendingFluidTicks", this.writePendingTicksToNBT(pendingFluidTicks, Registries.FLUID, "Fluid"));
                 }
 
                 // The entity list will not exist, if takeEntities is false when creating the schematic
@@ -1099,13 +1119,13 @@ public class LitematicaSchematic
                     if (version >= 3)
                     {
                         NbtList list = regionTag.getList("PendingBlockTicks", Constants.NBT.TAG_COMPOUND);
-                        this.pendingBlockTicks.put(regionName, this.readPendingTicksFromNBT(list, Registry.BLOCK, "Block", Blocks.AIR));
+                        this.pendingBlockTicks.put(regionName, this.readPendingTicksFromNBT(list, Registries.BLOCK, "Block", Blocks.AIR));
                     }
 
                     if (version >= 5)
                     {
                         NbtList list = regionTag.getList("PendingFluidTicks", Constants.NBT.TAG_COMPOUND);
-                        this.pendingFluidTicks.put(regionName, this.readPendingTicksFromNBT(list, Registry.FLUID, "Fluid", Fluids.EMPTY));
+                        this.pendingFluidTicks.put(regionName, this.readPendingTicksFromNBT(list, Registries.FLUID, "Fluid", Fluids.EMPTY));
                     }
 
                     NbtElement nbtBase = regionTag.get("BlockStates");
@@ -1178,11 +1198,12 @@ public class LitematicaSchematic
     {
         final int size = tagList.size();
         List<BlockState> list = new ArrayList<>(size);
+        RegistryEntryLookup<Block> lookup = Registries.BLOCK.getReadOnlyWrapper();
 
         for (int id = 0; id < size; ++id)
         {
             NbtCompound tag = tagList.getCompound(id);
-            BlockState state = NbtHelper.toBlockState(tag);
+            BlockState state = NbtHelper.toBlockState(lookup, tag);
             list.add(state);
         }
 
@@ -1387,11 +1408,12 @@ public class LitematicaSchematic
             BlockState air = Blocks.AIR.getDefaultState();
             int paletteSize = paletteTag.size();
             List<BlockState> list = new ArrayList<>(paletteSize);
+            RegistryEntryLookup<Block> lookup = Registries.BLOCK.getReadOnlyWrapper();
 
             for (int id = 0; id < paletteSize; ++id)
             {
                 NbtCompound t = paletteTag.getCompound(id);
-                BlockState state = NbtHelper.toBlockState(t);
+                BlockState state = NbtHelper.toBlockState(lookup, t);
                 list.add(state);
             }
 
@@ -1565,12 +1587,13 @@ public class LitematicaSchematic
     public static List<BlockState> getStatesFromPaletteTag(NbtList palette)
     {
         List<BlockState> states = new ArrayList<>();
+        RegistryEntryLookup<Block> lookup = Registries.BLOCK.getReadOnlyWrapper();
         final int size = palette.size();
 
         for (int i = 0; i < size; ++i)
         {
             NbtCompound tag = palette.getCompound(i);
-            BlockState state = NbtHelper.toBlockState(tag);
+            BlockState state = NbtHelper.toBlockState(lookup, tag);
 
             if (i > 0 || state != LitematicaBlockStateContainer.AIR_BLOCK_STATE)
             {
@@ -1879,6 +1902,11 @@ public class LitematicaSchematic
         public EntityInfo(Vec3d posVec, NbtCompound nbt)
         {
             this.posVec = posVec;
+
+            if (nbt.contains("SleepingX", Constants.NBT.TAG_INT)) { nbt.putInt("SleepingX", MathHelper.floor(posVec.x)); }
+            if (nbt.contains("SleepingY", Constants.NBT.TAG_INT)) { nbt.putInt("SleepingY", MathHelper.floor(posVec.y)); }
+            if (nbt.contains("SleepingZ", Constants.NBT.TAG_INT)) { nbt.putInt("SleepingZ", MathHelper.floor(posVec.z)); }
+
             this.nbt = nbt;
         }
     }

@@ -2,20 +2,21 @@ package fi.dy.masa.litematica.util;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import javax.annotation.Nullable;
-import com.mojang.datafixers.DataFixer;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.ComparatorBlock;
 import net.minecraft.block.RepeaterBlock;
 import net.minecraft.block.SlabBlock;
+import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.block.entity.SignBlockEntity;
+import net.minecraft.block.entity.SignText;
 import net.minecraft.block.enums.BlockHalf;
 import net.minecraft.block.enums.ComparatorMode;
 import net.minecraft.block.enums.SlabType;
@@ -32,8 +33,8 @@ import net.minecraft.nbt.NbtIo;
 import net.minecraft.state.property.DirectionProperty;
 import net.minecraft.state.property.Properties;
 import net.minecraft.state.property.Property;
-import net.minecraft.structure.Structure;
 import net.minecraft.structure.StructurePlacementData;
+import net.minecraft.structure.StructureTemplate;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -46,15 +47,18 @@ import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
+
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.config.Hotkeys;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.materials.MaterialCache;
+import fi.dy.masa.litematica.mixin.IMixinSignBlockEntity;
 import fi.dy.masa.litematica.schematic.LitematicaSchematic;
 import fi.dy.masa.litematica.schematic.SchematicaSchematic;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacementManager;
+import fi.dy.masa.litematica.schematic.placement.SchematicPlacementManager.PlacementPart;
 import fi.dy.masa.litematica.selection.AreaSelection;
 import fi.dy.masa.litematica.selection.Box;
 import fi.dy.masa.litematica.tool.ToolMode;
@@ -72,7 +76,6 @@ import fi.dy.masa.malilib.util.IntBoundingBox;
 import fi.dy.masa.malilib.util.LayerRange;
 import fi.dy.masa.malilib.util.MessageOutputType;
 import fi.dy.masa.malilib.util.StringUtils;
-import fi.dy.masa.malilib.util.SubChunkPos;
 
 public class WorldUtils
 {
@@ -108,7 +111,7 @@ public class WorldUtils
             return null;
         }
 
-        WorldSchematic world = SchematicWorldHandler.createSchematicWorld();
+        WorldSchematic world = SchematicWorldHandler.createSchematicWorld(null);
 
         loadChunksSchematicWorld(world, BlockPos.ORIGIN, schematic.getSize());
         StructurePlacementData placementSettings = new StructurePlacementData();
@@ -205,12 +208,12 @@ public class WorldUtils
     public static boolean convertLitematicaSchematicToVanillaStructure(
             File inputDir, String inputFileName, File outputDir, String outputFileName, boolean ignoreEntities, boolean override, IStringConsumer feedback)
     {
-        Structure template = convertLitematicaSchematicToVanillaStructure(inputDir, inputFileName, ignoreEntities, feedback);
+        StructureTemplate template = convertLitematicaSchematicToVanillaStructure(inputDir, inputFileName, ignoreEntities, feedback);
         return writeVanillaStructureToFile(template, outputDir, outputFileName, override, feedback);
     }
 
     @Nullable
-    public static Structure convertLitematicaSchematicToVanillaStructure(File inputDir, String inputFileName, boolean ignoreEntities, IStringConsumer feedback)
+    public static StructureTemplate convertLitematicaSchematicToVanillaStructure(File inputDir, String inputFileName, boolean ignoreEntities, IStringConsumer feedback)
     {
         LitematicaSchematic litematicaSchematic = LitematicaSchematic.createFromFile(inputDir, inputFileName);
 
@@ -220,20 +223,20 @@ public class WorldUtils
             return null;
         }
 
-        WorldSchematic world = SchematicWorldHandler.createSchematicWorld();
+        WorldSchematic world = SchematicWorldHandler.createSchematicWorld(null);
 
         BlockPos size = new BlockPos(litematicaSchematic.getTotalSize());
         loadChunksSchematicWorld(world, BlockPos.ORIGIN, size);
         SchematicPlacement schematicPlacement = SchematicPlacement.createForSchematicConversion(litematicaSchematic, BlockPos.ORIGIN);
         litematicaSchematic.placeToWorld(world, schematicPlacement, false); // TODO use a per-chunk version for a bit more speed
 
-        Structure template = new Structure();
+        StructureTemplate template = new StructureTemplate();
         template.saveFromWorld(world, BlockPos.ORIGIN, size, ignoreEntities == false, Blocks.STRUCTURE_VOID);
 
         return template;
     }
 
-    private static boolean writeVanillaStructureToFile(Structure template, File dir, String fileNameIn, boolean override, IStringConsumer feedback)
+    private static boolean writeVanillaStructureToFile(StructureTemplate template, File dir, String fileNameIn, boolean override, IStringConsumer feedback)
     {
         String fileName = fileNameIn;
         String extension = ".nbt";
@@ -273,16 +276,6 @@ public class WorldUtils
         }
 
         return false;
-    }
-
-    private static Structure readTemplateFromStream(InputStream stream, DataFixer fixer) throws IOException
-    {
-        NbtCompound nbt = NbtIo.readCompressed(stream);
-        Structure template = new Structure();
-        //template.read(fixer.process(FixTypes.STRUCTURE, nbt));
-        template.readNbt(nbt);
-
-        return template;
     }
 
     public static boolean isClientChunkLoaded(ClientWorld world, int chunkX, int chunkZ)
@@ -377,6 +370,32 @@ public class WorldUtils
         return false;
     }
 
+    public static void insertSignTextFromSchematic(SignBlockEntity beClient, SignText screenTextArr)
+    {
+        WorldSchematic worldSchematic = SchematicWorldHandler.getSchematicWorld();
+
+        if (worldSchematic != null)
+        {
+            BlockEntity beSchem = worldSchematic.getBlockEntity(beClient.getPos());
+
+            if (beSchem instanceof SignBlockEntity)
+            {
+                SignText frontTextSchematic = ((IMixinSignBlockEntity) beSchem).litematica_getFrontText();
+                SignText backTextSchematic = ((IMixinSignBlockEntity) beSchem).litematica_getBackText();
+
+                if (frontTextSchematic != null)
+                {
+                    beClient.setText(frontTextSchematic, true);
+                }
+
+                if (backTextSchematic != null)
+                {
+                    beClient.setText(backTextSchematic, false);
+                }
+            }
+        }
+    }
+
 /*SH    public static void easyPlaceOnUseTick(MinecraftClient mc)
     {
         if (mc.player != null && DataManager.getToolMode() != ToolMode.REBUILD &&
@@ -386,9 +405,9 @@ public class WorldUtils
         {
             WorldUtils.doEasyPlaceAction(mc);
         }
-    }*/
+    }
 
-/*SH    public static boolean handleEasyPlace(MinecraftClient mc)
+    public static boolean handleEasyPlace(MinecraftClient mc)
     {
         if (Configs.Generic.EASY_PLACE_MODE.getBooleanValue() &&
             DataManager.getToolMode() != ToolMode.REBUILD)
@@ -415,9 +434,9 @@ public class WorldUtils
         }
 
         return false;
-    }*/
+    }
 
-/*SH    private static ActionResult doEasyPlaceAction(MinecraftClient mc)
+    private static ActionResult doEasyPlaceAction(MinecraftClient mc)
     {
         RayTraceWrapper traceWrapper;
         double traceMaxRange = Configs.Generic.EASY_PLACE_VANILLA_REACH.getBooleanValue() ? 4.5 : 6;
@@ -534,7 +553,7 @@ public class WorldUtils
 
                 //System.out.printf("pos: %s side: %s, hit: %s\n", pos, side, hitPos);
                 // pos, side, hitPos
-                mc.interactionManager.interactBlock(mc.player, mc.world, hand, hitResult);
+                mc.interactionManager.interactBlock(mc.player, hand, hitResult);
 
                 if (stateSchematic.getBlock() instanceof SlabBlock && stateSchematic.get(SlabBlock.TYPE) == SlabType.DOUBLE)
                 {
@@ -544,7 +563,7 @@ public class WorldUtils
                     {
                         side = applyPlacementFacing(stateSchematic, sideOrig, stateClient);
                         hitResult = new BlockHitResult(hitPos, side, pos, false);
-                        mc.interactionManager.interactBlock(mc.player, mc.world, hand, hitResult);
+                        mc.interactionManager.interactBlock(mc.player, hand, hitResult);
                     }
                 }
             }
@@ -833,11 +852,10 @@ public class WorldUtils
         if (trace != null && trace.getType() == HitResult.Type.BLOCK)
         {
             BlockHitResult blockHitResult = (BlockHitResult) trace;
-            BlockPos pos = blockHitResult.getBlockPos();
             ItemPlacementContext ctx = new ItemPlacementContext(new ItemUsageContext(mc.player, Hand.MAIN_HAND, blockHitResult));
 
             // Get the possibly offset position, if the targeted block is not replaceable
-            pos = ctx.getBlockPos();
+            BlockPos pos = ctx.getBlockPos();
 
             BlockState stateClient = mc.world.getBlockState(pos);
 
@@ -859,7 +877,7 @@ public class WorldUtils
             }
 
             blockHitResult = new BlockHitResult(blockHitResult.getPos(), blockHitResult.getSide(), pos, false);
-            ctx = new ItemPlacementContext(new ItemUsageContext(mc.player, Hand.MAIN_HAND, (BlockHitResult) trace));
+            ctx = new ItemPlacementContext(new ItemUsageContext(mc.player, Hand.MAIN_HAND, blockHitResult));
 
             // Placement position is already occupied
             if (stateClient.canReplace(ctx) == false)
@@ -883,34 +901,29 @@ public class WorldUtils
     public static boolean isPositionWithinRangeOfSchematicRegions(BlockPos pos, int range)
     {
         SchematicPlacementManager manager = DataManager.getSchematicPlacementManager();
-        final int minCX = (pos.getX() - range) >> 4;
-        final int minCY = (pos.getY() - range) >> 4;
-        final int minCZ = (pos.getZ() - range) >> 4;
-        final int maxCX = (pos.getX() + range) >> 4;
-        final int maxCY = (pos.getY() + range) >> 4;
-        final int maxCZ = (pos.getZ() + range) >> 4;
         final int x = pos.getX();
         final int y = pos.getY();
         final int z = pos.getZ();
+        final int minCX = (x - range) >> 4;
+        final int minCZ = (z - range) >> 4;
+        final int maxCX = (x + range) >> 4;
+        final int maxCZ = (z + range) >> 4;
 
-        for (int cy = minCY; cy <= maxCY; ++cy)
+        for (int cz = minCZ; cz <= maxCZ; ++cz)
         {
-            for (int cz = minCZ; cz <= maxCZ; ++cz)
+            for (int cx = minCX; cx <= maxCX; ++cx)
             {
-                for (int cx = minCX; cx <= maxCX; ++cx)
+                List<PlacementPart> parts = manager.getPlacementPartsInChunk(cx, cz);
+
+                for (PlacementPart part : parts)
                 {
-                    List<IntBoundingBox> boxes = manager.getTouchedBoxesInSubChunk(new SubChunkPos(cx, cy, cz));
+                    IntBoundingBox box = part.bb;
 
-                    for (int i = 0; i < boxes.size(); ++i)
+                    if (x >= box.minX - range && x <= box.maxX + range &&
+                        y >= box.minY - range && y <= box.maxY + range &&
+                        z >= box.minZ - range && z <= box.maxZ + range)
                     {
-                        IntBoundingBox box = boxes.get(i);
-
-                        if (x >= box.minX - range && x <= box.maxX + range &&
-                            y >= box.minY - range && y <= box.maxY + range &&
-                            z >= box.minZ - range && z <= box.maxZ + range)
-                        {
-                            return true;
-                        }
+                        return true;
                     }
                 }
             }

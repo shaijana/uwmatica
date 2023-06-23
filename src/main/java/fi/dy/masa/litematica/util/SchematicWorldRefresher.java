@@ -1,14 +1,15 @@
 package fi.dy.masa.litematica.util;
 
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+import fi.dy.masa.malilib.interfaces.IRangeChangeListener;
+import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.world.ChunkSchematic;
 import fi.dy.masa.litematica.world.SchematicWorldHandler;
 import fi.dy.masa.litematica.world.WorldSchematic;
-import fi.dy.masa.malilib.interfaces.IRangeChangeListener;
-import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 
 public class SchematicWorldRefresher implements IRangeChangeListener
 {
@@ -21,7 +22,7 @@ public class SchematicWorldRefresher implements IRangeChangeListener
     {
         WorldSchematic world = SchematicWorldHandler.getSchematicWorld();
 
-        if (world != null)
+        if (world != null && this.mc.world != null)
         {
             DataManager.getSchematicPlacementManager().setVisibleSubChunksNeedsUpdate();
             final int minY = world.getBottomY();
@@ -38,13 +39,9 @@ public class SchematicWorldRefresher implements IRangeChangeListener
         if (world != null && this.mc.world != null)
         {
             DataManager.getSchematicPlacementManager().setVisibleSubChunksNeedsUpdate();
-            final int xMin = Math.min(minX, maxX);
-            final int xMax = Math.max(minX, maxX);
-            final int cxMin = (xMin >> 4);
-            final int cxMax = (xMax >> 4);
-            final int minY = world.getBottomY();
-            final int maxY = world.getTopY() - 1;
             Long2ObjectMap<ChunkSchematic> schematicChunks = world.getChunkProvider().getLoadedChunks();
+            final int cxMin = (Math.min(minX, maxX) >> 4);
+            final int cxMax = (Math.max(minX, maxX) >> 4);
 
             for (ChunkSchematic chunk : schematicChunks.values())
             {
@@ -54,10 +51,7 @@ public class SchematicWorldRefresher implements IRangeChangeListener
                 if (pos.x >= cxMin && pos.x <= cxMax && chunk.isEmpty() == false &&
                     WorldUtils.isClientChunkLoaded(this.mc.world, pos.x, pos.z))
                 {
-                    minX = Math.max( pos.x << 4      , xMin);
-                    maxX = Math.min((pos.x << 4) + 15, xMax);
-                    world.scheduleChunkRenders( minX, minY, (pos.z << 4)     ,
-                                                maxX, maxY, (pos.z << 4) + 15);
+                    world.scheduleChunkRenders(pos.x, pos.z);
                 }
             }
         }
@@ -80,8 +74,7 @@ public class SchematicWorldRefresher implements IRangeChangeListener
                 // Only mark chunks that are actually rendered (if the schematic world contains more chunks)
                 if (chunk.isEmpty() == false && WorldUtils.isClientChunkLoaded(this.mc.world, pos.x, pos.z))
                 {
-                    world.scheduleChunkRenders((pos.x << 4)     , minY, (pos.z << 4)     ,
-                                               (pos.x << 4) + 15, maxY, (pos.z << 4) + 15);
+                    world.scheduleChunkRenders(pos.x, pos.z);
                 }
             }
         }
@@ -95,13 +88,9 @@ public class SchematicWorldRefresher implements IRangeChangeListener
         if (world != null && this.mc.world != null)
         {
             DataManager.getSchematicPlacementManager().setVisibleSubChunksNeedsUpdate();
-            final int zMin = Math.min(minZ, maxZ);
-            final int zMax = Math.max(minZ, maxZ);
-            final int czMin = (zMin >> 4);
-            final int czMax = (zMax >> 4);
-            final int minY = world.getBottomY();
-            final int maxY = world.getTopY() - 1;
             Long2ObjectMap<ChunkSchematic> schematicChunks = world.getChunkProvider().getLoadedChunks();
+            final int czMin = (Math.min(minZ, maxZ) >> 4);
+            final int czMax = (Math.max(minZ, maxZ) >> 4);
 
             for (ChunkSchematic chunk : schematicChunks.values())
             {
@@ -111,10 +100,7 @@ public class SchematicWorldRefresher implements IRangeChangeListener
                 if (pos.z >= czMin && pos.z <= czMax && chunk.isEmpty() == false &&
                     WorldUtils.isClientChunkLoaded(this.mc.world, pos.x, pos.z))
                 {
-                    minZ = Math.max( pos.z << 4      , zMin);
-                    maxZ = Math.min((pos.z << 4) + 15, zMax);
-                    world.scheduleChunkRenders((pos.x << 4)     , minY, minZ,
-                                               (pos.x << 4) + 15, maxY, maxZ);
+                    world.scheduleChunkRenders(pos.x, pos.z);
                 }
             }
         }
@@ -134,20 +120,6 @@ public class SchematicWorldRefresher implements IRangeChangeListener
         }
     }
 
-    public void markSchematicChunksForRenderUpdate(int chunkX, int chunkY, int chunkZ)
-    {
-        WorldSchematic world = SchematicWorldHandler.getSchematicWorld();
-
-        if (world != null && this.mc.world != null)
-        {
-            if (world.getChunkProvider().isChunkLoaded(chunkX, chunkZ) &&
-                WorldUtils.isClientChunkLoaded(this.mc.world, chunkX, chunkZ))
-            {
-                world.scheduleBlockRenders(chunkX, chunkY, chunkZ);
-            }
-        }
-    }
-
     public void markSchematicChunkForRenderUpdate(BlockPos pos)
     {
         WorldSchematic world = SchematicWorldHandler.getSchematicWorld();
@@ -156,11 +128,12 @@ public class SchematicWorldRefresher implements IRangeChangeListener
         {
             int chunkX = pos.getX() >> 4;
             int chunkZ = pos.getZ() >> 4;
+            Litematica.debugLog("SchematicWorldRefresher#markSchematicChunkForRenderUpdate({}, {})", chunkX, chunkZ);
 
             if (world.getChunkProvider().isChunkLoaded(chunkX, chunkZ) &&
                 WorldUtils.isClientChunkLoaded(this.mc.world, chunkX, chunkZ))
             {
-                world.scheduleBlockRenders(chunkX, pos.getY() >> 4, chunkZ);
+                world.scheduleChunkRenders(chunkX, chunkZ);
             }
         }
     }

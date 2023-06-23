@@ -8,30 +8,30 @@ import fi.dy.masa.litematica.render.schematic.ChunkRendererSchematicVbo.OverlayR
 
 public class BufferBuilderCache
 {
-    private final Map<RenderLayer, BufferBuilder> blockBufferBuilders = new HashMap<>();
-    private BufferBuilder[] overlayBufferBuilders;
+    private final Map<RenderLayer, OmegaHackfixForCrashJustTemporarilyForNowISwearBecauseOfShittyBrokenCodeBufferBuilder> blockBufferBuilders = new HashMap<>();
+    private final OmegaHackfixForCrashJustTemporarilyForNowISwearBecauseOfShittyBrokenCodeBufferBuilder[] overlayBufferBuilders;
 
     public BufferBuilderCache()
     {
         for (RenderLayer layer : RenderLayer.getBlockLayers())
         {
-            this.blockBufferBuilders.put(layer, new BufferBuilder(layer.getExpectedBufferSize()));
+            this.blockBufferBuilders.put(layer, new OmegaHackfixForCrashJustTemporarilyForNowISwearBecauseOfShittyBrokenCodeBufferBuilder(layer.getExpectedBufferSize()));
         }
 
-        this.overlayBufferBuilders = new BufferBuilder[OverlayRenderType.values().length];
+        this.overlayBufferBuilders = new OmegaHackfixForCrashJustTemporarilyForNowISwearBecauseOfShittyBrokenCodeBufferBuilder[OverlayRenderType.values().length];
 
         for (int i = 0; i < this.overlayBufferBuilders.length; ++i)
         {
-            this.overlayBufferBuilders[i] = new BufferBuilder(262144);
+            this.overlayBufferBuilders[i] = new OmegaHackfixForCrashJustTemporarilyForNowISwearBecauseOfShittyBrokenCodeBufferBuilder(262144);
         }
     }
 
-    public BufferBuilder getBlockBufferByLayer(RenderLayer layer)
+    public OmegaHackfixForCrashJustTemporarilyForNowISwearBecauseOfShittyBrokenCodeBufferBuilder getBlockBufferByLayer(RenderLayer layer)
     {
         return this.blockBufferBuilders.get(layer);
     }
 
-    public BufferBuilder getOverlayBuffer(OverlayRenderType type)
+    public OmegaHackfixForCrashJustTemporarilyForNowISwearBecauseOfShittyBrokenCodeBufferBuilder getOverlayBuffer(OverlayRenderType type)
     {
         return this.overlayBufferBuilders[type.ordinal()];
     }
