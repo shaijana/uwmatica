@@ -8,6 +8,7 @@ import com.google.common.collect.Sets;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.systems.VertexSorter;
 
+import fi.dy.masa.litematica.schematic.verifier.SchematicVerifier;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
@@ -75,37 +76,6 @@ public class ChunkRendererSchematicVbo
 
     private boolean needsUpdate;
     private boolean needsImmediateUpdate;
-
-    public static HashSet<Block> forbiddenBlocks = new HashSet<Block>(Arrays.asList(
-            Blocks.DIAMOND_ORE,
-            Blocks.IRON_ORE,
-            Blocks.LAPIS_ORE,
-            Blocks.COAL_ORE,
-            Blocks.EMERALD_ORE,
-            Blocks.GOLD_ORE,
-            Blocks.NETHER_GOLD_ORE,
-            Blocks.REDSTONE_ORE,
-            Blocks.NETHER_QUARTZ_ORE,
-            Blocks.DEEPSLATE_IRON_ORE,
-            Blocks.COPPER_ORE,
-            Blocks.DEEPSLATE_COPPER_ORE,
-            Blocks.DEEPSLATE_GOLD_ORE,
-            Blocks.DEEPSLATE_REDSTONE_ORE,
-            Blocks.DEEPSLATE_EMERALD_ORE,
-            Blocks.DEEPSLATE_LAPIS_ORE,
-            Blocks.DEEPSLATE_DIAMOND_ORE,
-            Blocks.ANCIENT_DEBRIS,
-            Blocks.AMETHYST_BLOCK,
-            Blocks.BUDDING_AMETHYST,
-            Blocks.END_PORTAL_FRAME,
-            Blocks.END_PORTAL,
-            Blocks.SPAWNER,
-            Blocks.SMALL_AMETHYST_BUD,
-            Blocks.MEDIUM_AMETHYST_BUD,
-            Blocks.LARGE_AMETHYST_BUD,
-            Blocks.AMETHYST_CLUSTER,
-            Blocks.POINTED_DRIPSTONE
-    ));
 
     public ChunkRendererSchematicVbo(WorldSchematic world, WorldRendererSchematic worldRenderer)
     {
@@ -680,7 +650,7 @@ public class ChunkRendererSchematicVbo
 
     protected OverlayType getOverlayType(BlockState stateSchematic, BlockState stateClient)
     {
-        if (stateSchematic == stateClient || forbiddenBlocks.contains(stateClient.getBlock()))
+        if (stateSchematic == stateClient || SchematicVerifier.forbiddenBlocks.contains(stateClient.getBlock()))
         {
             return OverlayType.NONE;
         }

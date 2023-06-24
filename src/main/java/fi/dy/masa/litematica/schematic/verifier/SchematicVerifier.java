@@ -1,30 +1,8 @@
 package fi.dy.masa.litematica.schematic.verifier;
 
-import java.util.*;
-import javax.annotation.Nullable;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import net.minecraft.block.Material;
-import org.apache.commons.lang3.tuple.MutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-import net.minecraft.block.BlockState;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.chunk.Chunk;
-import fi.dy.masa.malilib.gui.GuiBase;
-import fi.dy.masa.malilib.gui.Message.MessageType;
-import fi.dy.masa.malilib.interfaces.ICompletionListener;
-import fi.dy.masa.malilib.util.Color4f;
-import fi.dy.masa.malilib.util.IntBoundingBox;
-import fi.dy.masa.malilib.util.LayerRange;
-import fi.dy.masa.malilib.util.StringUtils;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.render.infohud.IInfoHudRenderer;
@@ -38,6 +16,30 @@ import fi.dy.masa.litematica.util.ItemUtils;
 import fi.dy.masa.litematica.util.PositionUtils;
 import fi.dy.masa.litematica.util.WorldUtils;
 import fi.dy.masa.litematica.world.WorldSchematic;
+import fi.dy.masa.malilib.gui.GuiBase;
+import fi.dy.masa.malilib.gui.Message.MessageType;
+import fi.dy.masa.malilib.interfaces.ICompletionListener;
+import fi.dy.masa.malilib.util.Color4f;
+import fi.dy.masa.malilib.util.IntBoundingBox;
+import fi.dy.masa.malilib.util.LayerRange;
+import fi.dy.masa.malilib.util.StringUtils;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.world.ClientWorld;
+import net.minecraft.registry.Registries;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.world.chunk.Chunk;
+import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.commons.lang3.tuple.Pair;
+
+import javax.annotation.Nullable;
+import java.util.*;
 
 public class SchematicVerifier extends TaskBase implements IInfoHudRenderer {
     private static final MutablePair<BlockState, BlockState> MUTABLE_PAIR = new MutablePair<>();
@@ -74,10 +76,36 @@ public class SchematicVerifier extends TaskBase implements IInfoHudRenderer {
     private int schematicBlocks;
     private int clientBlocks;
     private int correctStatesCount;
-    public static HashSet<Block> forbiddenBlocks = new HashSet<Block>(Arrays.asList(
-
-    )){
-    };
+    public static HashSet<Block> forbiddenBlocks = new HashSet<>(Arrays.asList(
+            Blocks.DIAMOND_ORE,
+            Blocks.IRON_ORE,
+            Blocks.LAPIS_ORE,
+            Blocks.COAL_ORE,
+            Blocks.EMERALD_ORE,
+            Blocks.GOLD_ORE,
+            Blocks.NETHER_GOLD_ORE,
+            Blocks.REDSTONE_ORE,
+            Blocks.NETHER_QUARTZ_ORE,
+            Blocks.DEEPSLATE_IRON_ORE,
+            Blocks.COPPER_ORE,
+            Blocks.DEEPSLATE_COPPER_ORE,
+            Blocks.DEEPSLATE_GOLD_ORE,
+            Blocks.DEEPSLATE_REDSTONE_ORE,
+            Blocks.DEEPSLATE_EMERALD_ORE,
+            Blocks.DEEPSLATE_LAPIS_ORE,
+            Blocks.DEEPSLATE_DIAMOND_ORE,
+            Blocks.ANCIENT_DEBRIS,
+            Blocks.AMETHYST_BLOCK,
+            Blocks.BUDDING_AMETHYST,
+            Blocks.END_PORTAL_FRAME,
+            Blocks.END_PORTAL,
+            Blocks.SPAWNER,
+            Blocks.SMALL_AMETHYST_BUD,
+            Blocks.MEDIUM_AMETHYST_BUD,
+            Blocks.LARGE_AMETHYST_BUD,
+            Blocks.AMETHYST_CLUSTER,
+            Blocks.POINTED_DRIPSTONE
+    ));
 
 
     public SchematicVerifier() {

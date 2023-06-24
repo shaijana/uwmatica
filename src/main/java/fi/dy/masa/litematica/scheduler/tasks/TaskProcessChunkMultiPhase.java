@@ -1,9 +1,7 @@
 package fi.dy.masa.litematica.scheduler.tasks;
-
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
-import javax.annotation.Nullable;
+/*SH
+import fi.dy.masa.litematica.util.ToBooleanFunction;
+import fi.dy.masa.malilib.util.IntBoundingBox;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.text.MutableText;
@@ -12,10 +10,11 @@ import net.minecraft.text.TranslatableTextContent;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
-import fi.dy.masa.malilib.util.IntBoundingBox;
-import fi.dy.masa.litematica.config.Configs;
-import fi.dy.masa.litematica.data.DataManager;
-import fi.dy.masa.litematica.util.ToBooleanFunction;
+
+import javax.annotation.Nullable;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
 
 public abstract class TaskProcessChunkMultiPhase extends TaskProcessChunkBase
 {
@@ -129,7 +128,8 @@ public abstract class TaskProcessChunkMultiPhase extends TaskProcessChunkBase
 
     protected void initPhaseStartProbe()
     {
- /*SH       if (Configs.Generic.COMMAND_DISABLE_FEEDBACK.getBooleanValue() && this.isInWorld())
+ */
+/*SH       if (Configs.Generic.COMMAND_DISABLE_FEEDBACK.getBooleanValue() && this.isInWorld())
         {
             DataManager.addChatListener(this.gameRuleListener);
             this.sendCommand("gamerule sendCommandFeedback");
@@ -137,7 +137,8 @@ public abstract class TaskProcessChunkMultiPhase extends TaskProcessChunkBase
             this.phase = TaskPhase.GAME_RULE_PROBE;
         }
         else
-        {*/
+        {*//*
+
             this.shouldEnableFeedback = false;
             this.phase = TaskPhase.WAIT_FOR_CHUNKS;
 //SH         }
@@ -278,3 +279,4 @@ public abstract class TaskProcessChunkMultiPhase extends TaskProcessChunkBase
         }
     }
 }
+*/

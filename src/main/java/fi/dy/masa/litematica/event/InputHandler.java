@@ -1,33 +1,18 @@
 package fi.dy.masa.litematica.event;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import fi.dy.masa.malilib.gui.Message.MessageType;
-import fi.dy.masa.malilib.hotkeys.IHotkey;
-import fi.dy.masa.malilib.hotkeys.IKeybindManager;
-import fi.dy.masa.malilib.hotkeys.IKeybindProvider;
-import fi.dy.masa.malilib.hotkeys.IKeyboardInputHandler;
-import fi.dy.masa.malilib.hotkeys.IMouseInputHandler;
-import fi.dy.masa.malilib.hotkeys.KeybindMulti;
-import fi.dy.masa.malilib.util.GuiUtils;
-import fi.dy.masa.malilib.util.InfoUtils;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.Reference;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.config.Hotkeys;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.gui.GuiSchematicManager;
-import fi.dy.masa.litematica.selection.AreaSelection;
-import fi.dy.masa.litematica.selection.Box;
-import fi.dy.masa.litematica.selection.SelectionManager;
 import fi.dy.masa.litematica.tool.ToolMode;
 import fi.dy.masa.litematica.util.EntityUtils;
-import fi.dy.masa.litematica.util.PositionUtils;
-import fi.dy.masa.litematica.util.PositionUtils.Corner;
-import fi.dy.masa.litematica.util.SchematicUtils;
-import fi.dy.masa.litematica.util.WorldUtils;
+import fi.dy.masa.malilib.hotkeys.*;
+import fi.dy.masa.malilib.util.GuiUtils;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.entity.Entity;
+import net.minecraft.util.math.Direction;
 
 public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IMouseInputHandler
 {

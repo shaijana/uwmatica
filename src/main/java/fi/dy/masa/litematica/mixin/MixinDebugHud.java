@@ -1,19 +1,18 @@
 package fi.dy.masa.litematica.mixin;
 
-import java.util.List;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import net.minecraft.client.gui.hud.DebugHud;
-
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.render.LitematicaRenderer;
 import fi.dy.masa.litematica.render.schematic.WorldRendererSchematic;
 import fi.dy.masa.litematica.world.SchematicWorldHandler;
 import fi.dy.masa.litematica.world.WorldSchematic;
 import fi.dy.masa.malilib.gui.GuiBase;
+import net.minecraft.client.gui.hud.DebugHud;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.util.List;
 
 @Mixin(DebugHud.class)
 public abstract class MixinDebugHud
@@ -37,8 +36,8 @@ public abstract class MixinDebugHud
             String str = String.format("E: %d TE: TODO 1.17+ C: %d, CS: %d, VCS: %d",
                                        world.getRegularEntityCount(),
                                        world.getChunkProvider().getLoadedChunks().size(),
-                                       DataManager.getSchematicPlacementManager().getAllTouchedSubChunks().size(),
-                                       DataManager.getSchematicPlacementManager().getLastVisibleSubChunks().size());
+                                       DataManager.getSchematicPlacementManager().getTouchedChunksCount(),
+                                       DataManager.getSchematicPlacementManager().getLastVisibleChunksCount());
             list.add(String.format("%s[UWmatica]%s %s %s", pre, rst, renderer.getDebugInfoEntities(), str));
         }
     }

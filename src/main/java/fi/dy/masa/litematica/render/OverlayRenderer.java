@@ -1,13 +1,27 @@
 package fi.dy.masa.litematica.render;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import javax.annotation.Nullable;
 import com.google.common.collect.ImmutableMap;
 import com.mojang.blaze3d.systems.RenderSystem;
-
+import fi.dy.masa.litematica.config.Configs;
+import fi.dy.masa.litematica.config.Hotkeys;
+import fi.dy.masa.litematica.data.DataManager;
+import fi.dy.masa.litematica.gui.widgets.WidgetSchematicVerificationResult.BlockMismatchInfo;
+import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
+import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement.RequiredEnabled;
+import fi.dy.masa.litematica.schematic.verifier.SchematicVerifier;
+import fi.dy.masa.litematica.schematic.verifier.SchematicVerifier.BlockMismatch;
+import fi.dy.masa.litematica.schematic.verifier.SchematicVerifier.MismatchRenderPos;
+import fi.dy.masa.litematica.selection.Box;
+import fi.dy.masa.litematica.util.BlockInfoAlignment;
+import fi.dy.masa.litematica.util.ItemUtils;
+import fi.dy.masa.litematica.util.PositionUtils.Corner;
+import fi.dy.masa.litematica.util.RayTraceUtils;
+import fi.dy.masa.litematica.util.RayTraceUtils.RayTraceWrapper;
+import fi.dy.masa.litematica.world.SchematicWorldHandler;
+import fi.dy.masa.malilib.config.HudAlignment;
+import fi.dy.masa.malilib.gui.GuiBase;
+import fi.dy.masa.malilib.gui.LeftRight;
+import fi.dy.masa.malilib.util.*;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
@@ -24,34 +38,11 @@ import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-import fi.dy.masa.litematica.config.Configs;
-import fi.dy.masa.litematica.config.Hotkeys;
-import fi.dy.masa.litematica.data.DataManager;
-import fi.dy.masa.litematica.gui.widgets.WidgetSchematicVerificationResult.BlockMismatchInfo;
-import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
-import fi.dy.masa.litematica.schematic.placement.SchematicPlacementManager;
-import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement.RequiredEnabled;
-import fi.dy.masa.litematica.schematic.projects.SchematicProject;
-import fi.dy.masa.litematica.schematic.verifier.SchematicVerifier;
-import fi.dy.masa.litematica.schematic.verifier.SchematicVerifier.BlockMismatch;
-import fi.dy.masa.litematica.schematic.verifier.SchematicVerifier.MismatchRenderPos;
-import fi.dy.masa.litematica.selection.AreaSelection;
-import fi.dy.masa.litematica.selection.Box;
-import fi.dy.masa.litematica.selection.SelectionManager;
-import fi.dy.masa.litematica.util.BlockInfoAlignment;
-import fi.dy.masa.litematica.util.ItemUtils;
-import fi.dy.masa.litematica.util.PositionUtils.Corner;
-import fi.dy.masa.litematica.util.RayTraceUtils;
-import fi.dy.masa.litematica.util.RayTraceUtils.RayTraceWrapper;
-import fi.dy.masa.litematica.world.SchematicWorldHandler;
-import fi.dy.masa.malilib.config.HudAlignment;
-import fi.dy.masa.malilib.gui.GuiBase;
-import fi.dy.masa.malilib.gui.LeftRight;
-import fi.dy.masa.malilib.util.BlockUtils;
-import fi.dy.masa.malilib.util.Color4f;
-import fi.dy.masa.malilib.util.GuiUtils;
-import fi.dy.masa.malilib.util.InventoryUtils;
-import fi.dy.masa.malilib.util.WorldUtils;
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class OverlayRenderer
 {
