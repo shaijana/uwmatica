@@ -1,9 +1,16 @@
 pluginManagement {
 	repositories {
+		// Fabim start
+		/*       maven {
+                   name = 'Fabric'
+                   url = 'https://maven.fabricmc.net/'
+               }*/
 		maven {
-			name = 'Fabric'
-			url = 'https://maven.fabricmc.net/'
+			name = "fabimRepo"
+			url = uri("https://repo.fabim.de/repository/maven-public/")
+			credentials(PasswordCredentials.class)
 		}
+		// Fabim end
 		gradlePluginPortal()
 	}
 }
