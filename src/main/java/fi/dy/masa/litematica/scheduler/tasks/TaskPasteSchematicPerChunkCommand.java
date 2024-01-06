@@ -1,5 +1,6 @@
 package fi.dy.masa.litematica.scheduler.tasks;
 
+/*SH
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -603,7 +604,7 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
         ChunkSchematic chunk = this.schematicWorld.getChunkProvider().getChunk(box.minX >> 4, box.minZ >> 4);
         boolean ignoreBeFromFill = Configs.Generic.PASTE_IGNORE_BE_IN_FILL.getBooleanValue() &&
                                    Configs.Generic.PASTE_NBT_BEHAVIOR.getOptionListValue() != PasteNbtBehavior.NONE;
-        
+
 
         this.fillVolumes.clear();
 
@@ -1016,3 +1017,4 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
         }
     }
 }
+*/

@@ -1,3 +1,4 @@
+/*SH
 package fi.dy.masa.litematica.schematic.projects;
 
 import java.io.File;
@@ -8,7 +9,7 @@ import com.google.gson.JsonPrimitive;
 import net.minecraft.client.MinecraftClient;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.gui.GuiSchematicProjectManager;
-import fi.dy.masa.litematica.gui.GuiSchematicProjectsBrowser;
+//SHimport fi.dy.masa.litematica.gui.GuiSchematicProjectsBrowser;
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.util.GuiUtils;
@@ -203,3 +204,4 @@ public class SchematicProjectsManager
         }
     }
 }
+*/

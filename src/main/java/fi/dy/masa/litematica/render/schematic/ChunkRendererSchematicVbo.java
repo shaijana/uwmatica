@@ -1,12 +1,6 @@
 package fi.dy.masa.litematica.render.schematic;
 
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -14,9 +8,11 @@ import com.google.common.collect.Sets;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.systems.VertexSorter;
 
+import fi.dy.masa.litematica.schematic.verifier.SchematicVerifier;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.VertexBuffer;
@@ -654,7 +650,7 @@ public class ChunkRendererSchematicVbo
 
     protected OverlayType getOverlayType(BlockState stateSchematic, BlockState stateClient)
     {
-        if (stateSchematic == stateClient)
+        if (stateSchematic == stateClient || SchematicVerifier.forbiddenBlocks.contains(stateClient.getBlock()))
         {
             return OverlayType.NONE;
         }
@@ -684,7 +680,7 @@ public class ChunkRendererSchematicVbo
                     return OverlayType.WRONG_STATE;
                 }
             }
-        }
+    }
     }
 
     @Nullable

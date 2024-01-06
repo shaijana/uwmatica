@@ -395,7 +395,7 @@ public class WorldUtils
         }
     }
 
-    public static void easyPlaceOnUseTick(MinecraftClient mc)
+/*SH    public static void easyPlaceOnUseTick(MinecraftClient mc)
     {
         if (mc.player != null && DataManager.getToolMode() != ToolMode.REBUILD &&
             Configs.Generic.EASY_PLACE_MODE.getBooleanValue() &&
@@ -580,7 +580,7 @@ public class WorldUtils
         }
 
         return ActionResult.PASS;
-    }
+    }*/
 
     private static boolean easyPlaceBlockChecksCancel(BlockState stateSchematic, BlockState stateClient,
             PlayerEntity player, HitResult trace, ItemStack stack)
@@ -1121,10 +1121,10 @@ public class WorldUtils
         }
     }
 
-    private static boolean easyPlaceIsTooFast()
+/*SH    private static boolean easyPlaceIsTooFast()
     {
         return System.nanoTime() - easyPlaceLastPickBlockTime < 1000000L * Configs.Generic.EASY_PLACE_SWAP_INTERVAL.getIntegerValue();
-    }
+    }*/
 
     public static void setEasyPlaceLastPickBlockTime()
     {

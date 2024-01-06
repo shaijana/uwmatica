@@ -243,7 +243,7 @@ public class MaterialListHudRenderer implements IInfoHudRenderer
         }
     }
 
-    public static void renderLookedAtBlockInInventory(HandledScreen<?> gui, MinecraftClient mc)
+/*SH    public static void renderLookedAtBlockInInventory(HandledScreen<?> gui, MinecraftClient mc)
     {
         if (Configs.Generic.HIGHLIGHT_BLOCK_IN_INV.getBooleanValue())
         {
@@ -264,9 +264,9 @@ public class MaterialListHudRenderer implements IInfoHudRenderer
                 highlightSlotsWithItem(lastLookedAtBlocksItem, gui, color, mc);
             }
         }
-    }
+    }*/
 
-    public static void highlightSlotsWithItem(ItemStack referenceItem, HandledScreen<?> gui, Color4f color, MinecraftClient mc)
+/*SH    public static void highlightSlotsWithItem(ItemStack referenceItem, HandledScreen<?> gui, Color4f color, MinecraftClient mc)
     {
         List<Slot> slots = gui.getScreenHandler().slots;
 
@@ -285,7 +285,7 @@ public class MaterialListHudRenderer implements IInfoHudRenderer
         }
 
         RenderUtils.color(1f, 1f, 1f, 1f);
-    }
+    }*/
 
     public static void renderOutlinedBox(int x, int y, int width, int height, int colorBg, int colorBorder, float zLevel)
     {

@@ -1,19 +1,9 @@
 package fi.dy.masa.litematica.gui.widgets;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import javax.annotation.Nullable;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
-
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.util.math.BlockPos;
-
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.data.SchematicHolder;
-import fi.dy.masa.litematica.gui.GuiSchematicSave;
 import fi.dy.masa.litematica.gui.Icons;
 import fi.dy.masa.litematica.schematic.LitematicaSchematic;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
@@ -25,8 +15,15 @@ import fi.dy.masa.malilib.gui.button.IButtonActionListener;
 import fi.dy.masa.malilib.gui.widgets.WidgetFileBrowserBase;
 import fi.dy.masa.malilib.gui.widgets.WidgetListEntryBase;
 import fi.dy.masa.malilib.render.RenderUtils;
-import fi.dy.masa.malilib.util.GuiUtils;
 import fi.dy.masa.malilib.util.StringUtils;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.util.math.BlockPos;
+
+import javax.annotation.Nullable;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 public class WidgetSchematicEntry extends WidgetListEntryBase<LitematicaSchematic>
 {
@@ -51,7 +48,7 @@ public class WidgetSchematicEntry extends WidgetListEntryBase<LitematicaSchemati
 
         posX -= this.addButton(posX, y, ButtonListener.Type.UNLOAD);
         posX -= this.addButton(posX, y, ButtonListener.Type.RELOAD);
-        posX -= this.addButton(posX, y, ButtonListener.Type.SAVE_TO_FILE);
+//SH        posX -= this.addButton(posX, y, ButtonListener.Type.SAVE_TO_FILE);
         posX -= this.addButton(posX, y, ButtonListener.Type.CREATE_PLACEMENT);
 
         this.buttonsStartX = posX;
@@ -188,13 +185,13 @@ public class WidgetSchematicEntry extends WidgetListEntryBase<LitematicaSchemati
                 manager.addSchematicPlacement(placement, true);
                 manager.setSelectedSchematicPlacement(placement);
             }
-            else if (this.type == Type.SAVE_TO_FILE)
+/*SH            else if (this.type == Type.SAVE_TO_FILE)
             {
                 LitematicaSchematic entry = this.widget.schematic;
                 GuiSchematicSave gui = new GuiSchematicSave(entry);
                 gui.setParent(GuiUtils.getCurrentScreen());
                 GuiBase.openGui(gui);
-            }
+            }*/
             else if (this.type == Type.RELOAD)
             {
                 this.widget.schematic.readFromFile();
@@ -212,7 +209,7 @@ public class WidgetSchematicEntry extends WidgetListEntryBase<LitematicaSchemati
         {
             CREATE_PLACEMENT    ("litematica.gui.button.create_placement"),
             RELOAD              ("litematica.gui.button.reload", "litematica.gui.button.hover.schematic_list.reload_schematic"),
-            SAVE_TO_FILE        ("litematica.gui.button.save_to_file"),
+//SH            SAVE_TO_FILE        ("litematica.gui.button.save_to_file"),
             UNLOAD              ("litematica.gui.button.unload");
 
             private final String translationKey;

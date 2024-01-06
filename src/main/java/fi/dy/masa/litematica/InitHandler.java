@@ -42,7 +42,9 @@ public class InitHandler implements IInitializationHandler
         KeyCallbacks.init(MinecraftClient.getInstance());
         StatusInfoRenderer.init();
 
-        DataManager.getAreaSelectionsBaseDirectory();
+//SH        DataManager.getAreaSelectionsBaseDirectory();
         DataManager.getSchematicsBaseDirectory();
+
+		UWPacketHandler.init();//TODO-SH
     }
 }

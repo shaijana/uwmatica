@@ -1,13 +1,27 @@
 package fi.dy.masa.litematica.render;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import javax.annotation.Nullable;
 import com.google.common.collect.ImmutableMap;
 import com.mojang.blaze3d.systems.RenderSystem;
-
+import fi.dy.masa.litematica.config.Configs;
+import fi.dy.masa.litematica.config.Hotkeys;
+import fi.dy.masa.litematica.data.DataManager;
+import fi.dy.masa.litematica.gui.widgets.WidgetSchematicVerificationResult.BlockMismatchInfo;
+import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
+import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement.RequiredEnabled;
+import fi.dy.masa.litematica.schematic.verifier.SchematicVerifier;
+import fi.dy.masa.litematica.schematic.verifier.SchematicVerifier.BlockMismatch;
+import fi.dy.masa.litematica.schematic.verifier.SchematicVerifier.MismatchRenderPos;
+import fi.dy.masa.litematica.selection.Box;
+import fi.dy.masa.litematica.util.BlockInfoAlignment;
+import fi.dy.masa.litematica.util.ItemUtils;
+import fi.dy.masa.litematica.util.PositionUtils.Corner;
+import fi.dy.masa.litematica.util.RayTraceUtils;
+import fi.dy.masa.litematica.util.RayTraceUtils.RayTraceWrapper;
+import fi.dy.masa.litematica.world.SchematicWorldHandler;
+import fi.dy.masa.malilib.config.HudAlignment;
+import fi.dy.masa.malilib.gui.GuiBase;
+import fi.dy.masa.malilib.gui.LeftRight;
+import fi.dy.masa.malilib.util.*;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
@@ -24,34 +38,11 @@ import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-import fi.dy.masa.litematica.config.Configs;
-import fi.dy.masa.litematica.config.Hotkeys;
-import fi.dy.masa.litematica.data.DataManager;
-import fi.dy.masa.litematica.gui.widgets.WidgetSchematicVerificationResult.BlockMismatchInfo;
-import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
-import fi.dy.masa.litematica.schematic.placement.SchematicPlacementManager;
-import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement.RequiredEnabled;
-import fi.dy.masa.litematica.schematic.projects.SchematicProject;
-import fi.dy.masa.litematica.schematic.verifier.SchematicVerifier;
-import fi.dy.masa.litematica.schematic.verifier.SchematicVerifier.BlockMismatch;
-import fi.dy.masa.litematica.schematic.verifier.SchematicVerifier.MismatchRenderPos;
-import fi.dy.masa.litematica.selection.AreaSelection;
-import fi.dy.masa.litematica.selection.Box;
-import fi.dy.masa.litematica.selection.SelectionManager;
-import fi.dy.masa.litematica.util.BlockInfoAlignment;
-import fi.dy.masa.litematica.util.ItemUtils;
-import fi.dy.masa.litematica.util.PositionUtils.Corner;
-import fi.dy.masa.litematica.util.RayTraceUtils;
-import fi.dy.masa.litematica.util.RayTraceUtils.RayTraceWrapper;
-import fi.dy.masa.litematica.world.SchematicWorldHandler;
-import fi.dy.masa.malilib.config.HudAlignment;
-import fi.dy.masa.malilib.gui.GuiBase;
-import fi.dy.masa.malilib.gui.LeftRight;
-import fi.dy.masa.malilib.util.BlockUtils;
-import fi.dy.masa.malilib.util.Color4f;
-import fi.dy.masa.malilib.util.GuiUtils;
-import fi.dy.masa.malilib.util.InventoryUtils;
-import fi.dy.masa.malilib.util.WorldUtils;
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class OverlayRenderer
 {
@@ -124,18 +115,17 @@ public class OverlayRenderer
         }
     }
 
-    public void renderBoxes(MatrixStack matrices)
-    {
-        SelectionManager sm = DataManager.getSelectionManager();
-        AreaSelection currentSelection = sm.getCurrentSelection();
-        boolean renderAreas = currentSelection != null && Configs.Visuals.ENABLE_AREA_SELECTION_RENDERING.getBooleanValue();
-        boolean renderPlacements = this.placements.isEmpty() == false && Configs.Visuals.ENABLE_PLACEMENT_BOXES_RENDERING.getBooleanValue();
-        boolean isProjectMode = DataManager.getSchematicProjectsManager().hasProjectOpen();
-        float expand = 0.001f;
-        float lineWidthBlockBox = 2f;
-        float lineWidthArea = isProjectMode ? 3f : 1.5f;
+    public void renderBoxes(final MatrixStack matrices) {
+//SH        SelectionManager sm = DataManager.getSelectionManager();
+//SH        AreaSelection currentSelection = sm.getCurrentSelection();
+//SH        boolean renderAreas = currentSelection != null && Configs.Visuals.ENABLE_AREA_SELECTION_RENDERING.getBooleanValue();
+//SH        boolean renderPlacements = this.placements.isEmpty() == false && Configs.Visuals.ENABLE_PLACEMENT_BOXES_RENDERING.getBooleanValue();
+//SH        boolean isProjectMode = DataManager.getSchematicProjectsManager().hasProjectOpen();
+        final float expand = 0.001f;
+        final float lineWidthBlockBox = 2f;
+//SH        float lineWidthArea = isProjectMode ? 3f : 1.5f;
 
-        if (renderAreas || renderPlacements || isProjectMode)
+/*SH        if (renderAreas || renderPlacements || isProjectMode)
         {
             fi.dy.masa.malilib.render.RenderUtils.color(1f, 1f, 1f, 1f);
             fi.dy.masa.malilib.render.RenderUtils.setupBlend();
@@ -225,7 +215,7 @@ public class OverlayRenderer
             }
 
             RenderSystem.depthMask(true);
-        }
+        }*/
     }
 
     public void renderSelectionBox(Box box, BoxType boxType, float expand,
@@ -278,21 +268,17 @@ public class OverlayRenderer
         {
             color1 = this.colorBoxPlacementSelected;
             color2 = color1;
-            float alpha = (float) Configs.Visuals.PLACEMENT_BOX_SIDE_ALPHA.getDoubleValue();
-            sideColor = new Color4f(color1.r, color1.g, color1.b, alpha);
-        }
-        else if (boxType == BoxType.PLACEMENT_UNSELECTED)
-        {
+//SH            float alpha = (float) Configs.Visuals.PLACEMENT_BOX_SIDE_ALPHA.getDoubleValue();
+//SH            sideColor = new Color4f(color1.r, color1.g, color1.b, alpha);
+        } else if (boxType == BoxType.PLACEMENT_UNSELECTED) {
             color1 = placement.getBoxesBBColor();
             color2 = color1;
-            float alpha = (float) Configs.Visuals.PLACEMENT_BOX_SIDE_ALPHA.getDoubleValue();
-            sideColor = new Color4f(color1.r, color1.g, color1.b, alpha);
-        }
-        else
-        {
+//SH            float alpha = (float) Configs.Visuals.PLACEMENT_BOX_SIDE_ALPHA.getDoubleValue();
+//SH            sideColor = new Color4f(color1.r, color1.g, color1.b, alpha);
+        } else {
             color1 = box.getSelectedCorner() == Corner.CORNER_1 ? this.colorSelectedCorner : this.colorPos1;
             color2 = box.getSelectedCorner() == Corner.CORNER_2 ? this.colorSelectedCorner : this.colorPos2;
-            sideColor = Color4f.fromColor(Configs.Colors.AREA_SELECTION_BOX_SIDE_COLOR.getIntegerValue());
+//SH            sideColor = Color4f.fromColor(Configs.Colors.AREA_SELECTION_BOX_SIDE_COLOR.getIntegerValue());
         }
 
         if (pos1 != null && pos2 != null)
@@ -301,14 +287,14 @@ public class OverlayRenderer
             {
                 RenderUtils.renderAreaOutlineNoCorners(pos1, pos2, lineWidthArea, colorX, colorY, colorZ, this.mc);
 
-                if (((boxType == BoxType.AREA_SELECTED || boxType == BoxType.AREA_UNSELECTED) &&
+/*SH                if (((boxType == BoxType.AREA_SELECTED || boxType == BoxType.AREA_UNSELECTED) &&
                       Configs.Visuals.RENDER_AREA_SELECTION_BOX_SIDES.getBooleanValue())
                     ||
                      ((boxType == BoxType.PLACEMENT_SELECTED || boxType == BoxType.PLACEMENT_UNSELECTED) &&
                        Configs.Visuals.RENDER_PLACEMENT_BOX_SIDES.getBooleanValue()))
                 {
                     RenderUtils.renderAreaSides(pos1, pos2, sideColor, matrices, this.mc);
-                }
+                }*/
 
                 if (box.getSelectedCorner() == Corner.CORNER_1)
                 {
@@ -644,7 +630,7 @@ public class OverlayRenderer
         boolean direction = false;
         Entity entity = fi.dy.masa.malilib.util.EntityUtils.getCameraEntity();
 
-        if (Hotkeys.SCHEMATIC_EDIT_BREAK_ALL.getKeybind().isKeybindHeld())
+/*SH        if (Hotkeys.SCHEMATIC_EDIT_BREAK_ALL.getKeybind().isKeybindHeld())
         {
             traceWrapper = RayTraceUtils.getGenericTrace(this.mc.world, entity, 20);
             color = Configs.Colors.REBUILD_BREAK_OVERLAY_COLOR.getColor();
@@ -675,7 +661,7 @@ public class OverlayRenderer
             traceWrapper = RayTraceUtils.getGenericTrace(this.mc.world, entity, 20);
             color = Configs.Colors.REBUILD_REPLACE_OVERLAY_COLOR.getColor();
             direction = true;
-        }
+        }*/
 
         if (traceWrapper != null && traceWrapper.getHitType() == RayTraceWrapper.HitType.SCHEMATIC_BLOCK)
         {

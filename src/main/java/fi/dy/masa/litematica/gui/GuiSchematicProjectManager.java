@@ -7,7 +7,7 @@ import fi.dy.masa.litematica.gui.widgets.WidgetListSchematicVersions;
 import fi.dy.masa.litematica.gui.widgets.WidgetSchematicVersion;
 import fi.dy.masa.litematica.schematic.projects.SchematicProject;
 import fi.dy.masa.litematica.schematic.projects.SchematicVersion;
-import fi.dy.masa.litematica.selection.SelectionManager;
+//SHimport fi.dy.masa.litematica.selection.SelectionManager;
 import fi.dy.masa.litematica.util.SchematicUtils;
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.GuiConfirmAction;
@@ -138,16 +138,16 @@ public class GuiSchematicProjectManager extends GuiListBase<SchematicVersion, Wi
         @Override
         public void actionPerformedWithButton(ButtonBase button, int mouseButton)
         {
-            if (this.type == Type.OPEN_PROJECT_BROWSER)
+/*            if (this.type == Type.OPEN_PROJECT_BROWSER)
             {
                 GuiSchematicProjectsBrowser gui = new GuiSchematicProjectsBrowser();
                 GuiBase.openGui(gui);
-            }
-            else if (this.type == Type.SAVE_VERSION)
+            }*/
+/*SH            else if (this.type == Type.SAVE_VERSION)
             {
                 SchematicUtils.saveSchematic(false);
-            }
-            else if (this.type == Type.OPEN_AREA_EDITOR)
+            }*/
+/*SH            else if (this.type == Type.OPEN_AREA_EDITOR)
             {
                 SelectionManager manager = DataManager.getSelectionManager();
 
@@ -155,8 +155,9 @@ public class GuiSchematicProjectManager extends GuiListBase<SchematicVersion, Wi
                 {
                     manager.openEditGui(GuiUtils.getCurrentScreen());
                 }
-            }
-            else if (this.type == Type.PLACE_TO_WORLD)
+            }*/
+            //changed from else if-SH
+            if (this.type == Type.PLACE_TO_WORLD)
             {
                 PlaceToWorldExecutor executor = new PlaceToWorldExecutor();
                 String title = "litematica.gui.title.schematic_projects.confirm_place_to_world";
@@ -172,7 +173,7 @@ public class GuiSchematicProjectManager extends GuiListBase<SchematicVersion, Wi
                 GuiConfirmAction gui = new GuiConfirmAction(320, title, executor, this.gui, msg);
                 GuiBase.openGui(gui);
             }
-            else if (this.type == Type.MOVE_ORIGIN)
+/*SH            else if (this.type == Type.MOVE_ORIGIN)
             {
                 SchematicProject project = DataManager.getSchematicProjectsManager().getCurrentProject();
 
@@ -181,13 +182,13 @@ public class GuiSchematicProjectManager extends GuiListBase<SchematicVersion, Wi
                     project.setOrigin(fi.dy.masa.malilib.util.PositionUtils.getEntityBlockPos(this.gui.mc.player));
                     this.gui.reCreateGuiElements();
                 }
-            }
-            else if (this.type == Type.CLOSE_PROJECT)
+            }*/
+/*SH            else if (this.type == Type.CLOSE_PROJECT)
             {
                 DataManager.getSchematicProjectsManager().closeCurrentProject();
                 GuiSchematicProjectsBrowser gui = new GuiSchematicProjectsBrowser();
                 GuiBase.openGui(gui);
-            }
+            }*/
         }
 
         public enum Type
@@ -232,7 +233,7 @@ public class GuiSchematicProjectManager extends GuiListBase<SchematicVersion, Wi
         @Override
         public boolean onActionConfirmed()
         {
-            DataManager.getSchematicProjectsManager().pasteCurrentVersionToWorld();
+//SH            DataManager.getSchematicProjectsManager().pasteCurrentVersionToWorld();
             return true;
         }
 
@@ -248,7 +249,7 @@ public class GuiSchematicProjectManager extends GuiListBase<SchematicVersion, Wi
         @Override
         public boolean onActionConfirmed()
         {
-            DataManager.getSchematicProjectsManager().deleteLastSeenArea(MinecraftClient.getInstance());
+//SH            DataManager.getSchematicProjectsManager().deleteLastSeenArea(MinecraftClient.getInstance());
             return true;
         }
 

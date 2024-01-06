@@ -16,7 +16,7 @@ import fi.dy.masa.litematica.schematic.projects.SchematicProject;
 import fi.dy.masa.litematica.schematic.projects.SchematicVersion;
 import fi.dy.masa.litematica.selection.AreaSelection;
 import fi.dy.masa.litematica.selection.Box;
-import fi.dy.masa.litematica.selection.SelectionManager;
+//SHimport fi.dy.masa.litematica.selection.SelectionManager;
 import fi.dy.masa.litematica.selection.SelectionMode;
 import fi.dy.masa.litematica.tool.ToolMode;
 import fi.dy.masa.litematica.tool.ToolModeData;
@@ -90,7 +90,7 @@ public class ToolHud extends InfoHud
 
         List<String> lines = this.lineList;
 
-        if (hasTool && DataManager.getSchematicProjectsManager().hasProjectOpen())
+/*SH        if (hasTool && DataManager.getSchematicProjectsManager().hasProjectOpen())
         {
             SchematicProject project = DataManager.getSchematicProjectsManager().getCurrentProject();
 
@@ -135,7 +135,7 @@ public class ToolHud extends InfoHud
             }
 
             return;
-        }
+        }*/
 
         ToolMode mode = DataManager.getToolMode();
         String orange = GuiBase.TXT_GOLD;
@@ -144,7 +144,7 @@ public class ToolHud extends InfoHud
         String strYes = green + StringUtils.translate("litematica.label.yes") + rst;
         String strNo = GuiBase.TXT_RED + StringUtils.translate("litematica.label.no") + rst;
 
-        if (hasTool && mode == ToolMode.DELETE)
+/*SH        if (hasTool && mode == ToolMode.DELETE)
         {
             String strp = ToolModeData.DELETE.getUsePlacement() ? "litematica.hud.delete.target_mode.placement" : "litematica.hud.delete.target_mode.area";
             lines.add(StringUtils.translate("litematica.hud.delete.target_mode", green + StringUtils.translate(strp) + rst));
@@ -230,8 +230,8 @@ public class ToolHud extends InfoHud
 
             str = green + Configs.Generic.SELECTION_CORNERS_MODE.getOptionListValue().getDisplayName() + rst;
             lines.add(StringUtils.translate("litematica.hud.area_selection.selection_corners_mode", str));
-        }
-        else if ((hasTool || mode == ToolMode.REBUILD) && mode.getUsesSchematic())
+        }*/
+/*SH        else if ((hasTool || mode == ToolMode.REBUILD) && mode.getUsesSchematic())
         {
             SchematicPlacement schematicPlacement = DataManager.getSchematicPlacementManager().getSelectedSchematicPlacement();
 
@@ -279,7 +279,7 @@ public class ToolHud extends InfoHud
                     lines.add(StringUtils.translate("litematica.hud.schematic_placement.sub_region_origin", green + str + rst));
                 }
 
-                if (mode == ToolMode.PASTE_SCHEMATIC)
+*//*SH                if (mode == ToolMode.PASTE_SCHEMATIC)
                 {
                     ReplaceBehavior replace = (ReplaceBehavior) Configs.Generic.PASTE_REPLACE_BEHAVIOR.getOptionListValue();
                     str = replace.getDisplayName();
@@ -300,17 +300,17 @@ public class ToolHud extends InfoHud
 
                     String strVal = Configs.Generic.PASTE_IGNORE_INVENTORY.getBooleanValue() ? strYes : strNo;
                     lines.add(String.format("Ignore inventory contents: %s", strVal));
-                }
+                }*//*
             }
-            else
+//SH            else
             {
                 String strTmp = "<" + StringUtils.translate("litematica.label.none_lower") + ">";
                 str = StringUtils.translate("litematica.hud.schematic_placement.selected_placement");
                 lines.add(String.format("%s: %s%s%s", str, white, strTmp, rst));
             }
-        }
+        }*/
 
-        if (hasTool || mode == ToolMode.REBUILD)
+/*SH        if (hasTool || mode == ToolMode.REBUILD)
         {
             str = StringUtils.translate("litematica.hud.selected_mode");
             String modeName = mode.getName();
@@ -322,7 +322,7 @@ public class ToolHud extends InfoHud
 
             lines.add(String.format("%s [%s%d%s/%s%d%s]: %s%s%s", str, green, mode.ordinal() + 1, white,
                     green, ToolMode.values().length, white, green, modeName, rst));
-        }
+        }*/
     }
 
     protected String getBlockString(BlockState state)

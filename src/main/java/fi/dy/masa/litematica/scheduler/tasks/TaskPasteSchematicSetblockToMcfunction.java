@@ -1,5 +1,5 @@
 package fi.dy.masa.litematica.scheduler.tasks;
-
+/*SH
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -89,3 +89,4 @@ public class TaskPasteSchematicSetblockToMcfunction extends TaskPasteSchematicPe
         catch (IOException ignore) {}
     }
 }
+*/

@@ -1,33 +1,18 @@
 package fi.dy.masa.litematica.event;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import fi.dy.masa.malilib.gui.Message.MessageType;
-import fi.dy.masa.malilib.hotkeys.IHotkey;
-import fi.dy.masa.malilib.hotkeys.IKeybindManager;
-import fi.dy.masa.malilib.hotkeys.IKeybindProvider;
-import fi.dy.masa.malilib.hotkeys.IKeyboardInputHandler;
-import fi.dy.masa.malilib.hotkeys.IMouseInputHandler;
-import fi.dy.masa.malilib.hotkeys.KeybindMulti;
-import fi.dy.masa.malilib.util.GuiUtils;
-import fi.dy.masa.malilib.util.InfoUtils;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.Reference;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.config.Hotkeys;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.gui.GuiSchematicManager;
-import fi.dy.masa.litematica.selection.AreaSelection;
-import fi.dy.masa.litematica.selection.Box;
-import fi.dy.masa.litematica.selection.SelectionManager;
 import fi.dy.masa.litematica.tool.ToolMode;
 import fi.dy.masa.litematica.util.EntityUtils;
-import fi.dy.masa.litematica.util.PositionUtils;
-import fi.dy.masa.litematica.util.PositionUtils.Corner;
-import fi.dy.masa.litematica.util.SchematicUtils;
-import fi.dy.masa.litematica.util.WorldUtils;
+import fi.dy.masa.malilib.hotkeys.*;
+import fi.dy.masa.malilib.util.GuiUtils;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.entity.Entity;
+import net.minecraft.util.math.Direction;
 
 public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IMouseInputHandler
 {
@@ -130,7 +115,7 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
         ToolMode mode = DataManager.getToolMode();
         Entity entity = fi.dy.masa.malilib.util.EntityUtils.getCameraEntity();
 
-        if (Hotkeys.SELECTION_GRAB_MODIFIER.getKeybind().isKeybindHeld())
+/*SH        if (Hotkeys.SELECTION_GRAB_MODIFIER.getKeybind().isKeybindHeld())
         {
             if (mode.getUsesAreaSelection())
             {
@@ -154,17 +139,17 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
                     return true;
                 }
             }
-        }
+        }*/
 
-        if (Hotkeys.SELECTION_GROW_MODIFIER.getKeybind().isKeybindHeld())
+/*SH        if (Hotkeys.SELECTION_GROW_MODIFIER.getKeybind().isKeybindHeld())
         {
             return this.growOrShrinkSelection(amount, mode);
-        }
+        }*/
 
-        if (Hotkeys.SELECTION_NUDGE_MODIFIER.getKeybind().isKeybindHeld())
+/*SH        if (Hotkeys.SELECTION_NUDGE_MODIFIER.getKeybind().isKeybindHeld())
         {
             return nudgeSelection(amount, mode, entity);
-        }
+        }*/
 
         if (Hotkeys.OPERATION_MODE_CHANGE_MODIFIER.getKeybind().isKeybindHeld())
         {
@@ -172,21 +157,20 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
             return true;
         }
 
-        if (Hotkeys.SCHEMATIC_VERSION_CYCLE_MODIFIER.getKeybind().isKeybindHeld())
+/*SH        if (Hotkeys.SCHEMATIC_VERSION_CYCLE_MODIFIER.getKeybind().isKeybindHeld())
         {
             if (DataManager.getSchematicProjectsManager().hasProjectOpen())
             {
                 DataManager.getSchematicProjectsManager().cycleVersion(amount * -1);
             }
             return true;
-        }
+        }*/
 
         return false;
     }
 
-    public static boolean nudgeSelection(int amount, ToolMode mode, Entity entity)
-    {
-        if (mode.getUsesAreaSelection())
+    public static boolean nudgeSelection(final int amount, final ToolMode mode, final Entity entity) {
+/*        if (mode.getUsesAreaSelection())
         {
             SelectionManager sm = DataManager.getSelectionManager();
 
@@ -195,10 +179,10 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
                 sm.moveSelectedElement(EntityUtils.getClosestLookingDirection(entity), amount);
                 return true;
             }
-        }
-        else if (mode.getUsesSchematic())
-        {
-            Direction direction = EntityUtils.getClosestLookingDirection(entity);
+        }*/
+        //changed from else if-SH
+        if (mode.getUsesSchematic()) {
+            final Direction direction = EntityUtils.getClosestLookingDirection(entity);
             DataManager.getSchematicPlacementManager().nudgePositionOfCurrentSelection(direction, amount);
             return true;
         }
@@ -206,7 +190,7 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
         return false;
     }
 
-    private boolean growOrShrinkSelection(int amount, ToolMode mode)
+/*SH    private boolean growOrShrinkSelection(int amount, ToolMode mode)
     {
         if (mode.getUsesAreaSelection())
         {
@@ -235,11 +219,10 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
         }
 
         return true;
-    }
+    }*/
 
-    private boolean handleAttackKey(MinecraftClient mc)
-    {
-        if (mc.player != null && DataManager.getToolMode() == ToolMode.REBUILD && KeybindMulti.getTriggeredCount() == 0)
+    private boolean handleAttackKey(final MinecraftClient mc) {
+/*SH        if (mc.player != null && DataManager.getToolMode() == ToolMode.REBUILD && KeybindMulti.getTriggeredCount() == 0)
         {
             if (Hotkeys.SCHEMATIC_EDIT_BREAK_DIRECTION.getKeybind().isKeybindHeld())
             {
@@ -257,16 +240,14 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
             {
                 return SchematicUtils.breakSchematicBlock(mc);
             }
-        }
+        }*/
 
         return false;
     }
 
-    private boolean handleUseKey(MinecraftClient mc)
-    {
-        if (mc.player != null)
-        {
-            if (DataManager.getToolMode() == ToolMode.REBUILD)
+    private boolean handleUseKey(final MinecraftClient mc) {
+        if (mc.player != null) {
+/*SH            if (DataManager.getToolMode() == ToolMode.REBUILD)
             {
                 if (Hotkeys.SCHEMATIC_EDIT_REPLACE_DIRECTION.getKeybind().isKeybindHeld())
                 {
@@ -304,7 +285,7 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
             if (Configs.Generic.PLACEMENT_RESTRICTION.getBooleanValue())
             {
                 return WorldUtils.handlePlacementRestriction(mc);
-            }
+            }*/
         }
 
         return false;

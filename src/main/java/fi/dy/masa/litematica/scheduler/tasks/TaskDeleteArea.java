@@ -1,5 +1,5 @@
 package fi.dy.masa.litematica.scheduler.tasks;
-
+/*SH
 import java.util.List;
 import fi.dy.masa.litematica.selection.Box;
 import fi.dy.masa.malilib.gui.Message.MessageType;
@@ -29,3 +29,4 @@ public class TaskDeleteArea extends TaskFillArea
         }
     }
 }
+*/
