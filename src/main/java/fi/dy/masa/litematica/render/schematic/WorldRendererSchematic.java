@@ -112,9 +112,9 @@ public class WorldRendererSchematic
 
         for (ChunkRendererSchematicVbo chunkRenderer : this.renderInfos)
         {
-            ChunkRenderDataSchematic data = chunkRenderer.chunkRenderData;
+            ChunkRenderDataSchematic data = chunkRenderer.chunkRenderData.get();
 
-            if (data != ChunkRenderDataSchematic.EMPTY && data.isEmpty() == false)
+            if (data != ChunkRenderDataSchematic.EMPTY && !data.isEmpty())
             {
                 ++count;
             }
