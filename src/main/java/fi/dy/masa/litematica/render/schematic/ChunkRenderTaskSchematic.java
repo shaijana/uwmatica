@@ -6,6 +6,7 @@ import java.util.function.Supplier;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Doubles;
 import net.minecraft.util.math.Vec3d;
+import fi.dy.masa.litematica.Litematica;
 
 public class ChunkRenderTaskSchematic implements Comparable<ChunkRenderTaskSchematic>
 {
@@ -15,7 +16,7 @@ public class ChunkRenderTaskSchematic implements Comparable<ChunkRenderTaskSchem
     private final ReentrantLock lock = new ReentrantLock();
     private final Supplier<Vec3d> cameraPosSupplier;
     private final double distanceSq;
-    private BufferBuilderCache bufferBuilderCache;
+    private BufferAllocatorCache allocatorCache;
     private ChunkRenderDataSchematic chunkRenderData;
     private ChunkRenderTaskSchematic.Status status = ChunkRenderTaskSchematic.Status.PENDING;
     private boolean finished;
@@ -38,32 +39,39 @@ public class ChunkRenderTaskSchematic implements Comparable<ChunkRenderTaskSchem
         return this.status;
     }
 
-    public ChunkRendererSchematicVbo getRenderChunk()
+    protected ChunkRendererSchematicVbo getRenderChunk()
     {
         return this.chunkRenderer;
     }
 
-    public ChunkRenderDataSchematic getChunkRenderData()
+    protected ChunkRenderDataSchematic getChunkRenderData()
     {
         return this.chunkRenderData;
     }
 
-    public void setChunkRenderData(ChunkRenderDataSchematic chunkRenderData)
+    protected void setChunkRenderData(ChunkRenderDataSchematic chunkRenderData)
     {
         this.chunkRenderData = chunkRenderData;
     }
 
-    public BufferBuilderCache getBufferCache()
+    public BufferAllocatorCache getAllocatorCache()
     {
-        return this.bufferBuilderCache;
+        return this.allocatorCache;
     }
 
-    public void setRegionRenderCacheBuilder(BufferBuilderCache cache)
+    public boolean setRegionRenderCacheBuilder(BufferAllocatorCache allocatorCache)
     {
-        this.bufferBuilderCache = cache;
+        if (allocatorCache == null)
+        {
+            Litematica.logger.error("setRegionRenderCacheBuilder() [Task] allocatorCache is null");
+            return false;
+        }
+
+        this.allocatorCache = allocatorCache;
+        return true;
     }
 
-    public void setStatus(ChunkRenderTaskSchematic.Status statusIn)
+    protected void setStatus(ChunkRenderTaskSchematic.Status statusIn)
     {
         this.lock.lock();
 
@@ -77,7 +85,7 @@ public class ChunkRenderTaskSchematic implements Comparable<ChunkRenderTaskSchem
         }
     }
 
-    public void finish()
+    protected void finish()
     {
         this.lock.lock();
 
@@ -102,7 +110,7 @@ public class ChunkRenderTaskSchematic implements Comparable<ChunkRenderTaskSchem
         }
     }
 
-    public void addFinishRunnable(Runnable runnable)
+    protected void addFinishRunnable(Runnable runnable)
     {
         this.lock.lock();
 
@@ -121,17 +129,17 @@ public class ChunkRenderTaskSchematic implements Comparable<ChunkRenderTaskSchem
         }
     }
 
-    public ReentrantLock getLock()
+    protected ReentrantLock getLock()
     {
         return this.lock;
     }
 
-    public ChunkRenderTaskSchematic.Type getType()
+    protected ChunkRenderTaskSchematic.Type getType()
     {
         return this.type;
     }
 
-    public boolean isFinished()
+    protected boolean isFinished()
     {
         return this.finished;
     }

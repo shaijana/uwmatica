@@ -13,10 +13,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.Tessellator;
-import net.minecraft.client.render.VertexFormat;
-import net.minecraft.client.render.VertexFormats;
+import net.minecraft.client.render.*;
 import net.minecraft.entity.Entity;
 import net.minecraft.registry.Registries;
 import net.minecraft.util.hit.BlockHitResult;
@@ -24,6 +21,7 @@ import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
+import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.config.Hotkeys;
 import fi.dy.masa.litematica.data.DataManager;
@@ -368,8 +366,11 @@ public class OverlayRenderer
         RenderSystem.lineWidth(2f);
 
         Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder buffer = tessellator.getBuffer();
-        RenderUtils.startDrawingLines(buffer);
+        //BufferBuilder buffer = tessellator.getBuffer();
+        BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
+        BuiltBuffer meshData;
+
+        RenderUtils.startDrawingLines();
         MismatchRenderPos lookedEntry = null;
         MismatchRenderPos prevEntry = null;
         boolean connections = Configs.Visuals.RENDER_ERROR_MARKER_CONNECTIONS.getBooleanValue();
@@ -402,21 +403,42 @@ public class OverlayRenderer
                 RenderUtils.drawConnectingLineBatchedLines(prevEntry.pos, lookedEntry.pos, false, lookedEntry.type.getColor(), buffer, this.mc);
             }
 
-            tessellator.draw();
-            RenderUtils.startDrawingLines(buffer);
+            try
+            {
+                meshData = buffer.end();
+                BufferRenderer.drawWithGlobalProgram(meshData);
+                meshData.close();
+            }
+            catch (Exception e)
+            {
+                Litematica.logger.error("renderSchematicMismatches: Failed to draw Schematic Mismatches (Step 1) (Error: {})", e.getLocalizedMessage());
+            }
+
+            buffer = tessellator.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
+            RenderUtils.startDrawingLines();
 
             RenderSystem.lineWidth(6f);
             RenderUtils.drawBlockBoundingBoxOutlinesBatchedLines(lookPos, lookedEntry.type.getColor(), 0.002, buffer, this.mc);
         }
 
-        tessellator.draw();
+        try
+        {
+            meshData = buffer.end();
+            BufferRenderer.drawWithGlobalProgram(meshData);
+            meshData.close();
+        }
+        catch (Exception e)
+        {
+            Litematica.logger.error("renderSchematicMismatches: Failed to draw Schematic Mismatches (Step 2) (Error: {})", e.getLocalizedMessage());
+        }
 
         if (Configs.Visuals.RENDER_ERROR_MARKER_SIDES.getBooleanValue())
         {
             RenderSystem.enableBlend();
             RenderSystem.disableCull();
 
-            buffer.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+            //buffer.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+            buffer = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
             float alpha = (float) Configs.InfoOverlays.VERIFIER_ERROR_HILIGHT_ALPHA.getDoubleValue();
 
             for (MismatchRenderPos entry : posList)
@@ -426,7 +448,16 @@ public class OverlayRenderer
                 RenderUtils.renderAreaSidesBatched(entry.pos, entry.pos, color, 0.002, buffer, this.mc);
             }
 
-            tessellator.draw();
+            try
+            {
+                meshData = buffer.end();
+                BufferRenderer.drawWithGlobalProgram(meshData);
+                meshData.close();
+            }
+            catch (Exception e)
+            {
+                Litematica.logger.error("renderSchematicMismatches: Failed to draw Schematic Mismatches (Step 3) (Error: {})", e.getLocalizedMessage());
+            }
 
             RenderSystem.disableBlend();
         }

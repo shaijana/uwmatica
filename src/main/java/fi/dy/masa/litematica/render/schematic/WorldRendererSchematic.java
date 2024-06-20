@@ -5,7 +5,6 @@ import java.util.*;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fStack;
 import com.mojang.blaze3d.systems.RenderSystem;
-
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
@@ -28,15 +27,14 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.BlockRenderView;
-
+import fi.dy.masa.malilib.util.EntityUtils;
+import fi.dy.masa.malilib.util.LayerRange;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.config.Hotkeys;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.render.schematic.ChunkRendererSchematicVbo.OverlayRenderType;
 import fi.dy.masa.litematica.world.ChunkSchematic;
 import fi.dy.masa.litematica.world.WorldSchematic;
-import fi.dy.masa.malilib.util.EntityUtils;
-import fi.dy.masa.malilib.util.LayerRange;
 
 public class WorldRendererSchematic
 {
@@ -80,7 +78,7 @@ public class WorldRendererSchematic
         this.entityRenderDispatcher = mc.getEntityRenderDispatcher();
         this.bufferBuilders = mc.getBufferBuilders();
 
-        this.renderChunkFactory = ChunkRendererSchematicVbo::new;
+        this.renderChunkFactory = (world1, worldRenderer) -> new ChunkRendererSchematicVbo(world1, worldRenderer);
 
         this.blockRenderManager = MinecraftClient.getInstance().getBlockRenderManager();
         this.blockModelRenderer = new BlockModelRendererSchematic(mc.getBlockColors());
@@ -160,15 +158,19 @@ public class WorldRendererSchematic
 
     public void loadRenderers()
     {
+        //Litematica.logger.warn("loadRenderers() [Renderer]");
+
         if (this.hasWorld())
         {
+            this.world.getProfiler().push("litematica_load_renderers");
+
             if (this.renderDispatcher == null)
             {
                 this.renderDispatcher = new ChunkRenderDispatcherLitematica();
             }
 
             this.displayListEntitiesDirty = true;
-            this.renderDistanceChunks = this.mc.options.getViewDistance().getValue();
+            this.renderDistanceChunks = this.mc.options.getViewDistance().getValue() + 2;
 
             if (this.chunkRendererDispatcher != null)
             {
@@ -184,21 +186,29 @@ public class WorldRendererSchematic
 
             this.chunkRendererDispatcher = new ChunkRenderDispatcherSchematic(this.world, this.renderDistanceChunks, this, this.renderChunkFactory);
             this.renderEntitiesStartupCounter = 2;
+
+            this.world.getProfiler().pop();
         }
     }
 
     protected void stopChunkUpdates()
     {
+        if (this.chunksToUpdate.isEmpty() == false)
+        {
+            this.chunksToUpdate.forEach(ChunkRendererSchematicVbo::deleteGlResources);
+        }
         this.chunksToUpdate.clear();
         this.renderDispatcher.stopChunkUpdates();
     }
 
     public void setupTerrain(Camera camera, Frustum frustum, int frameCount, boolean playerSpectator)
     {
+        //Litematica.logger.warn("setupTerrain() [Renderer]");
+
         this.world.getProfiler().push("setup_terrain");
 
         if (this.chunkRendererDispatcher == null ||
-            this.mc.options.getViewDistance().getValue() != this.renderDistanceChunks)
+            this.mc.options.getViewDistance().getValue() + 2 != this.renderDistanceChunks)
         {
             this.loadRenderers();
         }
@@ -242,7 +252,7 @@ public class WorldRendererSchematic
         BlockPos viewPos = BlockPos.ofFloored(cameraX, cameraY + (double) entity.getStandingEyeHeight(), cameraZ);
         final int centerChunkX = (viewPos.getX() >> 4);
         final int centerChunkZ = (viewPos.getZ() >> 4);
-        final int renderDistance = this.mc.options.getViewDistance().getValue();
+        final int renderDistance = this.mc.options.getViewDistance().getValue() + 2;
         ChunkPos viewChunk = new ChunkPos(viewPos);
 
         this.displayListEntitiesDirty = this.displayListEntitiesDirty || this.chunksToUpdate.isEmpty() == false ||
@@ -283,6 +293,7 @@ public class WorldRendererSchematic
                 //SubChunkPos subChunk = queuePositions.poll();
                 int cx = chunkPos.x;
                 int cz = chunkPos.z;
+                //Litematica.logger.warn("setupTerrain() [WorldRenderer] positions[{}] chunkPos: {} // isLoaded: {}", i, chunkPos.toString(), this.world.getChunkProvider().isChunkLoaded(cx, cz));
                 // Only render sub-chunks that are within the client's render distance, and that
                 // have been already properly loaded on the client
                 if (Math.abs(cx - centerChunkX) <= renderDistance &&
@@ -344,6 +355,8 @@ public class WorldRendererSchematic
 
     public void updateChunks(long finishTimeNano)
     {
+        //Litematica.logger.warn("updateChunks() [Renderer]");
+
         this.mc.getProfiler().push("litematica_run_chunk_uploads");
         this.displayListEntitiesDirty |= this.renderDispatcher.runChunkUploads(finishTimeNano);
 
@@ -352,6 +365,7 @@ public class WorldRendererSchematic
         if (this.chunksToUpdate.isEmpty() == false)
         {
             Iterator<ChunkRendererSchematicVbo> iterator = this.chunksToUpdate.iterator();
+            int index = 0;
 
             while (iterator.hasNext())
             {
@@ -384,6 +398,7 @@ public class WorldRendererSchematic
                 {
                     break;
                 }
+                index++;
             }
         }
 
@@ -392,6 +407,7 @@ public class WorldRendererSchematic
 
     public int renderBlockLayer(RenderLayer renderLayer, Matrix4f matrices, Camera camera, Matrix4f projMatrix)
     {
+        //RenderSystem.assertOnRenderThread();
         this.world.getProfiler().push("render_block_layer_" + renderLayer.toString());
 
         boolean isTranslucent = renderLayer == RenderLayer.getTranslucent();
@@ -412,15 +428,20 @@ public class WorldRendererSchematic
 
             if (diffX * diffX + diffY * diffY + diffZ * diffZ > 1.0D)
             {
+                //int i = ChunkSectionPos.getSectionCoord(x);
+                //int j = ChunkSectionPos.getSectionCoord(y);
+                //int k = ChunkSectionPos.getSectionCoord(z);
+                //boolean block = i != ChunkSectionPos.getSectionCoord(this.lastTranslucentSortX) || k != ChunkSectionPos.getSectionCoord(this.lastTranslucentSortZ) || j != ChunkSectionPos.getSectionCoord(this.lastTranslucentSortY);
                 this.lastTranslucentSortX = x;
                 this.lastTranslucentSortY = y;
                 this.lastTranslucentSortZ = z;
-                int i = 0;
+                int h = 0;
 
                 for (ChunkRendererSchematicVbo chunkRenderer : this.renderInfos)
                 {
+                    //if ((chunkRenderer.getChunkRenderData().isBlockLayerStarted(renderLayer) || !block  && !chunkRenderer.isAxisAlignedWith(i, j, k) ||
                     if ((chunkRenderer.getChunkRenderData().isBlockLayerStarted(renderLayer) ||
-                        (chunkRenderer.getChunkRenderData() != ChunkRenderDataSchematic.EMPTY && chunkRenderer.hasOverlay())) && i++ < 15)
+                        (chunkRenderer.getChunkRenderData() != ChunkRenderDataSchematic.EMPTY && chunkRenderer.hasOverlay())) && h++ < 15)
                     {
                         this.renderDispatcher.updateTransparencyLater(chunkRenderer);
                     }
@@ -466,11 +487,25 @@ public class WorldRendererSchematic
                 BlockPos chunkOrigin = renderer.getOrigin();
                 VertexBuffer buffer = renderer.getBlocksVertexBufferByLayer(renderLayer);
 
+                if (buffer == null || buffer.isClosed())
+                {
+                    //Litematica.logger.error("renderBlockLayer() [Renderer]: vertexBuffer for layer [{}] is null/closed, skipping draw", ChunkRenderLayers.getFriendlyName(renderLayer));
+                    continue;
+                }
+
+                if (renderer.getChunkRenderData().getBuiltBufferCache().hasBuiltBufferByLayer(renderLayer) == false)
+                {
+                    //Litematica.logger.error("renderBlockLayer() [Renderer]: buffer for layer [{}] is not built, skipping draw", ChunkRenderLayers.getFriendlyName(renderLayer));
+                    continue;
+                }
+
                 if (chunkOffsetUniform != null)
                 {
                     chunkOffsetUniform.set((float)(chunkOrigin.getX() - x), (float)(chunkOrigin.getY() - y), (float)(chunkOrigin.getZ() - z));
                     chunkOffsetUniform.upload();
                 }
+
+                //Litematica.logger.warn("renderBlockLayer() [Renderer] --> bind / draw / unbind for layer [{}]", ChunkRenderLayers.getFriendlyName(renderLayer));
 
                 buffer.bind();
                 buffer.draw();
@@ -528,6 +563,8 @@ public class WorldRendererSchematic
 
     protected void renderBlockOverlay(OverlayRenderType type, Matrix4f matrix4f, Camera camera, Matrix4f projMatrix)
     {
+        //Litematica.logger.warn("renderBlockOverlay() [World] for overlay type [{}]", type.getDrawMode().name());
+
         RenderLayer renderLayer = RenderLayer.getTranslucent();
         renderLayer.startDrawing();
 
@@ -575,6 +612,20 @@ public class WorldRendererSchematic
                     VertexBuffer buffer = renderer.getOverlayVertexBuffer(type);
                     BlockPos chunkOrigin = renderer.getOrigin();
 
+                    if (buffer == null || buffer.isClosed())
+                    {
+                        //Litematica.logger.error("renderBlockOverlay() [Renderer]: vertexBuffer for overlay type [{}] is null/closed, skipping draw", type.getDrawMode().name());
+                        continue;
+                    }
+
+                    if (renderer.getChunkRenderData().getBuiltBufferCache().hasBuiltBufferByType(type) == false)
+                    {
+                        //Litematica.logger.error("renderBlockOverlay() [Renderer]: buffer for overlay type [{}] is not built, skipping draw", type.getDrawMode().name());
+                        continue;
+                    }
+
+                    //Litematica.logger.warn("renderBlockOverlay() [Renderer] --> bind / draw / unbind for layer [{}] --> with overlay type [{}]", ChunkRenderLayers.getFriendlyName(renderLayer), type.getDrawMode().name());
+
                     matrix4fStack.pushMatrix();
                     matrix4fStack.translate((float) (chunkOrigin.getX() - x), (float) (chunkOrigin.getY() - y), (float) (chunkOrigin.getZ() - z));
                     buffer.bind();
@@ -596,6 +647,8 @@ public class WorldRendererSchematic
 
     public boolean renderBlock(BlockRenderView world, BlockState state, BlockPos pos, MatrixStack matrixStack, BufferBuilder bufferBuilderIn)
     {
+        //Litematica.logger.warn("renderBlock(): [World] [{}] --> [{}]", pos.toShortString(), state.toString());
+
         try
         {
             BlockRenderType renderType = state.getRenderType();
@@ -608,6 +661,12 @@ public class WorldRendererSchematic
             {
                 return renderType == BlockRenderType.MODEL &&
                        this.blockModelRenderer.renderModel(world, this.getModelForState(state), state, pos, matrixStack, bufferBuilderIn, state.getRenderingSeed(pos));
+
+                /*
+                this.blockRenderManager.renderBlock(state, pos, world, matrixStack, bufferBuilderIn, false, Random.create(state.getRenderingSeed(pos)));
+
+                return renderType == BlockRenderType.MODEL;
+                 */
             }
         }
         catch (Throwable throwable)
@@ -619,9 +678,9 @@ public class WorldRendererSchematic
         }
     }
 
-    public void renderFluid(BlockRenderView world, FluidState state, BlockPos pos, BufferBuilder bufferBuilderIn)
+    public void renderFluid(BlockRenderView world, BlockState blockState, FluidState fluidState, BlockPos pos, BufferBuilder bufferBuilderIn)
     {
-        this.blockRenderManager.renderFluid(pos, world, bufferBuilderIn, state.getBlockState(), state);
+        this.blockRenderManager.renderFluid(pos, world, bufferBuilderIn, blockState, fluidState);
     }
 
     public BakedModel getModelForState(BlockState state)

@@ -51,7 +51,7 @@ import fi.dy.masa.litematica.render.schematic.WorldRendererSchematic;
 
 public class WorldSchematic extends World
 {
-    protected static final RegistryKey<World> REGISTRY_KEY = RegistryKey.of(RegistryKeys.WORLD, new Identifier(Reference.MOD_ID, "schematic_world"));
+    protected static final RegistryKey<World> REGISTRY_KEY = RegistryKey.of(RegistryKeys.WORLD, Identifier.of(Reference.MOD_ID, "schematic_world"));
 
     protected final MinecraftClient mc;
     protected final ChunkManagerSchematic chunkManagerSchematic;
@@ -67,7 +67,7 @@ public class WorldSchematic extends World
                           Supplier<Profiler> supplier,
                           @Nullable WorldRendererSchematic worldRenderer)
     {
-        super(properties, REGISTRY_KEY, registryManager.equals(DynamicRegistryManager.EMPTY) == false ? registryManager : MinecraftClient.getInstance().world.getRegistryManager(), dimension, supplier, true, false, 0L, 0);
+        super(properties, REGISTRY_KEY, registryManager.equals(DynamicRegistryManager.EMPTY) == false ? registryManager : SchematicWorldHandler.INSTANCE.getRegistryManager(), dimension, supplier, true, false, 0L, 0);
 
         this.mc = MinecraftClient.getInstance();
         if (this.mc == null || this.mc.world == null)
@@ -112,7 +112,10 @@ public class WorldSchematic extends World
     public void putMapState(MapIdComponent id, MapState state) { }
 
     @Override
-    public MapIdComponent getNextMapId() { return null; }
+    public MapIdComponent increaseAndGetMapId()
+    {
+        return null;
+    }
 
     @Override
     public QueryableTickScheduler<Block> getBlockTickScheduler()
@@ -498,6 +501,10 @@ public class WorldSchematic extends World
         if (this.mc != null && this.mc.world != null)
         {
             return this.mc.world.getRegistryManager();
+        }
+        else if (SchematicWorldHandler.INSTANCE.getRegistryManager().equals(DynamicRegistryManager.EMPTY) == false)
+        {
+            return SchematicWorldHandler.INSTANCE.getRegistryManager();
         }
         else
         {

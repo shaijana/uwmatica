@@ -1,5 +1,6 @@
 package fi.dy.masa.litematica.render.schematic;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
@@ -7,7 +8,6 @@ import java.util.function.Supplier;
 import com.google.common.collect.Sets;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.systems.VertexSorter;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
@@ -17,16 +17,18 @@ import net.minecraft.client.gl.VertexBuffer;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.block.entity.BlockEntityRenderer;
 import net.minecraft.client.render.model.BakedModel;
+import net.minecraft.client.util.BufferAllocator;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.fluid.FluidState;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.util.math.*;
 import net.minecraft.world.chunk.WorldChunk;
-
+import fi.dy.masa.malilib.util.Color4f;
+import fi.dy.masa.malilib.util.EntityUtils;
+import fi.dy.masa.malilib.util.IntBoundingBox;
+import fi.dy.masa.malilib.util.LayerRange;
+import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.render.RenderUtils;
@@ -34,14 +36,10 @@ import fi.dy.masa.litematica.schematic.placement.SchematicPlacementManager.Place
 import fi.dy.masa.litematica.util.OverlayType;
 import fi.dy.masa.litematica.util.PositionUtils;
 import fi.dy.masa.litematica.world.WorldSchematic;
-import fi.dy.masa.malilib.util.Color4f;
-import fi.dy.masa.malilib.util.EntityUtils;
-import fi.dy.masa.malilib.util.IntBoundingBox;
-import fi.dy.masa.malilib.util.LayerRange;
 
-public class ChunkRendererSchematicVbo
+public class ChunkRendererSchematicVbo implements AutoCloseable
 {
-    public static int schematicRenderChunksUpdated;
+    protected static int schematicRenderChunksUpdated;
 
     protected volatile WorldSchematic world;
     protected final WorldRendererSchematic worldRenderer;
@@ -64,13 +62,16 @@ public class ChunkRendererSchematicVbo
     protected ChunkCacheSchematic schematicWorldView;
     protected ChunkCacheSchematic clientWorldView;
 
+    //private final BufferAllocatorCache allocatorCache;
+    private final BufferBuilderCache builderCache;
+
     protected ChunkRenderTaskSchematic compileTask;
     protected ChunkRenderDataSchematic chunkRenderData;
 
     private boolean needsUpdate;
     private boolean needsImmediateUpdate;
 
-    public ChunkRendererSchematicVbo(WorldSchematic world, WorldRendererSchematic worldRenderer)
+    protected ChunkRendererSchematicVbo(WorldSchematic world, WorldRendererSchematic worldRenderer)
     {
         this.world = world;
         this.worldRenderer = worldRenderer;
@@ -81,6 +82,8 @@ public class ChunkRendererSchematicVbo
         this.vertexBufferOverlay = new IdentityHashMap<>();
         this.position = new BlockPos.Mutable();
         this.chunkRelativePos = new BlockPos.Mutable();
+        //this.allocatorCache = new BufferAllocatorCache();
+        this.builderCache = new BufferBuilderCache();
     }
 
     public boolean hasOverlay()
@@ -93,23 +96,35 @@ public class ChunkRendererSchematicVbo
         return this.existingOverlays;
     }
 
-    public VertexBuffer getBlocksVertexBufferByLayer(RenderLayer layer)
+    protected VertexBuffer getBlocksVertexBufferByLayer(RenderLayer layer)
     {
         return this.vertexBufferBlocks.computeIfAbsent(layer, l -> new VertexBuffer(VertexBuffer.Usage.STATIC));
     }
 
-    public VertexBuffer getOverlayVertexBuffer(OverlayRenderType type)
+    protected VertexBuffer getOverlayVertexBuffer(OverlayRenderType type)
     {
         //if (GuiBase.isCtrlDown()) System.out.printf("getOverlayVertexBuffer: type: %s, buf: %s\n", type, this.vertexBufferOverlay[type.ordinal()]);
         return this.vertexBufferOverlay.computeIfAbsent(type, l -> new VertexBuffer(VertexBuffer.Usage.STATIC));
     }
 
-    public ChunkRenderDataSchematic getChunkRenderData()
+    protected ChunkRenderDataSchematic getChunkRenderData()
     {
         return this.chunkRenderData;
     }
 
-    public void setChunkRenderData(ChunkRenderDataSchematic data)
+    /*
+    protected BufferAllocatorCache getAllocatorCache()
+    {
+        return this.allocatorCache;
+    }
+     */
+
+    protected BufferBuilderCache getBuilderCache()
+    {
+        return this.builderCache;
+    }
+
+    protected void setChunkRenderData(ChunkRenderDataSchematic data)
     {
         this.chunkRenderDataLock.lock();
 
@@ -141,8 +156,10 @@ public class ChunkRendererSchematicVbo
         return this.boundingBox;
     }
 
-    public void setPosition(int x, int y, int z)
+    protected void setPosition(int x, int y, int z)
     {
+        //Litematica.logger.error("setPosition() [VBO] pos [{}] --> [{} {} {}]", this.position.toShortString(), x, y, z);
+
         if (x != this.position.getX() ||
             y != this.position.getY() ||
             z != this.position.getZ())
@@ -163,57 +180,78 @@ public class ChunkRendererSchematicVbo
         return x * x + z * z;
     }
 
-    public void deleteGlResources()
+    protected void deleteGlResources()
     {
-        this.clear();
-        this.world = null;
+        //Litematica.debugLog("deleteGlResources(): [VBO] for origin [{}]", this.position.toShortString());
 
-        this.vertexBufferBlocks.values().forEach(VertexBuffer::close);
-        this.vertexBufferOverlay.values().forEach(VertexBuffer::close);
+        this.clear();
+        this.closeAllVertexBuffers();
+        //this.world = null;
     }
 
-    public void resortTransparency(ChunkRenderTaskSchematic task)
+    private void closeAllVertexBuffers()
     {
-        RenderLayer layerTranslucent = RenderLayer.getTranslucent();
+        this.vertexBufferBlocks.values().forEach(VertexBuffer::close);
+        this.vertexBufferOverlay.values().forEach(VertexBuffer::close);
+        this.vertexBufferBlocks.clear();
+        this.vertexBufferOverlay.clear();
+    }
+
+    protected void resortTransparency(ChunkRenderTaskSchematic task)
+    {
         ChunkRenderDataSchematic data = task.getChunkRenderData();
-        BufferBuilderCache buffers = task.getBufferCache();
-        BufferBuilder.TransparentSortingData bufferState = data.getBlockBufferState(layerTranslucent);
         Vec3d cameraPos = task.getCameraPosSupplier().get();
+        RenderLayer layerTranslucent = RenderLayer.getTranslucent();
+        BufferAllocatorCache allocators = task.getAllocatorCache();
+
+        //Litematica.debugLog("resortTransparency() [VBO]: resort for chunk origin [{}]", this.position.toShortString());
+
         float x = (float) cameraPos.x - this.position.getX();
         float y = (float) cameraPos.y - this.position.getY();
         float z = (float) cameraPos.z - this.position.getZ();
 
-        if (bufferState != null)
+        if (data.isBlockLayerEmpty(layerTranslucent) == false)
         {
-            if (data.isBlockLayerEmpty(layerTranslucent) == false)
-            {
-                BufferBuilder buffer = buffers.getBlockBufferByLayer(layerTranslucent);
+            RenderSystem.setShader(GameRenderer::getRenderTypeTranslucentProgram);
 
-                RenderSystem.setShader(GameRenderer::getRenderTypeTranslucentProgram);
-                this.preRenderBlocks(buffer, layerTranslucent);
-                buffer.beginSortedIndexBuffer(bufferState);
-                this.postRenderBlocks(layerTranslucent, x, y, z, buffer, data);
+            if (data.getBuiltBufferCache().hasBuiltBufferByLayer(layerTranslucent))
+            {
+                try
+                {
+                    this.resortRenderBlocks(layerTranslucent, x, y, z, data, allocators);
+                }
+                catch (Exception e)
+                {
+                    Litematica.logger.error("resortTransparency() [VBO] caught exception for layer [{}] // {}", ChunkRenderLayers.getFriendlyName(layerTranslucent), e.toString());
+                }
             }
         }
 
         //if (GuiBase.isCtrlDown()) System.out.printf("resortTransparency\n");
         //if (Configs.Visuals.ENABLE_SCHEMATIC_OVERLAY.getBooleanValue())
+
+        // FIXME --> Resorting the Overlay QUADs causes visual display issues, crashes
+        /**/
+        OverlayRenderType type = OverlayRenderType.QUAD;
+
+        if (data.isOverlayTypeEmpty(type) == false)
         {
-            OverlayRenderType type = OverlayRenderType.QUAD;
-            bufferState = data.getOverlayBufferState(type);
-
-            if (bufferState != null && data.isOverlayTypeEmpty(type) == false)
+            if (data.getBuiltBufferCache().hasBuiltBufferByType(type))
             {
-                BufferBuilder buffer = buffers.getOverlayBuffer(type);
-
-                this.preRenderOverlay(buffer, type.getDrawMode());
-                buffer.beginSortedIndexBuffer(bufferState);
-                this.postRenderOverlay(type, x, y, z, buffer, data);
+                try
+                {
+                    this.resortRenderOverlay(type, x, y, z, data, allocators);
+                }
+                catch (Exception e)
+                {
+                    Litematica.logger.error("resortTransparency() [VBO] caught exception for overlay type [{}] // {}", type.getDrawMode().name(), e.toString());
+                }
             }
         }
+         /**/
     }
 
-    public void rebuildChunk(ChunkRenderTaskSchematic task)
+    protected void rebuildChunk(ChunkRenderTaskSchematic task)
     {
         ChunkRenderDataSchematic data = new ChunkRenderDataSchematic();
         task.getLock().lock();
@@ -232,9 +270,16 @@ public class ChunkRendererSchematicVbo
             task.getLock().unlock();
         }
 
+        //Litematica.debugLog("rebuildChunk() [VBO]: bootstrap/clearing all render buffers for chunk origin [{}]", this.position.toShortString());
+
+        //this.allocatorCache.clearAll();
+        this.builderCache.clearAll();
+        //data.closeBuiltBufferCache();
+
         Set<BlockEntity> tileEntities = new HashSet<>();
         BlockPos posChunk = this.position;
         LayerRange range = DataManager.getRenderLayerRange();
+        BufferAllocatorCache allocators = task.getAllocatorCache();
 
         this.existingOverlays.clear();
         this.hasOverlay = false;
@@ -259,7 +304,6 @@ public class ChunkRendererSchematicVbo
                 float y = (float) cameraPos.y - this.position.getY();
                 float z = (float) cameraPos.z - this.position.getZ();
                 Set<RenderLayer> usedLayers = new HashSet<>();
-                BufferBuilderCache buffers = task.getBufferCache();
                 MatrixStack matrixStack = new MatrixStack();
                 // TODO --> Do we need to change this to a Matrix4f in the future,
                 //  when Matrix4f doesn't break things here or do we need to call RenderSystem again?
@@ -286,13 +330,13 @@ public class ChunkRendererSchematicVbo
                         matrixStack.push();
                         matrixStack.translate(posMutable.getX() & 0xF, posMutable.getY() - bottomY, posMutable.getZ() & 0xF);
 
-                        this.renderBlocksAndOverlay(posMutable, data, tileEntities, usedLayers, matrixStack, buffers);
+                        this.renderBlocksAndOverlay(posMutable, data, allocators, tileEntities, usedLayers, matrixStack);
 
                         matrixStack.pop();
                     }
                 }
 
-                for (RenderLayer layerTmp : RenderLayer.getBlockLayers())
+                for (RenderLayer layerTmp : ChunkRenderLayers.LAYERS)
                 {
                     if (usedLayers.contains(layerTmp))
                     {
@@ -301,7 +345,15 @@ public class ChunkRendererSchematicVbo
 
                     if (data.isBlockLayerStarted(layerTmp))
                     {
-                        this.postRenderBlocks(layerTmp, x, y, z, buffers.getBlockBufferByLayer(layerTmp), data);
+                        try
+                        {
+                            data.setBlockLayerUsed(layerTmp);
+                            this.postRenderBlocks(layerTmp, x, y, z, data, allocators);
+                        }
+                        catch (Exception e)
+                        {
+                            Litematica.logger.error("rebuildChunk() [VBO] failed to postRenderBlocks() for layer [{}] --> {}", ChunkRenderLayers.getFriendlyName(layerTmp), e.toString());
+                        }
                     }
                 }
 
@@ -312,8 +364,15 @@ public class ChunkRendererSchematicVbo
                     {
                         if (data.isOverlayTypeStarted(type))
                         {
-                            data.setOverlayTypeUsed(type);
-                            this.postRenderOverlay(type, x, y, z, buffers.getOverlayBuffer(type), data);
+                            try
+                            {
+                                data.setOverlayTypeUsed(type);
+                                this.postRenderOverlay(type, x, y, z, data, allocators);
+                            }
+                            catch (Exception e)
+                            {
+                                Litematica.logger.error("rebuildChunk() [VBO] failed to postRenderBlocks() for overlay type [{}] --> {}", type.getDrawMode().name(), e.toString());
+                            }
                         }
                     }
                 }
@@ -324,6 +383,8 @@ public class ChunkRendererSchematicVbo
 
         try
         {
+            //Litematica.debugLog("rebuildChunk() [VBO]: purging buffers for origin [{}]", this.position.toShortString());
+
             Set<BlockEntity> set = Sets.newHashSet(tileEntities);
             Set<BlockEntity> set1 = Sets.newHashSet(this.setBlockEntities);
             set.removeAll(this.setBlockEntities);
@@ -331,19 +392,23 @@ public class ChunkRendererSchematicVbo
             this.setBlockEntities.clear();
             this.setBlockEntities.addAll(tileEntities);
             this.worldRenderer.updateBlockEntities(set1, set);
+            //this.allocatorCache.clearAll();
+            this.builderCache.clearAll();
+            //this.chunkRenderData.closeBuiltBufferCache();
         }
         finally
         {
             this.chunkRenderLock.unlock();
         }
 
-
         data.setTimeBuilt(this.world.getTime());
     }
 
-    protected void renderBlocksAndOverlay(BlockPos pos, ChunkRenderDataSchematic data, Set<BlockEntity> tileEntities,
-            Set<RenderLayer> usedLayers, MatrixStack matrixStack, BufferBuilderCache buffers)
+    protected void renderBlocksAndOverlay(BlockPos pos, @Nonnull ChunkRenderDataSchematic data, @Nonnull BufferAllocatorCache allocators, Set<BlockEntity> tileEntities,
+            Set<RenderLayer> usedLayers, MatrixStack matrixStack)
     {
+        //Litematica.logger.warn("renderBlocksAndOverlay() [VBO] for BlockPos [{}]", pos.toShortString());
+
         BlockState stateSchematic = this.schematicWorldView.getBlockState(pos);
         BlockState stateClient    = this.clientWorldView.getBlockState(pos);
         boolean clientHasAir = stateClient.isAir();
@@ -373,30 +438,34 @@ public class ChunkRendererSchematicVbo
             {
                 RenderLayer layer = RenderLayers.getFluidLayer(fluidState);
                 int offsetY = ((pos.getY() >> 4) << 4) - this.position.getY();
-                OmegaHackfixForCrashJustTemporarilyForNowISwearBecauseOfShittyBrokenCodeBufferBuilder bufferSchematic = buffers.getBlockBufferByLayer(layer);
-                bufferSchematic.setYOffset(offsetY);
+                BufferBuilderPatch bufferSchematic = this.builderCache.getBufferByLayer(layer, allocators);
 
-                if (data.isBlockLayerStarted(layer) == false)
+                if (data.isBlockLayerStarted(layer) == false || bufferSchematic == null)
                 {
                     data.setBlockLayerStarted(layer);
-                    this.preRenderBlocks(bufferSchematic, layer);
+                    bufferSchematic = this.preRenderBlocks(layer, allocators);
                 }
+                bufferSchematic.setOffsetY(offsetY);
 
-                this.worldRenderer.renderFluid(this.schematicWorldView, fluidState, pos, bufferSchematic);
+                //Litematica.logger.error("renderBlocksAndOverlay() -> renderFluid() [VBO] layer: [{}] //  stateSchematic [{}] // fluidState [{}]", ChunkRenderLayers.getFriendlyName(layer), stateSchematic.toString(), fluidState.toString());
+
+                this.worldRenderer.renderFluid(this.schematicWorldView, stateSchematic, fluidState, pos, bufferSchematic);
                 usedLayers.add(layer);
-                bufferSchematic.setYOffset(0.0);
+                bufferSchematic.setOffsetY(0.0F);
             }
 
             if (stateSchematic.getRenderType() != BlockRenderType.INVISIBLE)
             {
                 RenderLayer layer = translucent ? RenderLayer.getTranslucent() : RenderLayers.getBlockLayer(stateSchematic);
-                BufferBuilder bufferSchematic = buffers.getBlockBufferByLayer(layer);
+                BufferBuilderPatch bufferSchematic = this.builderCache.getBufferByLayer(layer, allocators);
 
-                if (data.isBlockLayerStarted(layer) == false)
+                if (data.isBlockLayerStarted(layer) == false || bufferSchematic == null)
                 {
                     data.setBlockLayerStarted(layer);
-                    this.preRenderBlocks(bufferSchematic, layer);
+                    bufferSchematic = this.preRenderBlocks(layer, allocators);
                 }
+
+                //Litematica.logger.error("renderBlocksAndOverlay() -> renderBlock() [VBO] layer: [{}] //  stateSchematic [{}]", ChunkRenderLayers.getFriendlyName(layer), stateSchematic.toString());
 
                 if (this.worldRenderer.renderBlock(this.schematicWorldView, stateSchematic, pos, matrixStack, bufferSchematic))
                 {
@@ -418,24 +487,28 @@ public class ChunkRendererSchematicVbo
 
             if (this.overlayColor != null)
             {
-                this.renderOverlay(type, pos, stateSchematic, missing, data, buffers);
+                this.renderOverlay(type, pos, stateSchematic, missing, data, allocators);
             }
         }
     }
 
-    protected void renderOverlay(OverlayType type, BlockPos pos, BlockState stateSchematic, boolean missing, ChunkRenderDataSchematic data, BufferBuilderCache buffers)
+    protected void renderOverlay(OverlayType type, BlockPos pos, BlockState stateSchematic, boolean missing, @Nonnull ChunkRenderDataSchematic data, @Nonnull BufferAllocatorCache allocators)
     {
+        //Litematica.logger.warn("renderOverlay() [VBO] for overlay [{}]", type.name());
+
         RenderSystem.setShader(GameRenderer::getPositionColorProgram);
         BlockPos.Mutable relPos = this.getChunkRelativePosition(pos);
+        OverlayRenderType overlayType;
 
         if (Configs.Visuals.SCHEMATIC_OVERLAY_ENABLE_SIDES.getBooleanValue())
         {
-            BufferBuilder bufferOverlayQuads = buffers.getOverlayBuffer(OverlayRenderType.QUAD);
+            overlayType = OverlayRenderType.QUAD;
+            BufferBuilderPatch bufferOverlayQuads = this.builderCache.getBufferByOverlay(overlayType, allocators);
 
-            if (data.isOverlayTypeStarted(OverlayRenderType.QUAD) == false)
+            if (data.isOverlayTypeStarted(overlayType) == false || bufferOverlayQuads == null)
             {
-                data.setOverlayTypeStarted(OverlayRenderType.QUAD);
-                this.preRenderOverlay(bufferOverlayQuads, OverlayRenderType.QUAD);
+                data.setOverlayTypeStarted(overlayType);
+                bufferOverlayQuads = this.preRenderOverlay(overlayType, allocators);
             }
 
             if (Configs.Visuals.OVERLAY_REDUCED_INNER_SIDES.getBooleanValue())
@@ -488,12 +561,13 @@ public class ChunkRendererSchematicVbo
 
         if (Configs.Visuals.SCHEMATIC_OVERLAY_ENABLE_OUTLINES.getBooleanValue())
         {
-            BufferBuilder bufferOverlayOutlines = buffers.getOverlayBuffer(OverlayRenderType.OUTLINE);
+            overlayType = OverlayRenderType.OUTLINE;
+            BufferBuilderPatch bufferOverlayOutlines = this.builderCache.getBufferByOverlay(overlayType, allocators);
 
-            if (data.isOverlayTypeStarted(OverlayRenderType.OUTLINE) == false)
+            if (data.isOverlayTypeStarted(overlayType) == false || bufferOverlayOutlines == null)
             {
-                data.setOverlayTypeStarted(OverlayRenderType.OUTLINE);
-                this.preRenderOverlay(bufferOverlayOutlines, OverlayRenderType.OUTLINE);
+                data.setOverlayTypeStarted(overlayType);
+                bufferOverlayOutlines = this.preRenderOverlay(overlayType, allocators);
             }
 
             this.overlayColor = new Color4f(this.overlayColor.r, this.overlayColor.g, this.overlayColor.b, 1f);
@@ -736,50 +810,384 @@ public class ChunkRendererSchematicVbo
         }
     }
 
-    private void preRenderBlocks(BufferBuilder buffer, RenderLayer layer)
+    private BufferBuilderPatch preRenderBlocks(RenderLayer layer, @Nonnull BufferAllocatorCache allocators)
     {
-        buffer.begin(VertexFormat.DrawMode.QUADS, layer.getVertexFormat());
+        return this.builderCache.getBufferByLayer(layer, allocators);
     }
 
-    private void postRenderBlocks(RenderLayer layer, float x, float y, float z, BufferBuilder buffer, ChunkRenderDataSchematic chunkRenderData)
-    {
-        if (layer == RenderLayer.getTranslucent() && chunkRenderData.isBlockLayerEmpty(layer) == false)
-        {
-            buffer.setSorter(VertexSorter.byDistance(x, y, z));
-            chunkRenderData.setBlockBufferState(layer, buffer.getSortingData());
-        }
-
-        buffer.end();
-    }
-
-    private void preRenderOverlay(BufferBuilder buffer, OverlayRenderType type)
+    private BufferBuilderPatch preRenderOverlay(OverlayRenderType type, @Nonnull BufferAllocatorCache allocators)
     {
         this.existingOverlays.add(type);
         this.hasOverlay = true;
 
         RenderSystem.setShader(GameRenderer::getPositionColorProgram);
-        buffer.begin(type.getDrawMode(), VertexFormats.POSITION_COLOR);
+        return this.builderCache.getBufferByOverlay(type, allocators);
     }
 
-    private void preRenderOverlay(BufferBuilder buffer, VertexFormat.DrawMode drawMode)
+    protected void uploadBuiltBuffer(@Nonnull BuiltBuffer builtBuffer, @Nonnull VertexBuffer vertexBuffer)
     {
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
-        buffer.begin(drawMode, VertexFormats.POSITION_COLOR);
-    }
+        //Litematica.logger.warn("uploadBuiltBuffer(): [VBO] - INIT");
 
-    private void postRenderOverlay(OverlayRenderType type, float x, float y, float z, BufferBuilder buffer, ChunkRenderDataSchematic chunkRenderData)
-    {
-        RenderSystem.applyModelViewMatrix();
-        if (type == OverlayRenderType.QUAD && chunkRenderData.isOverlayTypeEmpty(type) == false)
+        if (vertexBuffer.isClosed())
         {
-            buffer.setSorter(VertexSorter.byDistance(x, y, z));
-            chunkRenderData.setOverlayBufferState(type, buffer.getSortingData());
+            Litematica.logger.error("uploadBuiltBuffer() [VBO] - Error, vertexBuffer is closed/Null");
+            builtBuffer.close();
+            return;
         }
 
-        buffer.end();
+        //Litematica.logger.warn("uploadBuiltBuffer(): [VBO] - UPLOAD");
+
+        vertexBuffer.bind();
+        vertexBuffer.upload(builtBuffer);
+        VertexBuffer.unbind();
+
+        //builtBuffer.close();
+        //Litematica.logger.warn("uploadBuiltBuffer(): [VBO] - DONE");
     }
 
-    public ChunkRenderTaskSchematic makeCompileTaskChunkSchematic(Supplier<Vec3d> cameraPosSupplier)
+    private void postRenderBlocks(RenderLayer layer, float x, float y, float z, @Nonnull ChunkRenderDataSchematic chunkRenderData, @Nonnull BufferAllocatorCache allocators)
+            throws RuntimeException
+    {
+        //Litematica.logger.warn("postRenderBlocks(): [VBO] for layer [{}] - INIT", ChunkRenderLayers.getFriendlyName(layer));
+
+        //if (layer == RenderLayer.getTranslucent() && chunkRenderData.isBlockLayerEmpty(layer) == false)
+        if (chunkRenderData.isBlockLayerEmpty(layer) == false)
+        {
+            BuiltBuffer built;
+
+            if (chunkRenderData.getBuiltBufferCache().hasBuiltBufferByLayer(layer))
+            {
+                chunkRenderData.getBuiltBufferCache().getBuiltBufferByLayer(layer).close();
+            }
+            if (this.builderCache.hasBufferByLayer(layer))
+            {
+                BufferBuilderPatch builder = this.builderCache.getBufferByLayer(layer, allocators);
+                built = builder.endNullable();
+
+                if (built == null)
+                {
+                    //Litematica.logger.error("postRenderBlocks(): [VBO] for layer [{}] -- Failed to Build", ChunkRenderLayers.getFriendlyName(layer));
+                    throw new RuntimeException("failed to build BuiltBuffer");
+                }
+                else
+                {
+                    //Litematica.logger.warn("postRenderBlocks(): [VBO] for layer [{}] - Built Buffer built", ChunkRenderLayers.getFriendlyName(layer));
+                    chunkRenderData.getBuiltBufferCache().storeBuiltBufferByLayer(layer, built);
+                }
+            }
+            else
+            {
+                //Litematica.logger.error("postRenderBlocks(): [VBO] for layer [{}] -- Builder not initialized", ChunkRenderLayers.getFriendlyName(layer));
+                throw new RuntimeException("BufferBuilder has not been initialized");
+            }
+
+            if (layer == RenderLayer.getTranslucent())
+            {
+                try
+                {
+                    this.resortRenderBlocks(layer, x, y, z, chunkRenderData, allocators);
+                }
+                catch (Exception e)
+                {
+                    throw new RuntimeException(e.toString());
+                }
+            }
+
+            // Upload Later
+            //this.uploadBuiltBuffer(built, this.getBlocksVertexBufferByLayer(layer));
+            //built.close();
+            //Litematica.logger.warn("postRenderBlocks(): [VBO] for layer [{}] -- Built Buffer UPLOADED", ChunkRenderLayers.getFriendlyName(layer));
+        }
+
+        //buffer.end();
+        //Litematica.logger.warn("postRenderBlocks(): [VBO] for layer [{}] - DONE", ChunkRenderLayers.getFriendlyName(layer));
+    }
+
+    private void postRenderOverlay(OverlayRenderType type, float x, float y, float z, @Nonnull ChunkRenderDataSchematic chunkRenderData, @Nonnull BufferAllocatorCache allocators)
+            throws RuntimeException
+    {
+        //Litematica.logger.warn("postRenderOverlay(): [VBO] for overlay type [{}] - INIT", type.getDrawMode().name());
+
+        RenderSystem.applyModelViewMatrix();
+        //if (type == OverlayRenderType.QUAD && chunkRenderData.isOverlayTypeEmpty(type) == false)
+        if (chunkRenderData.isOverlayTypeEmpty(type) == false)
+        {
+            BuiltBuffer built;
+
+            if (chunkRenderData.getBuiltBufferCache().hasBuiltBufferByType(type))
+            {
+                chunkRenderData.getBuiltBufferCache().getBuiltBufferByType(type).close();
+            }
+            if (this.builderCache.hasBufferByOverlay(type))
+            {
+                BufferBuilderPatch builder = this.builderCache.getBufferByOverlay(type, allocators);
+                built = builder.endNullable();
+
+                if (built == null)
+                {
+                    //Litematica.logger.error("postRenderOverlay(): [VBO] for overlay type [{}] -- Failed to Build", type.getDrawMode().name());
+                    throw new RuntimeException("failed to build BuiltBuffer");
+                }
+                else
+                {
+                    //Litematica.logger.warn("postRenderOverlay(): [VBO] for overlay type [{}] - Built Buffer built", type.getDrawMode().name());
+                    chunkRenderData.getBuiltBufferCache().storeBuiltBufferByType(type, built);
+                }
+            }
+            else
+            {
+                //Litematica.logger.error("postRenderOverlay(): [VBO] for overlay type [{}] -- Builder not initialized", type.getDrawMode().name());
+                throw new RuntimeException("BufferBuilder has not been initialized");
+            }
+
+            // FIXME --> Sorting the Overlay QUAD causes visual display issues
+            /**/
+            if (type.isTranslucent())
+            {
+                try
+                {
+                    this.resortRenderOverlay(type, x, y, z, chunkRenderData, allocators);
+                }
+                catch (Exception e)
+                {
+                    throw new RuntimeException(e.toString());
+                }
+            }
+             /**/
+
+            // Upload later
+            //this.uploadBuiltBuffer(built, this.getOverlayVertexBuffer(type));
+            //built.close();
+            //Litematica.logger.warn("postRenderOverlay(): [VBO] for overlay type [{}] -- Built Buffer UPLOADED", type.getDrawMode().name());
+        }
+
+        //buffer.end();
+        //Litematica.logger.warn("postRenderOverlay(): [VBO] for overlay type [{}] - DONE", type.getDrawMode().name());
+    }
+
+    protected VertexSorter createVertexSorter(float x, float y, float z)
+    {
+        return VertexSorter.byDistance(x, y, z);
+    }
+
+    protected VertexSorter createVertexSorter(Vec3d pos)
+    {
+        return VertexSorter.byDistance((float) pos.getX(), (float) pos.getY(), (float) pos.getZ());
+    }
+
+    protected VertexSorter createVertexSorter(Vec3d pos, BlockPos origin)
+    {
+        return VertexSorter.byDistance((float)(pos.x - (double)origin.getX()), (float)(pos.y - (double) origin.getY()), (float)(pos.z - (double) origin.getZ()));
+    }
+
+    protected VertexSorter createVertexSorter(Camera camera)
+    {
+        Vec3d vec3d = camera.getPos();
+
+        return this.createVertexSorter(vec3d, this.getOrigin());
+    }
+
+    protected void uploadSortingState(@Nonnull BufferAllocator.CloseableBuffer result, @Nonnull VertexBuffer vertexBuffer)
+    {
+        //Litematica.logger.warn("uploadSortingState() [VBO] - INIT");
+
+        if (vertexBuffer.isClosed())
+        {
+            Litematica.logger.error("uploadSortingState() [VBO] - Error, vertexBuffer is closed/Null");
+            result.close();
+            return;
+        }
+
+        //Litematica.logger.warn("uploadSortingState() [VBO] - UPLOAD");
+
+        vertexBuffer.bind();
+        vertexBuffer.uploadIndexBuffer(result);
+        VertexBuffer.unbind();
+
+        //result.close();
+        //Litematica.logger.warn("uploadSortingState() [VBO] - END");
+    }
+
+    private void resortRenderBlocks(RenderLayer layer, float x, float y, float z, @Nonnull ChunkRenderDataSchematic chunkRenderData, @Nonnull BufferAllocatorCache allocators)
+            throws InterruptedException
+    {
+        //Litematica.logger.warn("resortRenderBlocks(): [VBO] for layer [{}] - INIT", ChunkRenderLayers.getFriendlyName(layer));
+
+        //if (layer == RenderLayer.getTranslucent() && chunkRenderData.isBlockLayerEmpty(layer) == false)
+        if (chunkRenderData.isBlockLayerEmpty(layer) == false)
+        {
+            BufferAllocator allocator = allocators.getBufferByLayer(layer);
+            BuiltBuffer built;
+
+            if (allocator == null)
+            {
+                //Litematica.logger.error("resortRenderBlocks(): [VBO] for layer [{}] - INVALID BUFFERS", ChunkRenderLayers.getFriendlyName(layer));
+                throw new InterruptedException("Buffers are invalid");
+            }
+            if (chunkRenderData.getBuiltBufferCache().hasBuiltBufferByLayer(layer) == false)
+            {
+                //Litematica.logger.error("resortRenderBlocks(): [VBO] for layer [{}] - Buffer not built", ChunkRenderLayers.getFriendlyName(layer));
+                throw new InterruptedException("Buffers are invalid");
+            }
+
+            built = chunkRenderData.getBuiltBufferCache().getBuiltBufferByLayer(layer);
+
+            if (built == null)
+            {
+                //Litematica.logger.error("resortRenderBlocks() [VBO] for layer [{}] - Buffer not built", ChunkRenderLayers.getFriendlyName(layer));
+                throw new InterruptedException("Buffers are invalid");
+            }
+
+            //Litematica.logger.warn("resortRenderBlocks(): [VBO] for layer [{}] - Built Buffer built", ChunkRenderLayers.getFriendlyName(layer));
+
+            if (layer == RenderLayer.getTranslucent())
+            {
+                BuiltBuffer.SortState sortingData;
+                VertexSorter sorter = VertexSorter.byDistance(x, y, z);
+
+                if (chunkRenderData.hasTransparentSortingData() == false)
+                {
+                    sortingData = built.sortQuads(allocator, sorter);
+
+                    if (sortingData == null)
+                    {
+                        //Litematica.logger.error("resortRenderBlocks() [VBO] for layer [{}] - Failed to build Sort State", ChunkRenderLayers.getFriendlyName(layer));
+                        throw new InterruptedException("Sort State failure");
+                    }
+
+                    //Litematica.logger.warn("resortRenderBlocks(): [VBO] for layer [{}] - Sorting State built", ChunkRenderLayers.getFriendlyName(layer));
+                    chunkRenderData.setTransparentSortingData(sortingData);
+                }
+                else
+                {
+                    sortingData = chunkRenderData.getTransparentSortingData();
+                }
+
+                if (sortingData == null)
+                {
+                    //Litematica.logger.error("resortRenderBlocks() [VBO] for layer [{}] - Failed to get Sorting Data", ChunkRenderLayers.getFriendlyName(layer));
+                    throw new InterruptedException("Sorting Data failure");
+                }
+
+                // Upload Later
+                /*
+                BufferAllocator.CloseableBuffer result = sortingData.sortAndStore(allocator, sorter);
+
+                if (result == null)
+                {
+                    Litematica.logger.error("resortRenderBlocks() [VBO] for layer [{}] - Failed to build Sorting Results", ChunkRenderLayers.getFriendlyName(layer));
+                    throw new InterruptedException("Sorting result failure");
+                }
+
+                //this.uploadSortingState(result, this.getBlocksVertexBufferByLayer(layer));
+                Litematica.logger.warn("resortRenderBlocks() [VBO] for layer [{}] - Translucent Sort State UPLOADED", ChunkRenderLayers.getFriendlyName(layer));
+                result.close();
+                 */
+            }
+            else
+            {
+                //Litematica.logger.error("resortRenderBlocks() [VBO] for layer [{}] - Not the Translucent layer", ChunkRenderLayers.getFriendlyName(layer));
+                throw new InterruptedException("layer is not translucent");
+            }
+        }
+
+        //buffer.end();
+        //Litematica.logger.warn("resortRenderBlocks(): [VBO] for layer [{}] - DONE", layer.getDrawMode().name());
+    }
+
+    /**
+     * This should never be used since Overlay.QUADS is not RenderLayer Transparent
+     */
+    private void resortRenderOverlay(OverlayRenderType type, float x, float y, float z, @Nonnull ChunkRenderDataSchematic chunkRenderData, @Nonnull BufferAllocatorCache allocators)
+            throws InterruptedException
+    {
+        //Litematica.logger.warn("resortRenderOverlay(): [VBO] for overlay type [{}] - INIT", type.getDrawMode().name());
+
+        RenderSystem.applyModelViewMatrix();
+
+        //if (type == OverlayRenderType.QUAD && chunkRenderData.isOverlayTypeEmpty(type) == false)
+        if (chunkRenderData.isOverlayTypeEmpty(type) == false)
+        {
+            BufferAllocator allocator = allocators.getBufferByOverlay(type);
+            BuiltBuffer built;
+
+            if (allocator == null)
+            {
+                //Litematica.logger.error("resortRenderOverlay(): [VBO] for overlay type [{}] - INVALID BUFFERS", type.getDrawMode().name());
+                throw new InterruptedException("Buffers are invalid");
+            }
+            if (chunkRenderData.getBuiltBufferCache().hasBuiltBufferByType(type) == false)
+            {
+                //Litematica.logger.error("resortRenderOverlay(): [VBO] for overlay type [{}] - Buffer not built", type.getDrawMode().name());
+                throw new InterruptedException("Buffers are invalid");
+            }
+
+            built = chunkRenderData.getBuiltBufferCache().getBuiltBufferByType(type);
+
+            if (built == null)
+            {
+                //Litematica.logger.error("resortRenderOverlay() [VBO] for overlay type [{}] - Buffer not built", type.getDrawMode().name());
+                throw new InterruptedException("Buffers are invalid");
+            }
+
+            //Litematica.logger.warn("resortRenderOverlay(): [VBO] for overlay type [{}] - Built Buffer built", type.getDrawMode().name());
+
+            if (type.isTranslucent())
+            {
+                BuiltBuffer.SortState sortingData;
+                VertexSorter sorter = VertexSorter.byDistance(x, y, z);
+
+                if (chunkRenderData.hasTransparentSortingDataForOverlay(type) == false)
+                {
+                    sortingData = built.sortQuads(allocator, sorter);
+
+                    if (sortingData == null)
+                    {
+                        //Litematica.logger.error("resortRenderOverlay() [VBO] for overlay type [{}] - Failed to build Sort State", type.getDrawMode().name());
+                        throw new InterruptedException("Sort State failure");
+                    }
+
+                    //Litematica.logger.warn("resortRenderOverlay(): [VBO] for overlay type [{}] - Sorting State built", type.getDrawMode().name());
+                    chunkRenderData.setTransparentSortingDataForOverlay(type, sortingData);
+                }
+                else
+                {
+                    sortingData = chunkRenderData.getTransparentSortingDataForOverlay(type);
+                }
+
+                if (sortingData == null)
+                {
+                    //Litematica.logger.error("resortRenderOverlay() [VBO] for overlay type [{}] - Failed to get Sorting Data", type.getDrawMode().name());
+                    throw new InterruptedException("Sorting Data failure");
+                }
+
+                // Upload later
+                /*
+                BufferAllocator.CloseableBuffer result = sortingData.sortAndStore(allocator, sorter);
+
+                if (result == null)
+                {
+                    Litematica.logger.error("resortRenderOverlay() [VBO] for overlay type [{}] - Failed to build Sorting Results", type.getDrawMode().name());
+                    throw new InterruptedException("Sorting result failure");
+                }
+
+                this.uploadSortingState(result, this.getOverlayVertexBuffer(type));
+                //Litematica.logger.warn("resortRenderOverlay() [VBO] for overlay type [{}] - Translucent Sort State UPLOADED", type.getDrawMode().name());
+                result.close();
+                 */
+            }
+            else
+            {
+                //Litematica.logger.error("resortRenderOverlay() [VBO] for overlay type [{}] - Not the Translucent layer", type.getDrawMode().name());
+                throw new InterruptedException("layer is not translucent");
+            }
+        }
+
+        //buffer.end();
+        //Litematica.logger.warn("resortRenderOverlay(): [VBO] for overlay type [{}] - DONE", type.getDrawMode().name());
+    }
+
+    protected ChunkRenderTaskSchematic makeCompileTaskChunkSchematic(Supplier<Vec3d> cameraPosSupplier)
     {
         this.chunkRenderLock.lock();
         ChunkRenderTaskSchematic generator = null;
@@ -801,7 +1209,7 @@ public class ChunkRendererSchematicVbo
     }
 
     @Nullable
-    public ChunkRenderTaskSchematic makeCompileTaskTransparencySchematic(Supplier<Vec3d> cameraPosSupplier)
+    protected ChunkRenderTaskSchematic makeCompileTaskTransparencySchematic(Supplier<Vec3d> cameraPosSupplier)
     {
         this.chunkRenderLock.lock();
 
@@ -846,19 +1254,27 @@ public class ChunkRendererSchematicVbo
         }
     }
 
-    public ReentrantLock getLockCompileTask()
+    protected ReentrantLock getLockCompileTask()
     {
         return this.chunkRenderLock;
     }
 
-    public void clear()
+    protected void clear()
     {
         this.finishCompileTask();
+        /*
+        if (this.chunkRenderData != null && !this.chunkRenderData.equals(ChunkRenderDataSchematic.EMPTY))
+        {
+            this.chunkRenderData.closeBuiltBufferCache();
+        }
+         */
+        //this.allocatorCache.closeAll();
+        this.builderCache.clearAll();
         this.chunkRenderData = ChunkRenderDataSchematic.EMPTY;
         //this.needsUpdate = true;
     }
 
-    public void setNeedsUpdate(boolean immediate)
+    protected void setNeedsUpdate(boolean immediate)
     {
         if (this.needsUpdate)
         {
@@ -869,18 +1285,18 @@ public class ChunkRendererSchematicVbo
         this.needsImmediateUpdate = immediate;
     }
 
-    public void clearNeedsUpdate()
+    protected void clearNeedsUpdate()
     {
         this.needsUpdate = false;
         this.needsImmediateUpdate = false;
     }
 
-    public boolean needsUpdate()
+    protected boolean needsUpdate()
     {
         return this.needsUpdate;
     }
 
-    public boolean needsImmediateUpdate()
+    protected boolean needsImmediateUpdate()
     {
         return this.needsUpdate && this.needsImmediateUpdate;
     }
@@ -905,21 +1321,43 @@ public class ChunkRendererSchematicVbo
         }
     }
 
+    @Override
+    public void close() throws Exception
+    {
+        this.deleteGlResources();
+    }
+
     public enum OverlayRenderType
     {
-        OUTLINE     (VertexFormat.DrawMode.DEBUG_LINES),
-        QUAD        (VertexFormat.DrawMode.QUADS);
+        OUTLINE     (VertexFormat.DrawMode.DEBUG_LINES, RenderLayer.DEFAULT_BUFFER_SIZE, VertexFormats.POSITION_COLOR, false, false),
+        QUAD        (VertexFormat.DrawMode.QUADS,       RenderLayer.DEFAULT_BUFFER_SIZE, VertexFormats.POSITION_COLOR, false, true);
 
         private final VertexFormat.DrawMode drawMode;
+        private final VertexFormat vertexFormat;
+        private final int bufferSize;
+        private final boolean hasCrumbling;
+        private final boolean translucent;
 
-        OverlayRenderType(VertexFormat.DrawMode drawMode)
+        OverlayRenderType(VertexFormat.DrawMode drawMode, int bufferSize, VertexFormat format, boolean crumbling, boolean translucent)
         {
             this.drawMode = drawMode;
+            this.bufferSize = bufferSize;
+            this.vertexFormat = format;
+            this.hasCrumbling = crumbling;
+            this.translucent = translucent;
         }
 
         public VertexFormat.DrawMode getDrawMode()
         {
             return this.drawMode;
         }
+
+        public int getExpectedBufferSize() { return this.bufferSize; }
+
+        public VertexFormat getVertexFormat() { return this.vertexFormat; }
+
+        public boolean hasCrumbling() { return this.hasCrumbling; }
+
+        public boolean isTranslucent() { return this.translucent; }
     }
 }
