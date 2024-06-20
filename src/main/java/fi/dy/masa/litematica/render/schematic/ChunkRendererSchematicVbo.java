@@ -973,7 +973,7 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
     }
 
     private void resortRenderBlocks(RenderLayer layer, float x, float y, float z, @Nonnull ChunkRenderDataSchematic chunkRenderData, @Nonnull BufferAllocatorCache allocators)
-            throws InterruptedException\
+            throws InterruptedException
     {
         //Litematica.logger.warn("resortRenderBlocks(): [VBO] for layer [{}] - INIT", ChunkRenderLayers.getFriendlyName(layer));
 
