@@ -47,6 +47,17 @@ public class LitematicaRenderer
         return this.worldRenderer;
     }
 
+    public WorldRendererSchematic resetWorldRenderer()
+    {
+        if (this.worldRenderer != null)
+        {
+            this.worldRenderer.setWorldAndLoadRenderers(null);
+            this.worldRenderer = null;
+        }
+
+        return this.getWorldRenderer();
+    }
+
     public void loadRenderers()
     {
         this.getWorldRenderer().loadRenderers();

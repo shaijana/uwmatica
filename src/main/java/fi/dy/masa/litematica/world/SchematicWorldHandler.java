@@ -108,11 +108,12 @@ public class SchematicWorldHandler
         {
             Litematica.debugLog("Removing the schematic world...");
             this.world = null;
+            LitematicaRenderer.getInstance().onSchematicWorldChanged(null);
         }
         else
         {
             Litematica.debugLog("(Re-)creating the schematic world...");
-            @Nullable WorldRendererSchematic worldRenderer = this.world != null ? this.world.worldRenderer : LitematicaRenderer.getInstance().getWorldRenderer();
+            @Nullable WorldRendererSchematic worldRenderer = this.world != null ? this.world.worldRenderer : LitematicaRenderer.getInstance().resetWorldRenderer();
             // Note: The dimension used here must have no skylight, because the custom Chunks don't have those arrays
             this.world = createSchematicWorld(worldRenderer);
             Litematica.debugLog("Schematic world (re-)created: {}", this.world);

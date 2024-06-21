@@ -60,7 +60,6 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
     protected ChunkCacheSchematic schematicWorldView;
     protected ChunkCacheSchematic clientWorldView;
 
-    //private final BufferAllocatorCache allocatorCache;
     private final BufferBuilderCache builderCache;
 
     protected AtomicReference<ChunkRenderTaskSchematic> compileTask = new AtomicReference<>(null);
@@ -77,7 +76,6 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
         this.vertexBufferOverlay = new IdentityHashMap<>();
         this.position = new BlockPos.Mutable();
         this.chunkRelativePos = new BlockPos.Mutable();
-        //this.allocatorCache = new BufferAllocatorCache();
         this.builderCache = new BufferBuilderCache();
     }
 
@@ -106,13 +104,6 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
     {
         return chunkRenderData.get();
     }
-
-    /*
-    protected BufferAllocatorCache getAllocatorCache()
-    {
-        return this.allocatorCache;
-    }
-     */
 
     protected BufferBuilderCache getBuilderCache()
     {
@@ -144,8 +135,6 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
 
     protected void setPosition(int x, int y, int z)
     {
-        //Litematica.logger.error("setPosition() [VBO] pos [{}] --> [{} {} {}]", this.position.toShortString(), x, y, z);
-
         if (x != this.position.getX() ||
             y != this.position.getY() ||
             z != this.position.getZ())
@@ -168,8 +157,6 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
 
     protected void deleteGlResources()
     {
-        //Litematica.debugLog("deleteGlResources(): [VBO] for origin [{}]", this.position.toShortString());
-
         this.clear();
         this.closeAllVertexBuffers();
         //this.world = null;
@@ -242,15 +229,9 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
         ChunkRenderDataSchematic data = new ChunkRenderDataSchematic();
         task.setChunkRenderData(data);
 
-        //this.allocatorCache.clearAll();
-        this.builderCache.clearAll();
-        //data.closeBuiltBufferCache();
-
         //Litematica.debugLog("rebuildChunk() [VBO]: bootstrap/clearing all render buffers for chunk origin [{}]", this.position.toShortString());
 
-        //this.allocatorCache.clearAll();
         this.builderCache.clearAll();
-        //data.closeBuiltBufferCache();
 
         Set<BlockEntity> tileEntities = new HashSet<>();
         BlockPos posChunk = this.position;
@@ -347,7 +328,7 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
                             }
                             catch (Exception e)
                             {
-                                Litematica.logger.error("rebuildChunk() [VBO] failed to postRenderBlocks() for overlay type [{}] --> {}", type.getDrawMode().name(), e.toString());
+                                Litematica.logger.error("rebuildChunk() [VBO] failed to postRenderOverlay() for overlay type [{}] --> {}", type.getDrawMode().name(), e.toString());
                             }
                         }
                     }
@@ -781,7 +762,10 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
 
     private BufferBuilderPatch preRenderOverlay(OverlayRenderType type, @Nonnull BufferAllocatorCache allocators)
     {
-        //Litematica.logger.warn("postRenderBlocks(): [VBO] for layer [{}] - INIT", ChunkRenderLayers.getFriendlyName(layer));
+        //Litematica.logger.warn("preRenderOverlay(): [VBO] for overlay type [{}] - INIT", type.getDrawMode().name());
+
+        this.existingOverlays.add(type);
+        this.hasOverlay = true;
 
         RenderSystem.setShader(GameRenderer::getPositionColorProgram);
         return this.builderCache.getBufferByOverlay(type, allocators);

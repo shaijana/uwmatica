@@ -24,6 +24,7 @@ import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.util.BufferAllocator;
 import net.minecraft.util.math.Vec3d;
 import fi.dy.masa.litematica.Litematica;
+import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.render.schematic.ChunkRendererSchematicVbo.OverlayRenderType;
 
 public class ChunkRenderDispatcherLitematica
@@ -42,19 +43,17 @@ public class ChunkRenderDispatcherLitematica
 
     public ChunkRenderDispatcherLitematica()
     {
-        // TODO/FIXME 1.17
-        int threadLimitMemory = Math.max(1, (int)((double)Runtime.getRuntime().maxMemory() * 0.3D) / 10485760);
+        int threadLimitMemory = Math.max(1, (int) ((double) Runtime.getRuntime().maxMemory() * 0.3D) / BufferAllocatorCache.EXPECTED_TOTAL_SIZE);
         int threadLimitCPU = Math.max(1, MathHelper.clamp(Runtime.getRuntime().availableProcessors(), 1, threadLimitMemory / 5));
-
-        this.countRenderAllocators = 2;
+        int maxThreads = Math.max(1, Math.min((Configs.Visuals.RENDER_SCHEMATIC_MAX_THREADS.getIntegerValue()), threadLimitCPU));
+        int maxCache = Math.max(1, Math.min((Configs.Visuals.RENDER_SCHEMATIC_MAX_THREADS.getIntegerValue() - 1), threadLimitMemory));
         this.cameraPos = Vec3d.ZERO;
 
-
-        if (threadLimitCPU > 1)
+        if (maxThreads > 1)
         {
-            LOGGER.info("Creating {} render threads", threadLimitCPU);
+            LOGGER.info("Creating {} rendering threads", maxThreads);
 
-            for (int i = 0; i < threadLimitCPU; ++i)
+            for (int i = 0; i < maxThreads; ++i)
             {
                 ChunkRenderWorkerLitematica worker = new ChunkRenderWorkerLitematica(this);
                 Thread thread = THREAD_FACTORY.newThread(worker);
@@ -64,14 +63,35 @@ public class ChunkRenderDispatcherLitematica
             }
         }
 
-        LOGGER.info("Using {} total BufferAllocator caches", this.countRenderAllocators + 1);
+        this.queueFreeRenderAllocators = Queues.newArrayBlockingQueue(maxCache);
 
-        this.queueFreeRenderAllocators = Queues.newArrayBlockingQueue(this.countRenderAllocators);
-
-        for (int i = 0; i < this.countRenderAllocators; ++i)
+        for (int i = 0; i < maxCache; ++i)
         {
-            this.queueFreeRenderAllocators.add(new BufferAllocatorCache());
+            try
+            {
+                this.queueFreeRenderAllocators.add(new BufferAllocatorCache());
+            }
+            catch (OutOfMemoryError e)
+            {
+                LOGGER.warn("Only able to allocate {}/{} BufferAllocator caches", this.queueFreeRenderAllocators.size(), i);
+                int adjusted = Math.min(this.queueFreeRenderAllocators.size() * 2 / 3, this.queueFreeRenderAllocators.size() - 1);
+
+                for (int j = 0; j < adjusted; ++j)
+                {
+                    try
+                    {
+                        BufferAllocatorCache r = this.queueFreeRenderAllocators.take();
+                        r.close();
+                    }
+                    catch (Exception ignored) { }
+
+                    maxCache = adjusted;
+                }
+            }
         }
+
+        this.countRenderAllocators = maxCache;
+        LOGGER.info("Using {} max total BufferAllocator caches", this.countRenderAllocators + 1);
 
         this.renderWorker = new ChunkRenderWorkerLitematica(this, new BufferAllocatorCache());
     }
@@ -89,7 +109,7 @@ public class ChunkRenderDispatcherLitematica
     protected String getDebugInfo()
     {
         //return this.listWorkerThreads.isEmpty() ? String.format("pC: %03d, single-threaded", this.queueChunkUpdates.size()) : String.format("pC: %03d, pU: %1d, aB: %1d", this.queueChunkUpdates.size(), this.queueChunkUploads.size(), this.queueFreeRenderAllocators.size());
-        return String.format("pC: %03d, pU: %1d, aB: %1d", this.queueChunkUpdates.size(), this.queueChunkUploads.size(), this.queueFreeRenderAllocators.size());
+        return String.format("pC: %03d, pU: %03d, aB: %02d", this.queueChunkUpdates.size(), this.queueChunkUploads.size(), this.queueFreeRenderAllocators.size());
     }
 
     protected boolean runChunkUploads(long finishTimeNano)

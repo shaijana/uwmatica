@@ -137,7 +137,9 @@ public class WorldRendererSchematic
         }
         else
         {
+            this.chunksToUpdate.forEach(ChunkRendererSchematicVbo::deleteGlResources);
             this.chunksToUpdate.clear();
+            this.renderInfos.forEach(ChunkRendererSchematicVbo::deleteGlResources);
             this.renderInfos.clear();
 
             if (this.chunkRendererDispatcher != null)
