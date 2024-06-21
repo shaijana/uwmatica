@@ -2,16 +2,14 @@ package fi.dy.masa.litematica.render.schematic;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
 import net.minecraft.client.render.BuiltBuffer;
 import net.minecraft.client.render.RenderLayer;
 
 public class BufferBuilderCache implements AutoCloseable
 {
     private final ConcurrentHashMap<RenderLayer, BufferBuilderPatch> blockBufferBuilders = new ConcurrentHashMap<>();
-    private final Map<ChunkRendererSchematicVbo.OverlayRenderType, BufferBuilderPatch> overlayBufferBuilders = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<ChunkRendererSchematicVbo.OverlayRenderType, BufferBuilderPatch> overlayBufferBuilders = new ConcurrentHashMap<>();
 
     protected BufferBuilderCache() { }
 
@@ -32,26 +30,31 @@ public class BufferBuilderCache implements AutoCloseable
 
     protected BufferBuilderPatch getBufferByOverlay(ChunkRendererSchematicVbo.OverlayRenderType type, @Nonnull BufferAllocatorCache allocators)
     {
-        return overlayBufferBuilders.computeIfAbsent(type,(key) -> new BufferBuilderPatch(allocators.getBufferByOverlay(key), key.getDrawMode(), key.getVertexFormat()));
+        return overlayBufferBuilders.computeIfAbsent(type, (key) -> new BufferBuilderPatch(allocators.getBufferByOverlay(key), key.getDrawMode(), key.getVertexFormat()));
     }
 
     protected void clearAll()
     {
         ArrayList<BufferBuilderPatch> buffers;
-        synchronized (blockBufferBuilders) {
+
+        synchronized (blockBufferBuilders)
+        {
             buffers = new ArrayList<>(blockBufferBuilders.values());
             blockBufferBuilders.clear();
         }
-        synchronized (overlayBufferBuilders) {
+        synchronized (overlayBufferBuilders)
+        {
             buffers.addAll(overlayBufferBuilders.values());
             overlayBufferBuilders.clear();
         }
-        for(BufferBuilderPatch buffer:buffers) {
-            try{
+        for (BufferBuilderPatch buffer:buffers)
+        {
+            try {
                 BuiltBuffer built = buffer.endNullable();
-                if(built!=null)
+                if (built != null)
                     built.close();
-            } catch (Exception ignored) {}
+            }
+            catch (Exception ignored) {}
         }
     }
 

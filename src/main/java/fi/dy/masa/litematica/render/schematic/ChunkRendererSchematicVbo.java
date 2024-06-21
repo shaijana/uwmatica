@@ -653,7 +653,19 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
                     if (posTmp.getX() == pos.getX() && posTmp.getY() == pos.getY() && posTmp.getZ() == pos.getZ())
                     {
                         //System.out.printf("plop 2 index: %d, ind: %d, pos: %s, off: %s\n", index, ind, pos, posTmp);
-                        RenderUtils.drawBlockBoxEdgeBatchedLines(this.getChunkRelativePosition(pos), axis, corner, this.overlayColor, bufferOverlayOutlines);
+                        try
+                        {
+                            RenderUtils.drawBlockBoxEdgeBatchedLines(this.getChunkRelativePosition(pos), axis, corner, this.overlayColor, bufferOverlayOutlines);
+                        }
+                        catch (IllegalStateException err)
+                        {
+                            // TODO: This is absolutely awful. Basically  some times the render buffer is closed
+                            //  while the this processing is happening but if this happens the work the thread was
+                            //  doing is going to be thrown away anyway so we just abort & no harm done. Really we
+                            //  should be using cancelable futures & coroutines to do this correctly but that is a
+                            //  task for not 1:30am when I have work tomorrow.
+                            return;
+                        }
                         lines++;
                     }
                 }
