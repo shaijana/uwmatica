@@ -375,8 +375,7 @@ public class ChunkRenderDispatcherLitematica
 
         VertexBuffer vertexBuffer = renderChunk.getOverlayVertexBuffer(type);
 
-        /**/
-        if (type.isTranslucent())
+        if (type.isTranslucent() && Configs.Visuals.SCHEMATIC_OVERLAY_ENABLE_RESORTING.getBooleanValue())
         {
             //LOGGER.warn("uploadVertexBufferByType() [Dispatch] for overlay type [{}] - Translucent START", type.getDrawMode().name());
             BuiltBuffer.SortState sorting = compiledChunk.getTransparentSortingDataForOverlay(type);
@@ -406,8 +405,6 @@ public class ChunkRenderDispatcherLitematica
                 //LOGGER.warn("uploadVertexBufferByType() [Dispatch] for overlay type [{}] - Translucent Sort State UPLOADED", type.getDrawMode().name());
             }
         }
-      
-        /**/
 
         if (resortOnly == false)
         {

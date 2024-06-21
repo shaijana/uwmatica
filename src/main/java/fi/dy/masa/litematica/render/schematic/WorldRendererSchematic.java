@@ -565,8 +565,6 @@ public class WorldRendererSchematic
 
     protected void renderBlockOverlay(OverlayRenderType type, Matrix4f matrix4f, Camera camera, Matrix4f projMatrix)
     {
-        //Litematica.logger.warn("renderBlockOverlay() [World] for overlay type [{}]", type.getDrawMode().name());
-
         RenderLayer renderLayer = RenderLayer.getTranslucent();
         renderLayer.startDrawing();
 
@@ -614,19 +612,10 @@ public class WorldRendererSchematic
                     VertexBuffer buffer = renderer.getOverlayVertexBuffer(type);
                     BlockPos chunkOrigin = renderer.getOrigin();
 
-                    if (buffer == null || buffer.isClosed())
+                    if (buffer == null || buffer.isClosed() || renderer.getChunkRenderData().getBuiltBufferCache().hasBuiltBufferByType(type) == false)
                     {
-                        //Litematica.logger.error("renderBlockOverlay() [Renderer]: vertexBuffer for overlay type [{}] is null/closed, skipping draw", type.getDrawMode().name());
                         continue;
                     }
-
-                    if (renderer.getChunkRenderData().getBuiltBufferCache().hasBuiltBufferByType(type) == false)
-                    {
-                        //Litematica.logger.error("renderBlockOverlay() [Renderer]: buffer for overlay type [{}] is not built, skipping draw", type.getDrawMode().name());
-                        continue;
-                    }
-
-                    //Litematica.logger.warn("renderBlockOverlay() [Renderer] --> bind / draw / unbind for layer [{}] --> with overlay type [{}]", ChunkRenderLayers.getFriendlyName(renderLayer), type.getDrawMode().name());
 
                     matrix4fStack.pushMatrix();
                     matrix4fStack.translate((float) (chunkOrigin.getX() - x), (float) (chunkOrigin.getY() - y), (float) (chunkOrigin.getZ() - z));
@@ -649,8 +638,6 @@ public class WorldRendererSchematic
 
     public boolean renderBlock(BlockRenderView world, BlockState state, BlockPos pos, MatrixStack matrixStack, BufferBuilder bufferBuilderIn)
     {
-        //Litematica.logger.warn("renderBlock(): [World] [{}] --> [{}]", pos.toShortString(), state.toString());
-
         try
         {
             BlockRenderType renderType = state.getRenderType();
@@ -663,12 +650,6 @@ public class WorldRendererSchematic
             {
                 return renderType == BlockRenderType.MODEL &&
                        this.blockModelRenderer.renderModel(world, this.getModelForState(state), state, pos, matrixStack, bufferBuilderIn, state.getRenderingSeed(pos));
-
-                /*
-                this.blockRenderManager.renderBlock(state, pos, world, matrixStack, bufferBuilderIn, false, Random.create(state.getRenderingSeed(pos)));
-
-                return renderType == BlockRenderType.MODEL;
-                 */
             }
         }
         catch (Throwable throwable)
