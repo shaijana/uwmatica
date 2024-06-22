@@ -9,6 +9,7 @@ import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket;
 import net.minecraft.network.packet.s2c.play.UnloadChunkS2CPacket;
+import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.util.SchematicWorldRefresher;
@@ -53,11 +54,15 @@ public abstract class MixinClientPlayNetworkHandler
         }
     }
 
+    /**
+     * They keep moving where the effective onCustomPayload handling is... keeping them both
+     */
     @Inject(method = "onCustomPayload", at = @At("HEAD"))
     private void litematica_onCustomPayload(CustomPayload payload, CallbackInfo ci)
     {
         if (payload.getId().id().equals(DataManager.CARPET_HELLO))
         {
+            Litematica.debugLog("MixinClientPlayNetworkHandler#litematica_onCustomPayload(): received carpet hello packet");
             DataManager.setIsCarpetServer(true);
         }
     }
