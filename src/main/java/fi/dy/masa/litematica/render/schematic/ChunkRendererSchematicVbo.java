@@ -499,7 +499,11 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
                 }
                 else
                 {
-                    fi.dy.masa.malilib.render.RenderUtils.drawBlockBoundingBoxSidesBatchedQuads(relPos, this.overlayColor, 0, bufferOverlayQuads);
+                    try
+                    {
+                        fi.dy.masa.malilib.render.RenderUtils.drawBlockBoundingBoxSidesBatchedQuads(relPos, this.overlayColor, 0, bufferOverlayQuads);
+                    }
+                    catch (Exception ignored) { }
                 }
             }
         }
@@ -573,7 +577,11 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
                 }
                 else
                 {
-                    fi.dy.masa.malilib.render.RenderUtils.drawBlockBoundingBoxOutlinesBatchedLines(relPos, this.overlayColor, 0, bufferOverlayOutlines);
+                    try
+                    {
+                        fi.dy.masa.malilib.render.RenderUtils.drawBlockBoundingBoxOutlinesBatchedLines(relPos, this.overlayColor, 0, bufferOverlayOutlines);
+                    }
+                    catch (Exception ignored) { }
                 }
             }
         }
