@@ -162,9 +162,24 @@ public class ChunkRenderDataSchematic implements AutoCloseable
         this.timeBuilt = time;
     }
 
+    protected void clearAll()
+    {
+        this.closeBuiltBufferCache();
+        this.timeBuilt = 0;
+        this.overlaySortingData.clear();
+        this.transparentSortingData = null;
+        this.blockLayersUsed.clear();
+        this.overlayLayersUsed.clear();
+        this.blockLayersStarted.clear();
+        this.overlayLayersStarted.clear();
+        this.blockEntities.clear();
+        this.overlayEmpty = true;
+        this.empty = true;
+    }
+
     @Override
     public void close() throws Exception
     {
-        this.closeBuiltBufferCache();
+        this.clearAll();
     }
 }

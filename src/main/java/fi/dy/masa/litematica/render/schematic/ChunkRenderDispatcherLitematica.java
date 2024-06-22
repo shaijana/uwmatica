@@ -39,6 +39,7 @@ public class ChunkRenderDispatcherLitematica
     private final Queue<ChunkRenderDispatcherLitematica.PendingUpload> queueChunkUploads = Queues.newPriorityQueue();
     private final ChunkRenderWorkerLitematica renderWorker;
     private final int countRenderAllocators;
+    private final int countRenderThreads;
     private Vec3d cameraPos;
 
     public ChunkRenderDispatcherLitematica()
@@ -63,6 +64,7 @@ public class ChunkRenderDispatcherLitematica
             }
         }
 
+        this.countRenderThreads = maxThreads;
         this.queueFreeRenderAllocators = Queues.newArrayBlockingQueue(maxCache);
 
         for (int i = 0; i < maxCache; ++i)
@@ -109,7 +111,7 @@ public class ChunkRenderDispatcherLitematica
     protected String getDebugInfo()
     {
         //return this.listWorkerThreads.isEmpty() ? String.format("pC: %03d, single-threaded", this.queueChunkUpdates.size()) : String.format("pC: %03d, pU: %1d, aB: %1d", this.queueChunkUpdates.size(), this.queueChunkUploads.size(), this.queueFreeRenderAllocators.size());
-        return String.format("pC: %03d, pU: %03d, aB: %02d", this.queueChunkUpdates.size(), this.queueChunkUploads.size(), this.queueFreeRenderAllocators.size());
+        return String.format("T: %02d, pC: %03d, pU: %03d, aB: %02d", this.listThreadedWorkers.size(), this.queueChunkUpdates.size(), this.queueChunkUploads.size(), this.queueFreeRenderAllocators.size());
     }
 
     protected boolean runChunkUploads(long finishTimeNano)
@@ -263,7 +265,7 @@ public class ChunkRenderDispatcherLitematica
             }
             catch (Exception e)
             {
-                // TODO --> This one will throw since it's no longer sorted as Translucent,
+                // TODO --> This one will throw if it's not sorted as Translucent,
                 //  but it will cause a crash during draw() --> Ignored
                 LOGGER.warn("uploadChunkOverlay(): [Dispatch] Error uploading Vertex Buffer for overlay type [{}], Caught error: [{}]", type.getDrawMode().name(), e.toString());
             }
@@ -291,21 +293,17 @@ public class ChunkRenderDispatcherLitematica
     private void uploadVertexBufferByLayer(RenderLayer layer, @Nonnull BufferAllocatorCache allocators, @Nonnull ChunkRendererSchematicVbo renderChunk, @Nonnull ChunkRenderDataSchematic compiledChunk, @Nonnull VertexSorter sorter, boolean resortOnly)
             throws InterruptedException
     {
-        //LOGGER.warn("uploadVertexBufferByLayer() [Dispatch] for layer [{}] - INIT", ChunkRenderLayers.getFriendlyName(layer));
-
         BufferAllocator allocator = allocators.getBufferByLayer(layer);
         BuiltBuffer renderBuffer = compiledChunk.getBuiltBufferCache().getBuiltBufferByLayer(layer);
 
         if (allocator == null)
         {
-            //LOGGER.error("uploadVertexBufferByLayer() [Dispatch] for overlay type [{}] - INVALID BUFFERS", ChunkRenderLayers.getFriendlyName(layer));
             allocators.closeByLayer(layer);
             throw new InterruptedException("BufferAllocators are invalid");
         }
 
         if (renderBuffer == null)
         {
-            //LOGGER.error("uploadVertexBufferByLayer() [Dispatch] for layer [{}] - NOT BUILT", ChunkRenderLayers.getFriendlyName(layer));
             throw new InterruptedException("BuiltBuffer was not built");
         }
 
@@ -313,7 +311,6 @@ public class ChunkRenderDispatcherLitematica
 
         if (layer == RenderLayer.getTranslucent())
         {
-            //LOGGER.warn("uploadVertexBufferByLayer() [Dispatch] for layer [{}] - Translucent START", ChunkRenderLayers.getFriendlyName(layer));
             BuiltBuffer.SortState sorting = compiledChunk.getTransparentSortingData();
 
             if (sorting == null)
@@ -322,54 +319,41 @@ public class ChunkRenderDispatcherLitematica
 
                 if (sorting == null)
                 {
-                    //LOGGER.error("uploadVertexBufferByLayer() [Dispatch] for layer [{}] - Sort State FAILED", ChunkRenderLayers.getFriendlyName(layer));
                     throw new InterruptedException("Sort State failed to sortQuads()");
                 }
 
                 compiledChunk.setTransparentSortingData(sorting);
-                //LOGGER.warn("uploadVertexBufferByLayer() [Dispatch] for layer [{}] - Sort State built", ChunkRenderLayers.getFriendlyName(layer));
             }
 
             BufferAllocator.CloseableBuffer result = sorting.sortAndStore(allocator, sorter);
 
             if (result != null)
             {
-                //LOGGER.error("uploadVertexBufferByLayer() [Dispatch] for layer [{}] - Result Buffer built -> UPLOADING", ChunkRenderLayers.getFriendlyName(layer));
                 renderChunk.uploadSortingState(result, vertexBuffer);
                 result.close();
-
-                //LOGGER.warn("uploadVertexBufferByLayer() [Dispatch] for layer [{}] - Translucent Sort State UPLOADED", ChunkRenderLayers.getFriendlyName(layer));
             }
         }
 
         if (resortOnly == false)
         {
             renderChunk.uploadBuiltBuffer(renderBuffer, vertexBuffer);
-            //LOGGER.warn("uploadVertexBufferByLayer() [Dispatch] for layer [{}] - Built Buffer UPLOADED", ChunkRenderLayers.getFriendlyName(layer));
         }
-        //renderBuffer.close();
-
-        //LOGGER.error("uploadVertexBufferByLayer() [Dispatch] for layer [{}] - DONE", ChunkRenderLayers.getFriendlyName(layer));
     }
 
     private void uploadVertexBufferByType(OverlayRenderType type, @Nonnull BufferAllocatorCache allocators, @Nonnull ChunkRendererSchematicVbo renderChunk, @Nonnull ChunkRenderDataSchematic compiledChunk, @Nonnull VertexSorter sorter, boolean resortOnly)
             throws InterruptedException
     {
-        //LOGGER.warn("uploadVertexBufferByType() [Dispatch] for overlay type [{}] - INIT", type.getDrawMode().name());
-
         BufferAllocator allocator = allocators.getBufferByOverlay(type);
         BuiltBuffer renderBuffer = compiledChunk.getBuiltBufferCache().getBuiltBufferByType(type);
 
         if (allocator == null)
         {
-            //LOGGER.error("uploadVertexBufferByType() [Dispatch] for overlay type [{}] - INVALID BUFFERS", type.getDrawMode().name());
             allocators.closeByType(type);
             throw new InterruptedException("BufferAllocators are invalid");
         }
 
         if (renderBuffer == null)
         {
-            //LOGGER.error("uploadVertexBufferByType() [Dispatch] for overlay type [{}] - NOT BUILT", type.getDrawMode().name());
             throw new InterruptedException("BuiltBuffer was not built");
         }
 
@@ -377,7 +361,6 @@ public class ChunkRenderDispatcherLitematica
 
         if (type.isTranslucent() && Configs.Visuals.SCHEMATIC_OVERLAY_ENABLE_RESORTING.getBooleanValue())
         {
-            //LOGGER.warn("uploadVertexBufferByType() [Dispatch] for overlay type [{}] - Translucent START", type.getDrawMode().name());
             BuiltBuffer.SortState sorting = compiledChunk.getTransparentSortingDataForOverlay(type);
 
             if (sorting == null)
@@ -386,34 +369,25 @@ public class ChunkRenderDispatcherLitematica
 
                 if (sorting == null)
                 {
-                    //LOGGER.error("uploadVertexBufferByType() [Dispatch] for overlay type [{}] - Sort State FAILED", type.getDrawMode().name());
                     throw new InterruptedException("Sort State failed to sortQuads()");
                 }
 
                 compiledChunk.setTransparentSortingDataForOverlay(type, sorting);
-                //LOGGER.warn("uploadVertexBufferByType() [Dispatch] for overlay type [{}] - Sort State built", type.getDrawMode().name());
             }
 
             BufferAllocator.CloseableBuffer result = sorting.sortAndStore(allocator, sorter);
 
             if (result != null)
             {
-                //LOGGER.error("uploadVertexBufferByType() [Dispatch] for overlay type [{}] - Result Buffer built -> UPLOADING", type.getDrawMode().name());
                 renderChunk.uploadSortingState(result, vertexBuffer);
                 result.close();
-
-                //LOGGER.warn("uploadVertexBufferByType() [Dispatch] for overlay type [{}] - Translucent Sort State UPLOADED", type.getDrawMode().name());
             }
         }
 
         if (resortOnly == false)
         {
             renderChunk.uploadBuiltBuffer(renderBuffer, vertexBuffer);
-            //LOGGER.warn("uploadVertexBufferByType() [Dispatch] for overlay type [{}] - Built Buffer UPLOADED", type.getDrawMode().name());
         }
-        //renderBuffer.close();
-
-        //LOGGER.error("uploadVertexBufferByType() [Dispatch] for overlay type [{}] - DONE", type.getDrawMode().name());
     }
 
     protected void clearChunkUpdates()

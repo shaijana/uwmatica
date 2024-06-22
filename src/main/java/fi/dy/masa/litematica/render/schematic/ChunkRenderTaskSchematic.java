@@ -51,7 +51,7 @@ public class ChunkRenderTaskSchematic implements Comparable<ChunkRenderTaskSchem
     {
         if (this.chunkRenderData != null)
         {
-            this.chunkRenderData.closeBuiltBufferCache();
+            this.chunkRenderData.clearAll();
         }
 
         this.chunkRenderData = chunkRenderData;

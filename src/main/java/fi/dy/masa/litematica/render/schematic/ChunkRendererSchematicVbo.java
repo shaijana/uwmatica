@@ -251,7 +251,7 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
             int maxZ = minZ + 15;
 
             if (!this.boxes.isEmpty() &&
-                    (!this.schematicWorldView.isEmpty() || !this.clientWorldView.isEmpty()) &&
+                (!this.schematicWorldView.isEmpty() || !this.clientWorldView.isEmpty()) &&
                  range.intersectsBox(minX, minY, minZ, maxX, maxY, maxZ))
             {
                 ++schematicRenderChunksUpdated;
@@ -262,8 +262,7 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
                 float z = (float) cameraPos.z - this.position.getZ();
                 Set<RenderLayer> usedLayers = new HashSet<>();
                 MatrixStack matrixStack = new MatrixStack();
-                // TODO --> Do we need to change this to a Matrix4f in the future,
-                //  when Matrix4f doesn't break things here or do we need to call RenderSystem again?
+                // TODO --> Do we need to change this to a Matrix4f in the future?
                 int bottomY = this.position.getY();
 
                 for (IntBoundingBox box : this.boxes)
@@ -806,8 +805,6 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
     private void postRenderBlocks(RenderLayer layer, float x, float y, float z, @Nonnull ChunkRenderDataSchematic chunkRenderData, @Nonnull BufferAllocatorCache allocators)
             throws RuntimeException
     {
-        //Litematica.logger.warn("postRenderBlocks(): [VBO] for layer [{}] - INIT", ChunkRenderLayers.getFriendlyName(layer));
-
         //if (layer == RenderLayer.getTranslucent() && chunkRenderData.isBlockLayerEmpty(layer) == false)
         if (!chunkRenderData.isBlockLayerEmpty(layer))
         {
@@ -824,18 +821,15 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
 
                 if (built == null)
                 {
-                    //Litematica.logger.error("postRenderBlocks(): [VBO] for layer [{}] -- Failed to Build", ChunkRenderLayers.getFriendlyName(layer));
                     throw new RuntimeException("failed to build BuiltBuffer");
                 }
                 else
                 {
-                    //Litematica.logger.warn("postRenderBlocks(): [VBO] for layer [{}] - Built Buffer built", ChunkRenderLayers.getFriendlyName(layer));
                     chunkRenderData.getBuiltBufferCache().storeBuiltBufferByLayer(layer, built);
                 }
             }
             else
             {
-                //Litematica.logger.error("postRenderBlocks(): [VBO] for layer [{}] -- Builder not initialized", ChunkRenderLayers.getFriendlyName(layer));
                 throw new RuntimeException("BufferBuilder has not been initialized");
             }
 
@@ -851,15 +845,11 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
                 }
             }
         }
-
-        //Litematica.logger.warn("postRenderBlocks(): [VBO] for layer [{}] - DONE", ChunkRenderLayers.getFriendlyName(layer));
     }
 
     private void postRenderOverlay(OverlayRenderType type, float x, float y, float z, @Nonnull ChunkRenderDataSchematic chunkRenderData, @Nonnull BufferAllocatorCache allocators)
             throws RuntimeException
     {
-        //Litematica.logger.warn("postRenderOverlay(): [VBO] for overlay type [{}] - INIT", type.getDrawMode().name());
-
         RenderSystem.applyModelViewMatrix();
         //if (type == OverlayRenderType.QUAD && chunkRenderData.isOverlayTypeEmpty(type) == false)
         if (chunkRenderData.isOverlayTypeEmpty(type) == false)
@@ -877,18 +867,15 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
 
                 if (built == null)
                 {
-                    //Litematica.logger.error("postRenderOverlay(): [VBO] for overlay type [{}] -- Failed to Build", type.getDrawMode().name());
                     throw new RuntimeException("failed to build BuiltBuffer");
                 }
                 else
                 {
-                    //Litematica.logger.warn("postRenderOverlay(): [VBO] for overlay type [{}] - Built Buffer built", type.getDrawMode().name());
                     chunkRenderData.getBuiltBufferCache().storeBuiltBufferByType(type, built);
                 }
             }
             else
             {
-                //Litematica.logger.error("postRenderOverlay(): [VBO] for overlay type [{}] -- Builder not initialized", type.getDrawMode().name());
                 throw new RuntimeException("BufferBuilder has not been initialized");
             }
 
@@ -904,8 +891,6 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
                 }
             }
         }
-
-        //Litematica.logger.warn("postRenderOverlay(): [VBO] for overlay type [{}] - DONE", type.getDrawMode().name());
     }
 
     protected VertexSorter createVertexSorter(float x, float y, float z)
@@ -947,8 +932,6 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
     private void resortRenderBlocks(RenderLayer layer, float x, float y, float z, @Nonnull ChunkRenderDataSchematic chunkRenderData, @Nonnull BufferAllocatorCache allocators)
             throws InterruptedException
     {
-        //Litematica.logger.warn("resortRenderBlocks(): [VBO] for layer [{}] - INIT", ChunkRenderLayers.getFriendlyName(layer));
-
         //if (layer == RenderLayer.getTranslucent() && chunkRenderData.isBlockLayerEmpty(layer) == false)
         if (chunkRenderData.isBlockLayerEmpty(layer) == false)
         {
@@ -957,12 +940,10 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
 
             if (allocator == null)
             {
-                //Litematica.logger.error("resortRenderBlocks(): [VBO] for layer [{}] - INVALID BUFFERS", ChunkRenderLayers.getFriendlyName(layer));
                 throw new InterruptedException("Buffers are invalid");
             }
             if (chunkRenderData.getBuiltBufferCache().hasBuiltBufferByLayer(layer) == false)
             {
-                //Litematica.logger.error("resortRenderBlocks(): [VBO] for layer [{}] - Buffer not built", ChunkRenderLayers.getFriendlyName(layer));
                 throw new InterruptedException("Buffers are invalid");
             }
 
@@ -970,11 +951,8 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
 
             if (built == null)
             {
-                //Litematica.logger.error("resortRenderBlocks() [VBO] for layer [{}] - Buffer not built", ChunkRenderLayers.getFriendlyName(layer));
                 throw new InterruptedException("Buffers are invalid");
             }
-
-            //Litematica.logger.warn("resortRenderBlocks(): [VBO] for layer [{}] - Built Buffer built", ChunkRenderLayers.getFriendlyName(layer));
 
             if (layer == RenderLayer.getTranslucent())
             {
@@ -987,11 +965,9 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
 
                     if (sortingData == null)
                     {
-                        //Litematica.logger.error("resortRenderBlocks() [VBO] for layer [{}] - Failed to build Sort State", ChunkRenderLayers.getFriendlyName(layer));
                         throw new InterruptedException("Sort State failure");
                     }
 
-                    //Litematica.logger.warn("resortRenderBlocks(): [VBO] for layer [{}] - Sorting State built", ChunkRenderLayers.getFriendlyName(layer));
                     chunkRenderData.setTransparentSortingData(sortingData);
                 }
                 else
@@ -1001,25 +977,19 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
 
                 if (sortingData == null)
                 {
-                    //Litematica.logger.error("resortRenderBlocks() [VBO] for layer [{}] - Failed to get Sorting Data", ChunkRenderLayers.getFriendlyName(layer));
                     throw new InterruptedException("Sorting Data failure");
                 }
             }
             else
             {
-                //Litematica.logger.error("resortRenderBlocks() [VBO] for layer [{}] - Not the Translucent layer", ChunkRenderLayers.getFriendlyName(layer));
                 throw new InterruptedException("layer is not translucent");
             }
         }
-
-        //Litematica.logger.warn("resortRenderBlocks(): [VBO] for layer [{}] - DONE", layer.getDrawMode().name());
     }
 
     private void resortRenderOverlay(OverlayRenderType type, float x, float y, float z, @Nonnull ChunkRenderDataSchematic chunkRenderData, @Nonnull BufferAllocatorCache allocators)
             throws InterruptedException
     {
-        //Litematica.logger.warn("resortRenderOverlay(): [VBO] for overlay type [{}] - INIT", type.getDrawMode().name());
-
         RenderSystem.applyModelViewMatrix();
 
         //if (type == OverlayRenderType.QUAD && chunkRenderData.isOverlayTypeEmpty(type) == false)
@@ -1030,12 +1000,10 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
 
             if (allocator == null)
             {
-                //Litematica.logger.error("resortRenderOverlay(): [VBO] for overlay type [{}] - INVALID BUFFERS", type.getDrawMode().name());
                 throw new InterruptedException("Buffers are invalid");
             }
             if (chunkRenderData.getBuiltBufferCache().hasBuiltBufferByType(type) == false)
             {
-                //Litematica.logger.error("resortRenderOverlay(): [VBO] for overlay type [{}] - Buffer not built", type.getDrawMode().name());
                 throw new InterruptedException("Buffers are invalid");
             }
 
@@ -1043,11 +1011,8 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
 
             if (built == null)
             {
-                //Litematica.logger.error("resortRenderOverlay() [VBO] for overlay type [{}] - Buffer not built", type.getDrawMode().name());
                 throw new InterruptedException("Buffers are invalid");
             }
-
-            //Litematica.logger.warn("resortRenderOverlay(): [VBO] for overlay type [{}] - Built Buffer built", type.getDrawMode().name());
 
             if (type.isTranslucent() && Configs.Visuals.SCHEMATIC_OVERLAY_ENABLE_RESORTING.getBooleanValue())
             {
@@ -1060,11 +1025,9 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
 
                     if (sortingData == null)
                     {
-                        //Litematica.logger.error("resortRenderOverlay() [VBO] for overlay type [{}] - Failed to build Sort State", type.getDrawMode().name());
                         throw new InterruptedException("Sort State failure");
                     }
 
-                    //Litematica.logger.warn("resortRenderOverlay(): [VBO] for overlay type [{}] - Sorting State built", type.getDrawMode().name());
                     chunkRenderData.setTransparentSortingDataForOverlay(type, sortingData);
                 }
                 else
@@ -1074,18 +1037,14 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
 
                 if (sortingData == null)
                 {
-                    //Litematica.logger.error("resortRenderOverlay() [VBO] for overlay type [{}] - Failed to get Sorting Data", type.getDrawMode().name());
                     throw new InterruptedException("Sorting Data failure");
                 }
             }
             else
             {
-                //Litematica.logger.error("resortRenderOverlay() [VBO] for overlay type [{}] - Not the Translucent layer", type.getDrawMode().name());
                 throw new InterruptedException("layer is not translucent");
             }
         }
-
-        //Litematica.logger.warn("resortRenderOverlay(): [VBO] for overlay type [{}] - DONE", type.getDrawMode().name());
     }
 
     protected ChunkRenderTaskSchematic makeCompileTaskChunkSchematic(Supplier<Vec3d> cameraPosSupplier)
@@ -1100,7 +1059,7 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
     @Nullable
     protected ChunkRenderTaskSchematic makeCompileTaskTransparencySchematic(Supplier<Vec3d> cameraPosSupplier)
     {
-        if(compileTask.get().getStatus() == ChunkRenderTaskSchematic.Status.PENDING)
+        if (compileTask.get().getStatus() == ChunkRenderTaskSchematic.Status.PENDING)
             return null;
         ChunkRenderTaskSchematic newTask = new ChunkRenderTaskSchematic(this, ChunkRenderTaskSchematic.Type.RESORT_TRANSPARENCY, cameraPosSupplier, this.getDistanceSq());
         newTask.setChunkRenderData(this.chunkRenderData.get());
@@ -1111,15 +1070,24 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
     protected void finishCompileTask(@Nullable ChunkRenderTaskSchematic newTask)
     {
         ChunkRenderTaskSchematic oldtask = compileTask.getAndSet(newTask);
-        if(oldtask!=null)
+        if (oldtask != null)
             oldtask.finish();
     }
 
     protected void clear()
     {
-        this.finishCompileTask(null);
-        this.builderCache.clearAll();
-        this.chunkRenderData.set(ChunkRenderDataSchematic.EMPTY);
+        try
+        {
+            this.finishCompileTask(null);
+        }
+        finally
+        {
+            this.builderCache.clearAll();
+            this.chunkRenderData.get().clearAll();
+            this.chunkRenderData.set(ChunkRenderDataSchematic.EMPTY);
+            this.existingOverlays.clear();
+            this.hasOverlay = false;
+        }
     }
 
     protected void setNeedsUpdate(boolean immediate)
