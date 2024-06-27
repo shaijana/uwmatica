@@ -1,5 +1,6 @@
 package fi.dy.masa.litematica;
 
+import fi.dy.masa.litematica.interfaces.network.UWPacketHandler;
 import net.minecraft.client.MinecraftClient;
 
 import fi.dy.masa.litematica.config.Configs;

@@ -18,10 +18,12 @@ public class MixinClientCommonNetworkHandler
     @Inject(method = "onCustomPayload(Lnet/minecraft/network/packet/s2c/common/CustomPayloadS2CPacket;)V", at = @At("HEAD"))
     private void litematica_onCustomPayload(CustomPayloadS2CPacket packet, CallbackInfo ci)
     {
+/*SH
         if (packet.payload().getId().id().equals(DataManager.CARPET_HELLO))
         {
             Litematica.debugLog("ClientCommonNetworkHandler#litematica_onCustomPayload(): received carpet hello packet");
             DataManager.setIsCarpetServer(true);
         }
+        */
     }
 }

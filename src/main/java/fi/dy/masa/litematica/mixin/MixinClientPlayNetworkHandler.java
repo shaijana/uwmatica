@@ -60,10 +60,12 @@ public abstract class MixinClientPlayNetworkHandler
     @Inject(method = "onCustomPayload", at = @At("HEAD"))
     private void litematica_onCustomPayload(CustomPayload payload, CallbackInfo ci)
     {
+/*SH
         if (payload.getId().id().equals(DataManager.CARPET_HELLO))
         {
             Litematica.debugLog("MixinClientPlayNetworkHandler#litematica_onCustomPayload(): received carpet hello packet");
             DataManager.setIsCarpetServer(true);
         }
+        */
     }
 }
