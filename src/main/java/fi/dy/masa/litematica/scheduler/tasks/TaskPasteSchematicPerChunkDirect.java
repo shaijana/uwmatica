@@ -1,5 +1,6 @@
 package fi.dy.masa.litematica.scheduler.tasks;
 
+/*SH
 import java.util.ArrayList;
 import java.util.Collection;
 import com.google.common.collect.ArrayListMultimap;
@@ -119,3 +120,4 @@ public class TaskPasteSchematicPerChunkDirect extends TaskPasteSchematicPerChunk
         super.onStop();
     }
 }
+*/

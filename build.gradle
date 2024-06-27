@@ -31,6 +31,8 @@ dependencies {
 	//modImplementation "fi.dy.masa.malilib:malilib-fabric-${project.minecraft_version_out}:${project.malilib_version}"
 	modImplementation "com.github.sakura-ryoko:malilib:${project.malilib_id}"
 
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"//Fabim
+
 	//include(modApi(fabricApi.module("fabric-api-base", project.fabric_api_version)))
 	include(modApi(fabricApi.module("fabric-networking-api-v1", project.fabric_api_version)))
 	include(modApi(fabricApi.module("fabric-resource-loader-v0", project.fabric_api_version)))

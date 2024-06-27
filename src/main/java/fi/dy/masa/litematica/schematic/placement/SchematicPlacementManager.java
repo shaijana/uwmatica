@@ -1,23 +1,34 @@
 package fi.dy.masa.litematica.schematic.placement;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Supplier;
-import javax.annotation.Nullable;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import fi.dy.masa.litematica.config.Configs;
+import fi.dy.masa.litematica.config.Hotkeys;
+import fi.dy.masa.litematica.data.DataManager;
+import fi.dy.masa.litematica.data.SchematicHolder;
+import fi.dy.masa.litematica.render.LitematicaRenderer;
+import fi.dy.masa.litematica.render.OverlayRenderer;
+import fi.dy.masa.litematica.render.infohud.StatusInfoRenderer;
+import fi.dy.masa.litematica.schematic.LitematicaSchematic;
+import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement.RequiredEnabled;
+import fi.dy.masa.litematica.util.EntityUtils;
+import fi.dy.masa.litematica.util.PositionUtils;
+import fi.dy.masa.litematica.util.PositionUtils.ChunkPosDistanceComparator;
+import fi.dy.masa.litematica.util.*;
+import fi.dy.masa.litematica.util.RayTraceUtils.RayTraceWrapper;
+import fi.dy.masa.litematica.util.WorldUtils;
+import fi.dy.masa.litematica.util.RayTraceUtils.RayTraceWrapper.HitType;
+import fi.dy.masa.litematica.world.SchematicWorldHandler;
+import fi.dy.masa.litematica.world.WorldSchematic;
+import fi.dy.masa.malilib.config.options.ConfigHotkey;
+import fi.dy.masa.malilib.gui.Message.MessageType;
+import fi.dy.masa.malilib.interfaces.IConfirmationListener;
+import fi.dy.masa.malilib.util.*;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
-
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
@@ -28,42 +39,9 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 
-import fi.dy.masa.litematica.config.Configs;
-import fi.dy.masa.litematica.config.Hotkeys;
-import fi.dy.masa.litematica.data.DataManager;
-import fi.dy.masa.litematica.data.SchematicHolder;
-import fi.dy.masa.litematica.render.LitematicaRenderer;
-import fi.dy.masa.litematica.render.OverlayRenderer;
-import fi.dy.masa.litematica.render.infohud.StatusInfoRenderer;
-import fi.dy.masa.litematica.scheduler.TaskScheduler;
-import fi.dy.masa.litematica.scheduler.tasks.TaskPasteSchematicPerChunkBase;
-import fi.dy.masa.litematica.scheduler.tasks.TaskPasteSchematicPerChunkCommand;
-import fi.dy.masa.litematica.scheduler.tasks.TaskPasteSchematicPerChunkDirect;
-import fi.dy.masa.litematica.scheduler.tasks.TaskPasteSchematicSetblockToMcfunction;
-import fi.dy.masa.litematica.schematic.LitematicaSchematic;
-import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement.RequiredEnabled;
-import fi.dy.masa.litematica.util.EntityUtils;
-import fi.dy.masa.litematica.util.PositionUtils;
-import fi.dy.masa.litematica.util.PositionUtils.ChunkPosDistanceComparator;
-import fi.dy.masa.litematica.util.RayTraceUtils;
-import fi.dy.masa.litematica.util.RayTraceUtils.RayTraceWrapper;
-import fi.dy.masa.litematica.util.RayTraceUtils.RayTraceWrapper.HitType;
-import fi.dy.masa.litematica.util.ReplaceBehavior;
-import fi.dy.masa.litematica.util.SchematicPlacingUtils;
-import fi.dy.masa.litematica.util.WorldUtils;
-import fi.dy.masa.litematica.world.SchematicWorldHandler;
-import fi.dy.masa.litematica.world.WorldSchematic;
-import fi.dy.masa.malilib.config.options.ConfigHotkey;
-import fi.dy.masa.malilib.gui.GuiBase;
-import fi.dy.masa.malilib.gui.GuiConfirmAction;
-import fi.dy.masa.malilib.gui.Message.MessageType;
-import fi.dy.masa.malilib.interfaces.IConfirmationListener;
-import fi.dy.masa.malilib.util.InfoUtils;
-import fi.dy.masa.malilib.util.IntBoundingBox;
-import fi.dy.masa.malilib.util.JsonUtils;
-import fi.dy.masa.malilib.util.LayerMode;
-import fi.dy.masa.malilib.util.LayerRange;
-import fi.dy.masa.malilib.util.StringUtils;
+import javax.annotation.Nullable;
+import java.util.*;
+import java.util.function.Supplier;
 
 public class SchematicPlacementManager
 {
@@ -302,8 +280,7 @@ public class SchematicPlacementManager
         return this.touchedVolumesInChunk.size();
     }
 
-    protected void onPlacementAdded()
-    {
+    protected void onPlacementAdded() {
         StatusInfoRenderer.getInstance().startOverrideDelay();
     }
 
@@ -630,9 +607,9 @@ public class SchematicPlacementManager
             {
                 this.setSelectedSchematicPlacement(trace.getHitSchematicPlacement());
 
-                boolean selectSubRegion = Hotkeys.SELECTION_GRAB_MODIFIER.getKeybind().isKeybindHeld();
-                String subRegionName = selectSubRegion ? trace.getHitSchematicPlacementRegionName() : null;
-                this.getSelectedSchematicPlacement().setSelectedSubRegionName(subRegionName);
+//SH                boolean selectSubRegion = Hotkeys.SELECTION_GRAB_MODIFIER.getKeybind().isKeybindHeld();
+//SH                String subRegionName = selectSubRegion ? trace.getHitSchematicPlacementRegionName() : null;
+//SH                this.getSelectedSchematicPlacement().setSelectedSubRegionName(subRegionName);
 
                 return true;
             }
@@ -768,11 +745,10 @@ public class SchematicPlacementManager
         }
 
         @Override
-        public boolean onActionConfirmed()
-        {
-            LayerRange range = DataManager.getRenderLayerRange();
-            TaskPasteSchematicSetblockToMcfunction task = new TaskPasteSchematicSetblockToMcfunction(Collections.singletonList(this.schematicPlacement), range, this.changedBlocksOnly);
-            TaskScheduler.getInstanceClient().scheduleTask(task, 1);
+        public boolean onActionConfirmed() {
+            final LayerRange range = DataManager.getRenderLayerRange();
+//SH            TaskPasteSchematicSetblockToMcfunction task = new TaskPasteSchematicSetblockToMcfunction(Collections.singletonList(this.schematicPlacement), range, this.changedBlocksOnly);
+//SH            TaskScheduler.getInstanceClient().scheduleTask(task, 1);
             return true;
         }
 
@@ -798,11 +774,13 @@ public class SchematicPlacementManager
                 */
                 LayerRange range = DataManager.getRenderLayerRange();
 
-                if (Configs.Generic.PASTE_TO_MCFUNCTION.getBooleanValue())
+/*SH                if (Configs.Generic.PASTE_TO_MCFUNCTION.getBooleanValue())
                 {
                     PasteToCommandsListener cl = new PasteToCommandsListener(schematicPlacement, changedBlocksOnly);
                     GuiConfirmAction screen = new GuiConfirmAction(320, "Confirm paste to command files", cl, null, "Are you sure you want to paste the current placement as setblock commands into command/mcfunction files?");
                     GuiBase.openGui(screen);
+                }*/
+/*SH                if (mc.isIntegratedServerRunning()) //change from else if
                 }
                 else if(mc.isIntegratedServerRunning() == false || Configs.Generic.PASTE_USING_COMMANDS_IN_SP.getBooleanValue())
                 {
@@ -823,7 +801,17 @@ public class SchematicPlacementManager
                     {
                         InfoUtils.showGuiOrActionBarMessage(MessageType.INFO, "litematica.message.scheduled_task_added");
                     }
-                }
+                }*/
+/*SH                else
+                {
+                    TaskPasteSchematicPerChunkBase task = new TaskPasteSchematicPerChunkCommand(Collections.singletonList(schematicPlacement), range, changedBlocksOnly);
+                    TaskScheduler.getInstanceClient().scheduleTask(task, Configs.Generic.COMMAND_TASK_INTERVAL.getIntegerValue());
+
+                    if (printMessage)
+                    {
+                        InfoUtils.showGuiOrActionBarMessage(MessageType.INFO, "litematica.message.scheduled_task_added");
+                    }
+                }*/
             }
             else
             {

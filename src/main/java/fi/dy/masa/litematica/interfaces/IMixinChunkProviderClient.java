@@ -1,3 +1,4 @@
+/*
 package fi.dy.masa.litematica.interfaces;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
@@ -7,3 +8,4 @@ public interface IMixinChunkProviderClient
 {
     Long2ObjectMap<Chunk> getLoadedChunks();
 }
+*/

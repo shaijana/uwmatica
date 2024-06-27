@@ -170,7 +170,7 @@ public class SchematicPlacingUtils
         final BlockMirror mirrorMain = schematicPlacement.getMirror();
         final BlockState barrier = Blocks.BARRIER.getDefaultState();
         BlockMirror mirrorSub = placement.getMirror();
-        final boolean ignoreInventories = Configs.Generic.PASTE_IGNORE_INVENTORY.getBooleanValue();
+//SH        final boolean ignoreInventories = Configs.Generic.PASTE_IGNORE_INVENTORY.getBooleanValue();
 
         if (mirrorSub != BlockMirror.NONE &&
             (schematicPlacement.getRotation() == BlockRotation.CLOCKWISE_90 ||
@@ -241,12 +241,12 @@ public class SchematicPlacingUtils
                             teNBT.putInt("y", pos.getY());
                             teNBT.putInt("z", pos.getZ());
 
-                            if (ignoreInventories)
+/*SH                            if (ignoreInventories)
                             {
                                 teNBT.remove("Items");
-                            }
+                            }*/
 
-                            try
+/*SH                            try
                             {
                                 te.read(teNBT, world.getRegistryManager());
 
@@ -254,11 +254,11 @@ public class SchematicPlacingUtils
                                 {
                                     ((Inventory) te).clear();
                                 }
-                            }
-                            catch (Exception e)
+                            }*/
+/*SH                            catch (Exception e)
                             {
                                 Litematica.logger.warn("Failed to load BlockEntity data for {} @ {}", state, pos);
-                            }
+                            }*/
                         }
                     }
                 }

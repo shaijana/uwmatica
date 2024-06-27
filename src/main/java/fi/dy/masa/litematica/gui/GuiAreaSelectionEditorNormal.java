@@ -1,3 +1,4 @@
+/*SH
 package fi.dy.masa.litematica.gui;
 
 import java.util.ArrayList;
@@ -144,15 +145,17 @@ public class GuiAreaSelectionEditorNormal extends GuiListBase<String, WidgetSele
 
         y = this.height - 26;
 
-        ButtonListenerChangeMenu.ButtonType type = ButtonListenerChangeMenu.ButtonType.AREA_SELECTION_BROWSER;
-        String label = StringUtils.translate(type.getLabelKey());
-        ButtonGeneric button = new ButtonGeneric(x, y, -1, 20, label, type.getIcon());
+//SH        ButtonListenerChangeMenu.ButtonType type = ButtonListenerChangeMenu.ButtonType.AREA_SELECTION_BROWSER;
+//SH        String label = StringUtils.translate(type.getLabelKey());
+//SH        ButtonGeneric button = new ButtonGeneric(x, y, -1, 20, label, type.getIcon());
 
-        if (DataManager.getSchematicProjectsManager().hasProjectOpen())
+*/
+/*SH        if (DataManager.getSchematicProjectsManager().hasProjectOpen())
         {
             button.setEnabled(false);
             button.setHoverStrings("litematica.gui.button.hover.schematic_projects.area_browser_disabled_currently_in_projects_mode");
-        }
+        }*//*
+
 
         x += this.addButton(button, new ButtonListenerChangeMenu(type, this.getParent())).getWidth() + 4;
 
@@ -711,3 +714,4 @@ public class GuiAreaSelectionEditorNormal extends GuiListBase<String, WidgetSele
                 this.getBrowserWidth(), this.getBrowserHeight(), this.selection, this);
     }
 }
+*/

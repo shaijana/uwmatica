@@ -1,19 +1,11 @@
 package fi.dy.masa.litematica.util;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import javax.annotation.Nullable;
 import com.google.common.collect.ImmutableSet;
-import net.minecraft.block.BedBlock;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.ComparatorBlock;
-import net.minecraft.block.RepeaterBlock;
+import fi.dy.masa.litematica.Litematica;
+import net.minecraft.block.*;
 import net.minecraft.block.enums.BlockHalf;
 import net.minecraft.block.enums.ComparatorMode;
 import net.minecraft.block.enums.SlabType;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.state.property.DirectionProperty;
@@ -25,9 +17,11 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import fi.dy.masa.litematica.Litematica;
-import fi.dy.masa.litematica.config.Configs;
-import fi.dy.masa.litematica.data.DataManager;
+
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 public class PlacementHandler
 {
@@ -67,7 +61,7 @@ public class PlacementHandler
             Properties.ROTATION
     );
 
-    public static EasyPlaceProtocol getEffectiveProtocolVersion()
+/*SH    public static EasyPlaceProtocol getEffectiveProtocolVersion()
     {
         EasyPlaceProtocol protocol = (EasyPlaceProtocol) Configs.Generic.EASY_PLACE_PROTOCOL.getOptionListValue();
 
@@ -89,10 +83,10 @@ public class PlacementHandler
         Litematica.debugLog("getEffectiveProtocolVersion(): {}", protocol.name());
 
         return protocol;
-    }
+    }*/
 
     @Nullable
-    public static BlockState applyPlacementProtocolToPlacementState(BlockState state, UseContext context)
+/*SH    public static BlockState applyPlacementProtocolToPlacementState(BlockState state, UseContext context)
     {
         EasyPlaceProtocol protocol = getEffectiveProtocolVersion();
 
@@ -104,11 +98,7 @@ public class PlacementHandler
         {
             return applyPlacementProtocolV2(state, context);
         }
-        else
-        {
-            return state;
-        }
-    }
+    }*/
 
     public static BlockState applyPlacementProtocolV2(BlockState state, UseContext context)
     {

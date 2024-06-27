@@ -1,5 +1,6 @@
 package fi.dy.masa.litematica.scheduler.tasks;
 
+/*SH
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
@@ -996,3 +997,4 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
         return false;
     }
 }
+*/

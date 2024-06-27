@@ -1,13 +1,13 @@
 package fi.dy.masa.litematica.util;
 
-import java.util.ArrayList;
-import java.util.List;
+import fi.dy.masa.malilib.gui.GuiBase;
+import fi.dy.masa.malilib.gui.Message.MessageType;
+import fi.dy.masa.malilib.util.InfoUtils;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.ToolItem;
 import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
@@ -15,10 +15,9 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import fi.dy.masa.malilib.gui.GuiBase;
-import fi.dy.masa.malilib.gui.Message.MessageType;
-import fi.dy.masa.malilib.util.InfoUtils;
-import fi.dy.masa.litematica.config.Configs;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class InventoryUtils
 {
@@ -138,7 +137,7 @@ public class InventoryUtils
                 {
                     setPickedItemToHand(stack, mc);
                 }
-                else if (slot == -1 && Configs.Generic.PICK_BLOCK_SHULKERS.getBooleanValue())
+/*SH                else if (slot == -1 && Configs.Generic.PICK_BLOCK_SHULKERS.getBooleanValue())
                 {
                     slot = findSlotWithBoxWithItem(mc.player.playerScreenHandler, stack, false);
 
@@ -147,7 +146,7 @@ public class InventoryUtils
                         ItemStack boxStack = mc.player.playerScreenHandler.slots.get(slot).getStack();
                         setPickedItemToHand(boxStack, mc);
                     }
-                }
+                }*/
 
                 //return shouldPick == false || canPick;
             }
@@ -156,7 +155,8 @@ public class InventoryUtils
 
     private static boolean canPickToSlot(PlayerInventory inventory, int slotNum)
     {
-        if (PICK_BLOCKABLE_SLOTS.contains(slotNum) == false)
+        return false; //SH
+/*SH        if (PICK_BLOCKABLE_SLOTS.contains(slotNum) == false)
         {
             return false;
         }
@@ -167,11 +167,10 @@ public class InventoryUtils
         {
             return true;
         }
-
         return (Configs.Generic.PICK_BLOCK_AVOID_DAMAGEABLE.getBooleanValue() == false ||
                 stack.isDamageable() == false) &&
                (Configs.Generic.PICK_BLOCK_AVOID_TOOLS.getBooleanValue() == false ||
-                (stack.getItem() instanceof ToolItem) == false);
+                (stack.getItem() instanceof ToolItem) == false);*/
     }
 
     private static int getPickBlockTargetSlot(PlayerEntity player)

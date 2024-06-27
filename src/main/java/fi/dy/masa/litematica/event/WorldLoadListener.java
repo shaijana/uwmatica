@@ -24,7 +24,7 @@ public class WorldLoadListener implements IWorldLoadListener
         // Save the settings before the integrated server gets shut down
         if (worldBefore != null)
         {
-            DataManager.save();
+//SH            DataManager.save();
         }
     }
 

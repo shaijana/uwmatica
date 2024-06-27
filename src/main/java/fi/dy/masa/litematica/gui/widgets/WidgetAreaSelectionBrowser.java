@@ -1,3 +1,4 @@
+/*
 package fi.dy.masa.litematica.gui.widgets;
 
 import java.io.File;
@@ -58,3 +59,4 @@ public class WidgetAreaSelectionBrowser extends WidgetFileBrowserBase
         }
     }
 }
+*/

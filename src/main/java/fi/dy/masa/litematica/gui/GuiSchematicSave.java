@@ -1,3 +1,4 @@
+/*SH
 package fi.dy.masa.litematica.gui;
 
 import java.io.File;
@@ -211,3 +212,4 @@ public class GuiSchematicSave extends GuiSchematicSaveBase implements ICompletio
         }
     }
 }
+*/

@@ -1,3 +1,4 @@
+/*SH
 package fi.dy.masa.litematica.gui.widgets;
 
 import java.util.ArrayList;
@@ -203,3 +204,4 @@ public class WidgetSelectionSubRegion extends WidgetListEntryBase<String>
         }
     }
 }
+*/

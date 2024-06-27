@@ -98,8 +98,8 @@ public class SchematicProject
                 this.projectFile = newFile;
                 this.selection.setName(name);
                 this.selectionSimple.setName(name);
-                SelectionManager.renameSubRegionBoxIfSingle(this.selection, name);
-                SelectionManager.renameSubRegionBoxIfSingle(this.selectionSimple, name);
+//SH                SelectionManager.renameSubRegionBoxIfSingle(this.selection, name);
+//SH                SelectionManager.renameSubRegionBoxIfSingle(this.selectionSimple, name);
                 this.dirty = true;
             }
             catch (Exception e)
@@ -271,30 +271,26 @@ public class SchematicProject
 
             this.cacheCurrentAreaFromPlacement();
 
-            ToolUtils.deleteSelectionVolumes(this.lastSeenArea, true, () ->
+/*SH            ToolUtils.deleteSelectionVolumes(this.lastSeenArea, true, () ->
             {
                 DataManager.getSchematicPlacementManager().pastePlacementToWorld(this.currentPlacement, false, mc);
-            }, mc);
+            }, mc);*/
         }
     }
 
-    public void deleteLastSeenArea(MinecraftClient mc)
+/*SH    public void deleteLastSeenArea(MinecraftClient mc)
     {
         ToolUtils.deleteSelectionVolumes(this.lastSeenArea, true, mc);
-    }
+    }*/
 
-    public void removeCurrentPlacement()
-    {
-        if (this.currentPlacement != null)
-        {
+    public void removeCurrentPlacement() {
+        if (this.currentPlacement != null) {
             DataManager.getSchematicPlacementManager().removeSchematicPlacement(this.currentPlacement);
         }
     }
 
-    public boolean cycleVersion(int amount)
-    {
-        if (this.currentVersionId >= 0)
-        {
+    public boolean cycleVersion(final int amount) {
+        if (this.currentVersionId >= 0) {
             return this.switchVersion(this.currentVersionId + amount, true);
         }
 

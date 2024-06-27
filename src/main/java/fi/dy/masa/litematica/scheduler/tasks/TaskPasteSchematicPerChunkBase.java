@@ -1,5 +1,6 @@
 package fi.dy.masa.litematica.scheduler.tasks;
 
+/*SH
 import java.util.Collection;
 import java.util.Set;
 import com.google.common.collect.ImmutableList;
@@ -105,3 +106,4 @@ public abstract class TaskPasteSchematicPerChunkBase extends TaskProcessChunkMul
         return this.areSurroundingChunksLoaded(pos, this.clientWorld, 1);
     }
 }
+*/
