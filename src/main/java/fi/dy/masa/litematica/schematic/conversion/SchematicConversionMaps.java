@@ -1,27 +1,26 @@
 package fi.dy.masa.litematica.schematic.conversion;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
-import javax.annotation.Nullable;
-import com.mojang.datafixers.DataFixUtils;
-import com.mojang.serialization.Dynamic;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import com.mojang.datafixers.DataFixUtils;
+import com.mojang.serialization.Dynamic;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.PillarBlock;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.datafixer.TypeReferences;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtHelper;
-import net.minecraft.nbt.NbtOps;
-import net.minecraft.nbt.NbtString;
-import net.minecraft.nbt.StringNbtReader;
+import net.minecraft.nbt.*;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.RegistryEntryLookup;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import fi.dy.masa.malilib.util.NBTUtils;
 import fi.dy.masa.litematica.Litematica;
+import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.schematic.LitematicaSchematic;
 
 public class SchematicConversionMaps
@@ -190,10 +189,10 @@ public class SchematicConversionMaps
                 NbtCompound oldStateTag = getStateTagFromString(oldStateStrings[0]);
                 String oldName = oldStateTag.getString("Name");
 
-                // Don't run the vanilla block rename for overidden names
+                // Don't run the vanilla block rename for overridden names
                 if (overriddenName == null)
                 {
-                    newName = updateBlockName(newName);
+                    newName = updateBlockName(newName, Configs.Generic.DATAFIXER_DEFAULT_SCHEMA.getIntegerValue());
                     newStateTag.putString("Name", newName);
                 }
 
@@ -278,12 +277,179 @@ public class SchematicConversionMaps
         }
     }
 
-    public static String updateBlockName(String oldName)
+    public static String updateBlockName(String oldName, int oldVersion)
     {
         NbtString tagStr = NbtString.of(oldName);
 
-        return MinecraftClient.getInstance().getDataFixer().update(TypeReferences.BLOCK_NAME, new Dynamic<>(NbtOps.INSTANCE, tagStr),
-                        1139, LitematicaSchematic.MINECRAFT_DATA_VERSION).getValue().asString();
+        try
+        {
+            return MinecraftClient.getInstance().getDataFixer().update(TypeReferences.BLOCK_NAME, new Dynamic<>(NbtOps.INSTANCE, tagStr), oldVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION).getValue().asString();
+        }
+        catch (Exception e)
+        {
+            Litematica.logger.warn("updateBlockName: failed to update Block Name [{}], preserving original state (data may become lost)", oldName);
+            return oldName;
+        }
+    }
+
+    /**
+     * These are the Vanilla Data Fixer's for the 1.20.x -> 1.20.5 changes
+     */
+    public static NbtCompound updateBlockStates(NbtCompound oldBlockState, int oldVersion)
+    {
+        try
+        {
+            return (NbtCompound) MinecraftClient.getInstance().getDataFixer().update(TypeReferences.BLOCK_STATE, new Dynamic<>(NbtOps.INSTANCE, oldBlockState), oldVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION).getValue();
+        }
+        catch (Exception e)
+        {
+            Litematica.logger.warn("updateBlockStates: failed to update Block State [{}], preserving original state (data may become lost)",
+                                   oldBlockState.contains("Name") ? oldBlockState.getString("Name") : "?");
+            return oldBlockState;
+        }
+    }
+
+    public static NbtCompound updateBlockEntity(NbtCompound oldBlockEntity, int oldVersion)
+    {
+        try
+        {
+            return (NbtCompound) MinecraftClient.getInstance().getDataFixer().update(TypeReferences.BLOCK_ENTITY, new Dynamic<>(NbtOps.INSTANCE, oldBlockEntity), oldVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION).getValue();
+        }
+        catch (Exception e)
+        {
+            BlockPos pos = NBTUtils.readBlockPos(oldBlockEntity);
+            Litematica.logger.warn("updateBlockEntity: failed to update Block Entity [{}] at [{}], preserving original state (data may become lost)",
+                                   oldBlockEntity.contains("id") ? oldBlockEntity.getString("id") : "?", pos != null ? pos.toShortString() : "?");
+            return oldBlockEntity;
+        }
+    }
+
+    public static NbtCompound updateEntity(NbtCompound oldEntity, int oldVersion)
+    {
+        try
+        {
+            return (NbtCompound) MinecraftClient.getInstance().getDataFixer().update(TypeReferences.ENTITY, new Dynamic<>(NbtOps.INSTANCE, oldEntity), oldVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION).getValue();
+        }
+        catch (Exception e)
+        {
+            Litematica.logger.warn("updateEntity: failed to update Entity [{}], preserving original state (data may become lost)",
+                                   oldEntity.contains("id") ? oldEntity.getString("id") : "?");
+            return oldEntity;
+        }
+    }
+
+    public static NbtCompound checkForIdTag(NbtCompound tags)
+    {
+        if (tags.contains("id"))
+        {
+            return tags;
+        }
+        if (tags.contains("Id"))
+        {
+            tags.putString("id", tags.getString("Id"));
+            return tags;
+        }
+
+        // We don't have an "id" tag, let's try to fix it
+        if (tags.contains("Bees") || tags.contains("bees"))
+        {
+            tags.putString("id", "minecraft:beehive");
+        }
+        else if (tags.contains("TransferCooldown") && tags.contains("Items"))
+        {
+            tags.putString("id", "minecraft:hopper");
+        }
+        else if (tags.contains("SkullOwner"))
+        {
+            tags.putString("id", "minecraft:skull");
+        }
+        else if (tags.contains("Patterns") || tags.contains("patterns"))
+        {
+            tags.putString("id", "minecraft:banner");
+        }
+        else if (tags.contains("Sherds") || tags.contains("sherds"))
+        {
+            tags.putString("id", "minecraft:decorated_pot");
+        }
+        else if (tags.contains("last_interacted_slot") && tags.contains("Items"))
+        {
+            tags.putString("id", "minecraft:chiseled_bookshelf");
+        }
+        else if (tags.contains("CookTime") && tags.contains("Items"))
+        {
+            tags.putString("id", "minecraft:furnace");
+        }
+        else if (tags.contains("RecordItem"))
+        {
+            tags.putString("id", "minecraft:jukebox");
+        }
+        else if (tags.contains("Book") || tags.contains("book"))
+        {
+            tags.putString("id", "minecraft:lectern");
+        }
+        else if (tags.contains("front_text"))
+        {
+            tags.putString("id", "minecraft:sign");
+        }
+        else if (tags.contains("BrewTime") || tags.contains("Fuel"))
+        {
+            tags.putString("id", "minecraft:brewing_stand");
+        }
+        else if ((tags.contains("LootTable") && tags.contains("LootTableSeed")) || (tags.contains("hit_direction") || tags.contains("item")))
+        {
+            tags.putString("id", "minecraft:suspicious_sand");
+        }
+        else if (tags.contains("SpawnData") || tags.contains("SpawnPotentials"))
+        {
+            tags.putString("id", "minecraft:spawner");
+        }
+        else if (tags.contains("normal_config"))
+        {
+            tags.putString("id", "minecraft:trial_spawner");
+        }
+        else if (tags.contains("shared_data"))
+        {
+            tags.putString("id", "minecraft:vault");
+        }
+        else if (tags.contains("pool") && tags.contains("final_state") && tags.contains("placement_priority"))
+        {
+            tags.putString("id", "minecraft:jigsaw");
+        }
+        else if (tags.contains("author") && tags.contains("metadata") && tags.contains("showboundingbox"))
+        {
+            tags.putString("id", "minecraft:structure_block");
+        }
+        else if (tags.contains("ExactTeleport") && tags.contains("Age"))
+        {
+            tags.putString("id", "minecraft:end_gateway");
+        }
+        else if (tags.contains("Items"))
+        {
+            tags.putString("id", "minecraft:chest");
+        }
+        else if (tags.contains("last_vibration_frequency") || tags.contains("listener"))
+        {
+            tags.putString("id", "minecraft:sculk_sensor");
+        }
+        else if (tags.contains("warning_level") || tags.contains("listener"))
+        {
+            tags.putString("id", "minecraft:sculk_shrieker");
+        }
+        else if (tags.contains("OutputSignal"))
+        {
+            tags.putString("id", "minecraft:comparator");
+        }
+        else if (tags.contains("facing") || tags.contains("extending"))
+        {
+            tags.putString("id", "minecraft:piston");
+        }
+        else if (tags.contains("x") && tags.contains("y") && tags.contains("z"))
+        {
+            // Might only have x y z pos
+            tags.putString("id", "minecraft:piston");
+        }
+
+        return tags;
     }
 
     private static class ConversionData

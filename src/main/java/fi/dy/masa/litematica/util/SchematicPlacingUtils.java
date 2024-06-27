@@ -11,6 +11,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.decoration.DisplayEntity;
 import net.minecraft.entity.decoration.painting.PaintingEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.inventory.Inventory;
@@ -247,7 +248,7 @@ public class SchematicPlacingUtils
 
                             try
                             {
-                                te.readNbt(teNBT);
+                                te.read(teNBT, world.getRegistryManager());
 
                                 if (ignoreInventories && te instanceof Inventory)
                                 {
@@ -433,14 +434,14 @@ public class SchematicPlacingUtils
                     {
                         Direction right = paintingEntity.getHorizontalFacing().rotateYCounterclockwise();
 
-                        if ((paintingEntity.getWidthPixels() % 32) == 0 &&
+                        if ((paintingEntity.getVariant().value().width() % 32) == 0 &&
                             right.getDirection() == AxisDirection.POSITIVE)
                         {
                             x -= 1.0 * right.getOffsetX();
                             z -= 1.0 * right.getOffsetZ();
                         }
 
-                        if ((paintingEntity.getHeightPixels() % 32) == 0)
+                        if ((paintingEntity.getVariant().value().height() % 32) == 0)
                         {
                             y -= 1.0;
                         }
@@ -449,6 +450,11 @@ public class SchematicPlacingUtils
                     }
 
                     EntityUtils.spawnEntityAndPassengersInWorld(entity, world);
+
+                    if (entity instanceof DisplayEntity)
+                    {
+                        entity.tick(); // Required to set the full data for rendering
+                    }
                 }
             }
         }
