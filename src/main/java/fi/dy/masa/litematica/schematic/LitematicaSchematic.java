@@ -1872,8 +1872,7 @@ public class LitematicaSchematic
 
             for (BlockPos key : oldTE.keySet())
             {
-                NbtCompound oldNbt = SchematicConversionMaps.checkForIdTag(oldTE.get(key));
-                newTE.put(key, SchematicConversionMaps.updateBlockEntity(oldNbt, minecraftDataVersion));
+                newTE.put(key, SchematicConversionMaps.updateBlockEntity(SchematicConversionMaps.checkForIdTag(oldTE.get(key)), minecraftDataVersion));
             }
 
             return newTE;
