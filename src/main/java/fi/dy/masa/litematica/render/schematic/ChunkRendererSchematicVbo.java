@@ -72,6 +72,11 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
     {
         this.world = world;
         this.worldRenderer = worldRenderer;
+        /*
+        this.chunkRenderData = ChunkRenderDataSchematic.EMPTY;
+        this.chunkRenderLock = new ReentrantLock();
+        this.chunkRenderDataLock = new ReentrantLock();
+         */
         this.vertexBufferBlocks = new IdentityHashMap<>();
         this.vertexBufferOverlay = new IdentityHashMap<>();
         this.position = new BlockPos.Mutable();
@@ -102,7 +107,7 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
 
     protected ChunkRenderDataSchematic getChunkRenderData()
     {
-        return chunkRenderData.get();
+        return this.chunkRenderData.get();
     }
 
     protected BufferBuilderCache getBuilderCache()
@@ -112,7 +117,19 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
 
     protected void setChunkRenderData(ChunkRenderDataSchematic data)
     {
-        chunkRenderData.set(data);
+        /*
+        this.chunkRenderDataLock.lock();
+
+        try
+        {
+            this.chunkRenderData = data;
+        }
+        finally
+        {
+            this.chunkRenderDataLock.unlock();
+        }
+         */
+        this.chunkRenderData.set(data);
     }
 
     public BlockPos getOrigin()
@@ -228,6 +245,24 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
     {
         ChunkRenderDataSchematic data = new ChunkRenderDataSchematic();
         task.setChunkRenderData(data);
+        /*
+        task.getLock().lock();
+
+        try
+        {
+            if (task.getStatus() != ChunkRenderTaskSchematic.Status.COMPILING)
+            {
+                return;
+            }
+
+            task.setChunkRenderData(data);
+        }
+        finally
+        {
+            task.getLock().unlock();
+        }
+
+         */
 
         //Litematica.debugLog("rebuildChunk() [VBO]: bootstrap/clearing all render buffers for chunk origin [{}]", this.position.toShortString());
 
@@ -335,14 +370,33 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
             }
         }
 
-        Set<BlockEntity> removed = setBlockEntities.getAndSet(tileEntities);
+        /*
+        try
+        {
+            Set<BlockEntity> set = Sets.newHashSet(tileEntities);
+            Set<BlockEntity> set1 = Sets.newHashSet(this.setBlockEntities);
+            set.removeAll(this.setBlockEntities);
+            set1.removeAll(tileEntities);
+            this.setBlockEntities.clear();
+            this.setBlockEntities.addAll(tileEntities);
+            this.worldRenderer.updateBlockEntities(set1, set);
+        }
+        finally
+        {
+            this.chunkRenderLock.unlock();
+        }
+         */
+
+        Set<BlockEntity> removed = this.setBlockEntities.getAndSet(tileEntities);
         Set<BlockEntity> added = Sets.newHashSet(tileEntities);
         added.removeAll(removed);
         removed.removeAll(tileEntities);
-        synchronized (builderCache) {
+
+        synchronized (this.builderCache)
+        {
             // probably not necessary to do block Entity update this with builderCache locked but doing so out of caution.
-            worldRenderer.updateBlockEntities(removed, added);
-            builderCache.clearAll();
+            this.worldRenderer.updateBlockEntities(removed, added);
+            this.builderCache.clearAll();
         }
 
         data.setTimeBuilt(this.world.getTime());

@@ -17,17 +17,17 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.Chunk;
 import fi.dy.masa.malilib.interfaces.IClientTickHandler;
 import fi.dy.masa.malilib.network.ClientPlayHandler;
 import fi.dy.masa.malilib.network.IPluginClientPlayHandler;
 import fi.dy.masa.malilib.util.Constants;
 import fi.dy.masa.malilib.util.NBTUtils;
-import fi.dy.masa.malilib.util.WorldUtils;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.Reference;
 import fi.dy.masa.litematica.config.Configs;
@@ -35,6 +35,7 @@ import fi.dy.masa.litematica.mixin.IMixinDataQueryHandler;
 import fi.dy.masa.litematica.network.ServuxLitematicaHandler;
 import fi.dy.masa.litematica.network.ServuxLitematicaPacket;
 import fi.dy.masa.litematica.util.EntityUtils;
+import fi.dy.masa.litematica.util.WorldUtils;
 
 public class EntitiesDataStorage implements IClientTickHandler
 {
@@ -51,15 +52,18 @@ public class EntitiesDataStorage implements IClientTickHandler
     private boolean servuxServer = false;
     private boolean hasInValidServux = false;
     private String servuxVersion;
+    private final long chunkTimeoutMs = 5000;
+    // Wait 5 seconds for loaded Client Chunks to receive Entity Data
 
     private long serverTickTime = 0;
     // Requests to be executed
-    private Set<BlockPos> pendingBlockEntitiesQueue = new LinkedHashSet<>();
-    private Set<Integer> pendingEntitiesQueue = new LinkedHashSet<>();
-    private Set<ChunkPos> pendingChunks = new LinkedHashSet<>();
-    private Set<ChunkPos> completedChunks = new LinkedHashSet<>();
+    private final Set<BlockPos> pendingBlockEntitiesQueue = new LinkedHashSet<>();
+    private final Set<Integer> pendingEntitiesQueue = new LinkedHashSet<>();
+    private final Set<ChunkPos> pendingChunks = new LinkedHashSet<>();
+    private final Set<ChunkPos> completedChunks = new LinkedHashSet<>();
+    private final Map<ChunkPos, Long> pendingChunkTimeout = new HashMap<>();
     // To save vanilla query packet transaction
-    private Map<Integer, Either<BlockPos, Integer>> transactionToBlockPosOrEntityId = new HashMap<>();
+    private final Map<Integer, Either<BlockPos, Integer>> transactionToBlockPosOrEntityId = new HashMap<>();
 
     @Nullable
     public World getWorld()
@@ -74,23 +78,23 @@ public class EntitiesDataStorage implements IClientTickHandler
     @Override
     public void onClientTick(MinecraftClient mc)
     {
-        uptimeTicks++;
-        if (System.currentTimeMillis() - serverTickTime > 50)
+        this.uptimeTicks++;
+        if (System.currentTimeMillis() - this.serverTickTime > 50)
         {
             // In this block, we do something every server tick
 
-            if (Configs.Generic.ENTITY_DATA_SYNC.getBooleanValue() == false)
+            if (!Configs.Generic.ENTITY_DATA_SYNC.getBooleanValue())
             {
-                serverTickTime = System.currentTimeMillis();
+                this.serverTickTime = System.currentTimeMillis();
                 return;
             }
 
             // 5 queries / server tick
             for (int i = 0; i < Configs.Generic.SERVER_NBT_REQUEST_RATE.getIntegerValue(); i++)
             {
-                if (!pendingBlockEntitiesQueue.isEmpty())
+                if (!this.pendingBlockEntitiesQueue.isEmpty())
                 {
-                    var iter = pendingBlockEntitiesQueue.iterator();
+                    var iter = this.pendingBlockEntitiesQueue.iterator();
                     BlockPos pos = iter.next();
                     iter.remove();
                     if (this.hasServuxServer())
@@ -102,9 +106,9 @@ public class EntitiesDataStorage implements IClientTickHandler
                         requestQueryBlockEntity(pos);
                     }
                 }
-                if (!pendingEntitiesQueue.isEmpty())
+                if (!this.pendingEntitiesQueue.isEmpty())
                 {
-                    var iter = pendingEntitiesQueue.iterator();
+                    var iter = this.pendingEntitiesQueue.iterator();
                     int entityId = iter.next();
                     iter.remove();
                     if (this.hasServuxServer())
@@ -117,7 +121,7 @@ public class EntitiesDataStorage implements IClientTickHandler
                     }
                 }
             }
-            serverTickTime = System.currentTimeMillis();
+            this.serverTickTime = System.currentTimeMillis();
         }
     }
 
@@ -246,13 +250,13 @@ public class EntitiesDataStorage implements IClientTickHandler
     {
         if (world.getBlockState(pos).getBlock() instanceof BlockEntityProvider)
         {
-            pendingBlockEntitiesQueue.add(pos);
+            this.pendingBlockEntitiesQueue.add(pos);
         }
     }
 
     public void requestEntity(int entityId)
     {
-        pendingEntitiesQueue.add(entityId);
+        this.pendingEntitiesQueue.add(entityId);
     }
 
     private void requestQueryBlockEntity(BlockPos pos)
@@ -270,7 +274,7 @@ public class EntitiesDataStorage implements IClientTickHandler
             {
                 handleBlockEntityData(pos, nbtCompound, null);
             });
-            transactionToBlockPosOrEntityId.put(((IMixinDataQueryHandler) handler.getDataQueryHandler()).currentTransactionId(), Either.left(pos));
+            this.transactionToBlockPosOrEntityId.put(((IMixinDataQueryHandler) handler.getDataQueryHandler()).currentTransactionId(), Either.left(pos));
         }
     }
 
@@ -289,7 +293,7 @@ public class EntitiesDataStorage implements IClientTickHandler
             {
                 handleEntityData(entityId, nbtCompound);
             });
-            transactionToBlockPosOrEntityId.put(((IMixinDataQueryHandler) handler.getDataQueryHandler()).currentTransactionId(), Either.right(entityId));
+            this.transactionToBlockPosOrEntityId.put(((IMixinDataQueryHandler) handler.getDataQueryHandler()).currentTransactionId(), Either.right(entityId));
         }
     }
 
@@ -323,21 +327,12 @@ public class EntitiesDataStorage implements IClientTickHandler
 
         NbtCompound req = new NbtCompound();
 
-        if (this.completedChunks.contains(chunkPos))
-        {
-            this.completedChunks.remove(chunkPos);
-        }
-
+        this.completedChunks.remove(chunkPos);
         this.pendingChunks.add(chunkPos);
+        this.pendingChunkTimeout.put(chunkPos, Util.getMeasuringTimeMs());
 
-        if (minY < -60)
-        {
-            minY = -60;
-        }
-        if (maxY > 319)
-        {
-            maxY = 319;
-        }
+        minY = MathHelper.clamp(minY, -60, 319);
+        maxY = MathHelper.clamp(maxY, -60, 319);
 
         req.putInt("minY", minY);
         req.putInt("maxY", maxY);
@@ -349,7 +344,7 @@ public class EntitiesDataStorage implements IClientTickHandler
     @Nullable
     public BlockEntity handleBlockEntityData(BlockPos pos, NbtCompound nbt, @Nullable Identifier type)
     {
-        pendingBlockEntitiesQueue.remove(pos);
+        this.pendingBlockEntitiesQueue.remove(pos);
         if (nbt == null || this.getWorld() == null) return null;
 
         BlockEntity blockEntity = this.getWorld().getBlockEntity(pos);
@@ -377,7 +372,7 @@ public class EntitiesDataStorage implements IClientTickHandler
     @Nullable
     public Entity handleEntityData(int entityId, NbtCompound nbt)
     {
-        pendingEntitiesQueue.remove(entityId);
+        this.pendingEntitiesQueue.remove(entityId);
         if (nbt == null || this.getWorld() == null) return null;
         Entity entity = this.getWorld().getEntityById(entityId);
         if (entity != null)
@@ -415,11 +410,8 @@ public class EntitiesDataStorage implements IClientTickHandler
             handleEntityData(entityId, ent);
         }
 
-        if (this.pendingChunks.contains(chunkPos))
-        {
-            this.pendingChunks.remove(chunkPos);
-        }
-
+        this.pendingChunks.remove(chunkPos);
+        this.pendingChunkTimeout.remove(chunkPos);
         this.completedChunks.add(chunkPos);
 
         Litematica.debugLog("EntitiesDataStorage#handleBulkEntityData(): [ChunkPos {}] received TE: [{}], and E: [{}] entiries from Servux", chunkPos.toString(), tileList.size(), entityList.size());
@@ -427,7 +419,7 @@ public class EntitiesDataStorage implements IClientTickHandler
 
     public void handleVanillaQueryNbt(int transactionId, NbtCompound nbt)
     {
-        Either<BlockPos, Integer> either = transactionToBlockPosOrEntityId.remove(transactionId);
+        Either<BlockPos, Integer> either = this.transactionToBlockPosOrEntityId.remove(transactionId);
         if (either != null)
         {
             either.ifLeft(pos -> handleBlockEntityData(pos, nbt, null))
@@ -441,9 +433,32 @@ public class EntitiesDataStorage implements IClientTickHandler
         {
             return this.pendingChunks.contains(pos);
         }
-        else
+
+        return false;
+    }
+
+    private void checkForPendingChunkTimeout(ChunkPos pos)
+    {
+        if (this.hasServuxServer() && this.hasPendingChunk(pos))
         {
-            return false;
+            long now = Util.getMeasuringTimeMs();
+
+            // Take no action when ChunkPos is not loaded by the ClientWorld.
+            if (WorldUtils.isClientChunkLoaded(mc.world, pos.x, pos.z) == false)
+            {
+                this.pendingChunkTimeout.replace(pos, now);
+                return;
+            }
+
+            long duration = now - this.pendingChunkTimeout.get(pos);
+
+            if (duration > this.chunkTimeoutMs)
+            {
+                //Litematica.debugLog("EntitiesDataStorage#checkForPendingChunkTimeout(): [ChunkPos {}] has timed out waiting for data, marking complete without Receiving Entity Data.", pos.toString());
+                this.pendingChunkTimeout.remove(pos);
+                this.pendingChunks.remove(pos);
+                this.completedChunks.add(pos);
+            }
         }
     }
 
@@ -451,12 +466,11 @@ public class EntitiesDataStorage implements IClientTickHandler
     {
         if (this.hasServuxServer())
         {
+            this.checkForPendingChunkTimeout(pos);
             return this.completedChunks.contains(pos);
         }
-        else
-        {
-            return true;
-        }
+
+        return true;
     }
 
     public void markCompletedChunkDirty(ChunkPos pos)
