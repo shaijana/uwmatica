@@ -1,17 +1,11 @@
 package fi.dy.masa.litematica.util;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.function.BiFunction;
-import javax.annotation.Nullable;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import net.minecraft.block.BedBlock;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.ComparatorBlock;
-import net.minecraft.block.RepeaterBlock;
+import net.minecraft.block.*;
 import net.minecraft.block.enums.BlockHalf;
 import net.minecraft.block.enums.ComparatorMode;
 import net.minecraft.block.enums.SlabType;
@@ -78,17 +72,6 @@ public class PlacementHandler
             Properties.ROTATION
     );
 
-    public static final ImmutableMap<Property<?>, BiFunction<BlockState, UseContext, Boolean>> PROPERTY_VALIDATORS = ImmutableMap.<Property<?>, BiFunction<BlockState, UseContext, Boolean>>builder()
-            .put(Properties.HORIZONTAL_FACING, (value, ctx) ->
-            {
-                if (value.getProperties().contains(Properties.BLOCK_FACE))
-                {
-                    return value.canPlaceAt(ctx.getWorld(), ctx.getPos());
-                }
-                return true;
-            })
-            .build();
-    
     public static EasyPlaceProtocol getEffectiveProtocolVersion()
     {
         EasyPlaceProtocol protocol = (EasyPlaceProtocol) Configs.Generic.EASY_PLACE_PROTOCOL.getOptionListValue();
@@ -107,8 +90,6 @@ public class PlacementHandler
 
             return EasyPlaceProtocol.SLAB_ONLY;
         }
-
-        Litematica.debugLog("getEffectiveProtocolVersion(): {}", protocol.name());
 
         return protocol;
     }
@@ -211,9 +192,13 @@ public class PlacementHandler
         {
             //System.out.printf("applying: 0x%08X\n", protocolValue);
             state = applyDirectionProperty(state, context, property, protocolValue);
-            var validator = PROPERTY_VALIDATORS.get(property);
 
-            if ((validator == null || validator.apply(state, context)) && state.canPlaceAt(context.getWorld(), context.getPos()))
+            if (state == null)
+            {
+                return null;
+            }
+
+            if (state.canPlaceAt(context.getWorld(), context.getPos()))
             {
                 //System.out.printf("validator passed for \"%s\"\n", property.getName());
                 oldState = state;
@@ -224,11 +209,6 @@ public class PlacementHandler
                 state = oldState;
             }
             
-            if (state == null)
-            {
-                return null;
-            }
-
             // Consume the bits used for the facing
             protocolValue >>>= 3;
         }
@@ -266,8 +246,7 @@ public class PlacementHandler
                             //System.out.printf("applying \"%s\": %s\n", prop.getName(), value);
                             state = state.with(prop, value);
 
-                            BiFunction<BlockState, UseContext, Boolean> validator = PROPERTY_VALIDATORS.get(prop);
-                            if ((validator == null || validator.apply(state, context)) && state.canPlaceAt(context.getWorld(), context.getPos()))
+                            if (state.canPlaceAt(context.getWorld(), context.getPos()))
                             {
                                 //System.out.printf("validator passed for \"%s\"\n", prop.getName());
                                 oldState = state;

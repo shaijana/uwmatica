@@ -83,10 +83,18 @@ public class EntitiesDataStorage implements IClientTickHandler
         {
             // In this block, we do something every server tick
 
-            if (!Configs.Generic.ENTITY_DATA_SYNC.getBooleanValue())
+            if (Configs.Generic.ENTITY_DATA_SYNC.getBooleanValue() == false)
             {
                 this.serverTickTime = System.currentTimeMillis();
                 return;
+            }
+            else if (DataManager.getInstance().hasIntegratedServer() == false &&
+                    this.hasServuxServer() == false &&
+                    this.hasInValidServux == false)
+            {
+                // Make sure we're Play Registered, and request Metadata
+                HANDLER.registerPlayReceiver(ServuxLitematicaPacket.Payload.ID, HANDLER::receivePlayPayload);
+                this.requestMetadata();
             }
 
             // 5 queries / server tick
@@ -285,7 +293,7 @@ public class EntitiesDataStorage implements IClientTickHandler
             return;
         }
 
-        ClientPlayNetworkHandler handler = this.getVanillaHandler();
+        ClientPlayNetworkHandler handler = getVanillaHandler();
 
         if (handler != null)
         {
