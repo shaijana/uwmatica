@@ -86,11 +86,18 @@ public class EntitiesDataStorage implements IClientTickHandler
             if (Configs.Generic.ENTITY_DATA_SYNC.getBooleanValue() == false)
             {
                 this.serverTickTime = System.currentTimeMillis();
+
+                if (DataManager.getInstance().hasIntegratedServer() == false && this.hasServuxServer())
+                {
+                    this.servuxServer = false;
+                    HANDLER.unregisterPlayReceiver();
+                }
                 return;
             }
             else if (DataManager.getInstance().hasIntegratedServer() == false &&
                     this.hasServuxServer() == false &&
-                    this.hasInValidServux == false)
+                    this.hasInValidServux == false &&
+                    this.getWorld() != null)
             {
                 // Make sure we're Play Registered, and request Metadata
                 HANDLER.registerPlayReceiver(ServuxLitematicaPacket.Payload.ID, HANDLER::receivePlayPayload);
