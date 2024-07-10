@@ -37,22 +37,25 @@ public class BufferBuilderCache implements AutoCloseable
     {
         ArrayList<BufferBuilderPatch> buffers;
 
-        synchronized (blockBufferBuilders)
+        synchronized (this.blockBufferBuilders)
         {
-            buffers = new ArrayList<>(blockBufferBuilders.values());
-            blockBufferBuilders.clear();
+            buffers = new ArrayList<>(this.blockBufferBuilders.values());
+            this.blockBufferBuilders.clear();
         }
-        synchronized (overlayBufferBuilders)
+        synchronized (this.overlayBufferBuilders)
         {
-            buffers.addAll(overlayBufferBuilders.values());
-            overlayBufferBuilders.clear();
+            buffers.addAll(this.overlayBufferBuilders.values());
+            this.overlayBufferBuilders.clear();
         }
-        for (BufferBuilderPatch buffer:buffers)
+        for (BufferBuilderPatch buffer : buffers)
         {
-            try {
+            try
+            {
                 BuiltBuffer built = buffer.endNullable();
                 if (built != null)
+                {
                     built.close();
+                }
             }
             catch (Exception ignored) {}
         }

@@ -1,15 +1,16 @@
 package fi.dy.masa.litematica.render.schematic;
 
 import javax.annotation.Nonnull;
-import java.util.HashMap;
-import java.util.Map;
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.client.render.BuiltBuffer;
 import net.minecraft.client.render.RenderLayer;
 
 public class BuiltBufferCache implements AutoCloseable
 {
-    private final Map<RenderLayer, BuiltBuffer> layerBuffers = new HashMap<>();
-    private final Map<ChunkRendererSchematicVbo.OverlayRenderType, BuiltBuffer> overlayBuffers = new HashMap<>();
+    private final ConcurrentHashMap<RenderLayer, BuiltBuffer> layerBuffers = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<ChunkRendererSchematicVbo.OverlayRenderType, BuiltBuffer> overlayBuffers = new ConcurrentHashMap<>();
 
     protected BuiltBufferCache() { }
 
@@ -41,52 +42,37 @@ public class BuiltBufferCache implements AutoCloseable
         this.overlayBuffers.put(type, newBuffer);
     }
 
-    public BuiltBuffer getBuiltBufferByLayer(RenderLayer layer)
+    @Nullable
+    protected BuiltBuffer getBuiltBufferByLayer(RenderLayer layer)
     {
         return this.layerBuffers.get(layer);
     }
 
+    @Nullable
     protected BuiltBuffer getBuiltBufferByType(ChunkRendererSchematicVbo.OverlayRenderType type)
     {
         return this.overlayBuffers.get(type);
     }
 
-    protected void closeByLayer(RenderLayer layer)
-    {
-        try
-        {
-            if (this.layerBuffers.containsKey(layer))
-            {
-                this.layerBuffers.get(layer).close();
-            }
-        }
-        catch (Exception ignored) { }
-        this.layerBuffers.remove(layer);
-    }
-
-    protected void closeByType(ChunkRendererSchematicVbo.OverlayRenderType type)
-    {
-        try
-        {
-            if (this.overlayBuffers.containsKey(type))
-            {
-                this.overlayBuffers.get(type).close();
-            }
-        }
-        catch (Exception ignored) { }
-        this.overlayBuffers.remove(type);
-    }
-
     protected void closeAll()
     {
+        ArrayList<BuiltBuffer> builtBuffers;
+
+        synchronized (this.layerBuffers)
+        {
+            builtBuffers = new ArrayList<>(this.layerBuffers.values());
+            this.layerBuffers.clear();
+        }
+        synchronized (this.overlayBuffers)
+        {
+            builtBuffers.addAll(this.overlayBuffers.values());
+            this.overlayBuffers.clear();
+        }
         try
         {
-            this.layerBuffers.values().forEach(BuiltBuffer::close);
-            this.overlayBuffers.values().forEach(BuiltBuffer::close);
+            builtBuffers.forEach(BuiltBuffer::close);
         }
         catch (Exception ignored) { }
-        this.layerBuffers.clear();
-        this.overlayBuffers.clear();
     }
 
     @Override

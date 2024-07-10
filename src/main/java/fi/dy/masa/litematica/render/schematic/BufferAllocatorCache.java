@@ -1,12 +1,12 @@
 package fi.dy.masa.litematica.render.schematic;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.util.BufferAllocator;
+import java.util.concurrent.ConcurrentHashMap;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.util.BufferAllocator;
 
 @Environment(EnvType.CLIENT)
 public class BufferAllocatorCache implements AutoCloseable
@@ -14,8 +14,8 @@ public class BufferAllocatorCache implements AutoCloseable
     protected static final List<RenderLayer> LAYERS = ChunkRenderLayers.LAYERS;
     protected static final List<ChunkRendererSchematicVbo.OverlayRenderType> TYPES = ChunkRenderLayers.TYPES;
     protected static final int EXPECTED_TOTAL_SIZE;
-    private final Map<RenderLayer, BufferAllocator> layerCache = new HashMap<>();
-    private final Map<ChunkRendererSchematicVbo.OverlayRenderType, BufferAllocator> overlayCache = new HashMap<>();
+    private final ConcurrentHashMap<RenderLayer, BufferAllocator> layerCache = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<ChunkRendererSchematicVbo.OverlayRenderType, BufferAllocator> overlayCache = new ConcurrentHashMap<>();
 
     protected BufferAllocatorCache() { }
 
@@ -31,48 +31,30 @@ public class BufferAllocatorCache implements AutoCloseable
 
     protected BufferAllocator getBufferByLayer(RenderLayer layer)
     {
-        if (this.layerCache.containsKey(layer) == false)
-        {
-            this.layerCache.put(layer, new BufferAllocator(layer.getExpectedBufferSize()));
-        }
-
-        return this.layerCache.get(layer);
+        return this.layerCache.computeIfAbsent(layer, l -> new BufferAllocator(l.getExpectedBufferSize()));
     }
 
     protected BufferAllocator getBufferByOverlay(ChunkRendererSchematicVbo.OverlayRenderType type)
     {
-        if (this.overlayCache.containsKey(type) == false)
-        {
-            this.overlayCache.put(type, new BufferAllocator(type.getExpectedBufferSize()));
-        }
-
-        return this.overlayCache.get(type);
+        return this.overlayCache.computeIfAbsent(type, t -> new BufferAllocator(t.getExpectedBufferSize()));
     }
 
     protected void closeByLayer(RenderLayer layer)
     {
         try
         {
-            if (this.layerCache.containsKey(layer))
-            {
-                this.layerCache.get(layer).close();
-            }
+            this.layerCache.remove(layer).close();
         }
         catch (Exception ignored) { }
-        this.layerCache.remove(layer).close();
     }
 
     protected void closeByType(ChunkRendererSchematicVbo.OverlayRenderType type)
     {
         try
         {
-            if (this.overlayCache.containsKey(type))
-            {
-                this.overlayCache.get(type).close();
-            }
+            this.overlayCache.remove(type).close();
         }
         catch (Exception ignored) { }
-        this.overlayCache.remove(type).close();
     }
 
     protected void resetAll()
@@ -97,14 +79,20 @@ public class BufferAllocatorCache implements AutoCloseable
 
     protected void closeAll()
     {
-        try
+        ArrayList<BufferAllocator> allocators;
+
+        synchronized (this.layerCache)
         {
-            this.layerCache.values().forEach(BufferAllocator::close);
-            this.overlayCache.values().forEach(BufferAllocator::close);
+            allocators = new ArrayList<>(this.layerCache.values());
+            this.layerCache.clear();
         }
-        catch (Exception ignored) { }
-        this.layerCache.clear();
-        this.overlayCache.clear();
+        synchronized (this.overlayCache)
+        {
+            allocators.addAll(this.overlayCache.values());
+            this.overlayCache.clear();
+        }
+
+        allocators.forEach(BufferAllocator::close);
     }
 
     @Override
