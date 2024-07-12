@@ -108,7 +108,6 @@ public class WorldUtils
 
         litematicaSchematic.getMetadata().setName(outputFilename);
         litematicaSchematic.getMetadata().setTimeModifiedToNow();
-        feedback.setString("litematica.error.schematic_conversion.litematic_to_litematica.success");
 
         Configs.Generic.DATAFIXER_MODE.setOptionListValue(oldMode);
         return litematicaSchematic;
