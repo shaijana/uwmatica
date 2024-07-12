@@ -76,11 +76,42 @@ public class WorldUtils
         ((IWorldUpdateSuppressor) world).litematica_setShouldPreventBlockUpdates(preventUpdates);
     }
 
+    public static boolean convertLitematicaSchematicToLitematicaSchematic(
+            File inputDir, String inputFileName, File outputDir, String outputFileName, boolean ignoreEntities, boolean override, IStringConsumer feedback)
+    {
+        LitematicaSchematic litematicaSchematic = convertLitematicaSchematicToLitematicaSchematic(inputDir, inputFileName, outputFileName, feedback);
+        return litematicaSchematic != null && litematicaSchematic.writeToFile(outputDir, outputFileName, override);
+    }
+
     public static boolean convertSchematicaSchematicToLitematicaSchematic(
             File inputDir, String inputFileName, File outputDir, String outputFileName, boolean ignoreEntities, boolean override, IStringConsumer feedback)
     {
         LitematicaSchematic litematicaSchematic = convertSchematicaSchematicToLitematicaSchematic(inputDir, inputFileName, ignoreEntities, feedback);
         return litematicaSchematic != null && litematicaSchematic.writeToFile(outputDir, outputFileName, override);
+    }
+
+    @Nullable
+    public static LitematicaSchematic convertLitematicaSchematicToLitematicaSchematic(File inputDir, String inputFileName,
+                                                                                      String outputFilename,
+                                                                                      IStringConsumer feedback)
+    {
+        DataFixerMode oldMode = (DataFixerMode) Configs.Generic.DATAFIXER_MODE.getOptionListValue();
+        Configs.Generic.DATAFIXER_MODE.setOptionListValue(DataFixerMode.ALWAYS);
+        LitematicaSchematic litematicaSchematic = LitematicaSchematic.createFromFile(inputDir, inputFileName, FileType.LITEMATICA_SCHEMATIC);
+
+        if (litematicaSchematic == null)
+        {
+            feedback.setString("litematica.error.schematic_conversion.litematic_to_litematica.failed_to_read_litematic");
+            Configs.Generic.DATAFIXER_MODE.setOptionListValue(oldMode);
+            return null;
+        }
+
+        litematicaSchematic.getMetadata().setName(outputFilename);
+        litematicaSchematic.getMetadata().setTimeModifiedToNow();
+        feedback.setString("litematica.error.schematic_conversion.litematic_to_litematica.success");
+
+        Configs.Generic.DATAFIXER_MODE.setOptionListValue(oldMode);
+        return litematicaSchematic;
     }
 
     @Nullable
