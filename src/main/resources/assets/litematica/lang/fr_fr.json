@@ -20,8 +20,6 @@
   "litematica.error.area_editor.switch_mode.no_selection": "Impossible de passer en mode de sélection : Normal, car aucune zone n'est actuellement sélectionnée.\nSélectionnez une zone ou créez une nouvelle sélection dans le navigateur de sélection de zone",
 
   "litematica.error.schematic_conversion.litematic_to_litematica.failed_to_read_litematic": "Échec du chargement du schéma Litematica",
-  "litematica.error.schematic_conversion.litematic_to_litematica.success": "Mise à niveau réussie de la version des données du schéma Litematica",
-
   "litematica.error.schematic_conversion.schematic_to_litematica.failed_to_create_schematic": "Échec de la création du schéma Litematica",
   "litematica.error.schematic_conversion.schematic_to_litematica.failed_to_read_schematic": "Échec du chargement du schéma",
   "litematica.error.schematic_conversion.structure_to_litematica_failed": "Échec de la conversion de la structure en schéma Litematica",
@@ -238,6 +236,7 @@
   "litematica.gui.label.data_fixer_mode.below_1205": "En dessous de 1.20.5 uniquement",
   "litematica.gui.label.data_fixer_mode.below_120X": "En dessous de 1.20.x uniquement",
   "litematica.gui.label.data_fixer_mode.below_119X": "En dessous de 1.19.x uniquement",
+  "litematica.gui.label.data_fixer_mode.below_117X": "En dessous de 1.17.x uniquement",
   "litematica.gui.label.data_fixer_mode.below_116X": "En dessous de 1.16.x uniquement",
   "litematica.gui.label.data_fixer_mode.below_113X": "En dessous de 1.13.x uniquement",
   "litematica.gui.label.data_fixer_mode.below_112X": "En dessous de 1.12.x uniquement",
@@ -461,7 +460,7 @@
   "litematica.message.easy_place_fail": "§6Action empêchée par le mode Placement Facile",
   "litematica.message.grabbed_element_for_moving": "Élément saisi pour le déplacement",
   "litematica.message.in_memory_schematic_created": "Créé un schéma en mémoire en tant que '%s'",
-  "litematica.message.litematic_saved_as": "Schéma Litematica  enregistré en tant que '%s'",
+  "litematica.message.litematic_saved_as": "Mise à niveau réussie de la version des données du schéma Litematica\\nSchéma enregistré sous '%s'",
   "litematica.message.material_list.material_cache_cleared": "Cache des matériaux effacé",
   "litematica.message.material_list_written_to_file": "Liste des matériaux écrite dans le fichier '%s'",
   "litematica.message.moved_area_origin": "Déplacé le point d'origine de la zone de %s => %s",

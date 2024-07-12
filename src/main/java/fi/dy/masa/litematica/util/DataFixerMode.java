@@ -12,6 +12,7 @@ public enum DataFixerMode implements IConfigOptionListEntry
     BELOW_1205              ("below_1205", "litematica.gui.label.data_fixer_mode.below_1205"),
     BELOW_120X              ("below_120X", "litematica.gui.label.data_fixer_mode.below_120X"),
     BELOW_119X              ("below_119X", "litematica.gui.label.data_fixer_mode.below_119X"),
+    BELOW_117X              ("below_117X", "litematica.gui.label.data_fixer_mode.below_117X"),
     BELOW_116X              ("below_116X", "litematica.gui.label.data_fixer_mode.below_116X"),
     BELOW_113X              ("below_113X", "litematica.gui.label.data_fixer_mode.below_113X"),
     BELOW_112X              ("below_112X", "litematica.gui.label.data_fixer_mode.below_112X"),
@@ -112,6 +113,15 @@ public enum DataFixerMode implements IConfigOptionListEntry
             case BELOW_119X ->
             {
                 if (dataVersion < Schema.SCHEMA_1_19_00.getDataVersion())
+                {
+                    return schema;
+                }
+
+                return null;
+            }
+            case BELOW_117X ->
+            {
+                if (dataVersion < Schema.SCHEMA_1_17_00.getDataVersion())
                 {
                     return schema;
                 }
