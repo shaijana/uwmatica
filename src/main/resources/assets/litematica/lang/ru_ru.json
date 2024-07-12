@@ -19,6 +19,9 @@
     "litematica.error.area_editor.rename_sub_region.exists": "Не удалось переименовать подрегион:\nПодрегион уже существует с именем \"%s\"",
     "litematica.error.area_editor.switch_mode.no_selection": "Не удалось переключить режим указания на обычный, так как не выбрана область. Выберите область или создайте новое выделение в Менеджере областей выделения",
 
+    "litematica.error.schematic_conversion.litematic_to_litematica.failed_to_read_litematic": "Не удалось загрузить схему Litematica",
+    "litematica.error.schematic_conversion.litematic_to_litematica.success": "Успешно обновлена \u200B\u200Bверсия данных Litematica Schematic",
+
     "litematica.error.schematic_conversion.schematic_to_litematica.failed_to_create_schematic": "Не удалось создать схему Litematica",
     "litematica.error.schematic_conversion.schematic_to_litematica.failed_to_read_schematic": "Не удалось загрузить схему",
     "litematica.error.schematic_conversion.structure_to_litematica_failed": "Ошибка конвертации структуры в схему Litematica",
@@ -230,7 +233,16 @@
     "litematica.gui.label.easy_place_protocol.slabs_only": "Только плиты",
     "litematica.gui.label.easy_place_protocol.v2": "Версия 2",
     "litematica.gui.label.easy_place_protocol.v3": "Версия 3",
-    
+
+    "litematica.gui.label.data_fixer_mode.always": "Всегда",
+    "litematica.gui.label.data_fixer_mode.below_1205": "Только ниже 1.20.5",
+    "litematica.gui.label.data_fixer_mode.below_120X": "Только ниже 1.20.x",
+    "litematica.gui.label.data_fixer_mode.below_119X": "Только ниже 1.19.x",
+    "litematica.gui.label.data_fixer_mode.below_116X": "Только ниже 1.16.x",
+    "litematica.gui.label.data_fixer_mode.below_113X": "Только ниже 1.13.x",
+    "litematica.gui.label.data_fixer_mode.below_112X": "Только ниже 1.12.x",
+    "litematica.gui.label.data_fixer_mode.never": "Никогда",
+
     "litematica.gui.label.loaded_schematic.modified_on": "§6Изменено %s§r",
 
     "litematica.gui.label.material_list.abbr.shulker_box": "шалкеровых ящика(ов)",
@@ -437,6 +449,8 @@
     "litematica.message.error.schematic_save_failed": "Не удалось сохранить схему в файл \"%s\"",
     "litematica.message.error.schematic_save_interrupted": "Сохранение схемы привело к ошибке или было остановлено",
     "litematica.message.error.schematic_save_no_area_selected": "§cНе удалось сохранить схему - не выбрана область§r",
+    "litematica.message.warn.pickblock.no_suitable_slot_found": "Не найден подходящий слот панели быстрого доступа для блока выбора!\\nПроверьте конфигурацию Generic -> §epickBlockableSlots§r.\\nКроме того, в зависимости от конфигурации §epickBlockAvoid*§6, функция блока выбора может отказаться заменять любые инструменты или другие повреждаемые элементы в этих слотах.",
+    "litematica.message.warn.pickblock.no_valid_slots_configured": "В конфигурации Generic -> §epickBlockableSlots§6 не установлены слоты для горячей панели!",
 
     "litematica.message.added_selection_box": "Добавлена новая область выделения на %s",
     "litematica.message.area_clear_fail": "§cНе удалось очистить область(и)§r",
@@ -447,6 +461,7 @@
     "litematica.message.easy_place_fail": "§6Действие заблокировано из-за простого режима размещения",
     "litematica.message.grabbed_element_for_moving": "Элемент захвачен",
     "litematica.message.in_memory_schematic_created": "Создана временная схема \"%s\"",
+    "litematica.message.litematic_saved_as": "Схема Litematica сохранена как '%s'",
     "litematica.message.material_list.material_cache_cleared": "Кэш материалов очищен",
     "litematica.message.material_list_written_to_file": "Список материалов сохранён в файл \"%s\"",
     "litematica.message.moved_area_origin": "Точка привязки области изменена с %s → %s",
