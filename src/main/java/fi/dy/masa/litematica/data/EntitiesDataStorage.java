@@ -349,6 +349,7 @@ public class EntitiesDataStorage implements IClientTickHandler
         minY = MathHelper.clamp(minY, -60, 319);
         maxY = MathHelper.clamp(maxY, -60, 319);
 
+        req.putString("Task", "BulkEntityRequest");
         req.putInt("minY", minY);
         req.putInt("maxY", maxY);
 
@@ -403,33 +404,40 @@ public class EntitiesDataStorage implements IClientTickHandler
         {
             return;
         }
-        NbtList tileList = nbt.contains("TileEntities") ? nbt.getList("TileEntities", Constants.NBT.TAG_COMPOUND) : new NbtList();
-        NbtList entityList = nbt.contains("Entities") ? nbt.getList("Entities", Constants.NBT.TAG_COMPOUND) : new NbtList();
-        ChunkPos chunkPos = new ChunkPos(nbt.getInt("chunkX"), nbt.getInt("chunkZ"));
 
-        for (int i = 0; i < tileList.size(); ++i)
+        // TODO --> Split out the task this way (I should have done this under sakura.12, etc),
+        //  So we need to check if the "Task" is not included for now... (Wait for the updates to bake in)
+        if ((nbt.contains("Task") && nbt.getString("Task").equals("BulkEntityReply")) ||
+            nbt.contains("Task") == false)
         {
-            NbtCompound te = tileList.getCompound(i);
-            BlockPos pos = NBTUtils.readBlockPos(te);
-            Identifier type = Identifier.of(te.getString("id"));
+            NbtList tileList = nbt.contains("TileEntities") ? nbt.getList("TileEntities", Constants.NBT.TAG_COMPOUND) : new NbtList();
+            NbtList entityList = nbt.contains("Entities") ? nbt.getList("Entities", Constants.NBT.TAG_COMPOUND) : new NbtList();
+            ChunkPos chunkPos = new ChunkPos(nbt.getInt("chunkX"), nbt.getInt("chunkZ"));
 
-            handleBlockEntityData(pos, te, type);
+            for (int i = 0; i < tileList.size(); ++i)
+            {
+                NbtCompound te = tileList.getCompound(i);
+                BlockPos pos = NBTUtils.readBlockPos(te);
+                Identifier type = Identifier.of(te.getString("id"));
+
+                handleBlockEntityData(pos, te, type);
+            }
+
+            for (int i = 0; i < entityList.size(); ++i)
+            {
+                NbtCompound ent = entityList.getCompound(i);
+                Vec3d pos = NBTUtils.readEntityPositionFromTag(ent);
+                int entityId = ent.getInt("entityId");
+
+                handleEntityData(entityId, ent);
+            }
+
+            this.pendingChunks.remove(chunkPos);
+            this.pendingChunkTimeout.remove(chunkPos);
+            this.completedChunks.add(chunkPos);
+
+            Litematica.debugLog("EntitiesDataStorage#handleBulkEntityData(): [ChunkPos {}] received TE: [{}], and E: [{}] entiries from Servux", chunkPos.toString(), tileList.size(), entityList.size());
         }
-
-        for (int i = 0; i < entityList.size(); ++i)
-        {
-            NbtCompound ent = entityList.getCompound(i);
-            Vec3d pos = NBTUtils.readEntityPositionFromTag(ent);
-            int entityId = ent.getInt("entityId");
-
-            handleEntityData(entityId, ent);
-        }
-
-        this.pendingChunks.remove(chunkPos);
-        this.pendingChunkTimeout.remove(chunkPos);
-        this.completedChunks.add(chunkPos);
-
-        Litematica.debugLog("EntitiesDataStorage#handleBulkEntityData(): [ChunkPos {}] received TE: [{}], and E: [{}] entiries from Servux", chunkPos.toString(), tileList.size(), entityList.size());
     }
 
     public void handleVanillaQueryNbt(int transactionId, NbtCompound nbt)
