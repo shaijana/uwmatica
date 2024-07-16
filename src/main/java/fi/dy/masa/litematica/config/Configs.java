@@ -170,7 +170,7 @@ public class Configs implements IConfigHandler
         public static final ConfigBoolean       ENABLE_SCHEMATIC_BLOCKS             = new ConfigBoolean("enableSchematicBlocksRendering",  true, "litematica.config.visuals.comment.enableSchematicBlocksRendering", "litematica.config.visuals.prettyName.enableSchematicBlocksRendering").translatedName("litematica.config.visuals.name.enableSchematicBlocksRendering");
         public static final ConfigBoolean       ENABLE_SCHEMATIC_OVERLAY            = new ConfigBoolean("enableSchematicOverlay",  true, "litematica.config.visuals.comment.enableSchematicOverlay", "litematica.config.visuals.prettyName.enableSchematicOverlay").translatedName("litematica.config.visuals.name.enableSchematicOverlay");
         public static final ConfigBoolean       ENABLE_SCHEMATIC_RENDERING          = new ConfigBoolean("enableSchematicRendering", true, "litematica.config.visuals.comment.enableSchematicRendering", "litematica.config.visuals.prettyName.enableSchematicRendering").translatedName("litematica.config.visuals.name.enableSchematicRendering");
-        public static final ConfigInteger       RENDER_SCHEMATIC_MAX_THREADS        = new ConfigInteger("renderSchematicMaxThreads", 4, 1, 16, "litematica.config.visuals.comment.renderSchematicMaxThreads").translatedName("litematica.config.visuals.name.renderSchematicMaxThreads");
+        //public static final ConfigInteger       RENDER_SCHEMATIC_MAX_THREADS        = new ConfigInteger("renderSchematicMaxThreads", 4, 1, 16, "litematica.config.visuals.comment.renderSchematicMaxThreads").translatedName("litematica.config.visuals.name.renderSchematicMaxThreads");
         public static final ConfigDouble        GHOST_BLOCK_ALPHA                   = new ConfigDouble( "ghostBlockAlpha", 0.5, 0, 1, "litematica.config.visuals.comment.ghostBlockAlpha").translatedName("litematica.config.visuals.name.ghostBlockAlpha");
         public static final ConfigBoolean       IGNORE_EXISTING_FLUIDS              = new ConfigBoolean("ignoreExistingFluids", false, "litematica.config.visuals.comment.ignoreExistingFluids").translatedName("litematica.config.visuals.name.ignoreExistingFluids");
         public static final ConfigBoolean       OVERLAY_REDUCED_INNER_SIDES         = new ConfigBoolean("overlayReducedInnerSides", true, "litematica.config.visuals.comment.overlayReducedInnerSides").translatedName("litematica.config.visuals.name.overlayReducedInnerSides");
@@ -201,7 +201,7 @@ public class Configs implements IConfigHandler
         public static final ImmutableList<IConfigBase> OPTIONS = ImmutableList.of(
                 ENABLE_RENDERING,
                 ENABLE_SCHEMATIC_RENDERING,
-                RENDER_SCHEMATIC_MAX_THREADS,
+                //RENDER_SCHEMATIC_MAX_THREADS,
 
                 ENABLE_AREA_SELECTION_RENDERING,
                 ENABLE_PLACEMENT_BOXES_RENDERING,

@@ -571,7 +571,7 @@ public class WorldUtils
 
                 BlockHitResult hitResult = new BlockHitResult(hitPos, side, pos, false);
 
-                //System.out.printf("pos: %s side: %s, hit: %s\n", pos, side, hitPos);
+                //System.out.printf("interact -> pos: %s side: %s, hit: %s\n", pos, side, hitPos);
                 // pos, side, hitPos
                 ActionResult result = mc.interactionManager.interactBlock(mc.player, hand, hitResult);
 
@@ -734,6 +734,9 @@ public class WorldUtils
         int shiftAmount = 1;
         int propCount = 0;
 
+        //System.out.printf("hit vec.x %s, pos.x: %s\n", hitVecIn.getX(), pos.getX());
+        //System.out.printf("raw protocol value in: 0x%08X\n", protocolValue);
+
         @Nullable DirectionProperty property = BlockUtils.getFirstDirectionProperty(state);
 
         // DirectionProperty - allow all except: VERTICAL_DIRECTION (PointedDripstone)
@@ -741,6 +744,7 @@ public class WorldUtils
         {
             Direction direction = state.get(property);
             protocolValue |= direction.getId() << shiftAmount;
+            //System.out.printf("applying: 0x%08X\n", protocolValue);
             shiftAmount += 3;
             ++propCount;
         }
@@ -762,6 +766,8 @@ public class WorldUtils
 
                     int requiredBits = MathHelper.floorLog2(MathHelper.smallestEncompassingPowerOfTwo(list.size()));
                     int valueIndex = list.indexOf(state.get(prop));
+
+                    //System.out.printf("trying to apply valInd: %d, bits: %d, prot val: 0x%08X\n", valueIndex, requiredBits, protocolValue);
 
                     if (valueIndex != -1)
                     {
