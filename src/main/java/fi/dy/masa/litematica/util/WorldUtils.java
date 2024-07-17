@@ -554,7 +554,9 @@ public class WorldUtils
                 // Support for special cases
                 PlacementProtocolData placementData = applyPlacementProtocolAll(pos, stateSchematic, hitPos);
                 if (placementData.mustFail)
+                {
                     return ActionResult.FAIL; //disallowed cases (e.g. trying to place torch with no support block)
+                }
 
                 if (placementData.handled)
                 {
