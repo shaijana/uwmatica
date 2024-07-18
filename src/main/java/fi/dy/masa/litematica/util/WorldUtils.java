@@ -12,7 +12,6 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.SignBlockEntity;
 import net.minecraft.block.entity.SignText;
 import net.minecraft.block.enums.BlockHalf;
-import net.minecraft.block.enums.ChestType;
 import net.minecraft.block.enums.ComparatorMode;
 import net.minecraft.block.enums.SlabType;
 import net.minecraft.client.MinecraftClient;
@@ -38,11 +37,10 @@ import net.minecraft.util.math.*;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
-import fi.dy.masa.malilib.gui.Message;
 import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.interfaces.IStringConsumer;
-import fi.dy.masa.malilib.util.*;
 import fi.dy.masa.malilib.util.BlockUtils;
+import fi.dy.masa.malilib.util.*;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.config.Hotkeys;
@@ -567,22 +565,20 @@ public class WorldUtils
                     side = placementData.side;
                     hitPos = placementData.hitVec;
                 }
-                else
+
+                if (protocol == EasyPlaceProtocol.V3)
                 {
-                    if (protocol == EasyPlaceProtocol.V3)
-                    {
-                        hitPos = applyPlacementProtocolV3(pos, stateSchematic, hitPos);
-                    }
-                    else if (protocol == EasyPlaceProtocol.V2)
-                    {
-                        // Carpet Accurate Block Placement protocol support, plus slab support
-                        hitPos = applyCarpetProtocolHitVec(pos, stateSchematic, hitPos);
-                    }
-                    else if (protocol == EasyPlaceProtocol.SLAB_ONLY)
-                    {
-                        // Slab support only
-                        hitPos = applyBlockSlabProtocol(pos, stateSchematic, hitPos);
-                    }
+                    hitPos = applyPlacementProtocolV3(pos, stateSchematic, hitPos);
+                }
+                else if (protocol == EasyPlaceProtocol.V2)
+                {
+                    // Carpet Accurate Block Placement protocol support, plus slab support
+                    hitPos = applyCarpetProtocolHitVec(pos, stateSchematic, hitPos);
+                }
+                else if (protocol == EasyPlaceProtocol.SLAB_ONLY)
+                {
+                    // Slab support only
+                    hitPos = applyBlockSlabProtocol(pos, stateSchematic, hitPos);
                 }
 
                 // Mark that this position has been handled (use the non-offset position that is checked above)
@@ -654,7 +650,7 @@ public class WorldUtils
         return false;
     }
 
-    static class PlacementProtocolData
+    public static class PlacementProtocolData
     {
         boolean handled;
         boolean mustFail;
@@ -665,6 +661,7 @@ public class WorldUtils
 
     public static PlacementProtocolData applyPlacementProtocolAll(BlockPos pos, BlockState stateSchematic, Vec3d hitVecIn)
     {
+        //MinecraftClient mc = MinecraftClient.getInstance();
         PlacementProtocolData placementData = new PlacementProtocolData();
 
         Block stateBlock = stateSchematic.getBlock();
@@ -692,6 +689,31 @@ public class WorldUtils
                 placementData.mustFail = true;
             }
         }
+        // FIXME (Didn't have time)
+        /*
+        if (stateBlock instanceof ChestBlock)
+        {
+            if (stateSchematic.get(Properties.CHEST_TYPE) != ChestType.SINGLE)
+            {
+                for (Direction face : fi.dy.masa.malilib.util.PositionUtils.HORIZONTAL_DIRECTIONS)
+                {
+                    BlockState neighborState = mc.world.getBlockState(pos.offset(face));
+
+                    if (neighborState.isOf(stateBlock) && neighborState.get(Properties.CHEST_TYPE) == ChestType.SINGLE)
+                    {
+                        placementData.handled = true;
+                        placementData.hitVec = hitVecIn;
+                        placementData.pos = pos.offset(face);
+                        placementData.side = neighborState.get(Properties.FACING);
+                    }
+                    else
+                    {
+                        placementData.mustFail = true;
+                    }
+                }
+            }
+        }
+         */
 
         return placementData;
     }

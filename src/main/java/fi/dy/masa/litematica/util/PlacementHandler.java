@@ -56,6 +56,8 @@ public class PlacementHandler
             Properties.CHEST_TYPE,
             Properties.COMPARATOR_MODE,
             Properties.DOOR_HINGE,
+            Properties.HORIZONTAL_FACING,
+            Properties.HOPPER_FACING,
             Properties.ORIENTATION,
             Properties.RAIL_SHAPE,
             Properties.STRAIGHT_RAIL_SHAPE,
@@ -332,7 +334,7 @@ public class PlacementHandler
         private final Hand hand;
         @Nullable private final ItemPlacementContext itemPlacementContext;
 
-        private UseContext(World world, BlockPos pos, Direction side, Vec3d hitVec,
+        public UseContext(World world, BlockPos pos, Direction side, Vec3d hitVec,
                            LivingEntity entity, Hand hand, @Nullable ItemPlacementContext itemPlacementContext)
         {
             this.world = world;
