@@ -607,7 +607,7 @@
     "litematica.config.info_overlays.comment.blockInfoLinesOffsetY": "方块信息与边框的纵向偏移量（纵向距离）",
     "litematica.config.info_overlays.name.blockInfoOverlayAlignment": "方块信息位置",
     "litematica.config.info_overlays.comment.blockInfoOverlayAlignment": "方块信息在屏幕位置调整的选项",
-    "litematica..info_overlays.name.blockInfoOverlayOffsetY": "方块提示位置纵移",
+    "litematica.config.info_overlays.name.blockInfoOverlayOffsetY": "方块提示位置纵移",
     "litematica.config.info_overlays.comment.blockInfoOverlayOffsetY": "方块信息弹窗的纵向偏移量",
     "litematica.config.info_overlays.name.blockInfoOverlayEnabled": "方块提示启用",
     "litematica.config.info_overlays.comment.blockInfoOverlayEnabled": "启用方块信息弹窗，其功能为图形显示方块贴图\n主要是可以在投影放错时，为你提供投影原本方块的信息。",

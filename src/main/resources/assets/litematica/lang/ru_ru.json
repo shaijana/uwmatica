@@ -64,7 +64,6 @@
     "litematica.config.generic.name.toolItem": "toolItem",
     "litematica.config.generic.name.toolItemEnabled": "toolItemEnabled",
     "litematica.config.generic.name.unhideSchematicVCS": "unhideSchematicVCS",
-
     "litematica.config.visuals.name.enableAreaSelectionBoxesRendering": "enableAreaSelectionBoxesRendering",
     "litematica.config.visuals.name.enablePlacementBoxesRendering": "enablePlacementBoxesRendering",
     "litematica.config.visuals.name.enableRendering": "enableRendering",
@@ -98,7 +97,6 @@
     "litematica.config.visuals.name.schematicOverlayTypeWrongBlock": "schematicOverlayTypeWrongBlock",
     "litematica.config.visuals.name.schematicOverlayTypeWrongState": "schematicOverlayTypeWrongState",
     "litematica.config.visuals.name.schematicVerifierUseBlockModels": "schematicVerifierUseBlockModels",
-
     "litematica.config.info_overlays.name.blockInfoLinesAlignment": "blockInfoLinesAlignment",
     "litematica.config.info_overlays.name.blockInfoOverlayAlignment": "blockInfoOverlayAlignment",
     "litematica.config.info_overlays.name.infoHudAlignment": "infoHudAlignment",
@@ -107,6 +105,7 @@
     "litematica.config.info_overlays.name.blockInfoLinesFontScale": "blockInfoLinesFontScale",
     "litematica.config.info_overlays.name.blockInfoLinesOffsetX": "blockInfoLinesOffsetX",
     "litematica.config.info_overlays.name.blockInfoLinesOffsetY": "blockInfoLinesOffsetY",
+    "litematica.config.info_overlays.name.blockInfoOverlayOffsetY": "blockInfoOverlayOffsetY",
     "litematica.config.info_overlays.name.blockInfoOverlayEnabled": "blockInfoOverlayEnabled",
     "litematica.config.info_overlays.name.infoHudMaxLines": "infoHudMaxLines",
     "litematica.config.info_overlays.name.infoHudOffsetX": "infoHudOffsetX",
@@ -124,7 +123,6 @@
     "litematica.config.info_overlays.name.verifierErrorHilightMaxPositions": "verifierErrorHilightMaxPositions",
     "litematica.config.info_overlays.name.verifierOverlayEnabled": "verifierOverlayEnabled",
     "litematica.config.info_overlays.name.warnDisabledRendering": "warnDisabledRendering",
-
     "litematica.config.colors.name.areaSelectionBoxSideColor": "areaSelectionBoxSideColor",
     "litematica.config.colors.name.hightlightBlockInInventoryColor": "hightlightBlockInInventoryColor",
     "litematica.config.colors.name.materialListHudItemCountsColor": "materialListHudItemCountsColor",
@@ -135,7 +133,6 @@
     "litematica.config.colors.name.schematicOverlayColorMissing": "schematicOverlayColorMissing",
     "litematica.config.colors.name.schematicOverlayColorWrongBlock": "schematicOverlayColorWrongBlock",
     "litematica.config.colors.name.schematicOverlayColorWrongState": "schematicOverlayColorWrongState",
-
     "litematica.config.hotkeys.name.addSelectionBox": "addSelectionBox",
     "litematica.config.hotkeys.name.cloneSelection": "cloneSelection",
     "litematica.config.hotkeys.name.deleteSelectionBox": "deleteSelectionBox",
@@ -209,7 +206,6 @@
     "litematica.config.hotkeys.name.toolSelectModifierBlock1": "toolSelectModifierBlock1",
     "litematica.config.hotkeys.name.toolSelectModifierBlock2": "toolSelectModifierBlock2",
     "litematica.config.hotkeys.name.unloadCurrentSchematic": "unloadCurrentSchematic",
-
     "litematica.config.generic.comment.easyPlaceProtocolVersion": "The type of \"accurate placement protocol\" to use.\n- Auto: Uses v3 in single player, and by default Slabs-only in multiplayer,\n  unless the server has Carpet mod that sends a 'carpet:hello'\n  packet, in which case v2 is used on that server.\n- Version 3: Only supported by Litematica itself (in single player) or with Servux.\n- Version 2: Compatible with servers with the Carpet mod\n  (either QuickCarpet by skyrising and DeadlyMC,\n  or CarpetExtra in addition to FabricCarpet.\n  And in both cases the 'accurateBlockPlacement' Carpet rule needs\n  to be enabled on the server).\n- Slabs only: Only fixes top slabs. Compatible with Paper servers.\n- None: Does not modify coordinates.",
     "litematica.config.generic.comment.pasteNbtRestoreBehavior": "Whether or not the NBT data of blocks is attempted to be restored,\nand which method is used for that.\n- Place & Data Modify will try to place the \"NBT-picked\" block\n  near the player, and then use the data modify\n  command to transfer the NBT data to the setblock'ed block\n- Place & Clone will try to place the \"NBT-picked\" block\n  near the player, and then clone it to the final location.\n- Teleport & Place will try to teleport the player nearby and then\n  directly place the NBT-picked item in the correct position.\nNote that the teleport & place method doesn't currently work correctly/at all.\nThe recommended method is §ePlace & Data Modify§r, however for that to work\nyou will probably need to lower the pasteCommandLimit to 1 per tick and increase\nthe pasteCommandInterval to 1-4 ticks or something.\nThus you should only use this for pasting important blocks that need the data,\nfor example by making a schematic of just the inventories,\nand then paste that with replace behavior set to None.",
     "litematica.config.generic.comment.pasteReplaceBehavior": "The behavior of replacing existing blocks\nin the Paste schematic tool mode",
@@ -275,7 +271,6 @@
     "litematica.config.generic.comment.toolItem": "The item to use as the \"tool\" for selections etc.",
     "litematica.config.generic.comment.toolItemEnabled": "If true, then the \"tool\" item can be used to control selections etc.",
     "litematica.config.generic.comment.unhideSchematicVCS": "Un-hides the Schematic VCS (Version Control System) menu button,\nand enables the hotkey and the VCS functionality in general.\n(This was called Schematic Projects before.)\n\nIn general you §6should not§r be using this feature,\nunless you really know how it works and what it does.\nIt somewhat changes how the area selections, placements and pasting works,\nin particular that there is also an area delete operation when pasting.\n\nBasically this feature is intended for §6iterative, in-place§r design work,\nand it allows you to easier create multiple versions/snapshots\nof the same build, and also to switch between the versions by deleting what is\nin the world first, and then pasting the next version in its place.",
-
     "litematica.config.visuals.comment.enableAreaSelectionBoxesRendering": "Enable Area Selection boxes rendering",
     "litematica.config.visuals.comment.enablePlacementBoxesRendering": "Enable Schematic Placement boxes rendering",
     "litematica.config.visuals.comment.enableRendering": "Main rendering toggle option. Enables/disables ALL mod rendering.",
@@ -309,7 +304,6 @@
     "litematica.config.visuals.comment.schematicOverlayTypeWrongBlock": "Enables the schematic overlay for wrong blocks",
     "litematica.config.visuals.comment.schematicOverlayTypeWrongState": "Enables the schematic overlay for wrong states",
     "litematica.config.visuals.comment.schematicVerifierUseBlockModels": "Forces using blocks models for everything in the Schematic Verifier\nresult list. Normally item models are used for anything\nthat has an item, and block models are only used for blocks\nthat don't have an item, plus for Flower Pots to see the contained item.",
-
     "litematica.config.info_overlays.comment.blockInfoLinesAlignment": "The alignment of the block info lines overlay",
     "litematica.config.info_overlays.comment.blockInfoOverlayAlignment": "The alignment of the Block Info Overlay",
     "litematica.config.info_overlays.comment.infoHudAlignment": "The alignment of the \"Info HUD\",\nused for the Material List, Schematic Verifier mismatch positions etc.",
@@ -336,7 +330,6 @@
     "litematica.config.info_overlays.comment.verifierErrorHilightMaxPositions": "The maximum number of mismatched positions to render\nat once in the Schematic Verifier overlay.",
     "litematica.config.info_overlays.comment.verifierOverlayEnabled": "Enable Schematic Verifier marker overlay rendering",
     "litematica.config.info_overlays.comment.warnDisabledRendering": "Should the warning message about being in a layer mode\nor having some of the rendering options disabled\nbe shown when loading a new schematic\nor creating a new placement",
-
     "litematica.config.colors.comment.areaSelectionBoxSideColor": "The color of the area selection boxes, when they are unselected",
     "litematica.config.colors.comment.hightlightBlockInInventoryColor": "The highlight color for the item of the looked at block",
     "litematica.config.colors.comment.materialListHudItemCountsColor": "The color of the item count text in the Material List info HUD",
@@ -347,7 +340,6 @@
     "litematica.config.colors.comment.schematicOverlayColorMissing": "The color of the blocks overlay for missing blocks",
     "litematica.config.colors.comment.schematicOverlayColorWrongBlock": "The color of the blocks overlay for wrong blocks",
     "litematica.config.colors.comment.schematicOverlayColorWrongState": "The color of the blocks overlay for wrong block states",
-
     "litematica.config.hotkeys.comment.addSelectionBox": "Add a new selection box (position 1) here",
     "litematica.config.hotkeys.comment.cloneSelection": "Quickly clone the current area selection.\nThis basically just creates an in-memory-only schematic,\nand then creates a placement of that schematic and selects it,\nand also switches the tool mode to the Paste mode.",
     "litematica.config.hotkeys.comment.deleteSelectionBox": "Delete the currently selected box",
@@ -421,13 +413,11 @@
     "litematica.config.hotkeys.comment.toolSelectModifierBlock1": "The modifier key to hold while using the 'toolSelectElements'\nhotkey, to select the primary block type to use in some of the tool modes",
     "litematica.config.hotkeys.comment.toolSelectModifierBlock2": "The modifier key to hold while using the 'toolSelectElements'\nhotkey, to select the secondary block type to use in some of the tool modes",
     "litematica.config.hotkeys.comment.unloadCurrentSchematic": "Unloads the schematic of the currently selected placement,and thus also removes all placements created from it",
-
     "litematica.config.generic.prettyName.pickBlockEnabled": "Pick Block Hotkeys",
     "litematica.config.generic.prettyName.easyPlaceMode": "Easy Place Mode",
     "litematica.config.generic.prettyName.placementRestriction": "Placement Restriction",
     "litematica.config.generic.prettyName.signTextPaste": "Sign Text Paste",
     "litematica.config.generic.prettyName.toolItemEnabled": "Tool Item Enabled",
-
     "litematica.config.visuals.prettyName.enableAreaSelectionBoxesRendering": "Area Selection Boxes Rendering",
     "litematica.config.visuals.prettyName.enablePlacementBoxesRendering": "Schematic Placement Boxes Rendering",
     "litematica.config.visuals.prettyName.enableRendering": "All Rendering",
@@ -438,12 +428,9 @@
     "litematica.config.visuals.prettyName.schematicOverlayEnableOutlines": "Schematic Overlay Outlines",
     "litematica.config.visuals.prettyName.schematicOverlayEnableResorting": "Schematic Overlay Translucent Sorting",
     "litematica.config.visuals.prettyName.schematicOverlayEnableSides": "Schematic Overlay Sides",
-
     "litematica.config.info_overlays.prettyName.blockInfoOverlayEnabled": "Block Info Overlay Rendering",
     "litematica.config.info_overlays.prettyName.verifierOverlayEnabled": "Verifier Overlay Rendering",
-
     "litematica.config.hotkeys.prettyName.toggleAllRendering": "All Rendering",
-
     "litematica.error.area_selection.copy_failed": "Не удалось скопировать выделение",
     "litematica.error.area_selection.create_failed": "Не удалось создать новое выделение с именем '%s', файл уже существует",
     "litematica.error.area_selection.failed_to_load": "Не удалось загрузить область выделения",
@@ -451,47 +438,37 @@
     "litematica.error.area_selection.no_placement_selected": "Размещение схемы не выбрано",
     "litematica.error.area_selection.rename.already_exists": "Ошибка: область с именем '%s' уже существует",
     "litematica.error.area_selection.rename.invalid_safe_file_name": "Сгенерировано некорректное имя файла '%s'",
-
     "litematica.error.duplicate_schematic_placement": "Ошибка: Попытка создать уже существующее размещение",
     "litematica.error.generic.creative_mode_only": "Это действие доступно только в режиме креатива",
     "litematica.error.generic.failed_to_delete_file": "Не удалось удалить файл '%s'",
     "litematica.error.generic.failed_to_sort_list_of_ignored_states": "Не удалось отсортировать список игнорируемых состояний",
     "litematica.error.generic.schematic_world_not_loaded": "Мир схемы не был загружен",
-
     "litematica.error.area_editor.create_sub_region.exists": "Подрегион с именем '%s' уже существует",
     "litematica.error.area_editor.no_selection": "Нет активных областей выделения",
     "litematica.error.area_editor.open_gui.no_selection": "Активен режим выделения: обычный, но не выбрана ни одна область",
     "litematica.error.area_editor.rename_sub_region.exists": "Не удалось переименовать подрегион:\nПодрегион уже существует с именем '%s'",
     "litematica.error.area_editor.switch_mode.no_selection": "Не удалось переключить режим указания на обычный, так как не выбрана область. Выберите область или создайте новое выделение в Менеджере областей выделения",
-
     "litematica.error.schematic_conversion.litematic_to_litematica.failed_to_read_litematic": "Не удалось загрузить схему Litematica",
     "litematica.error.schematic_conversion.schematic_to_litematica.failed_to_create_schematic": "Не удалось создать схему Litematica",
     "litematica.error.schematic_conversion.schematic_to_litematica.failed_to_read_schematic": "Не удалось загрузить схему",
     "litematica.error.schematic_conversion.structure_to_litematica_failed": "Ошибка конвертации структуры в схему Litematica",
-
     "litematica.error.schematic.create.no_selections": "Выделение не имеет ни одного подрегиона.",
-
     "litematica.error.schematic_load.cant_read_file": "Не удалось прочитать файл схемы '%s' (ошибка доступа или файл не существует)",
     "litematica.error.schematic_load.no_schematic_selected": "Файл схемы не выбран.",
     "litematica.error.schematic_load.no_schematic_version_information": "Схема не содержит информации о версии и не может быть безопасно загружена.",
     "litematica.error.schematic_load.unsupported_schematic_version": "Неподдерживаемая или более поздняя версия схемы \"%d\"",
     "litematica.error.schematic_load.unsupported_type": "Неизвестный или неподдерживаемый тип файла '%s'",
-
     "litematica.error.schematic_manager.schematic_export.unsupported_type": "Только схемы Litematica могут быть экспортированы в другие форматы.",
     "litematica.error.schematic_manager.schematic_import.unsupported_type": "Тип выбранной схемы не поддерживается для импорта.",
-
     "litematica.error.schematic_placements.remove_fail_locked": "Размещение зафиксировано. Удерживайте Shift, чтобы принудительно удалить его.",
-
     "litematica.error.schematic_save.directory_doesnt_exist": "Папка не существует: '%s'",
     "litematica.error.schematic_save.file_already_exists": "Файл '%s' уже существует",
     "litematica.error.schematic_save.invalid_directory": "Некорректный путь: '%s'",
     "litematica.error.schematic_save.invalid_schematic_name": "Некорректное имя схемы '%s'",
     "litematica.error.schematic_save.schematic_creation_failed": "Не удалось создать схему",
-
     "litematica.error.schematic_read_from_file_failed.cant_read": "Не удалось прочитать схему из файла '%s'",
     "litematica.error.schematic_read_from_file_failed.exception": "Исключение при попытке чтения схемы из файла '%s'",
     "litematica.error.schematic_read_from_file_failed.no_file": "Не удалось прочитать схему из файла: файл недоступен (возможно, временная схема?)",
-
     "litematica.error.schematic_projects.empty_selection": "Пустая область выделения (0 подрегионов)",
     "litematica.error.schematic_projects.failed_to_load_project": "Не удалось загрузить проект",
     "litematica.error.schematic_projects.failed_to_load_schematic": "Не удалось загрузить схему для текущей версии",
@@ -503,20 +480,16 @@
     "litematica.error.schematic_projects.null_player": "Нет данных об игроке",
     "litematica.error.schematic_projects.project_already_exists": "Проект '%s' уже существует",
     "litematica.error.schematic_projects.save_already_in_progress": "Сохранение уже запущено",
-
     "litematica.error.schematic_write_to_file_failed.directory_creation_failed": "Не удалось создать адрес схемы '%s'",
     "litematica.error.schematic_write_to_file_failed.exception": "Не удалось записать схему в файл '%s' (исключение)",
     "litematica.error.schematic_write_to_file_failed.exists": "Не удалось записать схему в файл '%s': имя уже занято",
     "litematica.error.structure_write_to_file_failed.exception": "Не удалось записать структуру в файл '%s' (исключение)",
     "litematica.error.structure_write_to_file_failed.exists": "Не удалось записать структуру в файл '%s': имя уже занято",
-
     "litematica.hotkeys.category.generic_hotkeys": "Основные клавиши",
-
     "litematica.info.schematic_load.schematic_loaded": "Схема '%s' успешно загружена в память",
     "litematica.info.schematic_manager.preview.right_click_to_cancel": "- Нажмите ПКМ по кнопке, чтобы прервать операцию создания миниатюры\n- Удерживайте Ctrl+Alt+Shift при нажатии, чтобы загрузить картинку из существующего\n PNG-файла с именем \"thumb.png\", лежащего в той же директории, что и файл схемы.",
     "litematica.info.schematic_manager.preview.set_preview_by_taking_a_screenshot": "Используйте обычную клавишу создания скриншота, чтобы установить миниатюру. Нажмите ПКМ по этой кнопке, чтобы прервать операцию.",
     "litematica.info.schematic_manager.preview.success": "Миниатюра успешно установлена",
-
     "litematica.gui.button.area_editor.analyze_area": "Анализ области",
     "litematica.gui.button.area_editor.change_corner_mode": "Режим выделения: %s",
     "litematica.gui.button.area_editor.change_selection_mode": "Тип указания: %s",
@@ -525,13 +498,11 @@
     "litematica.gui.button.area_editor.origin_enabled": "Точка привязки: %s",
     "litematica.gui.button.area_editor.set_box_name": "Применить",
     "litematica.gui.button.area_editor.set_selection_name": "Применить",
-
     "litematica.gui.button.area_selection_mode": "Режим указания области: %s",
     "litematica.gui.button.area_selections.create_directory": "Создать папку",
     "litematica.gui.button.area_selections.create_new_selection": "Новое выделение",
     "litematica.gui.button.area_selections.create_selection_from_placement": "Из размещения схемы",
     "litematica.gui.button.area_selections.unselect": "Снять выбор",
-
     "litematica.gui.button.change_menu.area_editor": "Редактор области",
     "litematica.gui.button.change_menu.configuration_menu": "Настройки",
     "litematica.gui.button.change_menu.load_schematics_to_memory": "Загрузить схему",
@@ -542,14 +513,12 @@
     "litematica.gui.button.change_menu.show_schematic_placements": "Размещение схем",
     "litematica.gui.button.change_menu.task_manager": "Диспетчер задач",
     "litematica.gui.button.change_menu.to_main_menu": "Главное меню",
-
     "litematica.gui.button.config_gui.colors": "Цвета",
     "litematica.gui.button.config_gui.generic": "Основные",
     "litematica.gui.button.config_gui.hotkeys": "Клавиши",
     "litematica.gui.button.config_gui.info_overlays": "Наложение информации",
     "litematica.gui.button.config_gui.render_layers": "Отображение слоёв",
     "litematica.gui.button.config_gui.visuals": "Визуализация",
-
     "litematica.gui.button.hover.area_editor.shift_for_in_memory": "Удерживайте Shift, чтобы сохранить временную схему (только в ОЗУ)",
     "litematica.gui.button.hover.area_selections.unselect": "Снимает выбор с текущей области выделения",
     "litematica.gui.button.hover.material_list.clear_cache": "Очищает кэш материалов.\nОбычно это не требуется.\nЭто можно использовать вместо удаления файла \"material_cache.nbt\"\nв случае, если кэш содержит ошибочные данные вроде\nпредметов, сохранённых для блоков, которые их не имеют\n(например, головка поршня)",
@@ -564,7 +533,6 @@
     "litematica.gui.button.hover.schematic_projects.move_origin_to_player": "Переместить точку привязки проекта к текущей пощиции игрока.\nЭто также переместит область выделения и размещение.",
     "litematica.gui.button.hover.schematic_projects.place_to_world_warning": "§6Предупреждение: Это приведёт к замене блоков\n§6в пределах области, сохранённой как версия проекта\n§6или размещённой из неё.",
     "litematica.gui.button.hover.schematic_projects.save_new_version": "Сохранить новую версию проекта (в виде схемы)",
-
     "litematica.gui.button.material_list": "Список материалов",
     "litematica.gui.button.material_list.clear_cache": "Очистить кэш",
     "litematica.gui.button.material_list.clear_ignored": "Показать скрытые",
@@ -574,25 +542,19 @@
     "litematica.gui.button.material_list.refresh_list": "Обновить",
     "litematica.gui.button.material_list.toggle_info_hud": "Панель информации: %s",
     "litematica.gui.button.material_list.write_to_file": "Записать в файл",
-
     "litematica.gui.button.placement_sub.placement_configuration": "Настройка размещения",
     "litematica.gui.button.placement_sub.reset_sub_region_placement": "Сброс",
     "litematica.gui.button.placement_sub.slice_type": "Slice: %s",
-
     "litematica.gui.button.schematic_manager.export_as": "Экспортировать как:",
-
     "litematica.gui.button.schematic_placement.abbr.rendering": "⩺",
-
     "litematica.gui.button.schematic_placement.ignore_entities": "Скрыть сущности: %s",
     "litematica.gui.button.schematic_placement.region_enabled": "Регион: %s",
     "litematica.gui.button.schematic_placement.reset_sub_region_placements": "Сброс подрегионов",
     "litematica.gui.button.schematic_placement.toggle_all_off": "§cОтключить§r все",
     "litematica.gui.button.schematic_placement.toggle_all_on": "§aВключить§r все",
-
     "litematica.gui.button.schematic_placement.hover.enclosing_box": "Отображение общей границы: %s",
     "litematica.gui.button.schematic_placement.hover.lock": "Фиксация размещения предотвращает его сдвиг\nили иное случайное изменение позиции",
     "litematica.gui.button.schematic_placement.hover.rendering": "Отображение: %s\nОбратите внимание, что это работает немного\nстранно и не влияет на отображение сущностей.\nОбычно достаточно просто полностью\nотключить размещение.",
-
     "litematica.gui.button.schematic_placements.configure": "Настроить",
     "litematica.gui.button.schematic_placements.disable": "Отключить",
     "litematica.gui.button.schematic_placements.locked": "Фиксация: %s",
@@ -600,7 +562,6 @@
     "litematica.gui.button.schematic_placements.remove": "Удалить",
     "litematica.gui.button.schematic_placements.rendering_enabled": "Отображение: %s",
     "litematica.gui.button.schematic_placements.select": "Выбрать",
-
     "litematica.gui.button.schematic_projects.close_project": "Закрыть проект",
     "litematica.gui.button.schematic_projects.create_project": "Создать проект",
     "litematica.gui.button.schematic_projects.delete_area": "Очистить область",
@@ -611,7 +572,6 @@
     "litematica.gui.button.schematic_projects.open_project_browser": "Просмотр проектов УВС",
     "litematica.gui.button.schematic_projects.place_to_world": "Разместить в мире",
     "litematica.gui.button.schematic_projects.save_version": "Сохранить новую версию",
-
     "litematica.gui.button.schematic_verifier.ignore": "Скрыть",
     "litematica.gui.button.schematic_verifier.range_type": "Диапазон: %s",
     "litematica.gui.button.schematic_verifier.reset_ignored": "Показать скрытые",
@@ -620,7 +580,6 @@
     "litematica.gui.button.schematic_verifier.start": "Запустить проверку",
     "litematica.gui.button.schematic_verifier.stop": "Остановить проверку",
     "litematica.gui.button.schematic_verifier.toggle_info_hud": "Панель информации: %s",
-
     "litematica.gui.button.cancel": "Закрыть",
     "litematica.gui.button.configure": "Настройки",
     "litematica.gui.button.copy": "Копировать",
@@ -647,7 +606,6 @@
     "litematica.gui.button.tool_mode": "Режим инструмента: %s",
     "litematica.gui.button.unload": "Выгрузить",
     "litematica.gui.button.unlocked": "Разблокировано",
-
     "litematica.gui.label.area_editor.box_name": "Имя подрегиона",
     "litematica.gui.label.area_editor.selection_name": "Имя выделения",
     "litematica.gui.label.area_editor.corner_1": "Угол 1",
@@ -657,26 +615,20 @@
     "litematica.gui.label.area_editor.pos1": "Угол 1",
     "litematica.gui.label.area_editor.pos2": "Угол 2",
     "litematica.gui.label.area_editor.sub_regions": "Подрегионы (%s)",
-
     "litematica.gui.label.area_selection_manager.current_selection": "Выбранная область: %s",
-
     "litematica.gui.label.area_selection_box_count": "Регионы: %d",
     "litematica.gui.label.area_selection_origin": "Привязка: %s",
     "litematica.gui.label.area_selection.mode.normal": "Обычный",
     "litematica.gui.label.area_selection.mode.simple": "Простой",
-
     "litematica.gui.label.block_info.state_client": "Состояние блока клиентского мира",
     "litematica.gui.label.block_info.state_schematic": "Состояние блока схемы",
-
     "litematica.gui.label.block_info_list_type.all": "Вся схема",
     "litematica.gui.label.block_info_list_type.render_layers": "Видимые слои",
-    
     "litematica.gui.label.easy_place_protocol.auto": "Авто",
     "litematica.gui.label.easy_place_protocol.none": "Нет",
     "litematica.gui.label.easy_place_protocol.slabs_only": "Только плиты",
     "litematica.gui.label.easy_place_protocol.v2": "Версия 2",
     "litematica.gui.label.easy_place_protocol.v3": "Версия 3",
-
     "litematica.gui.label.data_fixer_mode.always": "Всегда",
     "litematica.gui.label.data_fixer_mode.below_1205": "Только ниже 1.20.5",
     "litematica.gui.label.data_fixer_mode.below_120X": "Только ниже 1.20.x",
@@ -686,15 +638,12 @@
     "litematica.gui.label.data_fixer_mode.below_113X": "Только ниже 1.13.x",
     "litematica.gui.label.data_fixer_mode.below_112X": "Только ниже 1.12.x",
     "litematica.gui.label.data_fixer_mode.never": "Никогда",
-
     "litematica.gui.label.loaded_schematic.modified_on": "§6Изменено %s§r",
-
     "litematica.gui.label.material_list.abbr.shulker_box": "шалкеровых ящика(ов)",
     "litematica.gui.label.material_list.title.available": "Доступно",
     "litematica.gui.label.material_list.title.item": "Название",
     "litematica.gui.label.material_list.title.missing": "Пропущено",
     "litematica.gui.label.material_list.title.total": "Всего",
-
     "litematica.gui.label.material_list.multiplier": "Множитель:",
     "litematica.gui.label.material_list.name": "Название",
     "litematica.gui.label.material_list.progress": "Прогресс: %s",
@@ -702,27 +651,20 @@
     "litematica.gui.label.material_list.progress.mismatch": "не совпадает %s",
     "litematica.gui.label.material_list.progress.missing": "пропущено %s",
     "litematica.gui.label.material_list.total": "Всего: %s предметов",
-
     "litematica.gui.label.origin.auto": "Авто",
     "litematica.gui.label.origin.manual": "Ручная",
-
     "litematica.gui.label.paste_nbt_behavior.none": "Нет",
     "litematica.gui.label.paste_nbt_behavior.place_data_modify": "Разместить → /data modify",
     "litematica.gui.label.paste_nbt_behavior.place_clone": "Разместить → /clone",
-
     "litematica.gui.label.placement_sub.region_name": "Имя региона: %s",
     "litematica.gui.label.placement_sub.region_position": "Позиция региона",
     "litematica.gui.label.placement_sub.region_size": "Размер региона: %s",
-
     "litematica.gui.label.placement_settings.placement_origin": "Привязка размещения",
-
     "litematica.gui.label.render_layers.hotkey": "Клавиша",
     "litematica.gui.label.render_layers.hover.hotkey": "Горячая клавиша следующего/предыдущего слоя будет менять это значение.\nЕсли обе отключены, горячие клавиши будут влиять на границу,\nближайшую к игроку.",
-
     "litematica.gui.label.replace_behavior.all": "Вся схема",
     "litematica.gui.label.replace_behavior.none": "Не заменять блоки",
     "litematica.gui.label.replace_behavior.with_non_air": "Исключить воздух",
-
     "litematica.gui.label.schematic_info.schematic_author": "Автор схемы: §f%s§r",
     "litematica.gui.label.schematic_info.description": "Описание:",
     "litematica.gui.label.schematic_info.enclosing_size": "Суммарный размер:",
@@ -734,10 +676,8 @@
     "litematica.gui.label.schematic_info.total_blocks": "Всего блоков: §f%d§r",
     "litematica.gui.label.schematic_info.total_blocks_and_volume": "Блоков/Объём: §f%d§r/§f%d§r",
     "litematica.gui.label.schematic_info.total_volume": "Общий объём, блоков: §f%d§r",
-
     "litematica.gui.label.schematic_load.checkbox.create_placement": "Создать размещение",
     "litematica.gui.label.schematic_load.hoverinfo.create_placement": "Создать и сделать активным размещение",
-
     "litematica.gui.label.schematic_placement.enclosing_size": "Суммарный размер: %s",
     "litematica.gui.label.schematic_placement.hoverinfo.hold_shift_to_create_as_disabled": "Удерживайте Shift, чтобы скрыть размещение при создании",
     "litematica.gui.label.schematic_placement.in_memory": "Временная схема",
@@ -747,17 +687,14 @@
     "litematica.gui.label.schematic_placement.schematic_name": "Схема: %s",
     "litematica.gui.label.schematic_placement.sub_region_count": "Подрегионов: %s",
     "litematica.gui.label.schematic_placement.sub_regions": "Подрегионы (%s):",
-
     "litematica.gui.label.schematic_projects.currently_open_project": "Текущий открытый проект: %s",
     "litematica.gui.label.schematic_projects.origin": "Привязка:",
     "litematica.gui.label.schematic_projects.project": "Проект:",
     "litematica.gui.label.schematic_projects.version": "Версия: %s (из %s)",
     "litematica.gui.label.schematic_projects.version_entry": "Версия %d - %s",
     "litematica.gui.label.schematic_projects.version_name": "Название версии:",
-
     "litematica.gui.label.schematic_save.checkbox.ignore_entities": "Исключить сущности",
     "litematica.gui.label.schematic_save.hoverinfo.hold_shift_to_overwrite": "Удерживайте Shift, чтобы перезаписать существующий файл",
-
     "litematica.gui.label.schematic_verifier.count": "Количество",
     "litematica.gui.label.schematic_verifier.expected": "Ожидалось",
     "litematica.gui.label.schematic_verifier.found": "Найдено",
@@ -771,7 +708,6 @@
     "litematica.gui.label.schematic_verifier.status.done_correct_total": "§aПравильно: %s§r, Всего: %s",
     "litematica.gui.label.schematic_verifier.status.verifying": "Ожидание загрузки чанков: %s / %s",
     "litematica.gui.label.schematic_verifier.verifier": "Проверка схемы",
-
     "litematica.gui.label.task.title.remaining_chunks": "%s, оставшиеся чанки (%s)",
     "litematica.gui.label.task_name.area_analyzer": "Анализ области",
     "litematica.gui.label.task_name.delete": "Удаление",
@@ -780,11 +716,9 @@
     "litematica.gui.label.task_name.paste": "Вставка схемы",
     "litematica.gui.label.task_name.save_schematic": "Сохранение схемы",
     "litematica.gui.label.task_name.verifier": "Проверка схемы",
-
     "litematica.gui.message.confirm_file_deletion": "Вы действительно хотите удалить файл '%s'?",
     "litematica.gui.message.schematic_projects.confirm_delete_area": "Вы хотите удалить последнюю затронутую область? Это приведёт к удалению всех блоков и сущностей, находящихся в области, которую менеджер проекта в последний раз размещал в мире или сохранял в качестве версии. (Как правило, \"последняя просмотренная затронутая область\", если бы вы циклично перебирали версии, она не оставила бы блоков после предыдущей версии.)",
     "litematica.gui.message.schematic_projects.confirm_place_to_world": "Вы хотите разместить эту версию в мире? Это приведёт к удалению всех блоков, находящихся в области, которую менеджер проекта в последний раз размещал в мире или сохранял в качестве версии. (Как правило, \"последняя просмотренная затронутая область\", если бы вы циклично перебирали версии, она не оставила бы блоков после предыдущей версии.)",
-
     "litematica.gui.title.area_editor_normal": "Редактор области (обычный/мультирежим)",
     "litematica.gui.title.area_editor_normal_schematic_projects": "Редактор области (§6§lОбласть проекта УВС§r)",
     "litematica.gui.title.area_editor_simple": "Редактор области (простой режим)",
@@ -827,7 +761,6 @@
     "litematica.gui.title.schematic_verifier": "Проверка схемы '%s'",
     "litematica.gui.title.schematic_verifier_errors": "Ошибки проверки схемы",
     "litematica.gui.title.task_manager": "Диспетчер задач",
-
     "litematica.hud.area_selection.box_count": "Регионы: %s",
     "litematica.hud.area_selection.dimensions_position": "Габариты: %s - угол 1: %s, угол 2: %s",
     "litematica.hud.area_selection.mode.corners": "Углы",
@@ -837,11 +770,9 @@
     "litematica.hud.area_selection.selected_area_simple": "Область [§6простой режим§r]: %s",
     "litematica.hud.area_selection.selected_sub_region": "Подрегион: %s",
     "litematica.hud.area_selection.selection_corners_mode": "Тип указания: %s",
-
     "litematica.hud.delete.target_mode": "Режим удаления: %s",
     "litematica.hud.delete.target_mode.area": "Текущая область",
     "litematica.hud.delete.target_mode.placement": "Текущее размещение",
-
     "litematica.hud.misc.easy_place_mode_enabled": "Простой режим размещения §aВкл§r",
     "litematica.hud.misc.none_brackets": "<нет>",
     "litematica.hud.misc.placement_restriction_mode_enabled": "Ограничение размещения §aвключено§r",
@@ -850,7 +781,6 @@
     "litematica.hud.misc.renderer_status": "Отображение: A: %s Блоки: %s B: %s Обводка: %s Области: %s",
     "litematica.hud.misc.schematic_paste.data_restore_mode": "Режим восстановления данных: §b%s",
     "litematica.hud.misc.schematic_paste.replace_mode": "Замена блоков: %s",
-
     "litematica.hud.schematic_placement.hover_info.lock_coordinate": "Зафиксировать координату\nЭто позволяет менять другие координаты,\nне затрагивая зафиксированную.",
     "litematica.hud.schematic_placement.hover_info.placement_locked": "Это размещение зафиксировано и не может\nбыть изменено без снятия фиксации",
     "litematica.hud.schematic_placement.hover_info.placement_modified": "Это размещение было изменено",
@@ -861,9 +791,7 @@
     "litematica.hud.schematic_placement.sub_region_modified": "Изменён",
     "litematica.hud.schematic_placement.sub_region_origin": "Привязка региона: %s",
     "litematica.hud.schematic_placement.sub_regions_modified": "Подрегионы изменены",
-
     "litematica.hud.selected_mode": "Режим",
-
     "litematica.hud.schematic_projects.current_version_date": "Дата: %s",
     "litematica.hud.schematic_projects.current_version": "Версия: %s/%s - Название: %s",
     "litematica.hud.schematic_projects.no_project_open": "<нет открытых проектов>",
@@ -871,16 +799,12 @@
     "litematica.hud.schematic_projects.origin": "Привязка проекта: %s",
     "litematica.hud.schematic_projects.project_name": "Проект: %s",
     "litematica.hud.schematic_projects_mode": "§6Управление версиями схемы (УВС)§r",
-
     "litematica.info.material_list": "- Клавиша списка материалов откроет последний просмотренный список материалов,\n   если он был сохранён.\n- Чтобы переключиться на другой список материалов, откройте его\n   с помощью соответствующей кнопки в окне настроек размещения\n   или в Менеджере схем.\n- Сохранённый/просмотренный список также \"забывается\",\n   если меняется размещение выбранной схемы.\n- Если ещё нет последнего просмотренного списка материалов,\n   то используется выбранное размещение (при наличии)",
-
     "litematica.label.alignment.center": "По центру",
     "litematica.label.alignment.top_center": "По центру сверху",
-
     "litematica.label.none_lower": "нет",
     "litematica.label.no": "нет",
     "litematica.label.yes": "да",
-
     "litematica.message.error.area_deletion_aborted": "Удаление области привело к ошибке или было прервано",
     "litematica.message.error.empty_area_selection": "Пустая облась выделения (без регионов)",
     "litematica.message.error.invalid_schematic_name": "Некорректное имя схемы '%s'",
@@ -895,7 +819,6 @@
     "litematica.message.error.schematic_save_no_area_selected": "§cНе удалось сохранить схему - не выбрана область§r",
     "litematica.message.warn.pickblock.no_suitable_slot_found": "Не найден подходящий слот панели быстрого доступа для блока выбора!\nПроверьте конфигурацию Generic -> §epickBlockableSlots§r.\nКроме того, в зависимости от конфигурации §epickBlockAvoid*§6, функция блока выбора может отказаться заменять любые инструменты или другие повреждаемые элементы в этих слотах.",
     "litematica.message.warn.pickblock.no_valid_slots_configured": "В конфигурации Generic -> §epickBlockableSlots§6 не установлены слоты для горячей панели!",
-
     "litematica.message.added_selection_box": "Добавлена новая область выделения на %s",
     "litematica.message.area_clear_fail": "§cНе удалось очистить область(и)§r",
     "litematica.message.area_cleared": "Область очищена",
@@ -920,9 +843,9 @@
     "litematica.message.scheduled_task_added": "Добавлена отложенная задача...",
     "litematica.message.schematic_exported_as": "Схема сохранена как '%s'",
     "litematica.message.schematic_pasted": "Схема вставлена в мир",
-    "litematica.message.schematic_pasted_using_world_edit": "Схема вставлена с использованием §b%s§r команд //set для World Edit",
     "litematica.message.schematic_pasted_using_fill_and_setblock": "Схема вставлена с использованием §b%s§r команд /fill и §b%s§r команд /setblock",
     "litematica.message.schematic_pasted_using_setblock": "Схема вставлена с использованием %s команд /setblock",
+    "litematica.message.schematic_pasted_using_world_edit": "Схема вставлена с использованием §b%s§r команд //set для World Edit",
     "litematica.message.schematic_placement_created": "Создано расположение для '%s'",
     "litematica.message.schematic_preview_cancelled": "Создание миниатюры отменено",
     "litematica.message.schematic_read_from_file_success": "Схема загружена из файла '%s'",
@@ -934,11 +857,9 @@
     "litematica.message.toggled": "Переключён %s %s",
     "litematica.message.value.on": "Вкл",
     "litematica.message.value.off": "Выкл",
-
     "litematica.message.schematic_projects.project_created": "Создан проект '%s'",
     "litematica.message.schematic_projects.project_loaded": "Проект '%s' загружен",
     "litematica.message.schematic_projects.version_saved": "Новая версия (№%s) сохранена как '%s'",
-
     "litematica.message.warn.area_selection.browser_open_in_simple_mode": "Примечание: В настоящее время вы в режиме простого выделения области",
     "litematica.message.warn.layer_mode_currently_at": "Примечание: В настоящее время включён режим отображения §f[%s]",
     "litematica.message.warn.main_rendering_disabled": "Внимание: В настоящее время отображение всех элементов отключено. Проверьте настройки §f[Визуализация] §6→§f %s§6 или §f[Клавиши] §6→§f %s [%s]",
@@ -947,16 +868,12 @@
     "litematica.message.warn.schematic_rebuild_placement_not_selected": "Это размещение сейчас не выбрано. Клавиша \"Заменить всё\" работает только с выделенными подрегионами размещения, на которое вы нажимаете. Поэтому, чтобы заменить блоки в конкретном подрегионе, выберите этот подрегион. Чтобы произвести замену во всей схеме (все подрегионы), выберите всё размещение, но не отдельный подрегион. Также блоки будут заменены только в пределах отображаемых слоёв.",
     "litematica.message.warn.schematic_rendering_disabled": "Внимание: В настоящее время отображение схемы отключено. Проверьте настройки §f[Визуализация] §6→§f %s§6 или §f[Клавиши] §6→§f %s [%s]",
     "litematica.message.warn.schematic_verifier.overlay_disabled": "Внимание: Наложение информации проверки схемы отключено. Проверьте настройки §f[Наложение информации] §6→§f %s§6 (или §f[Клавиши] §6→§f %s [%s]§6)",
-
     "litematica.message.warning.invalid_number": "Некорректный ввод числа '%s'",
     "litematica.message.warning.schematic_projects_hidden": "Внимание: Система управления версиями схемы (УВС) скрыта. Вам НЕ следует её использовать, если вы не знаете, каким образом она работает и меняет поведение мода. Она предназначена для работы в местах, где требуется быстрое переключение по итерациям между разными версиями постройки (=удаление предыдущей версии и её замена новой). Если вы хотите её использовать, включите настройку [Основные] → unhideSchematicVCS",
-
     "litematica.warning.area_editor.area_rendering_disabled": "Примечание: В настоящее время отображение регионов областей выделения отключено. Проверьте настройки §f[Визуализация] §6→§f %s§6 или §f[Клавиши] §6→§f %s [%s]",
-
     "litematica.tool_hud.block_1": "Блок: %s",
     "litematica.tool_hud.block_2": "Заменяемый блок: %s",
     "litematica.tool_hud.facing": "направление: %s",
-
     "litematica.tool_mode.name.area_selection": "Выбор области",
     "litematica.tool_mode.name.delete": "Удаление",
     "litematica.tool_mode.name.fill": "Заполнение",

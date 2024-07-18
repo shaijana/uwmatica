@@ -107,6 +107,7 @@
     "litematica.config.info_overlays.name.blockInfoLinesFontScale": "blockInfoLinesFontScale",
     "litematica.config.info_overlays.name.blockInfoLinesOffsetX": "blockInfoLinesOffsetX",
     "litematica.config.info_overlays.name.blockInfoLinesOffsetY": "blockInfoLinesOffsetY",
+    "litematica.config.info_overlays.name.blockInfoOverlayOffsetY": "blockInfoOverlayOffsetY",
     "litematica.config.info_overlays.name.blockInfoOverlayEnabled": "blockInfoOverlayEnabled",
     "litematica.config.info_overlays.name.infoHudMaxLines": "infoHudMaxLines",
     "litematica.config.info_overlays.name.infoHudOffsetX": "infoHudOffsetX",
