@@ -661,7 +661,6 @@ public class WorldUtils
 
     public static PlacementProtocolData applyPlacementProtocolAll(BlockPos pos, BlockState stateSchematic, Vec3d hitVecIn)
     {
-        //MinecraftClient mc = MinecraftClient.getInstance();
         PlacementProtocolData placementData = new PlacementProtocolData();
 
         Block stateBlock = stateSchematic.getBlock();
@@ -717,31 +716,6 @@ public class WorldUtils
             if (!WallMountedBlock.canPlaceAt(world, pos, direction))
                 placementData.mustFail = true;
         }
-        // FIXME (Didn't have time)
-        /*
-        if (stateBlock instanceof ChestBlock)
-        {
-            if (stateSchematic.get(Properties.CHEST_TYPE) != ChestType.SINGLE)
-            {
-                for (Direction face : fi.dy.masa.malilib.util.PositionUtils.HORIZONTAL_DIRECTIONS)
-                {
-                    BlockState neighborState = mc.world.getBlockState(pos.offset(face));
-
-                    if (neighborState.isOf(stateBlock) && neighborState.get(Properties.CHEST_TYPE) == ChestType.SINGLE)
-                    {
-                        placementData.handled = true;
-                        placementData.hitVec = hitVecIn;
-                        placementData.pos = pos.offset(face);
-                        placementData.side = neighborState.get(Properties.FACING);
-                    }
-                    else
-                    {
-                        placementData.mustFail = true;
-                    }
-                }
-            }
-        }
-         */
 
         return placementData;
     }
