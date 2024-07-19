@@ -291,7 +291,7 @@
     "litematica.config.visuals.comment.renderAreaSelectionBoxSides": "If enabled, then the area selection boxes will\nhave their side quads rendered",
     "litematica.config.visuals.comment.renderBlocksAsTranslucent": "If enabled, then the schematics are rendered\nusing translucent \"ghost blocks\"",
     "litematica.config.visuals.comment.renderCollidingSchematicBlocks": "If enabled, then blocks in the schematics are rendered\nalso when there is already a (wrong) block in the client world.\nProbably mostly useful when trying to build\nsomething where there are snow layers or water in the way.",
-    "litematica.config.visuals.comment.renderErrorMarkerConnections": "Render connecting lines between subsequent verifier hilight box corners.\nThis was a rendering bug that some people experienced, but at least some players\nliked it and requested for it to stay, so this options \"restores\" it",
+    "litematica.config.visuals.comment.renderErrorMarkerConnections": "Render connecting lines between subsequent verifier highlight box corners.\nThis was a rendering bug that some people experienced, but at least some players\nliked it and requested for it to stay, so this options \"restores\" it",
     "litematica.config.visuals.comment.renderErrorMarkerSides": "If enabled, then the error markers in the Schematic Verifier\nwill have (translucent) sides rendered instead of just the outline",
     "litematica.config.visuals.comment.renderPlacementBoxSides": "If enabled, then the placed schematic sub-region boxes\nwill have their side quads rendered",
     "litematica.config.visuals.comment.renderPlacementEnclosingBox": "If enabled, then an enclosing box is rendered around\nall the sub-regions in a schematic (placement)",
