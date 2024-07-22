@@ -22,8 +22,8 @@ dependencies {
 	modImplementation "com.github.sakura-ryoko:malilib:${project.malilib_id}"
 
 	//include(modApi(fabricApi.module("fabric-api-base", project.fabric_api_version)))
-	include(modApi(fabricApi.module("fabric-networking-api-v1", project.fabric_api_version)))
-	include(modApi(fabricApi.module("fabric-resource-loader-v0", project.fabric_api_version)))
+	//modImplementation "fabric-networking-api-v1:${project.fabric_api_version}"
+	//modImplementation "fabric-resource-loader-v0:${project.fabric_api_version}"
 
 	modCompileOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
 }
