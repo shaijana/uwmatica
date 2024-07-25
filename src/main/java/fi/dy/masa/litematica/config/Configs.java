@@ -55,6 +55,7 @@ public class Configs implements IConfigHandler
         public static final ConfigBoolean       EASY_PLACE_MODE             = new ConfigBoolean("easyPlaceMode", false, "litematica.config.generic.comment.easyPlaceMode", "litematica.config.generic.prettyName.easyPlaceMode").translatedName("litematica.config.generic.name.easyPlaceMode");
         public static final ConfigBoolean       EASY_PLACE_SP_HANDLING      = new ConfigBoolean("easyPlaceSinglePlayerHandling", true, "litematica.config.generic.comment.easyPlaceSinglePlayerHandling").translatedName("litematica.config.generic.name.easyPlaceSinglePlayerHandling");
         public static final ConfigInteger       EASY_PLACE_SWAP_INTERVAL    = new ConfigInteger("easyPlaceSwapInterval", 0, 0, 10000, "litematica.config.generic.comment.easyPlaceSwapInterval").translatedName("litematica.config.generic.name.easyPlaceSwapInterval");
+        public static final ConfigBoolean       EASY_PLACE_SWING_HAND       = new ConfigBoolean("easyPlaceSwingHand", true, "litematica.config.generic.comment.easyPlaceSwingHand").translatedName("litematica.config.generic.name.easyPlaceSwingHand");
         public static final ConfigBoolean       EASY_PLACE_VANILLA_REACH    = new ConfigBoolean("easyPlaceVanillaReach", false, "litematica.config.generic.comment.easyPlaceVanillaReach").translatedName("litematica.config.generic.name.easyPlaceVanillaReach");
         public static final ConfigBoolean       ENTITY_DATA_SYNC            = new ConfigBoolean("entityDataSync", true, "litematica.config.generic.comment.entityDataSync").translatedName("litematica.config.generic.name.entityDataSync");
         public static final ConfigBoolean       ENTITY_DATA_SYNC_BACKUP     = new ConfigBoolean("entityDataSyncBackup", true, "litematica.config.generic.comment.entityDataSyncBackup").translatedName("litematica.config.generic.name.entityDataSyncBackup");
@@ -108,6 +109,7 @@ public class Configs implements IConfigHandler
                 EASY_PLACE_MODE,
                 EASY_PLACE_SP_HANDLING,
                 EASY_PLACE_PROTOCOL,
+                EASY_PLACE_SWING_HAND,
                 EASY_PLACE_VANILLA_REACH,
                 ENTITY_DATA_SYNC,
                 ENTITY_DATA_SYNC_BACKUP,

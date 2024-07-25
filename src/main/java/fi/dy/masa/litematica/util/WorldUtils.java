@@ -3,6 +3,7 @@ package fi.dy.masa.litematica.util;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.ObjectInputFilter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -591,7 +592,7 @@ public class WorldUtils
                 ActionResult result = mc.interactionManager.interactBlock(mc.player, hand, hitResult);
 
                 // swing hand fix, see MinecraftClient#doItemUse
-                if (result.shouldSwingHand())
+                if (result.shouldSwingHand() && Configs.Generic.EASY_PLACE_SWING_HAND.getBooleanValue())
                 {
                     mc.player.swingHand(hand);
                 }
