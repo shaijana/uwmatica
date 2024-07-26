@@ -26,6 +26,7 @@ import net.minecraft.world.World;
 
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.util.BlockInfoAlignment;
+import fi.dy.masa.litematica.util.InventoryUtils;
 import fi.dy.masa.litematica.util.PositionUtils;
 import fi.dy.masa.litematica.util.RayTraceUtils;
 import fi.dy.masa.malilib.gui.LeftRight;
@@ -687,9 +688,7 @@ public class RenderUtils
     public static int renderInventoryOverlay(BlockInfoAlignment align, LeftRight side, int offY,
             World world, BlockPos pos, MinecraftClient mc, DrawContext drawContext)
     {
-        RayTraceUtils.InventoryPreviewData data = RayTraceUtils.getTargetInventory(mc, world, pos);
-        Inventory inv = data.inv();
-        //inv = fi.dy.masa.malilib.util.InventoryUtils.getInventory(world, pos);
+        Inventory inv = InventoryUtils.getInventory(world, pos);
 
         if (inv != null)
         {

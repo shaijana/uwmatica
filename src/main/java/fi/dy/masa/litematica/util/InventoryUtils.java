@@ -1,11 +1,13 @@
 package fi.dy.masa.litematica.util;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ToolItem;
 import net.minecraft.screen.PlayerScreenHandler;
@@ -19,6 +21,8 @@ import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.util.InfoUtils;
 import fi.dy.masa.litematica.config.Configs;
+import fi.dy.masa.litematica.data.DataManager;
+import fi.dy.masa.litematica.render.OverlayRenderer;
 
 public class InventoryUtils
 {
@@ -280,5 +284,18 @@ public class InventoryUtils
         }
 
         return -1;
+    }
+
+    @Nullable
+    public static Inventory getInventory(World world, BlockPos pos)
+    {
+        Inventory inv = fi.dy.masa.malilib.util.InventoryUtils.getInventory(world, pos);
+
+        if ((inv == null || inv.isEmpty()) && DataManager.getInstance().hasIntegratedServer() == false)
+        {
+            OverlayRenderer.getInstance().requestBlockEntityAt(world, pos);
+        }
+
+        return inv;
     }
 }
