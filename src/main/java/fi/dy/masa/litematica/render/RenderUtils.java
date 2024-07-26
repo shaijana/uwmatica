@@ -678,13 +678,8 @@ public class RenderUtils
 
     public static int renderInventoryOverlays(BlockInfoAlignment align, int offY, World worldSchematic, World worldClient, BlockPos pos, MinecraftClient mc, DrawContext drawContext)
     {
-        return renderInventoryOverlays(align, offY, worldSchematic, worldClient, pos, mc, drawContext, false);
-    }
-
-    public static int renderInventoryOverlays(BlockInfoAlignment align, int offY, World worldSchematic, World worldClient, BlockPos pos, MinecraftClient mc, DrawContext drawContext, boolean hasServux)
-    {
-        int heightSch = renderInventoryOverlay(align, LeftRight.LEFT, offY, worldSchematic, pos, mc, drawContext, false);
-        int heightCli = renderInventoryOverlay(align, LeftRight.RIGHT, offY, worldClient, pos, mc, drawContext, hasServux);
+        int heightSch = renderInventoryOverlay(align, LeftRight.LEFT, offY, worldSchematic, pos, mc, drawContext);
+        int heightCli = renderInventoryOverlay(align, LeftRight.RIGHT, offY, worldClient, pos, mc, drawContext);
 
         return Math.max(heightSch, heightCli);
     }
@@ -692,23 +687,9 @@ public class RenderUtils
     public static int renderInventoryOverlay(BlockInfoAlignment align, LeftRight side, int offY,
             World world, BlockPos pos, MinecraftClient mc, DrawContext drawContext)
     {
-        return renderInventoryOverlay(align, side, offY, world, pos, mc, drawContext, false);
-    }
-
-    public static int renderInventoryOverlay(BlockInfoAlignment align, LeftRight side, int offY,
-            World world, BlockPos pos, MinecraftClient mc, DrawContext drawContext, boolean hasServux)
-    {
-        Inventory inv;
-
-        if (hasServux)
-        {
-            RayTraceUtils.InventoryPreviewData data = RayTraceUtils.getTargetInventory(mc, world, pos);
-            inv = data.inv();
-        }
-        else
-        {
-            inv = fi.dy.masa.malilib.util.InventoryUtils.getInventory(world, pos);
-        }
+        RayTraceUtils.InventoryPreviewData data = RayTraceUtils.getTargetInventory(mc, world, pos);
+        Inventory inv = data.inv();
+        //inv = fi.dy.masa.malilib.util.InventoryUtils.getInventory(world, pos);
 
         if (inv != null)
         {

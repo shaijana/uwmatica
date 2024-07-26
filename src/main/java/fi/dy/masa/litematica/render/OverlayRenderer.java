@@ -537,7 +537,6 @@ public class OverlayRenderer
     private boolean renderVerifierOverlay(MinecraftClient mc, DrawContext drawContext)
     {
         SchematicPlacement placement = DataManager.getSchematicPlacementManager().getSelectedSchematicPlacement();
-        boolean hasServux = EntitiesDataStorage.getInstance().hasServuxServer();
 
         if (placement != null && placement.hasVerifier())
         {
@@ -551,7 +550,7 @@ public class OverlayRenderer
                 World worldSchematic = SchematicWorldHandler.getSchematicWorld();
                 BlockPos pos = trace.getBlockPos();
 
-                if (hasServux)
+                if (DataManager.getInstance().hasIntegratedServer() == false)
                 {
                     EntitiesDataStorage.getInstance().requestBlockEntity(mc.world, pos);
                 }
@@ -563,7 +562,7 @@ public class OverlayRenderer
                     BlockMismatchInfo info = new BlockMismatchInfo(mismatch.stateExpected, mismatch.stateFound);
                     BlockInfoAlignment align = (BlockInfoAlignment) Configs.InfoOverlays.BLOCK_INFO_OVERLAY_ALIGNMENT.getOptionListValue();
                     int offY = Configs.InfoOverlays.BLOCK_INFO_OVERLAY_OFFSET_Y.getIntegerValue();
-                    int invHeight = RenderUtils.renderInventoryOverlays(align, offY, worldSchematic, mc.world, pos, mc, drawContext, hasServux);
+                    int invHeight = RenderUtils.renderInventoryOverlays(align, offY, worldSchematic, mc.world, pos, mc, drawContext);
                     this.getOverlayPosition(align, info.getTotalWidth(), info.getTotalHeight(), offY, invHeight, mc);
                     info.render(this.blockInfoX, this.blockInfoY, mc, drawContext);
                     return true;
@@ -584,20 +583,10 @@ public class OverlayRenderer
 
         BlockState stateClient = mc.world.getBlockState(pos);
         BlockState stateSchematic = worldSchematic.getBlockState(pos);
-        boolean hasServux = EntitiesDataStorage.getInstance().hasServuxServer();
-        boolean hasInvClient;
+        boolean hasInvClient = RayTraceUtils.getTargetInventory(mc, worldClient, pos) != null;
+        //boolean hasInvClient = InventoryUtils.getInventory(worldClient, pos) != null;
         boolean hasInvSchematic = InventoryUtils.getInventory(worldSchematic, pos) != null;
         int invHeight = 0;
-
-        if (hasServux)
-        {
-            hasInvClient = RayTraceUtils.getTargetInventory(mc, worldClient, pos) != null;
-        }
-        else
-        {
-            hasInvClient = InventoryUtils.getInventory(worldClient, pos) != null;
-        }
-
         int offY = Configs.InfoOverlays.BLOCK_INFO_OVERLAY_OFFSET_Y.getIntegerValue();
         BlockInfoAlignment align = (BlockInfoAlignment) Configs.InfoOverlays.BLOCK_INFO_OVERLAY_ALIGNMENT.getOptionListValue();
 
@@ -606,11 +595,11 @@ public class OverlayRenderer
 
         if (hasInvClient && hasInvSchematic)
         {
-            invHeight = RenderUtils.renderInventoryOverlays(align, offY, worldSchematic, worldClient, pos, mc, drawContext, hasServux);
+            invHeight = RenderUtils.renderInventoryOverlays(align, offY, worldSchematic, worldClient, pos, mc, drawContext);
         }
         else if (hasInvClient)
         {
-            invHeight = RenderUtils.renderInventoryOverlay(align, LeftRight.RIGHT, offY, worldClient, pos, mc, drawContext, hasServux);
+            invHeight = RenderUtils.renderInventoryOverlay(align, LeftRight.RIGHT, offY, worldClient, pos, mc, drawContext);
         }
         else if (hasInvSchematic)
         {

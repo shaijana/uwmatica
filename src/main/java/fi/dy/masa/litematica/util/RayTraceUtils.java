@@ -1088,6 +1088,7 @@ public class RayTraceUtils
         }
     }
 
+    // Cloned from MiniHUD
     public static @Nullable RayTraceUtils.InventoryPreviewData getTargetInventory(MinecraftClient mc, World world, @Nullable BlockPos pos)
     {
         //World world = WorldUtils.getBestWorld(mc);
