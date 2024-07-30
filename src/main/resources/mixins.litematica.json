@@ -13,6 +13,7 @@
         "IMixinSignBlockEntity",
         "IMixinStairsBlock",
         "IMixinVineBlock",
+        "IMixinWallMountedBlock",
         "IMixinWorld",
         "IMixinWorldTickScheduler",
         "MixinAbstractSignEditScreen",
@@ -36,8 +37,5 @@
     ],
     "injectors": {
         "defaultRequire": 1
-    },
-    "mixins": [
-        "IMixinWallMountedBlock"
-    ]
+    }
 }
