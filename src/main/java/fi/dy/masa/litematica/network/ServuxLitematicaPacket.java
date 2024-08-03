@@ -368,7 +368,7 @@ public class ServuxLitematicaPacket implements IClientPayloadData
             {
                 try
                 {
-                    return ServuxLitematicaPacket.BulkNbtRequest(input.readChunkPos(), input.readNbt());
+                    return ServuxLitematicaPacket.BulkNbtRequest(input.readChunkPos(), (NbtCompound) input.readNbt(NbtSizeTracker.ofUnlimitedBytes()));
                 }
                 catch (Exception e)
                 {
