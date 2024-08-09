@@ -1,8 +1,9 @@
 package fi.dy.masa.litematica.util;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
+
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
@@ -10,6 +11,7 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ToolItem;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
@@ -17,6 +19,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.util.InfoUtils;
@@ -286,6 +289,13 @@ public class InventoryUtils
         return -1;
     }
 
+    /**
+     * Get a valid Inventory Object by any means necessary.
+     *
+     * @param world (Input ClientWorld)
+     * @param pos (Pos of the Tile Entity)
+     * @return (The result Inventory | NULL if not obtainable)
+     */
     @Nullable
     public static Inventory getInventory(World world, BlockPos pos)
     {
@@ -297,5 +307,66 @@ public class InventoryUtils
         }
 
         return inv;
+    }
+
+    /**
+     * Converts an NbtCompound representation of an ItemStack into a '/give' compatible string.
+     * This is the format used by the ItemStringReader(), including Data Components.
+     *
+     * @param nbt (Nbt Input, must be valid ItemStack.encode() format)
+     * @return (The String Result | NULL if the NBT is invalid)
+     */
+    @Nullable
+    public static String convertItemNbtToString(NbtCompound nbt)
+    {
+        StringBuilder result = new StringBuilder();
+
+        if (nbt.isEmpty())
+        {
+            return null;
+        }
+
+        if (nbt.contains("id"))
+        {
+            result.append(nbt.getString("id"));
+        }
+        else
+        {
+            return null;
+        }
+        if (nbt.contains("components"))
+        {
+            NbtCompound components = nbt.getCompound("components");
+            int count = 0;
+
+            result.append("[");
+
+            for (String key : components.getKeys())
+            {
+                if (count > 0)
+                {
+                    result.append(", ");
+                }
+
+                result.append(key);
+                result.append("=");
+                result.append(components.get(key));
+                count++;
+            }
+
+            result.append("]");
+        }
+        if (nbt.contains("count"))
+        {
+            int count = nbt.getInt("count");
+
+            if (count > 1)
+            {
+                result.append(" ");
+                result.append(count);
+            }
+        }
+
+        return result.toString();
     }
 }

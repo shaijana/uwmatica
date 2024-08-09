@@ -1,13 +1,13 @@
 package fi.dy.masa.litematica.util;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.ObjectInputFilter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import javax.annotation.Nullable;
+
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.SignBlockEntity;
@@ -38,6 +38,7 @@ import net.minecraft.util.math.*;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
+
 import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.interfaces.IStringConsumer;
 import fi.dy.masa.malilib.util.BlockUtils;
@@ -67,6 +68,11 @@ public class WorldUtils
 {
     private static final List<PositionCache> EASY_PLACE_POSITIONS = new ArrayList<>();
     private static long easyPlaceLastPickBlockTime = System.nanoTime();
+
+    public static double getValidBlockRange(MinecraftClient mc)
+    {
+        return Configs.Generic.EASY_PLACE_VANILLA_REACH.getBooleanValue() ? mc.player.getBlockInteractionRange() : mc.player.getBlockInteractionRange() + 1.0;
+    }
 
     public static boolean shouldPreventBlockUpdates(World world)
     {
@@ -322,7 +328,7 @@ public class WorldUtils
     {
         BlockState state = Blocks.AIR.getDefaultState();
         Entity entity = fi.dy.masa.malilib.util.EntityUtils.getCameraEntity();
-        RayTraceWrapper wrapper = RayTraceUtils.getGenericTrace(mc.world, entity, 6);
+        RayTraceWrapper wrapper = RayTraceUtils.getGenericTrace(mc.world, entity, getValidBlockRange(mc));
 
         if (wrapper != null)
         {
@@ -365,11 +371,11 @@ public class WorldUtils
 
         if (closest)
         {
-            pos = RayTraceUtils.getSchematicWorldTraceIfClosest(mc.world, mc.player, 6);
+            pos = RayTraceUtils.getSchematicWorldTraceIfClosest(mc.world, mc.player, getValidBlockRange(mc));
         }
         else
         {
-            pos = RayTraceUtils.getFurthestSchematicWorldBlockBeforeVanilla(mc.world, mc.player, 6, true);
+            pos = RayTraceUtils.getFurthestSchematicWorldBlockBeforeVanilla(mc.world, mc.player, getValidBlockRange(mc), true);
         }
 
         if (pos != null)
@@ -454,7 +460,7 @@ public class WorldUtils
     private static ActionResult doEasyPlaceAction(MinecraftClient mc)
     {
         RayTraceWrapper traceWrapper;
-        double traceMaxRange = Configs.Generic.EASY_PLACE_VANILLA_REACH.getBooleanValue() ? 4.5 : 6;
+        double traceMaxRange = getValidBlockRange(mc);
 
         if (Configs.Generic.EASY_PLACE_FIRST.getBooleanValue())
         {

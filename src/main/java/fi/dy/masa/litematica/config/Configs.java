@@ -4,6 +4,9 @@ import java.io.File;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+
+import net.minecraft.client.MinecraftClient;
+
 import fi.dy.masa.malilib.config.ConfigUtils;
 import fi.dy.masa.malilib.config.HudAlignment;
 import fi.dy.masa.malilib.config.IConfigBase;
@@ -90,6 +93,7 @@ public class Configs implements IConfigHandler
         public static final ConfigBoolean       SIGN_TEXT_PASTE             = new ConfigBoolean("signTextPaste", true, "litematica.config.generic.comment.signTextPaste", "litematica.config.generic.prettyName.signTextPaste").translatedName("litematica.config.generic.name.signTextPaste");
         public static final ConfigString        TOOL_ITEM                   = new ConfigString( "toolItem", "minecraft:stick", "litematica.config.generic.comment.toolItem").translatedName("litematica.config.generic.name.toolItem");
         public static final ConfigBoolean       TOOL_ITEM_ENABLED           = new ConfigBoolean("toolItemEnabled", true, "litematica.config.generic.comment.toolItemEnabled", "litematica.config.generic.prettyName.toolItemEnabled").translatedName("litematica.config.generic.name.toolItemEnabled");
+        public static final ConfigString        TOOL_ITEM_COMPONENTS        = new ConfigString( "toolItemComponents", "empty", "litematica.config.generic.comment.toolItemComponents").translatedName("litematica.config.generic.name.toolItemComponents");
         public static final ConfigBoolean       UNHIDE_SCHEMATIC_PROJECTS   = new ConfigBoolean("unhideSchematicVCS", false, "litematica.config.generic.comment.unhideSchematicVCS").translatedName("litematica.config.generic.name.unhideSchematicVCS");
 
         public static final ImmutableList<IConfigBase> OPTIONS = ImmutableList.of(
@@ -160,7 +164,8 @@ public class Configs implements IConfigHandler
                 CUSTOM_SCHEMATIC_BASE_DIRECTORY,
                 EASY_PLACE_SWAP_INTERVAL,
                 PICK_BLOCKABLE_SLOTS,
-                TOOL_ITEM
+                TOOL_ITEM,
+                TOOL_ITEM_COMPONENTS
         );
     }
 
@@ -349,6 +354,10 @@ public class Configs implements IConfigHandler
         }
 
         DataManager.setToolItem(Generic.TOOL_ITEM.getStringValue());
+        if (MinecraftClient.getInstance().world != null)
+        {
+            DataManager.getInstance().setToolItemComponents(Generic.TOOL_ITEM_COMPONENTS.getStringValue(), MinecraftClient.getInstance().world.getRegistryManager());
+        }
         InventoryUtils.setPickBlockableSlots(Generic.PICK_BLOCKABLE_SLOTS.getStringValue());
     }
 
