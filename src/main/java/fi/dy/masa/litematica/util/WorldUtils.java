@@ -227,6 +227,23 @@ public class WorldUtils
         return false;
     }
 
+    public static boolean convertLitematicaSchematicToV6LitematicaSchematic(
+            File inputDir, String inputFileName, File outputDir, String outputFileName, boolean ignoreEntities, boolean override, IStringConsumer feedback)
+    {
+        LitematicaSchematic v7LitematicaSchematic = LitematicaSchematic.createFromFile(inputDir, inputFileName, FileType.LITEMATICA_SCHEMATIC);
+
+        if (v7LitematicaSchematic == null)
+        {
+            feedback.setString("litematica.error.schematic_conversion.litematica_to_schematic.failed_to_read_schematic");
+            return false;
+        }
+
+        LitematicaSchematic v6LitematicaSchematic = LitematicaSchematic.createEmptySchematicFromExisting(v7LitematicaSchematic, MinecraftClient.getInstance().player.getName().getString());
+        v6LitematicaSchematic.downgradeV7toV6Schematic(v7LitematicaSchematic);
+
+        return v6LitematicaSchematic.writeToFile(outputDir, outputFileName, override, true);
+    }
+
     public static boolean convertLitematicaSchematicToVanillaStructure(
             File inputDir, String inputFileName, File outputDir, String outputFileName, boolean ignoreEntities, boolean override, IStringConsumer feedback)
     {
