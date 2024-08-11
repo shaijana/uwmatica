@@ -349,11 +349,7 @@ public class SchematicDowngradeConverter
                 {
                     outNbt.putInt("Damage", nbt.getInt(key));
                 }
-                case "minecraft:enchantments" ->
-                {
-                    outNbt.put("Enchantments", processEnchantments(nbt.get(key)));
-                }
-                case "minecraft:stored_enchantments" ->
+                case "minecraft:enchantments", "minecraft:stored_enchantments" ->
                 {
                     outNbt.put("Enchantments", processEnchantments(nbt.get(key)));
                 }
@@ -510,7 +506,7 @@ public class SchematicDowngradeConverter
 
             for (int i = 0; i < oldExplosions.size(); i++)
             {
-                newExplosions.add((NbtCompound) processFireworkExplosion(oldExplosions.getCompound(i)));
+                newExplosions.add(processFireworkExplosion(oldExplosions.getCompound(i)));
             }
 
             newRocket.put("Explosions", newExplosions);
