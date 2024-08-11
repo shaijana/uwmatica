@@ -208,6 +208,7 @@ public class SchematicDowngradeConverter
                 case "flower_pos" -> newTE.put("FlowerPos", processFlowerPos(oldTE, key));
                 case "bees" -> newTE.put("Bees", processBeesTag(oldTE.get(key), minecraftDataVersion, registryManager));
                 case "item" -> newTE.put("item", processDecoratedPot(oldTE.get(key), minecraftDataVersion, registryManager));
+                case "last_interacted_slot" -> newTE.put("last_interacted_slot", oldTE.get(key));
                 case "ticks_since_song_started" ->
                 {
                     newTE.putLong("RecordStartTick", 0L);
@@ -349,9 +350,13 @@ public class SchematicDowngradeConverter
                 {
                     outNbt.putInt("Damage", nbt.getInt(key));
                 }
-                case "minecraft:enchantments", "minecraft:stored_enchantments" ->
+                case "minecraft:enchantments" ->
                 {
-                    outNbt.put("Enchantments", processEnchantments(nbt.get(key)));
+                    outNbt.put("Enchantments", processEnchantments(nbt.get(key), false));
+                }
+                case "minecraft:stored_enchantments" ->
+                {
+                    outNbt.put("StoredEnchantments", processEnchantments(nbt.get(key), true));
                 }
                 case "minecraft:fireworks" ->
                 {
@@ -440,7 +445,7 @@ public class SchematicDowngradeConverter
         return newNbt;
     }
 
-    private static NbtElement processEnchantments(NbtElement oldNbt)
+    private static NbtElement processEnchantments(NbtElement oldNbt, boolean shortInt)
     {
         NbtCompound oldEnchants = (NbtCompound) oldNbt;
         NbtCompound oldLevels = oldEnchants.getCompound("levels");
@@ -457,7 +462,14 @@ public class SchematicDowngradeConverter
         {
             NbtCompound newEntry = new NbtCompound();
             Identifier id = Identifier.of(key);
-            newEntry.putInt("lvl", oldLevels.getInt(key));
+            if (shortInt)
+            {
+                newEntry.putShort("lvl", (short) oldLevels.getInt(key));
+            }
+            else
+            {
+                newEntry.putInt("lvl", oldLevels.getInt(key));
+            }
             newEntry.putString("id", id.getPath());
             newEnchants.add(newEntry);
         }
@@ -472,7 +484,7 @@ public class SchematicDowngradeConverter
         MutableText oldCustomName = Text.Serialization.fromJson(oldNameString, registryManager);
         String newCustomName = Text.Serialization.toJsonString(oldCustomName, registryManager);
 
-        System.out.printf("processCustomNameTag(): oldName [%s], text: [%s], newString [%s]\n", oldNameString, oldCustomName.getString(), newCustomName);
+        //System.out.printf("processCustomNameTag(): oldName [%s], text: [%s], newString [%s]\n", oldNameString, oldCustomName.getString(), newCustomName);
 
         return newCustomName;
     }
