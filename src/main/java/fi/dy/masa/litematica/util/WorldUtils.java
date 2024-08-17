@@ -241,7 +241,15 @@ public class WorldUtils
         LitematicaSchematic v6LitematicaSchematic = LitematicaSchematic.createEmptySchematicFromExisting(v7LitematicaSchematic, MinecraftClient.getInstance().player.getName().getString());
         v6LitematicaSchematic.downgradeV7toV6Schematic(v7LitematicaSchematic);
 
-        return v6LitematicaSchematic.writeToFile(outputDir, outputFileName, override, true);
+        if (v6LitematicaSchematic.writeToFile(outputDir, outputFileName, override, true))
+        {
+            return true;
+        }
+        else
+        {
+            feedback.setString("litematica.error.schematic_conversion.litematica_to_schematic.failed_to_downgrade_litematic");
+            return false;
+        }
     }
 
     public static boolean convertLitematicaSchematicToVanillaStructure(

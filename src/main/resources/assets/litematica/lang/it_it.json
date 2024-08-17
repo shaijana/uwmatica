@@ -473,6 +473,7 @@
   "litematica.error.area_editor.rename_sub_region.exists": "Impossibile rinominare la sottoregione:\nEsiste già una sottoregione con il nome '%s'",
   "litematica.error.area_editor.switch_mode.no_selection": "Impossibile passare alla modalità Selezione: Normale, perché al momento non è selezionata alcuna area.\nSeleziona un'area o crea una nuova selezione nel browser di selezione dell'area",
 
+  "litematica.error.schematic_conversion.litematic_to_litematica.failed_to_downgrade_litematic": "Failed to downgrade the Litematica Schematic",
   "litematica.error.schematic_conversion.litematic_to_litematica.failed_to_read_litematic": "Impossibile caricare lo schema di Litematica",
   "litematica.error.schematic_conversion.schematic_to_litematica.failed_to_create_schematic": "Impossibile creare lo schema Litematica",
   "litematica.error.schematic_conversion.schematic_to_litematica.failed_to_read_schematic": "Impossibile caricare lo Schema",
@@ -904,7 +905,7 @@
   "litematica.message.error.schematic_save_no_area_selected": "§cSalvataggio dello schema fallito - nessuna area selezionata§r",
   "litematica.message.warn.pickblock.no_suitable_slot_found": "Nessuno slot hotbar adatto trovato per il pick block!\nControlla la configurazione Generico -> §epickBlockableSlots§r.\\nA seconda delle configurazioni §epickBlockAvoid*§6, la funzione pick block potrebbe rifiutare di sostituire strumenti o altri oggetti danneggiabili in quegli slot.",
   "litematica.message.warn.pickblock.no_valid_slots_configured": "Nessuno slot hotbar impostato nella configurazione Generico -> §epickBlockableSlots§6!",
-  
+
   "litematica.message.added_selection_box": "Aggiunta una nuova casella di selezione a %s",
   "litematica.message.area_clear_fail": "§cImpossibile cancellare l'area/e§r",
   "litematica.message.area_cleared": "Area cancellata",
@@ -914,6 +915,7 @@
   "litematica.message.easy_place_fail": "§6Azione impedita dalla modalità Easy Place",
   "litematica.message.grabbed_element_for_moving": "Catturato un elemento da spostare",
   "litematica.message.in_memory_schematic_created": "Creato uno schema in memoria come '%s'",
+  "litematica.message.litematic_downgrade_exported_as": "Schematic export downgraded as '%s'\n§6NOTE: This is an experimental feature; data loss may occur.§r",
   "litematica.message.litematic_saved_as": "Aggiornata con successo la versione dei dati dello schema Litematica\nSchema salvato come '%s'",
   "litematica.message.material_list.material_cache_cleared": "Cache dei materiali svuotata",
   "litematica.message.material_list_written_to_file": "Elenco materiali scritto nel file '%s'",

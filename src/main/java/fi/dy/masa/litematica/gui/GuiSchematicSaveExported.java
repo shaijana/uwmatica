@@ -104,7 +104,7 @@ public class GuiSchematicSaveExported extends GuiSchematicSaveBase
                         {
                             if (WorldUtils.convertLitematicaSchematicToV6LitematicaSchematic(inDir, inFile, dir, fileName, ignoreEntities, override, this.gui))
                             {
-                                this.gui.addMessage(MessageType.SUCCESS, "litematica.message.schematic_exported_as", fileName);
+                                this.gui.addMessage(MessageType.SUCCESS, "litematica.message.litematic_downgrade_exported_as", fileName);
                                 this.gui.getListWidget().refreshEntries();
                             }
                         }
