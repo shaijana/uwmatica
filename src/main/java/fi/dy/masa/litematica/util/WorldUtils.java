@@ -91,6 +91,13 @@ public class WorldUtils
         return litematicaSchematic != null && litematicaSchematic.writeToFile(outputDir, outputFileName, override);
     }
 
+    public static boolean convertSpongeSchematicToLitematicaSchematic(
+            File inputDir, String inputFileName, File outputDir, String outputFileName, boolean ignoreEntities, boolean override, IStringConsumer feedback)
+    {
+        LitematicaSchematic litematicaSchematic = convertSpongeSchematicToLitematicaSchematic(inputDir, inputFileName);
+        return litematicaSchematic != null && litematicaSchematic.writeToFile(outputDir, outputFileName, override);
+    }
+
     public static boolean convertSchematicaSchematicToLitematicaSchematic(
             File inputDir, String inputFileName, File outputDir, String outputFileName, boolean ignoreEntities, boolean override, IStringConsumer feedback)
     {
@@ -624,7 +631,8 @@ public class WorldUtils
                 ActionResult result = mc.interactionManager.interactBlock(mc.player, hand, hitResult);
 
                 // swing hand fix, see MinecraftClient#doItemUse
-                if (result.shouldSwingHand() && Configs.Generic.EASY_PLACE_SWING_HAND.getBooleanValue())
+                if (result.shouldSwingHand() &&
+                    Configs.Generic.EASY_PLACE_SWING_HAND.getBooleanValue())
                 {
                     mc.player.swingHand(hand);
                 }
