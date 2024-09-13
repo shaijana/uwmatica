@@ -164,7 +164,7 @@ public enum DataFixerMode implements IConfigOptionListEntry
     {
         for (Schema schema : Schema.values())
         {
-            if (schema.getDataVersion() < dataVersion)
+            if (schema.getDataVersion() <= dataVersion)
             {
                 return schema;
             }
@@ -177,6 +177,8 @@ public enum DataFixerMode implements IConfigOptionListEntry
     public enum Schema
     {
         // Minecraft Data Versions
+        SCHEMA_24W37A  (4065),
+        SCHEMA_1_21_01 (3955),
         SCHEMA_1_21_00 (3953),
         SCHEMA_1_20_05 (3837),
         SCHEMA_1_20_04 (3700),
