@@ -480,19 +480,6 @@ public class EntitiesDataStorage implements IClientTickHandler
                     return pair;
                 }
             }
-            else if (world instanceof WorldSchematic)
-            {
-                BlockEntity be2 = world.getWorldChunk(pos).getBlockEntity(pos);
-
-                if (be2 != null)
-                {
-                    NbtCompound nbt = be2.createNbtWithIdentifyingData(world.getRegistryManager());
-                    Pair<BlockEntity, NbtCompound> pair = Pair.of(be2, nbt);
-
-                    // No Cache
-                    return pair;
-                }
-            }
             else if (Configs.Generic.ENTITY_DATA_SYNC.getBooleanValue())
             {
                 this.pendingBlockEntitiesQueue.add(pos);
@@ -754,9 +741,9 @@ public class EntitiesDataStorage implements IClientTickHandler
     public BlockEntity handleBlockEntityData(BlockPos pos, NbtCompound nbt, @Nullable Identifier type)
     {
         this.pendingBlockEntitiesQueue.remove(pos);
-        if (nbt == null || this.getWorld() == null) return null;
+        if (nbt == null || this.getClientWorld() == null) return null;
 
-        BlockEntity blockEntity = this.getWorld().getBlockEntity(pos);
+        BlockEntity blockEntity = this.getClientWorld().getBlockEntity(pos);
 
         if (blockEntity != null && (type == null || type.equals(BlockEntityType.getId(blockEntity.getType()))))
         {
@@ -782,10 +769,7 @@ public class EntitiesDataStorage implements IClientTickHandler
                 }
             }
 
-            if (Configs.Generic.ENTITY_DATA_LOAD_NBT.getBooleanValue())
-            {
-                blockEntity.read(nbt, this.getWorld().getRegistryManager());
-            }
+            blockEntity.read(nbt, this.getClientWorld().getRegistryManager());
 
             return blockEntity;
         }
