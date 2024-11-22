@@ -122,6 +122,10 @@ public class InventoryUtils
     public static void schematicWorldPickBlock(ItemStack stack, BlockPos pos,
                                                World schematicWorld, MinecraftClient mc)
     {
+        if (mc.player == null || mc.interactionManager == null || mc.world == null)
+        {
+            return;
+        }
         if (stack.isEmpty() == false)
         {
             PlayerInventory inv = mc.player.getInventory();
