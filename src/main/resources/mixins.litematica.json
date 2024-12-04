@@ -32,7 +32,6 @@
     "MixinIntegratedServer",
     "MixinMinecraftClient",
     "MixinMinecraftClient_easyPlace",
-    "MixinModelOverrideList",
     "MixinRailBlocks",
     "MixinServerPlayNetworkHandler",
     "MixinWorld",
@@ -41,5 +40,8 @@
   ],
   "injectors": {
     "defaultRequire": 1
-  }
+  },
+  "mixins": [
+    "IMixinAbstractBlock"
+  ]
 }
