@@ -8,6 +8,7 @@ import fi.dy.masa.litematica.Reference;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.config.Hotkeys;
 import fi.dy.masa.litematica.data.DataManager;
+import fi.dy.masa.litematica.handler.AllowedFunctionsHandler; //Shaijana
 import fi.dy.masa.litematica.util.SchematicWorldRefresher;
 import fi.dy.masa.malilib.config.IConfigBase;
 import fi.dy.masa.malilib.gui.GuiBase;
@@ -86,11 +87,11 @@ public class GuiConfigs extends GuiConfigsBase
         List<? extends IConfigBase> configs;
         ConfigGuiTab tab = DataManager.getConfigGuiTab();
         configs = switch (tab) {
-            case GENERIC -> Configs.Generic.OPTIONS;
+            case GENERIC -> AllowedFunctionsHandler.ALLOWED_GENERIC_CONFIGS; //Shaijana
             case INFO_OVERLAYS -> Configs.InfoOverlays.OPTIONS;
-            case VISUALS -> Configs.Visuals.OPTIONS;
-            case COLORS -> Configs.Colors.OPTIONS;
-            case HOTKEYS -> Hotkeys.HOTKEY_LIST;
+            case VISUALS -> AllowedFunctionsHandler.ALLOWED_VISUALS_CONFIGS; //Shaijana
+            case COLORS -> AllowedFunctionsHandler.ALLOWED_COLORS_CONFIGS; //Shaijana
+            case HOTKEYS -> AllowedFunctionsHandler.ALLOWED_HOTKEYS; //Shaijana
             case RENDER_LAYERS -> Collections.emptyList();
             //case TEST -> Configs.Test.OPTIONS;
         };

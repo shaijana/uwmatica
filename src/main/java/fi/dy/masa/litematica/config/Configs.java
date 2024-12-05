@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import fi.dy.masa.litematica.handler.AllowedFunctionsHandler; //Shaijana
 import net.minecraft.client.MinecraftClient;
 
 import fi.dy.masa.malilib.config.ConfigUtils;
@@ -96,12 +97,12 @@ public class Configs implements IConfigHandler
         public static final ConfigBoolean       RENDER_THREAD_NO_TIMEOUT    = new ConfigBoolean("renderThreadNoTimeout", true).apply(GENERIC_KEY);
         public static final ConfigInteger       SERVER_NBT_REQUEST_RATE     = new ConfigInteger("serverNbtRequestRate", 2).apply(GENERIC_KEY);
         public static final ConfigBoolean       SIGN_TEXT_PASTE             = new ConfigBoolean("signTextPaste", true).apply(GENERIC_KEY);
-        public static final ConfigString        TOOL_ITEM                   = new ConfigString( "toolItem", "minecraft:stick").apply(GENERIC_KEY);
-        public static final ConfigBoolean       TOOL_ITEM_ENABLED           = new ConfigBoolean("toolItemEnabled", true).apply(GENERIC_KEY);
+        public static final ConfigString        TOOL_ITEM                   = new ConfigString( "toolItem", "minecraft:wooden_sword").apply(GENERIC_KEY); //Shaijana
+        public static final ConfigBoolean       TOOL_ITEM_ENABLED           = new ConfigBoolean("toolItemEnabled", false).apply(GENERIC_KEY); //Shaijana
         public static final ConfigString        TOOL_ITEM_COMPONENTS        = new ConfigString( "toolItemComponents", "empty").apply(GENERIC_KEY);
         public static final ConfigBoolean       UNHIDE_SCHEMATIC_PROJECTS   = new ConfigBoolean("unhideSchematicVCS", false).apply(GENERIC_KEY);
 
-        public static final ImmutableList<IConfigBase> OPTIONS = ImmutableList.of(
+        public static final ImmutableList<IConfigBase> OPTIONS_DISABLED = ImmutableList.of( //Shaijana
                 AREAS_PER_WORLD,
                 //BETTER_RENDER_ORDER,
                 CHANGE_SELECTED_CORNER,
@@ -216,7 +217,7 @@ public class Configs implements IConfigHandler
         public static final ConfigBoolean       SCHEMATIC_OVERLAY_TYPE_WRONG_STATE  = new ConfigBoolean("schematicOverlayTypeWrongState",  true).apply(VISUALS_KEY);
         public static final ConfigBoolean       SCHEMATIC_VERIFIER_BLOCK_MODELS     = new ConfigBoolean("schematicVerifierUseBlockModels", false).apply(VISUALS_KEY);
 
-        public static final ImmutableList<IConfigBase> OPTIONS = ImmutableList.of(
+        public static final ImmutableList<IConfigBase> OPTIONS_DISABLED = ImmutableList.of( //Shaijana
                 ENABLE_RENDERING,
                 ENABLE_SCHEMATIC_RENDERING,
                 //RENDER_SCHEMATIC_MAX_THREADS,
@@ -333,7 +334,7 @@ public class Configs implements IConfigHandler
         public static final ConfigColor SCHEMATIC_OVERLAY_COLOR_WRONG_BLOCK = new ConfigColor("schematicOverlayColorWrongBlock",    "#4CFF3333").apply(COLORS_KEY);
         public static final ConfigColor SCHEMATIC_OVERLAY_COLOR_WRONG_STATE = new ConfigColor("schematicOverlayColorWrongState",    "#4CFF9010").apply(COLORS_KEY);
 
-        public static final ImmutableList<IConfigBase> OPTIONS = ImmutableList.of(
+        public static final ImmutableList<IConfigBase> OPTIONS_DISABLED = ImmutableList.of( //Shaijana
                 AREA_SELECTION_BOX_SIDE_COLOR,
                 HIGHTLIGHT_BLOCK_IN_INV_COLOR,
                 MATERIAL_LIST_HUD_ITEM_COUNTS,
@@ -359,11 +360,11 @@ public class Configs implements IConfigHandler
             {
                 JsonObject root = element.getAsJsonObject();
 
-                ConfigUtils.readConfigBase(root, "Colors", Colors.OPTIONS);
-                ConfigUtils.readConfigBase(root, "Generic", Generic.OPTIONS);
-                ConfigUtils.readConfigBase(root, "Hotkeys", Hotkeys.HOTKEY_LIST);
+                ConfigUtils.readConfigBase(root, "Colors", AllowedFunctionsHandler.ALLOWED_COLORS_CONFIGS); //Shaijana
+                ConfigUtils.readConfigBase(root, "Generic", AllowedFunctionsHandler.ALLOWED_GENERIC_CONFIGS); //Shaijana
+                ConfigUtils.readConfigBase(root, "Hotkeys", AllowedFunctionsHandler.ALLOWED_HOTKEYS); //Shaijana
                 ConfigUtils.readConfigBase(root, "InfoOverlays", InfoOverlays.OPTIONS);
-                ConfigUtils.readConfigBase(root, "Visuals", Visuals.OPTIONS);
+                ConfigUtils.readConfigBase(root, "Visuals", AllowedFunctionsHandler.ALLOWED_VISUALS_CONFIGS); //Shaijana
             }
         }
 
@@ -372,7 +373,7 @@ public class Configs implements IConfigHandler
         {
             DataManager.getInstance().setToolItemComponents(Generic.TOOL_ITEM_COMPONENTS.getStringValue(), MinecraftClient.getInstance().world.getRegistryManager());
         }
-        InventoryUtils.setPickBlockableSlots(Generic.PICK_BLOCKABLE_SLOTS.getStringValue());
+//        InventoryUtils.setPickBlockableSlots(Generic.PICK_BLOCKABLE_SLOTS.getStringValue()); //Shaijana
     }
 
     public static void saveToFile()
@@ -383,11 +384,11 @@ public class Configs implements IConfigHandler
         {
             JsonObject root = new JsonObject();
 
-            ConfigUtils.writeConfigBase(root, "Colors", Colors.OPTIONS);
-            ConfigUtils.writeConfigBase(root, "Generic", Generic.OPTIONS);
-            ConfigUtils.writeConfigBase(root, "Hotkeys", Hotkeys.HOTKEY_LIST);
+            ConfigUtils.writeConfigBase(root, "Colors", AllowedFunctionsHandler.ALLOWED_COLORS_CONFIGS); //Shaijana
+            ConfigUtils.writeConfigBase(root, "Generic", AllowedFunctionsHandler.ALLOWED_GENERIC_CONFIGS); //Shaijana
+            ConfigUtils.writeConfigBase(root, "Hotkeys", AllowedFunctionsHandler.ALLOWED_HOTKEYS); //Shaijana
             ConfigUtils.writeConfigBase(root, "InfoOverlays", InfoOverlays.OPTIONS);
-            ConfigUtils.writeConfigBase(root, "Visuals", Visuals.OPTIONS);
+            ConfigUtils.writeConfigBase(root, "Visuals", AllowedFunctionsHandler.ALLOWED_VISUALS_CONFIGS); //Shaijana
 
             JsonUtils.writeJsonToFile(root, new File(dir, CONFIG_FILE_NAME));
         }

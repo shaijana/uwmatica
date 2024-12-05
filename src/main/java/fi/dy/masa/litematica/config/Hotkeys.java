@@ -86,7 +86,7 @@ public class Hotkeys
     public static final ConfigHotkey TOOL_SELECT_MODIFIER_BLOCK_2       = new ConfigHotkey("toolSelectModifierBlock2",          "LEFT_SHIFT", KeybindSettings.MODIFIER_INGAME).apply(HOTKEYS_KEY);
     public static final ConfigHotkey UNLOAD_CURRENT_SCHEMATIC           = new ConfigHotkey("unloadCurrentSchematic",            "").apply(HOTKEYS_KEY);
 
-    public static final List<ConfigHotkey> HOTKEY_LIST = ImmutableList.of(
+    public static final List<ConfigHotkey> HOTKEY_LIST_DISABLED = ImmutableList.of( //Shaijana
             ADD_SELECTION_BOX,
             CLONE_SELECTION,
             DELETE_SELECTION_BOX,

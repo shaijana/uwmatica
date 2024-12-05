@@ -13,6 +13,7 @@ import javax.annotation.Nullable;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
+import fi.dy.masa.litematica.handler.AllowedFunctionsHandler; //Shaijana
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.apache.commons.lang3.tuple.MutablePair;
@@ -694,7 +695,7 @@ public class SchematicVerifier extends TaskBase implements IInfoHudRenderer
     {
         BlockPos pos = new BlockPos(x, y, z);
 
-        if (stateClient != stateSchematic && (stateClient.isAir() == false || stateSchematic.isAir() == false))
+        if (stateClient != stateSchematic && (stateClient.isAir() == false || stateSchematic.isAir() == false) && AllowedFunctionsHandler.isAllowed(stateClient.getBlock())) //Shaijana
         {
             MUTABLE_PAIR.setLeft(stateSchematic);
             MUTABLE_PAIR.setRight(stateClient);

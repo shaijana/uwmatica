@@ -23,7 +23,7 @@ public abstract class MixinDebugHud
     {
         WorldSchematic world = SchematicWorldHandler.getSchematicWorld();
 
-        if (world != null)
+        if (world != null && false) //Shaijana
         {
             List<String> list = cir.getReturnValue();
             String pre = GuiBase.TXT_GOLD;

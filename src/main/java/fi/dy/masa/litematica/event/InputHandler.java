@@ -1,5 +1,6 @@
 package fi.dy.masa.litematica.event;
 
+import fi.dy.masa.litematica.handler.AllowedFunctionsHandler; //Shaijana
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
@@ -36,7 +37,7 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
     @Override
     public void addKeysToMap(IKeybindManager manager)
     {
-        for (IHotkey hotkey : Hotkeys.HOTKEY_LIST)
+        for (IHotkey hotkey : AllowedFunctionsHandler.ALLOWED_HOTKEYS) //Shaijana
         {
             manager.addKeybindToMap(hotkey.getKeybind());
         }
@@ -45,7 +46,7 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
     @Override
     public void addHotkeys(IKeybindManager manager)
     {
-        manager.addHotkeysForCategory(Reference.MOD_NAME, "litematica.hotkeys.category.generic_hotkeys", Hotkeys.HOTKEY_LIST);
+        manager.addHotkeysForCategory(Reference.MOD_NAME, "litematica.hotkeys.category.generic_hotkeys", AllowedFunctionsHandler.ALLOWED_HOTKEYS); //Shaijana
     }
 
     @Override

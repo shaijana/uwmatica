@@ -117,12 +117,12 @@ public enum ToolMode
 
             if (isCreative || mode.creativeOnly == false)
             {
-                return mode;
+//                return mode; //Shaijana
             }
 
             nextId += inc;
         }
 
-        return this;
+        return SCHEMATIC_PLACEMENT; //Shaijana
     }
 }

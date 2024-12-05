@@ -1,5 +1,6 @@
 package fi.dy.masa.litematica;
 
+import fi.dy.masa.litematica.network.UWPacketHandler; //Shaijana
 import net.minecraft.client.MinecraftClient;
 
 import fi.dy.masa.malilib.config.ConfigManager;
@@ -44,5 +45,7 @@ public class InitHandler implements IInitializationHandler
 
         DataManager.getAreaSelectionsBaseDirectory();
         DataManager.getSchematicsBaseDirectory();
+
+        UWPacketHandler.init(); //Shaijana
     }
 }

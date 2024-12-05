@@ -39,22 +39,22 @@ public class GuiMainMenu extends GuiBase
         this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.LOAD_SCHEMATICS);
         y += 44;
 
-        this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.AREA_EDITOR);
+//        this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.AREA_EDITOR); //Shaijana
         y += 22;
-        this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.AREA_SELECTION_BROWSER);
+//        this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.AREA_SELECTION_BROWSER); //Shaijana
         y += 22;
 
         SelectionMode mode = DataManager.getSelectionManager().getSelectionMode();
         String label = StringUtils.translate("litematica.gui.button.area_selection_mode", mode.getDisplayName());
         ButtonGeneric button = new ButtonGeneric(x, y, width, 20, label);
-        this.addButton(button, new ButtonListenerCycleAreaMode(this));
+//        this.addButton(button, new ButtonListenerCycleAreaMode(this)); //Shaijana
 
         label = StringUtils.translate("litematica.gui.button.tool_mode", DataManager.getToolMode().getName());
         int width2 = this.getStringWidth(label) + 10;
 
         y = this.height - 26;
         button = new ButtonGeneric(x, y, width2, 20, label);
-        this.addButton(button, new ButtonListenerCycleToolMode(this));
+//        this.addButton(button, new ButtonListenerCycleToolMode(this)); //Shaijana
 
         x += width + 20;
         y = 30;
@@ -69,7 +69,7 @@ public class GuiMainMenu extends GuiBase
         if (Configs.Generic.UNHIDE_SCHEMATIC_PROJECTS.getBooleanValue())
         {
             y += 22;
-            this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.SCHEMATIC_PROJECTS_MANAGER);
+//            this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.SCHEMATIC_PROJECTS_MANAGER); //Shaijana
         }
     }
 
