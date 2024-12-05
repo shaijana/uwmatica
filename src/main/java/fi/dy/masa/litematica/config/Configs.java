@@ -195,11 +195,13 @@ public class Configs implements IConfigHandler
         public static final ConfigBoolean       IGNORE_EXISTING_FLUIDS              = new ConfigBoolean("ignoreExistingFluids", false).apply(VISUALS_KEY);
         public static final ConfigBoolean       OVERLAY_REDUCED_INNER_SIDES         = new ConfigBoolean("overlayReducedInnerSides", false).apply(VISUALS_KEY);
         public static final ConfigDouble        PLACEMENT_BOX_SIDE_ALPHA            = new ConfigDouble( "placementBoxSideAlpha", 0.2, 0, 1).apply(VISUALS_KEY);
+        public static final ConfigBoolean       RENDER_AO_MODERN_ENABLE             = new ConfigBoolean("renderAOModernEnable", false).apply(VISUALS_KEY);
         public static final ConfigBoolean       RENDER_AREA_SELECTION_BOX_SIDES     = new ConfigBoolean("renderAreaSelectionBoxSides", true).apply(VISUALS_KEY);
         public static final ConfigBoolean       RENDER_BLOCKS_AS_TRANSLUCENT        = new ConfigBoolean("renderBlocksAsTranslucent", false).apply(VISUALS_KEY);
         public static final ConfigBoolean       RENDER_COLLIDING_SCHEMATIC_BLOCKS   = new ConfigBoolean("renderCollidingSchematicBlocks", false).apply(VISUALS_KEY);
         public static final ConfigBoolean       RENDER_ERROR_MARKER_CONNECTIONS     = new ConfigBoolean("renderErrorMarkerConnections", false).apply(VISUALS_KEY);
         public static final ConfigBoolean       RENDER_ERROR_MARKER_SIDES           = new ConfigBoolean("renderErrorMarkerSides", true).apply(VISUALS_KEY);
+        //public static final ConfigInteger       RENDER_FAKE_LIGHTING_LEVEL          = new ConfigInteger("renderFakeLightingLevel", 15, 0, 15).apply(VISUALS_KEY);
         public static final ConfigBoolean       RENDER_PLACEMENT_BOX_SIDES          = new ConfigBoolean("renderPlacementBoxSides", false).apply(VISUALS_KEY);
         public static final ConfigBoolean       RENDER_PLACEMENT_ENCLOSING_BOX      = new ConfigBoolean("renderPlacementEnclosingBox", true).apply(VISUALS_KEY);
         public static final ConfigBoolean       RENDER_PLACEMENT_ENCLOSING_BOX_SIDES= new ConfigBoolean("renderPlacementEnclosingBoxSides", false).apply(VISUALS_KEY);
@@ -230,11 +232,13 @@ public class Configs implements IConfigHandler
                 ENABLE_SCHEMATIC_OVERLAY,
                 IGNORE_EXISTING_FLUIDS,
                 OVERLAY_REDUCED_INNER_SIDES,
+                RENDER_AO_MODERN_ENABLE,
                 RENDER_AREA_SELECTION_BOX_SIDES,
                 RENDER_BLOCKS_AS_TRANSLUCENT,
                 RENDER_COLLIDING_SCHEMATIC_BLOCKS,
                 RENDER_ERROR_MARKER_CONNECTIONS,
                 RENDER_ERROR_MARKER_SIDES,
+                //RENDER_FAKE_LIGHTING_LEVEL,
                 RENDER_PLACEMENT_BOX_SIDES,
                 RENDER_PLACEMENT_ENCLOSING_BOX,
                 RENDER_PLACEMENT_ENCLOSING_BOX_SIDES,

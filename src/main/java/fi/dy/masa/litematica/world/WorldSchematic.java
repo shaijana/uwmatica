@@ -6,9 +6,6 @@ import java.util.List;
 import java.util.function.Predicate;
 import javax.annotation.Nonnull;
 import com.google.common.collect.ImmutableList;
-
-import net.minecraft.entity.boss.dragon.EnderDragonPart;
-import net.minecraft.recipe.RecipeManager;
 import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.block.Block;
@@ -17,6 +14,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.DimensionEffects;
 import net.minecraft.component.type.MapIdComponent;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.boss.dragon.EnderDragonPart;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
@@ -24,6 +22,7 @@ import net.minecraft.item.FuelRegistry;
 import net.minecraft.item.map.MapState;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.recipe.BrewingRecipeRegistry;
+import net.minecraft.recipe.RecipeManager;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.registry.RegistryEntryLookup;
 import net.minecraft.registry.RegistryKey;
@@ -53,6 +52,7 @@ import net.minecraft.world.tick.EmptyTickSchedulers;
 import net.minecraft.world.tick.QueryableTickScheduler;
 import net.minecraft.world.tick.TickManager;
 
+import fi.dy.masa.malilib.util.WorldUtils;
 import fi.dy.masa.litematica.Reference;
 import fi.dy.masa.litematica.render.schematic.WorldRendererSchematic;
 
@@ -75,7 +75,7 @@ public class WorldSchematic extends World
                           RegistryEntry<DimensionType> dimension,
                           @Nullable WorldRendererSchematic worldRenderer)
     {
-        super(properties, REGISTRY_KEY, !registryManager.equals(DynamicRegistryManager.EMPTY) ? registryManager : SchematicWorldHandler.INSTANCE.getRegistryManager(), dimension, false, false, 0L, 0);
+        super(properties, REGISTRY_KEY, !registryManager.equals(DynamicRegistryManager.EMPTY) ? registryManager : SchematicWorldHandler.INSTANCE.getRegistryManager(), dimension, true, false, 0L, 0);
 
         this.mc = MinecraftClient.getInstance();
         if (this.mc == null || this.mc.world == null)
@@ -104,15 +104,18 @@ public class WorldSchematic extends World
 
         if (this.dimensionType.equals(nether))
         {
-            this.biome = this.getWastes(registryManager);
+            //this.biome = this.getWastes(registryManager);
+            this.biome = WorldUtils.getWastes(registryManager);
         }
         else if (this.dimensionType.equals(end))
         {
-            this.biome = this.getTheEnd(registryManager);
+            //this.biome = this.getTheEnd(registryManager);
+            this.biome = WorldUtils.getTheEnd(registryManager);
         }
         else
         {
-            this.biome = this.getPlains(registryManager);
+            //this.biome = this.getPlains(registryManager);
+            this.biome = WorldUtils.getPlains(registryManager);
         }
 
         this.dimensionEffects = DimensionEffects.byDimensionType(this.dimensionType.value());
@@ -456,12 +459,14 @@ public class WorldSchematic extends World
     @Override
     public int getLightLevel(LightType type, BlockPos pos)
     {
+        //return Configs.Visuals.RENDER_FAKE_LIGHTING_LEVEL != null ? Configs.Visuals.RENDER_FAKE_LIGHTING_LEVEL.getIntegerValue() : 15;
         return 15;
     }
 
     @Override
     public int getBaseLightLevel(BlockPos pos, int defaultValue)
     {
+        //return Configs.Visuals.RENDER_FAKE_LIGHTING_LEVEL != null ? Configs.Visuals.RENDER_FAKE_LIGHTING_LEVEL.getIntegerValue() : 15;
         return 15;
     }
 

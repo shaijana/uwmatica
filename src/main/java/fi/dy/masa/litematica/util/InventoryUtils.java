@@ -342,6 +342,11 @@ public class InventoryUtils
 
             InventoryOverlay.Context ctx = getTargetInventoryFromBlock(world, pos, be, nbt);
 
+            if (world instanceof WorldSchematic)
+            {
+                return ctx;
+            }
+
             if (lastBlockEntityContext != null && !lastBlockEntityContext.getLeft().equals(pos))
             {
                 lastBlockEntityContext = null;
@@ -399,7 +404,7 @@ public class InventoryUtils
             }
         }
 
-        //Litematica.logger.warn("getTarget():3: pos [{}], inv [{}], be [{}], nbt [{}]", pos.toShortString(), inv != null, be != null, nbt != null ? nbt.getString("id") : new NbtCompound());
+        //Litematica.logger.warn("getTarget(): [SchematicWorld? {}] pos [{}], inv [{}], be [{}], nbt [{}]", world instanceof WorldSchematic ? "YES" : "NO", pos.toShortString(), inv != null, be != null, nbt != null ? nbt.getString("id") : new NbtCompound());
 
         if (inv == null || nbt == null)
         {
