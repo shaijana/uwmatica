@@ -14,7 +14,7 @@ import net.minecraft.world.World;
 
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.registry.Registry;
-import fi.dy.masa.malilib.util.BlockUtils;
+import fi.dy.masa.malilib.util.game.BlockUtils;
 import fi.dy.masa.malilib.util.game.PlacementUtils;
 import fi.dy.masa.litematica.materials.MaterialCache;
 import fi.dy.masa.litematica.world.SchematicWorldHandler;
