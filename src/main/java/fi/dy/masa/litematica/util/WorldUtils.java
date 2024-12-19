@@ -2,10 +2,7 @@ package fi.dy.masa.litematica.util;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import javax.annotation.Nullable;
 
 import net.minecraft.block.*;
@@ -41,7 +38,7 @@ import net.minecraft.world.chunk.ChunkStatus;
 
 import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.interfaces.IStringConsumer;
-import fi.dy.masa.malilib.util.BlockUtils;
+import fi.dy.masa.malilib.util.game.BlockUtils;
 import fi.dy.masa.malilib.util.*;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.config.Configs;
@@ -592,10 +589,13 @@ public class WorldUtils
                     }
                 }
 
+                //System.out.printf("doEasyPlaceAction - stateSchematic [%s] // sideOrig [%s]\n", stateSchematic.toString(), sideOrig.getName());
+
                 Direction side = applyPlacementFacing(stateSchematic, sideOrig, stateClient);
 
                 // Support for special cases
                 PlacementProtocolData placementData = applyPlacementProtocolAll(pos, stateSchematic, hitPos);
+
                 if (placementData.mustFail)
                 {
                     return ActionResult.FAIL; //disallowed cases (e.g. trying to place torch with no support block)
@@ -759,21 +759,26 @@ public class WorldUtils
         double y = hitVecIn.y;
         double z = hitVecIn.z;
         Block block = state.getBlock();
-        Direction facing = BlockUtils.getFirstPropertyFacingValue(state);
+        Optional<Direction> facing = BlockUtils.getFirstPropertyFacingValue(state);
         final int propertyIncrement = 16;
         boolean hasData = false;
         int protocolValue = 0;
 
-        if (facing != null)
+        if (facing.isPresent())
         {
-            protocolValue = facing.getId();
+            //System.out.printf("(WorldUtils):v2: applying: 0x%08X (getFirstDirectionProperty() -> %s)\n", protocolValue, facing.get().getName());
+
+            protocolValue = facing.get().getId();
             hasData = true; // without this down rotation would not be detected >_>
         }
         else if (state.contains(Properties.AXIS))
         {
             Direction.Axis axis = state.get(Properties.AXIS);
+            //System.out.printf("(WorldUtils):v2: 0x%08X (current axis %s)\n", protocolValue, axis.getName());
+
             protocolValue = axis.ordinal();
             hasData = true; // without this id 0 would not be detected >_>
+            //System.out.printf("(WorldUtils):v2: axis current state: %s, protocolValue 0x%08X\n", state.toString(), protocolValue);
         }
 
         if (block instanceof RepeaterBlock)
@@ -799,6 +804,8 @@ public class WorldUtils
         {
             x += (protocolValue * 2) + 2;
         }
+
+        //System.out.printf("(WorldUtils):v2: stateIn: %s // Vec3d Out [%s]\n", state.toString(), new Vec3d(x, y, z).toString());
 
         return new Vec3d(x, y, z);
     }
@@ -849,17 +856,17 @@ public class WorldUtils
         int shiftAmount = 1;
         int propCount = 0;
 
-        //System.out.printf("hit vec.x %s, pos.x: %s\n", hitVecIn.getX(), pos.getX());
-        //System.out.printf("raw protocol value in: 0x%08X\n", protocolValue);
+        //System.out.printf("(WorldUtils):v3: hit vec.x %s, pos.x: %s\n", hitVecIn.getX(), pos.getX());
+        //System.out.printf("(WorldUtils):v3: raw protocol value in: 0x%08X\n", protocolValue);
 
-        @Nullable EnumProperty<Direction> property = BlockUtils.getFirstDirectionProperty(state);
+        Optional<EnumProperty<Direction>> property = BlockUtils.getFirstDirectionProperty(state);
 
         // DirectionProperty - allow all except: VERTICAL_DIRECTION (PointedDripstone)
-        if (property != null && property != Properties.VERTICAL_DIRECTION)
+        if (property.isPresent() && property.get() != Properties.VERTICAL_DIRECTION)
         {
-            Direction direction = state.get(property);
+            Direction direction = state.get(property.get());
             protocolValue |= direction.getId() << shiftAmount;
-            //System.out.printf("applying: 0x%08X\n", protocolValue);
+            //System.out.printf("(WorldUtils):v3: applying: 0x%08X (getFirstDirection %s)\n", protocolValue, property.get().getName());
             shiftAmount += 3;
             ++propCount;
         }
@@ -871,7 +878,9 @@ public class WorldUtils
         {
             for (Property<?> p : propList)
             {
-                if (((p instanceof EnumProperty<?> ep) && ep.getType().equals(Direction.class) == false) &&
+                //if (((p instanceof EnumProperty<?> ep) && ep.getType().equals(Direction.class) == false) &&
+                if ((property.isPresent() && !property.get().equals(p)) ||
+                    (property.isEmpty()) &&
                     PlacementHandler.WHITELISTED_PROPERTIES.contains(p))
                 {
                     @SuppressWarnings("unchecked")
@@ -882,11 +891,11 @@ public class WorldUtils
                     int requiredBits = MathHelper.floorLog2(MathHelper.smallestEncompassingPowerOfTwo(list.size()));
                     int valueIndex = list.indexOf(state.get(prop));
 
-                    //System.out.printf("trying to apply valInd: %d, bits: %d, prot val: 0x%08X\n", valueIndex, requiredBits, protocolValue);
+                    //System.out.printf("(WorldUtils):v3: trying to apply valInd: %d, bits: %d, prot val: 0x%08X [Property %s]\n", valueIndex, requiredBits, protocolValue, prop.getName());
 
                     if (valueIndex != -1)
                     {
-                        //System.out.printf("requesting: %s = %s, index: %d\n", prop.getName(), state.get(prop), valueIndex);
+                        //System.out.printf("(WorldUtils):v3: requesting: %s = %s, index: %d\n", prop.getName(), state.get(prop), valueIndex);
                         protocolValue |= (valueIndex << shiftAmount);
                         shiftAmount += requiredBits;
                         ++propCount;
@@ -902,7 +911,7 @@ public class WorldUtils
         if (propCount > 0)
         {
             double x = pos.getX() + relX + 2 + protocolValue;
-            //System.out.printf("request prot value 0x%08X\n", protocolValue + 2);
+            //System.out.printf("(WorldUtils):v3: request prot value 0x%08X\n", protocolValue + 2);
             return new Vec3d(x, hitVecIn.y, hitVecIn.z);
         }
 
@@ -1082,7 +1091,7 @@ public class WorldUtils
                 Properties.BLOCK_FACE, //lever, button, grindstone
                 Properties.ATTACHMENT, //bell (double-check for single-wall / double-wall)
                 //Properties.HORIZONTAL_AXIS, //Nether portals, though they aren't directly placeable
-                //Properties.ORIENTATION, //jigsaw blocks
+                //Properties.ORIENTATION, //jigsaw blocks, Crafters
         };
 
         for (Property<?> property : orientationProperties)

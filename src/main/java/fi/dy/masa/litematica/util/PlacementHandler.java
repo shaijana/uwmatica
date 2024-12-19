@@ -4,6 +4,7 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import com.google.common.collect.ImmutableSet;
 import net.minecraft.block.*;
 import net.minecraft.block.enums.BlockHalf;
@@ -21,6 +22,8 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+
+import fi.dy.masa.malilib.util.game.BlockUtils;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
@@ -36,6 +39,9 @@ public class PlacementHandler
             Properties.INVERTED,
             Properties.OPEN,
             //Properties.PERSISTENT,
+            // TODO --> TEST (Boolean)
+            Properties.POWERED,
+            Properties.LOCKED,
             // EnumProperty:
             // ATTACHMENT - Bells
             // AXIS - Pillar
@@ -56,6 +62,7 @@ public class PlacementHandler
             Properties.CHEST_TYPE,
             Properties.COMPARATOR_MODE,
             Properties.DOOR_HINGE,
+            Properties.FACING,
             Properties.HORIZONTAL_FACING,
             Properties.HOPPER_FACING,
             Properties.ORIENTATION,
@@ -124,11 +131,12 @@ public class PlacementHandler
             return state;
         }
 
-        @Nullable EnumProperty<Direction> property = fi.dy.masa.malilib.util.BlockUtils.getFirstDirectionProperty(state);
+        Optional<EnumProperty<Direction>> property = BlockUtils.getFirstDirectionProperty(state);
 
-        if (property != null)
+        if (property.isPresent())
         {
-            state = applyDirectionProperty(state, context, property, protocolValue);
+            //System.out.printf("[PHv2] applying: 0x%08X (getFirstDirectionProperty() -> %s)\n", protocolValue, property.get().getName());
+            state = applyDirectionProperty(state, context, property.get(), protocolValue);
 
             if (state == null)
             {
@@ -138,10 +146,12 @@ public class PlacementHandler
         else if (state.contains(Properties.AXIS))
         {
             Direction.Axis axis = Direction.Axis.VALUES[((protocolValue >> 1) & 0x3) % 3];
+            //System.out.printf("[PHv2] applying: 0x%08X (Axis -> %s)\n", protocolValue, axis.getName());
 
             if (Properties.AXIS.getValues().contains(axis))
             {
                 state = state.with(Properties.AXIS, axis);
+                //System.out.printf("[PHv2] axis stateOut: %s\n", state.toString());
             }
         }
 
@@ -172,6 +182,8 @@ public class PlacementHandler
             state = state.with(Properties.BLOCK_HALF, protocolValue > 0 ? BlockHalf.TOP : BlockHalf.BOTTOM);
         }
 
+        //System.out.printf("[PHv2] stateOut: %s\n", state.toString());
+
         return state;
     }
 
@@ -179,21 +191,21 @@ public class PlacementHandler
     {
         int protocolValue = (int) (context.getHitVec().x - (double) context.getPos().getX()) - 2;
         BlockState oldState = state;
-        //System.out.printf("hit vec.x %s, pos.x: %s\n", context.getHitVec().getX(), context.getPos().getX());
-        //System.out.printf("raw protocol value in: 0x%08X\n", protocolValue);
+        //System.out.printf("[PHv3] hit vec.x %s, pos.x: %s\n", context.getHitVec().getX(), context.getPos().getX());
+        //System.out.printf("[PHv3] raw protocol value in: 0x%08X\n", protocolValue);
 
         if (protocolValue < 0)
         {
             return oldState;
         }
 
-        @Nullable EnumProperty<Direction> property = fi.dy.masa.malilib.util.BlockUtils.getFirstDirectionProperty(state);
+        Optional<EnumProperty<Direction>> property = BlockUtils.getFirstDirectionProperty(state);
 
         // DirectionProperty - allow all except: VERTICAL_DIRECTION (PointedDripstone)
-        if (property != null && property != Properties.VERTICAL_DIRECTION)
+        if (property.isPresent() && property.get() != Properties.VERTICAL_DIRECTION)
         {
-            //System.out.printf("applying: 0x%08X\n", protocolValue);
-            state = applyDirectionProperty(state, context, property, protocolValue);
+            //System.out.printf("[PHv3] applying: 0x%08X (getFirstDirectionProperty() -> %s)\n", protocolValue, property.get().getName());
+            state = applyDirectionProperty(state, context, property.get(), protocolValue);
 
             if (state == null)
             {
@@ -202,12 +214,12 @@ public class PlacementHandler
 
             if (state.canPlaceAt(context.getWorld(), context.getPos()))
             {
-                //System.out.printf("validator passed for \"%s\"\n", property.getName());
+                //System.out.printf("[PHv3] validator passed for \"%s\"\n", property.get().getName());
                 oldState = state;
             }
             else
             {
-                //System.out.printf("validator failed for \"%s\"\n", property.getName());
+                //System.out.printf("[PHv3] validator failed for \"%s\"\n", property.get().getName());
                 state = oldState;
             }
             
@@ -225,7 +237,8 @@ public class PlacementHandler
         {
             for (Property<?> p : propList)
             {
-                if (((p instanceof EnumProperty<?> ep) && ep.getType().equals(Direction.class) == false) &&
+                if ((property.isPresent() && !property.get().equals(p)) ||
+                    (property.isEmpty()) &&
                     WHITELISTED_PROPERTIES.contains(p))
                 {
                     @SuppressWarnings("unchecked")
@@ -236,7 +249,7 @@ public class PlacementHandler
                     int requiredBits = MathHelper.floorLog2(MathHelper.smallestEncompassingPowerOfTwo(list.size()));
                     int bitMask = ~(0xFFFFFFFF << requiredBits);
                     int valueIndex = protocolValue & bitMask;
-                    //System.out.printf("trying to apply valInd: %d, bits: %d, prot val: 0x%08X\n", valueIndex, requiredBits, protocolValue);
+                    //System.out.printf("[PHv3] trying to apply valInd: %d, bits: %d, prot val: 0x%08X [Property %s]\n", valueIndex, requiredBits, protocolValue, prop.getName());
 
                     if (valueIndex >= 0 && valueIndex < list.size())
                     {
@@ -245,17 +258,17 @@ public class PlacementHandler
                         if (state.get(prop).equals(value) == false &&
                             value != SlabType.DOUBLE) // don't allow duping slabs by forcing a double slab via the protocol
                         {
-                            //System.out.printf("applying \"%s\": %s\n", prop.getName(), value);
+                            //System.out.printf("[PHv3] applying \"%s\": %s\n", prop.getName(), value);
                             state = state.with(prop, value);
 
                             if (state.canPlaceAt(context.getWorld(), context.getPos()))
                             {
-                                //System.out.printf("validator passed for \"%s\"\n", prop.getName());
+                                //System.out.printf("[PHv3] validator passed for \"%s\"\n", prop.getName());
                                 oldState = state;
                             }
                             else
                             {
-                                //System.out.printf("validator failed for \"%s\"\n", prop.getName());
+                                //System.out.printf("[PHv3] validator failed for \"%s\"\n", prop.getName());
                                 state = oldState;
                             }
                         }
@@ -272,12 +285,12 @@ public class PlacementHandler
 
         if (state.canPlaceAt(context.getWorld(), context.getPos()))
         {
-            //System.out.printf("validator passed for \"%s\"\n", state);
+            //System.out.printf("[PHv3] validator passed for \"%s\"\n", state);
             return state;
         }
         else
         {
-            //System.out.printf("validator failed for \"%s\"\n", state);
+            //System.out.printf("[PHv3] validator failed for \"%s\"\n", state);
             return null;
         }
     }

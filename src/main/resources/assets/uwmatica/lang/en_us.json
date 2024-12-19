@@ -35,6 +35,7 @@
     "litematica.config.generic.name.easyPlaceVanillaReach": "easyPlaceVanillaReach",
     "litematica.config.generic.name.entityDataSync": "entityDataSync",
     "litematica.config.generic.name.entityDataSyncBackup": "entityDataSyncBackup",
+    "litematica.config.generic.name.entityDataSyncCacheTimeout": "entityDataSyncCacheTimeout",
     "litematica.config.generic.name.entityDataSyncLoadNbt": "entityDataSyncLoadNbt",
     "litematica.config.generic.name.executeRequireHoldingTool": "executeRequireHoldingTool",
     "litematica.config.generic.name.fixChestMirror": "fixChestMirror",
@@ -83,6 +84,7 @@
     "litematica.config.visuals.name.ignoreExistingFluids": "ignoreExistingFluids",
     "litematica.config.visuals.name.overlayReducedInnerSides": "overlayReducedInnerSides",
     "litematica.config.visuals.name.placementBoxSideAlpha": "placementBoxSideAlpha",
+    "litematica.config.visuals.name.renderAOModernEnable": "renderAOModernEnable",
     "litematica.config.visuals.name.renderAreaSelectionBoxSides": "renderAreaSelectionBoxSides",
     "litematica.config.visuals.name.renderBlocksAsTranslucent": "renderBlocksAsTranslucent",
     "litematica.config.visuals.name.renderCollidingSchematicBlocks": "renderCollidingSchematicBlocks",
@@ -256,6 +258,7 @@
     "litematica.config.generic.comment.easyPlaceVanillaReach": "If enabled, reduces reach distance from +1.0 to the\nVanilla value so servers don't reject placement of\nfar blocks.",
     "litematica.config.generic.comment.entityDataSync": "Use the Entity Data Sync protocol from Servux\nto obtain Entity Data from the server",
     "litematica.config.generic.comment.entityDataSyncBackup": "Use the Vanilla NBT Query method when Servux\nis not available.  This method requires Operator Privileges.",
+    "litematica.config.generic.comment.entityDataSyncCacheTimeout": "The Cache timeout value in seconds that\nthe Entity Cache keeps records for.\nA lower value means more frequent updates, but\nyou may want to consider a higher value if\nyour litematics fail to save with all of the NBT data.",
     "litematica.config.generic.comment.entityDataSyncLoadNbt": "Load the synced NBT data into the Client World.\n§6WARNING!  This feature will cause incompatibility\n§6with other mods that rely on this data.",
     "litematica.config.generic.comment.executeRequireHoldingTool": "Require holding an enabled tool item\nfor the executeOperation hotkey to work",
     "litematica.config.generic.comment.fixChestMirror": "Enable a fix to the broken chest mirror code in vanilla",
@@ -304,6 +307,7 @@
     "litematica.config.visuals.comment.ignoreExistingFluids": "If enabled, then any fluid blocks are ignored as \"extra blocks\"\nand as \"wrong blocks\", ie. where the schematic has air or other blocks.\nBasically this makes building stuff under water a whole lot less annoying.\nNote: You will most likely also want to enable the 'renderCollidingSchematicBlocks'\noption at the same time, to allow the blocks to get rendered inside fluids.",
     "litematica.config.visuals.comment.overlayReducedInnerSides": "If enabled, then the adjacent/touching inner sides\nfor the block overlays are removed/not rendered",
     "litematica.config.visuals.comment.placementBoxSideAlpha": "The alpha value of the sub-region boxes' side",
+    "litematica.config.visuals.comment.renderAOModernEnable": "Enables a new Ambient Occlusion Processor which should\nfix issues where shadows aren't being applied correctly,\nbut it can also cause Schematic Layers to have shadows\nfrom adjacent layers that can be distracting\nwhile your building.",
     "litematica.config.visuals.comment.renderAreaSelectionBoxSides": "If enabled, then the area selection boxes will\nhave their side quads rendered",
     "litematica.config.visuals.comment.renderBlocksAsTranslucent": "If enabled, then the schematics are rendered\nusing translucent \"ghost blocks\"",
     "litematica.config.visuals.comment.renderCollidingSchematicBlocks": "If enabled, then blocks in the schematics are rendered\nalso when there is already a (wrong) block in the client world.\nProbably mostly useful when trying to build\nsomething where there are snow layers or water in the way.",
@@ -454,6 +458,7 @@
     "litematica.config.visuals.prettyName.enableSchematicFluidRendering": "Schematic Fluid Rendering",
     "litematica.config.visuals.prettyName.enableSchematicOverlay": "Schematic Overlay Rendering",
     "litematica.config.visuals.prettyName.enableSchematicRendering": "Schematic Rendering",
+    "litematica.config.visuals.prettyName.renderAOModernEnable": "AO Modern Processor",
     "litematica.config.visuals.prettyName.renderBlocksAsTranslucent": "Translucent Schematic Block Rendering",
     "litematica.config.visuals.prettyName.schematicOverlayEnableOutlines": "Schematic Overlay Outlines",
     "litematica.config.visuals.prettyName.schematicOverlayEnableResorting": "Schematic Overlay Translucent Sorting",
@@ -757,6 +762,8 @@
     "litematica.gui.label.schematic_info.total_blocks_and_volume": "Blocks/Volume: §f%d§r/§f%d§r",
     "litematica.gui.label.schematic_info.total_volume": "Total volume: §f%d§r blocks",
     "litematica.gui.label.schematic_info.version": "Litematic Version: §f%d§r",
+    "litematica.gui.label.schematic_info.sponge_version": "Sponge Version: §f%d§r",
+    "litematica.gui.label.schematic_info.vanilla_version": "Vanilla Structure",
     "litematica.gui.label.schematic_info.schema": "Minecraft: §f%s§r [Schema §f%d§r]",
 
     "litematica.gui.label.schematic_load.checkbox.create_placement": "Create a placement",
@@ -786,7 +793,7 @@
     "litematica.gui.label.schematic_save.checkbox.visible_blocks_only": "Visible blocks only [experimental quick hax]",
     "litematica.gui.label.schematic_save.checkbox.support_blocks": "Support blocks",
     "litematica.gui.label.schematic_save.hover_info.support_blocks": "Include any necessary support blocks in \"Visible blocks only\" mode,\nfor things like Repeaters, Comparators, Carpets or gravity blocks that would be visible",
-
+    "litematica.gui.label.schematic_save.hoverinfo.hold_shift_to_overwrite": "Hold shift to overwrite an existing file",
 
     "litematica.gui.label.schematic_verifier.count": "Count",
     "litematica.gui.label.schematic_verifier.expected": "Expected",
@@ -999,5 +1006,7 @@
     "litematica.tool_mode.name.paste_schematic": "Paste Schematic in world",
     "litematica.tool_mode.name.rebuild": "Edit Schematic",
     "litematica.tool_mode.name.replace_block": "Replace block",
-    "litematica.tool_mode.name.schematic_placement": "Schematic Placement"
+    "litematica.tool_mode.name.schematic_placement": "Schematic Placement",
+
+    "modmenu.descriptionTranslation.litematica": "Modern mod schematic for LiteLoader, Rift, Fabric, etc."
 }

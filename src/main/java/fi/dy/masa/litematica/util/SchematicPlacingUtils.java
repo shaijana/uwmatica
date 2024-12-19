@@ -8,10 +8,11 @@ import javax.annotation.Nullable;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.StairsBlock;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.block.enums.StairShape;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.decoration.AbstractDecorationEntity;
 import net.minecraft.entity.decoration.DisplayEntity;
 import net.minecraft.entity.decoration.ItemFrameEntity;
 import net.minecraft.entity.decoration.painting.PaintingEntity;
@@ -20,28 +21,30 @@ import net.minecraft.inventory.Inventory;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.state.property.Properties;
 import net.minecraft.util.BlockMirror;
 import net.minecraft.util.BlockRotation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Direction.AxisDirection;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
 import net.minecraft.world.tick.OrderedTick;
 import net.minecraft.world.tick.WorldTickScheduler;
 
+import fi.dy.masa.malilib.util.Constants;
+import fi.dy.masa.malilib.util.IntBoundingBox;
+import fi.dy.masa.malilib.util.nbt.NbtUtils;
+import fi.dy.masa.malilib.util.position.Vec3d;
+import fi.dy.masa.malilib.util.position.Vec3i;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.config.Configs;
+import fi.dy.masa.litematica.mixin.IMixinStairsBlock;
 import fi.dy.masa.litematica.schematic.LitematicaSchematic;
 import fi.dy.masa.litematica.schematic.LitematicaSchematic.EntityInfo;
 import fi.dy.masa.litematica.schematic.container.LitematicaBlockStateContainer;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
 import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement;
-import fi.dy.masa.malilib.util.Constants;
-import fi.dy.masa.malilib.util.IntBoundingBox;
-import fi.dy.masa.malilib.util.NBTUtils;
 
 public class SchematicPlacingUtils
 {
@@ -118,7 +121,7 @@ public class SchematicPlacingUtils
                                                  ReplaceBehavior replace, boolean notifyNeighbors)
     {
         IntBoundingBox bounds = schematicPlacement.getBoxWithinChunkForRegion(regionName, chunkPos.x, chunkPos.z);
-        Vec3i regionSize = schematicPlacement.getSchematic().getAreaSize(regionName);
+        Vec3i regionSize = schematicPlacement.getSchematic().getAreaSizeAsVec3i(regionName);
 
         if (bounds == null || container == null || blockEntityMap == null || regionSize == null)
         {
@@ -218,9 +221,72 @@ public class SchematicPlacingUtils
                         continue;
                     }
 
+                    // Fix Stair Rotation / Mirroring
+                    StairShape stairShape = null;
+
+                    if (state.getBlock() instanceof StairsBlock && mirrorMain != BlockMirror.NONE)
+                    {
+                        stairShape = state.get(Properties.STAIR_SHAPE);
+                        /*
+                        System.out.printf("placeBlocksWithinChunk() - STAIRS: pre-Mirror:0: pos: [%s] // state [%s]\n",
+                                          pos.toShortString(), state.toString());
+                         */
+                    }
+
                     if (mirrorMain != BlockMirror.NONE) { state = state.mirror(mirrorMain); }
                     if (mirrorSub != BlockMirror.NONE)  { state = state.mirror(mirrorSub); }
                     if (rotationCombined != BlockRotation.NONE) { state = state.rotate(rotationCombined); }
+
+                    if (state.getBlock() instanceof StairsBlock && stairShape != null)
+                    {
+                        /*
+                        System.out.printf("placeBlocksWithinChunk() - STAIRS:post-Mirror:1: pos: [%s] // state [%s] (ORG Shape: %s)\n",
+                                          pos.toShortString(), state.toString(),
+                                          stairShape.name());
+                         */
+
+                        if (mirrorMain != BlockMirror.NONE && stairShape != StairShape.STRAIGHT)
+                        {
+                            StairShape newShape = IMixinStairsBlock.litematica_invokeGetStairShape(state, world, pos);
+
+                            // Best case scenario, and don't cross Outer/Inner types
+                            if (newShape != StairShape.STRAIGHT &&
+                                !((stairShape == StairShape.INNER_LEFT || stairShape == StairShape.INNER_RIGHT) &&
+                                  newShape == StairShape.OUTER_LEFT || newShape == StairShape.OUTER_RIGHT) &&
+                                !((stairShape == StairShape.OUTER_LEFT || stairShape == StairShape.OUTER_RIGHT) &&
+                                  newShape == StairShape.INNER_LEFT || newShape == StairShape.INNER_RIGHT)
+                                )
+                            {
+                                state = state.with(StairsBlock.SHAPE, newShape);
+                            }
+                            else
+                            {
+                                // Flip Shape if Invoker fails (It works? :)
+                                if (stairShape == StairShape.INNER_LEFT)
+                                {
+                                    state = state.with(StairsBlock.SHAPE, StairShape.INNER_RIGHT);
+                                }
+                                else if (stairShape == StairShape.INNER_RIGHT)
+                                {
+                                    state = state.with(StairsBlock.SHAPE, StairShape.INNER_LEFT);
+                                }
+                                else if (stairShape == StairShape.OUTER_LEFT)
+                                {
+                                    state = state.with(StairsBlock.SHAPE, StairShape.OUTER_RIGHT);
+                                }
+                                else if (stairShape == StairShape.OUTER_RIGHT)
+                                {
+                                    state = state.with(StairsBlock.SHAPE, StairShape.OUTER_LEFT);
+                                }
+                            }
+                        }
+
+                        /*
+                        System.out.printf("placeBlocksWithinChunk() - STAIRS:post-Mirror:2: pos: [%s] // state [%s] (ORG Shape: %s)\n",
+                                          pos.toShortString(), state.toString(),
+                                          stairShape.name());
+                         */
+                    }
 
                     BlockEntity te = world.getBlockEntity(pos);
 
@@ -384,8 +450,8 @@ public class SchematicPlacingUtils
         for (EntityInfo info : entityList)
         {
             Vec3d pos = info.posVec;
-            pos = PositionUtils.getTransformedPosition(pos, schematicPlacement.getMirror(), schematicPlacement.getRotation());
-            pos = PositionUtils.getTransformedPosition(pos, placement.getMirror(), placement.getRotation());
+            pos = Vec3d.of(PositionUtils.getTransformedPosition(pos.toVanilla(), schematicPlacement.getMirror(), schematicPlacement.getRotation()));
+            pos = Vec3d.of(PositionUtils.getTransformedPosition(pos.toVanilla(), placement.getMirror(), placement.getRotation()));
             double x = pos.x + offX;
             double y = pos.y + offY;
             double z = pos.z + offZ;
@@ -404,12 +470,12 @@ public class SchematicPlacingUtils
                     id.equals("minecraft:leash_knot") ||
                     id.equals("minecraft:painting"))
                 {
-                    Vec3d p = NBTUtils.readEntityPositionFromTag(tag);
+                    Vec3d p = NbtUtils.readEntityPositionFromTag(tag);
 
                     if (p == null)
                     {
                         p = new Vec3d(x, y, z);
-                        NBTUtils.writeEntityPositionToTag(p, tag);
+                        NbtUtils.writeEntityPositionToTag(p, tag);
                     }
 
                     tag.putInt("TileX", (int) p.x);

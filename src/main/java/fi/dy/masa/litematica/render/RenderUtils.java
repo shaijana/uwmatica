@@ -22,14 +22,16 @@ import net.minecraft.util.math.Vec3i;
 import net.minecraft.util.math.random.LocalRandom;
 import net.minecraft.world.World;
 
+import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.LeftRight;
 import fi.dy.masa.malilib.render.InventoryOverlay;
 import fi.dy.masa.malilib.render.InventoryOverlay.InventoryProperties;
 import fi.dy.masa.malilib.render.InventoryOverlay.InventoryRenderType;
-import fi.dy.masa.malilib.util.BlockUtils;
 import fi.dy.masa.malilib.util.Color4f;
 import fi.dy.masa.malilib.util.GuiUtils;
 import fi.dy.masa.malilib.util.StringUtils;
+import fi.dy.masa.malilib.util.game.BlockUtils;
+import fi.dy.masa.malilib.util.nbt.NbtBlockUtils;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.util.BlockInfoAlignment;
 import fi.dy.masa.litematica.util.InventoryUtils;
@@ -694,7 +696,6 @@ public class RenderUtils
 
         if (ctx != null && ctx.inv() != null)
         {
-            //final InventoryRenderType type = fi.dy.masa.malilib.render.InventoryOverlay.getInventoryType(inv);
             final InventoryProperties props = fi.dy.masa.malilib.render.InventoryOverlay.getInventoryPropsTemp(ctx.type(), ctx.inv().size());
 
             //Litematica.logger.error("render(): type [{}], inv [{}], be [{}], nbt [{}]", ctx.type().name(), ctx.inv().size(), ctx.be() != null, ctx.nbt() != null ? ctx.nbt().getString("id") : new NbtCompound());
@@ -706,7 +707,7 @@ public class RenderUtils
 
                 if (ctx.nbt() != null && !ctx.nbt().isEmpty())
                 {
-                    disabledSlots = BlockUtils.getDisabledSlotsFromNbt(ctx.nbt());
+                    disabledSlots = NbtBlockUtils.getDisabledSlotsFromNbt(ctx.nbt());
                 }
                 else if (ctx.be() instanceof CrafterBlockEntity cbe)
                 {
@@ -759,6 +760,11 @@ public class RenderUtils
         fi.dy.masa.malilib.render.InventoryOverlay.renderInventoryStacks(type, inv, xInv + props.slotOffsetX, yInv + props.slotOffsetY, props.slotsPerRow, 0, inv.size(), disabledSlots, mc, drawContext);
 
         return props.height;
+    }
+
+    public static void renderBackgroundMask(int startX, int startY, int width, int height, DrawContext drawContext)
+    {
+        fi.dy.masa.malilib.render.RenderUtils.drawTexturedRect(GuiBase.BG_TEXTURE, startX, startY, 0, 0, width, height, drawContext);
     }
 
     /*
