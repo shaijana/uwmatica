@@ -4,6 +4,7 @@
   "compatibilityLevel": "JAVA_21",
   "minVersion": "0.8",
   "client": [
+    "IMixinAbstractBlock",
     "IMixinChunkDeltaUpdateS2CPacket",
     "IMixinDataQueryHandler",
     "IMixinEntity",
@@ -34,14 +35,12 @@
     "MixinMinecraftClient_easyPlace",
     "MixinRailBlocks",
     "MixinServerPlayNetworkHandler",
+    "MixinStairsBlock",
     "MixinWorld",
     "MixinWorldChunk",
     "MixinWorldRenderer"
   ],
   "injectors": {
     "defaultRequire": 1
-  },
-  "mixins": [
-    "IMixinAbstractBlock"
-  ]
+  }
 }
