@@ -52,8 +52,11 @@ import net.minecraft.world.tick.QueryableTickScheduler;
 import net.minecraft.world.tick.TickManager;
 
 import fi.dy.masa.malilib.util.WorldUtils;
+import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.Reference;
 import fi.dy.masa.litematica.render.schematic.WorldRendererSchematic;
+import fi.dy.masa.litematica.world.fallback.SchematicBiomeTypes;
+import fi.dy.masa.litematica.world.fallback.SchematicDimensionTypes;
 
 public class WorldSchematic extends World
 {
@@ -84,6 +87,7 @@ public class WorldSchematic extends World
         this.worldRenderer = worldRenderer;
         this.chunkManagerSchematic = new ChunkManagerSchematic(this);
         this.dimensionType = dimension;
+
         if (!registryManager.equals(DynamicRegistryManager.EMPTY))
         {
             this.setDimension(registryManager);
@@ -92,6 +96,9 @@ public class WorldSchematic extends World
         {
             this.setDimension(this.mc.world.getRegistryManager());
         }
+
+        Litematica.debugLog("WorldSchematic#init(): DimensionType [{}] / BiomeType [{}]", this.dimensionType.getIdAsString(), this.biome.getIdAsString());
+
         this.tickManager = new TickManager();
     }
 
@@ -103,6 +110,14 @@ public class WorldSchematic extends World
 
     private void setDimension(DynamicRegistryManager registryManager)
     {
+        // Fallback Dimension Only
+        if (this.getDimensionType() == SchematicDimensionTypes.SCHEMATIC_FALLBACK)
+        {
+            this.biome = WorldUtils.getBiomeEntry(SchematicBiomeTypes.SCHEMATIC_FALLBACK, registryManager);
+            this.dimensionEffects = DimensionEffects.byDimensionType(this.dimensionType.value());
+            return;
+        }
+
         RegistryEntryLookup<DimensionType> entryLookup = registryManager.getOrThrow(RegistryKeys.DIMENSION_TYPE);
         RegistryEntry<DimensionType> nether = entryLookup.getOrThrow(DimensionTypes.THE_NETHER);
         RegistryEntry<DimensionType> end = entryLookup.getOrThrow(DimensionTypes.THE_END);
