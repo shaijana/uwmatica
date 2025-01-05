@@ -6,18 +6,16 @@ import javax.annotation.Nullable;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.registry.RegistryEntryLookup;
-import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.World;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.dimension.DimensionTypes;
 
+import fi.dy.masa.malilib.util.WorldUtils;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.render.LitematicaRenderer;
 import fi.dy.masa.litematica.render.schematic.WorldRendererSchematic;
-import fi.dy.masa.litematica.world.fallback.SchematicDimensionTypes;
 
 public class SchematicWorldHandler
 {
@@ -77,29 +75,32 @@ public class SchematicWorldHandler
             return null;
         }
 
-        RegistryEntry<DimensionType> entry1 = null;
-        RegistryEntry<DimensionType> entry2 = null;
+        RegistryEntry<DimensionType> entry;
 
         try
         {
+            /*
+            //RegistryEntryLookup.RegistryLookup lookup = world.getRegistryManager().createRegistryLookup();
             RegistryEntryLookup<DimensionType> entryLookup = SchematicWorldHandler.INSTANCE.getRegistryManager().getOrThrow(RegistryKeys.DIMENSION_TYPE);
+            entry = entryLookup.getOrThrow(DimensionTypes.OVERWORLD);
+             */
 
-            entry1 = entryLookup.getOrThrow(DimensionTypes.OVERWORLD);
-            entry2 = entryLookup.getOrThrow(SchematicDimensionTypes.SCHEMATIC_FALLBACK);
+            entry = WorldUtils.getDimensionTypeEntry(DimensionTypes.OVERWORLD_ID, SchematicWorldHandler.INSTANCE.getRegistryManager());
         }
-        catch (Exception err)
+        catch (Exception e)
         {
-            Litematica.logger.warn("createSchematicWorld():  Exception while getting the Over world Dimension type: [{}]", err.getMessage());
+            entry = world.getDimensionEntry();
         }
 
-        if (entry1 == null)
+        if (entry == null)
         {
-            entry1 = entry2 != null ? entry2 : world.getDimensionEntry();
+            entry = world.getDimensionEntry();
         }
+        // Use the DimensionType of the current client world
 
         ClientWorld.Properties levelInfo = new ClientWorld.Properties(Difficulty.PEACEFUL, false, true);
 
-        return new WorldSchematic(levelInfo, world.getRegistryManager(), entry1, worldRenderer);
+        return new WorldSchematic(levelInfo, world.getRegistryManager(), entry, worldRenderer);
     }
 
     public void recreateSchematicWorld(boolean remove)
