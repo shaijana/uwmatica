@@ -1,11 +1,11 @@
 plugins {
-	id 'fabric-loom' version '1.9-SNAPSHOT'
-	id 'maven-publish'
+	id 'fabric-loom' version '1.8-SNAPSHOT'
 }
 
 repositories {
 	maven { url = 'https://masa.dy.fi/maven' }
-	maven { url = 'https://maven.terraformersmc.com/releases/' }
+	maven { url = 'https://maven.fallenbreath.me/releases' }
+	maven {	url = 'https://maven.terraformersmc.com/releases/' }
 	maven { url = 'https://jitpack.io' }
 }
 
@@ -31,6 +31,19 @@ base {
 
 	if (version.endsWith('-dev')) {
 		version += "." + new Date().format('yyyyMMdd.HHmmss')
+	}
+}
+
+loom {
+	def commonVmArgs = ['-Dmixin.debug.export=true', '-Dmixin.debug.countInjections=true']
+	// [FEATURE] MIXIN_AUDITOR
+	runs {
+		def auditVmArgs = [*commonVmArgs, '-DmixinAuditor.audit=true']
+		clientMixinAudit {
+			client()
+			vmArgs auditVmArgs
+			ideConfigGenerated false
+		}
 	}
 }
 
@@ -63,30 +76,4 @@ tasks.withType(JavaCompile).configureEach {
 tasks.withType(AbstractArchiveTask).configureEach {
 	preserveFileTimestamps = true
 	//reproducibleFileOrder = true
-}
-
-jar {
-	from("LICENSE") {
-		rename { "${it}_${base.archivesName}"}
-	}
-}
-
-tasks.publish.dependsOn build
-publishing {
-	publications {
-		mavenJava(MavenPublication) {
-			// How to introduce archivesName here without it breaking?
-			artifactId = base.archivesName.get()
-
-			// add all the jars that should be included when publishing to maven
-			//artifact(jar)             { builtBy remapJar }
-			from components.java
-		}
-	}
-
-	repositories {
-		maven {
-			url = "$projectDir/../../CommonMaven"
-		}
-	}
 }
