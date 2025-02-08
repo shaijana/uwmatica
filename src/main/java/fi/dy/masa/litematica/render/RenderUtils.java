@@ -33,7 +33,6 @@ import fi.dy.masa.malilib.util.StringUtils;
 import fi.dy.masa.malilib.util.game.BlockUtils;
 import fi.dy.masa.malilib.util.nbt.NbtBlockUtils;
 import fi.dy.masa.litematica.Litematica;
-import fi.dy.masa.litematica.compat.jade.JadeCompat;
 import fi.dy.masa.litematica.util.BlockInfoAlignment;
 import fi.dy.masa.litematica.util.InventoryUtils;
 import fi.dy.masa.litematica.util.PositionUtils;
@@ -83,7 +82,7 @@ public class RenderUtils
         }
         catch (Exception e)
         {
-            Litematica.logger.error("renderBlockOutline: Failed to draw Area Selection box (Error: {})", e.getLocalizedMessage());
+            Litematica.LOGGER.error("renderBlockOutline: Failed to draw Area Selection box (Error: {})", e.getLocalizedMessage());
         }
     }
 
@@ -204,7 +203,7 @@ public class RenderUtils
         }
         catch (Exception e)
         {
-            Litematica.logger.error("renderBlockOutlineOverlapping: Failed to draw Area Selection box (Error: {})", e.getLocalizedMessage());
+            Litematica.LOGGER.error("renderBlockOutlineOverlapping: Failed to draw Area Selection box (Error: {})", e.getLocalizedMessage());
         }
     }
 

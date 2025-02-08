@@ -417,7 +417,7 @@ public class OverlayRenderer
             }
             catch (Exception e)
             {
-                Litematica.logger.error("renderSchematicMismatches: Failed to draw Schematic Mismatches (Step 1) (Error: {})", e.getLocalizedMessage());
+                Litematica.LOGGER.error("renderSchematicMismatches: Failed to draw Schematic Mismatches (Step 1) (Error: {})", e.getLocalizedMessage());
             }
 
             buffer = tessellator.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
@@ -435,7 +435,7 @@ public class OverlayRenderer
         }
         catch (Exception e)
         {
-            Litematica.logger.error("renderSchematicMismatches: Failed to draw Schematic Mismatches (Step 2) (Error: {})", e.getLocalizedMessage());
+            Litematica.LOGGER.error("renderSchematicMismatches: Failed to draw Schematic Mismatches (Step 2) (Error: {})", e.getLocalizedMessage());
         }
 
         if (Configs.Visuals.RENDER_ERROR_MARKER_SIDES.getBooleanValue())
@@ -462,7 +462,7 @@ public class OverlayRenderer
             }
             catch (Exception e)
             {
-                Litematica.logger.error("renderSchematicMismatches: Failed to draw Schematic Mismatches (Step 3) (Error: {})", e.getLocalizedMessage());
+                Litematica.LOGGER.error("renderSchematicMismatches: Failed to draw Schematic Mismatches (Step 3) (Error: {})", e.getLocalizedMessage());
             }
 
             RenderSystem.disableBlend();
