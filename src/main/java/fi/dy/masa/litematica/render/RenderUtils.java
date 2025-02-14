@@ -87,7 +87,7 @@ public class RenderUtils
     }
 
     public static void drawBlockBoundingBoxOutlinesBatchedLines(BlockPos pos, Color4f color,
-            double expand, BufferBuilder buffer, MinecraftClient mc)
+                                                                double expand, BufferBuilder buffer, MinecraftClient mc)
     {
         Vec3d cameraPos = mc.gameRenderer.getCamera().getPos();
         final double dx = cameraPos.x;
@@ -123,7 +123,7 @@ public class RenderUtils
     }
 
     public static void drawConnectingLineBatchedLines(BlockPos pos1, BlockPos pos2, boolean center,
-            Color4f color, BufferBuilder buffer, MinecraftClient mc)
+                                                      Color4f color, BufferBuilder buffer, MinecraftClient mc)
     {
         Vec3d cameraPos = mc.gameRenderer.getCamera().getPos();
         final double dx = cameraPos.x;
