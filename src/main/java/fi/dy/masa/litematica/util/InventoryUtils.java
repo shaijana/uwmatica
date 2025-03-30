@@ -15,7 +15,6 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.MiningToolItem;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.screen.ScreenHandler;
@@ -30,6 +29,7 @@ import net.minecraft.world.World;
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.render.InventoryOverlay;
+import fi.dy.masa.malilib.util.EquipmentUtils;
 import fi.dy.masa.malilib.util.InfoUtils;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.EntitiesDataStorage;
@@ -79,7 +79,7 @@ public class InventoryUtils
 
         if (PlayerInventory.isValidHotbarIndex(sourceSlot))
         {
-            inventory.selectedSlot = sourceSlot;
+            inventory.setSelectedSlot(sourceSlot);
         }
         else
         {
@@ -103,11 +103,11 @@ public class InventoryUtils
 
             if (hotbarSlot != -1)
             {
-                inventory.selectedSlot = hotbarSlot;
+                inventory.setSelectedSlot(hotbarSlot);
 
                 if (EntityUtils.isCreativeMode(player))
                 {
-                    inventory.main.set(hotbarSlot, stack.copy());
+                    inventory.getMainStacks().set(hotbarSlot, stack.copy());
                 }
                 else
                 {
@@ -150,14 +150,14 @@ public class InventoryUtils
                 }
 
                 setPickedItemToHand(stack, mc);
-                mc.interactionManager.clickCreativeStack(mc.player.getStackInHand(Hand.MAIN_HAND), 36 + inv.selectedSlot);
+                mc.interactionManager.clickCreativeStack(mc.player.getStackInHand(Hand.MAIN_HAND), 36 + inv.getSelectedSlot());
 
                 //return true;
             }
             else
             {
                 int slot = inv.getSlotWithStack(stack);
-                boolean shouldPick = inv.selectedSlot != slot;
+                boolean shouldPick = inv.getSelectedSlot() != slot;
 
                 if (shouldPick && slot != -1)
                 {
@@ -196,7 +196,8 @@ public class InventoryUtils
         return (Configs.Generic.PICK_BLOCK_AVOID_DAMAGEABLE.getBooleanValue() == false ||
                 stack.isDamageable() == false) &&
                (Configs.Generic.PICK_BLOCK_AVOID_TOOLS.getBooleanValue() == false ||
-                (stack.getItem() instanceof MiningToolItem) == false);
+                //(stack.getItem() instanceof MiningToolItem) == false);
+                (EquipmentUtils.isRegularTool(stack)) == false);
     }
 
     private static int getPickBlockTargetSlot(PlayerEntity player)
@@ -206,7 +207,7 @@ public class InventoryUtils
             return -1;
         }
 
-        int slotNum = player.getInventory().selectedSlot;
+        int slotNum = player.getInventory().getSelectedSlot();
 
         if (canPickToSlot(player.getInventory(), slotNum))
         {
@@ -469,7 +470,7 @@ public class InventoryUtils
         }
         if (nbt.contains("components"))
         {
-            NbtCompound components = nbt.getCompound("components");
+            NbtCompound components = nbt.getCompoundOrEmpty("components");
             int count = 0;
 
             result.append("[");
@@ -491,7 +492,7 @@ public class InventoryUtils
         }
         if (nbt.contains("count"))
         {
-            int count = nbt.getInt("count");
+            int count = nbt.getInt("count", 1);
 
             if (count > 1)
             {
@@ -570,7 +571,7 @@ public class InventoryUtils
             return ItemStack.EMPTY;
         }
         PlayerInventory inv = player.getInventory();
-        return inv != null ? inv.getMainHandStack() : ItemStack.EMPTY;
+        return inv != null ? inv.getSelectedStack() : ItemStack.EMPTY;
     }
 
     @ApiStatus.Experimental
@@ -582,6 +583,6 @@ public class InventoryUtils
             return 0;
         }
         PlayerInventory inv = player.getInventory();
-        return inv != null ? inv.selectedSlot : 0;
+        return inv != null ? inv.getSelectedSlot() : 0;
     }
 }
