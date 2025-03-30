@@ -164,7 +164,7 @@ public class ChunkRenderWorkerLitematica implements Runnable
         profiler.push("process_task");
         task.getLock().lock();
 
-        LOGGER.warn("[LW] processTask() task [{}] / [{}]", task.getType().name(), task.getStatus().name());
+        //LOGGER.warn("[LW] processTask() task [{}] / [{}]", task.getType().name(), task.getStatus().name());
         try
         {
             if (task.getStatus() != ChunkRenderTaskSchematic.Status.PENDING)
@@ -204,12 +204,12 @@ public class ChunkRenderWorkerLitematica implements Runnable
             profiler.swap("run_task_now_" + taskType.name());
             if (taskType == ChunkRenderTaskSchematic.Type.REBUILD_CHUNK)
             {
-                LOGGER.warn("[LW] (REBUILD_CHUNK) --> [VBO]");
+                //LOGGER.warn("[LW] (REBUILD_CHUNK) --> [VBO]");
                 task.getRenderChunk().rebuildChunk(task, profiler);
             }
             else if (taskType == ChunkRenderTaskSchematic.Type.RESORT_TRANSPARENCY)
             {
-                LOGGER.warn("[LW] (RESORT_TRANSPARENCY) --> [VBO]");
+                //LOGGER.warn("[LW] (RESORT_TRANSPARENCY) --> [VBO]");
                 task.getRenderChunk().resortTransparency(task, profiler);
             }
 
@@ -244,7 +244,7 @@ public class ChunkRenderWorkerLitematica implements Runnable
 
             if (taskType == ChunkRenderTaskSchematic.Type.REBUILD_CHUNK)
             {
-                LOGGER.warn("[LW] (REBUILD_CHUNK) --> Schedule Uploads");
+                //LOGGER.warn("[LW] (REBUILD_CHUNK) --> Schedule Uploads");
 
                 //if (GuiBase.isCtrlDown()) System.out.printf("pre uploadChunk()\n");
                 for (RenderLayer layer : ChunkRenderLayers.LAYERS)
@@ -269,7 +269,7 @@ public class ChunkRenderWorkerLitematica implements Runnable
             }
             else if (taskType == ChunkRenderTaskSchematic.Type.RESORT_TRANSPARENCY)
             {
-                LOGGER.warn("[LW] (RESORT_TRANSPARENCY) --> Schedule Uploads");
+                //LOGGER.warn("[LW] (RESORT_TRANSPARENCY) --> Schedule Uploads");
                 RenderLayer layer = RenderLayer.getTranslucent();
 
                 if (chunkRenderData.isBlockLayerEmpty(layer) == false)
@@ -288,7 +288,7 @@ public class ChunkRenderWorkerLitematica implements Runnable
 
             profiler.swap("run_task_later_" + taskType.name());
 
-            LOGGER.warn("[LW] (TASK COMBINE) --> futuresList size [{}]", futuresList.size());
+            //LOGGER.warn("[LW] (TASK COMBINE) --> futuresList size [{}]", futuresList.size());
 
             final ListenableFuture<List<Object>> listenablefuture = Futures.allAsList(futuresList);
 

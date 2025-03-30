@@ -335,7 +335,7 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
         this.builderCache.clearAll();
         this.gpuBufferCache.clearAll();
 
-        LOGGER.warn("[VBO] rebuildChunk() pos [{}]", this.position.toShortString());
+        //LOGGER.warn("[VBO] rebuildChunk() pos [{}]", this.position.toShortString());
 
         Set<BlockEntity> tileEntities = new HashSet<>();
         BlockPos posChunk = this.position;
@@ -498,7 +498,7 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
             return;
         }
 
-        LOGGER.warn("[VBO] renderBlocksAndOverlay() pos [{}]", pos.toShortString());
+        //LOGGER.warn("[VBO] renderBlocksAndOverlay() pos [{}]", pos.toShortString());
         this.getProfiler().push("render_build");
         this.overlayColor = null;
 
@@ -1007,7 +1007,7 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
 
     protected void uploadBuffersByLayer(RenderLayer layer, @Nonnull BuiltBuffer meshData)
     {
-        LOGGER.warn("[VBO] uploadBuffersByLayer() Layer [{}], IndexCount [{}]", ChunkRenderLayers.getFriendlyName(layer), meshData.getDrawParameters().indexCount());
+        //LOGGER.warn("[VBO] uploadBuffersByLayer() Layer [{}], IndexCount [{}]", ChunkRenderLayers.getFriendlyName(layer), meshData.getDrawParameters().indexCount());
         ChunkRenderObjectBuffers gpuBuffers = this.gpuBufferCache.getBuffersByLayer(layer);
 
         if (gpuBuffers != null)
@@ -1085,13 +1085,13 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
             );
         }
 
-        LOGGER.warn("[VBO] uploadBuffersByLayer() Layer [{}], END", ChunkRenderLayers.getFriendlyName(layer));
+        //LOGGER.warn("[VBO] uploadBuffersByLayer() Layer [{}], END", ChunkRenderLayers.getFriendlyName(layer));
 //        meshData.close();
     }
 
     protected void uploadBuffersByType(OverlayRenderType type, @Nonnull BuiltBuffer meshData)
     {
-        LOGGER.warn("[VBO] uploadBuffersByType() Overlay [{}], IndexCount [{}]", type.name(), meshData.getDrawParameters().indexCount());
+        //LOGGER.warn("[VBO] uploadBuffersByType() Overlay [{}], IndexCount [{}]", type.name(), meshData.getDrawParameters().indexCount());
         ChunkRenderObjectBuffers gpuBuffers = this.gpuBufferCache.getBuffersByType(type);
 
         if (gpuBuffers != null)
@@ -1169,13 +1169,13 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
             );
         }
 
-        LOGGER.warn("[VBO] uploadBuffersByType() Overlay [{}], END", type.name());
+        //LOGGER.warn("[VBO] uploadBuffersByType() Overlay [{}], END", type.name());
 //        meshData.close();
     }
 
     protected void uploadIndexByLayer(RenderLayer layer, @Nonnull BufferAllocator.CloseableBuffer buffer)
     {
-        LOGGER.warn("[VBO] uploadIndexByLayer() Layer [{}] --> BEGIN", ChunkRenderLayers.getFriendlyName(layer));
+        //LOGGER.warn("[VBO] uploadIndexByLayer() Layer [{}] --> BEGIN", ChunkRenderLayers.getFriendlyName(layer));
         if (this.gpuBufferCache.hasBuffersByLayer(layer))
         {
             ChunkRenderObjectBuffers gpuBuffers = this.gpuBufferCache.getBuffersByLayer(layer);
@@ -1199,13 +1199,13 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
             }
         }
 
-        LOGGER.warn("[VBO] uploadIndexByLayer() Layer [{}] --> END", ChunkRenderLayers.getFriendlyName(layer));
+        //LOGGER.warn("[VBO] uploadIndexByLayer() Layer [{}] --> END", ChunkRenderLayers.getFriendlyName(layer));
 //        buffer.close();
     }
 
     protected void uploadIndexByType(OverlayRenderType type, @Nonnull BufferAllocator.CloseableBuffer buffer)
     {
-        LOGGER.warn("[VBO] uploadIndexByType() Overlay [{}] --> BEGIN", type.name());
+        //LOGGER.warn("[VBO] uploadIndexByType() Overlay [{}] --> BEGIN", type.name());
         if (this.gpuBufferCache.hasBuffersByType(type))
         {
             ChunkRenderObjectBuffers gpuBuffers = this.gpuBufferCache.getBuffersByType(type);
@@ -1223,20 +1223,20 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
             {
                 if (!gpuBuffers.indexBuffer.isClosed())
                 {
-//                    LOGGER.warn("[VBO] uploadIndexByType() Overlay [{}] --> WRITE INDEX BUFFER", type.name());
+//                    //LOGGER.warn("[VBO] uploadIndexByType() Overlay [{}] --> WRITE INDEX BUFFER", type.name());
                     RenderSystem.getDevice().createCommandEncoder().writeToBuffer(gpuBuffers.indexBuffer, buffer.getBuffer(), 0);
                 }
             }
         }
 
-        LOGGER.warn("[VBO] uploadIndexByType() Overlay [{}] --> END", type.name());
+        //LOGGER.warn("[VBO] uploadIndexByType() Overlay [{}] --> END", type.name());
 //        buffer.close();
     }
 
     private void postRenderBlocks(RenderLayer layer, float x, float y, float z, @Nonnull ChunkRenderDataSchematic chunkRenderData, @Nonnull BufferAllocatorCache allocators)
             throws RuntimeException
     {
-        LOGGER.warn("[VBO] postRenderBlocks(): layer: [{}]", ChunkRenderLayers.getFriendlyName(layer));
+        //LOGGER.warn("[VBO] postRenderBlocks(): layer: [{}]", ChunkRenderLayers.getFriendlyName(layer));
 
         if (!chunkRenderData.isBlockLayerEmpty(layer))
         {
@@ -1285,7 +1285,7 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
     private void postRenderOverlay(OverlayRenderType type, float x, float y, float z, @Nonnull ChunkRenderDataSchematic chunkRenderData, @Nonnull BufferAllocatorCache allocators)
             throws RuntimeException
     {
-        LOGGER.warn("[VBO] postRenderOverlay(): overlay type: [{}]", type.name());
+        //LOGGER.warn("[VBO] postRenderOverlay(): overlay type: [{}]", type.name());
 
         if (!chunkRenderData.isOverlayTypeEmpty(type))
         {
@@ -1369,7 +1369,7 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
     private void resortRenderBlocks(RenderLayer layer, float x, float y, float z, @Nonnull ChunkRenderDataSchematic chunkRenderData, @Nonnull BufferAllocatorCache allocators)
             throws InterruptedException
     {
-        LOGGER.warn("[VBO] resortRenderBlocks() layer [{}]", ChunkRenderLayers.getFriendlyName(layer));
+        //LOGGER.warn("[VBO] resortRenderBlocks() layer [{}]", ChunkRenderLayers.getFriendlyName(layer));
 
         if (!chunkRenderData.isBlockLayerEmpty(layer))
         {
@@ -1427,7 +1427,7 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
     private void resortRenderOverlay(OverlayRenderType type, float x, float y, float z, @Nonnull ChunkRenderDataSchematic chunkRenderData, @Nonnull BufferAllocatorCache allocators)
             throws InterruptedException
     {
-        LOGGER.warn("[VBO] resortRenderOverlay() overlay type [{}]", type.name());
+        //LOGGER.warn("[VBO] resortRenderOverlay() overlay type [{}]", type.name());
 
         if (!chunkRenderData.isOverlayTypeEmpty(type))
         {
@@ -1597,7 +1597,7 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
             this.chunkRenderData.set(ChunkRenderDataSchematic.EMPTY);
              */
 
-            LOGGER.warn("[VBO] clear() pos [{}]", this.position.toShortString());
+            //LOGGER.warn("[VBO] clear() pos [{}]", this.position.toShortString());
 
             if (this.chunkRenderData != null && !this.chunkRenderData.equals(ChunkRenderDataSchematic.EMPTY))
             {

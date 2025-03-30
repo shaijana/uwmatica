@@ -561,29 +561,29 @@ public class WorldRendererSchematic
                 BlockPos chunkOrigin = renderer.getOrigin();
                 ChunkRenderObjectBuffers buffers = renderer.getBlockBuffersByLayer(renderLayer);
 
-//                if (buffers == null || buffers.isClosed() || !renderer.getChunkRenderData().getBuiltBufferCache().hasBuiltBufferByLayer(renderLayer))
-//                {
+                if (buffers == null || buffers.isClosed() || !renderer.getChunkRenderData().getBuiltBufferCache().hasBuiltBufferByLayer(renderLayer))
+                {
 //                    Litematica.LOGGER.error("Layer [{}], ChunkOrigin [{}], NO BUFFERS!", ChunkRenderLayers.getFriendlyName(renderLayer), chunkOrigin.toShortString());
+                    continue;
+                }
+
+//                if (buffers == null)
+//                {
+//                    Litematica.LOGGER.error("Layer [{}], ChunkOrigin [{}], NO BUFFERS (NULL)", ChunkRenderLayers.getFriendlyName(renderLayer), chunkOrigin.toShortString());
 //                    continue;
 //                }
-
-                if (buffers == null)
-                {
-                    Litematica.LOGGER.error("Layer [{}], ChunkOrigin [{}], NO BUFFERS (NULL)", ChunkRenderLayers.getFriendlyName(renderLayer), chunkOrigin.toShortString());
-                    continue;
-                }
-
-                if (buffers.isClosed())
-                {
-                    Litematica.LOGGER.error("Layer [{}], ChunkOrigin [{}], NO BUFFERS (CLOSED)", ChunkRenderLayers.getFriendlyName(renderLayer), chunkOrigin.toShortString());
-                    continue;
-                }
-
-                if (!renderer.getChunkRenderData().getBuiltBufferCache().hasBuiltBufferByLayer(renderLayer))
-                {
-                    Litematica.LOGGER.error("Layer [{}], ChunkOrigin [{}], NO BUFFERS (NO DATA) ", ChunkRenderLayers.getFriendlyName(renderLayer), chunkOrigin.toShortString());
-                    continue;
-                }
+//
+//                if (buffers.isClosed())
+//                {
+//                    Litematica.LOGGER.error("Layer [{}], ChunkOrigin [{}], NO BUFFERS (CLOSED)", ChunkRenderLayers.getFriendlyName(renderLayer), chunkOrigin.toShortString());
+//                    continue;
+//                }
+//
+//                if (!renderer.getChunkRenderData().getBuiltBufferCache().hasBuiltBufferByLayer(renderLayer))
+//                {
+//                    Litematica.LOGGER.error("Layer [{}], ChunkOrigin [{}], NO BUFFERS (NO DATA) ", ChunkRenderLayers.getFriendlyName(renderLayer), chunkOrigin.toShortString());
+//                    continue;
+//                }
 
                 GpuBuffer gpuBuffer;
                 VertexFormat.IndexType indexType;
@@ -772,29 +772,29 @@ public class WorldRendererSchematic
                     ChunkRenderObjectBuffers buffers = renderer.getOverlayBuffersByType(type);
                     BlockPos chunkOrigin = renderer.getOrigin();
 
-//                    if (buffers == null || buffers.isClosed() || !renderer.getChunkRenderData().getBuiltBufferCache().hasBuiltBufferByType(type))
-//                    {
+                    if (buffers == null || buffers.isClosed() || !renderer.getChunkRenderData().getBuiltBufferCache().hasBuiltBufferByType(type))
+                    {
 //                        Litematica.LOGGER.error("Overlay [{}], ChunkOrigin [{}], NO BUFFERS", type.name(), chunkOrigin.toShortString());
+                        continue;
+                    }
+
+//                    if (buffers == null)
+//                    {
+//                        Litematica.LOGGER.error("Overlay [{}], ChunkOrigin [{}], NO BUFFERS (NULL)", type.name(), chunkOrigin.toShortString());
 //                        continue;
 //                    }
-
-                    if (buffers == null)
-                    {
-                        Litematica.LOGGER.error("Overlay [{}], ChunkOrigin [{}], NO BUFFERS (NULL)", type.name(), chunkOrigin.toShortString());
-                        continue;
-                    }
-
-                    if (buffers.isClosed())
-                    {
-                        Litematica.LOGGER.error("Overlay [{}], ChunkOrigin [{}], NO BUFFERS (CLOSED)", type.name(), chunkOrigin.toShortString());
-                        continue;
-                    }
-
-                    if (!renderer.getChunkRenderData().getBuiltBufferCache().hasBuiltBufferByType(type))
-                    {
-                        Litematica.LOGGER.error("Overlay [{}], ChunkOrigin [{}], NO BUFFERS (NO DATA)", type.name(), chunkOrigin.toShortString());
-                        continue;
-                    }
+//
+//                    if (buffers.isClosed())
+//                    {
+//                        Litematica.LOGGER.error("Overlay [{}], ChunkOrigin [{}], NO BUFFERS (CLOSED)", type.name(), chunkOrigin.toShortString());
+//                        continue;
+//                    }
+//
+//                    if (!renderer.getChunkRenderData().getBuiltBufferCache().hasBuiltBufferByType(type))
+//                    {
+//                        Litematica.LOGGER.error("Overlay [{}], ChunkOrigin [{}], NO BUFFERS (NO DATA)", type.name(), chunkOrigin.toShortString());
+//                        continue;
+//                    }
 
 //                    if (chunkOffsetUniform != null)
 //                    {

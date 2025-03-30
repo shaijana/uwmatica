@@ -6,8 +6,6 @@ import javax.annotation.Nullable;
 
 import net.minecraft.client.render.RenderLayer;
 
-import fi.dy.masa.litematica.Litematica;
-
 public class GpuBufferCache implements AutoCloseable
 {
     private final ConcurrentHashMap<RenderLayer, ChunkRenderObjectBuffers> layerBuffers = new ConcurrentHashMap<>();
@@ -83,7 +81,7 @@ public class GpuBufferCache implements AutoCloseable
 
     protected void clearAll()
     {
-        Litematica.LOGGER.warn("GpuBufferCache clearAll()");
+//        Litematica.LOGGER.warn("GpuBufferCache clearAll()");
 
         synchronized (this.layerBuffers)
         {
