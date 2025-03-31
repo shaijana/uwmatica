@@ -743,7 +743,7 @@ public class WorldRendererSchematic
 //        RenderLayer renderLayer = type.getRenderLayer();
         RenderPipeline pipeline = renderThrough ? type.getRenderThrough() : type.getPipeline();
 
-        float[] offset = new float[]{0.3f, 3.0f, 0.6f};
+        float[] offset = new float[]{0.3f, 0.0f, 0.6f};
 
         Matrix4fStack matrix4fStack = RenderSystem.getModelViewStack();
         MatrixStack matrices = new MatrixStack();
@@ -808,7 +808,7 @@ public class WorldRendererSchematic
 //                    matrix4fStack.mul(matrices.peek().getPositionMatrix());
                     matrix4fStack.translate((float) (chunkOrigin.getX() - x), (float) (chunkOrigin.getY() - y), (float) (chunkOrigin.getZ() - z));
 
-                    this.drawInternal(otherFb, pipeline, buffers, -1, offset, lineWidth, false, true, (type == OverlayRenderType.OUTLINE));
+                    this.drawInternal(otherFb, pipeline, buffers, -1, offset, lineWidth, false, false, (type == OverlayRenderType.OUTLINE));
 
 //                    arrayList.add(new RenderPass.
 //                            RenderObject(0, buffers.getVertexBuffer(), gpuBuffer, indexType, 0, buffers.getIndexCount(),
