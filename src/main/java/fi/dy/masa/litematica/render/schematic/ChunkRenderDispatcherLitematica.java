@@ -100,7 +100,7 @@ public class ChunkRenderDispatcherLitematica
         this.renderWorker = new ChunkRenderWorkerLitematica(this, new BufferAllocatorCache());
          */
 
-        this.countRenderAllocators = 3;
+        this.countRenderAllocators = 2;
         this.cameraPos = Vec3d.ZERO;
 
         LOGGER.info("Using {} total BufferAllocator caches", this.countRenderAllocators + 1);

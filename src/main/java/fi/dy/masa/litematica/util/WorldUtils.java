@@ -154,6 +154,11 @@ public class WorldUtils
         newSchem.getMetadata().setTimeCreated(origMetadata.getTimeCreated());
         newSchem.getMetadata().setTimeModifiedToNow();
 
+        try
+        {
+            world.closeEntityLookup();
+        }
+        catch (Exception ignored) {}
         Configs.Generic.DATAFIXER_MODE.setOptionListValue(oldMode);
         return newSchem.writeToFile(outputDir, outputFileName, override);
     }
@@ -258,6 +263,11 @@ public class WorldUtils
         newSchematic.getMetadata().setTimeCreated(System.currentTimeMillis());
         newSchematic.getMetadata().setTimeModifiedToNow();
 
+        try
+        {
+            world.closeEntityLookup();
+        }
+        catch (Exception ignored) {}
         Configs.Generic.DATAFIXER_MODE.setOptionListValue(oldMode);
         return newSchematic;
     }
@@ -334,6 +344,12 @@ public class WorldUtils
 
         boolean result = newSchem.writeToFile(outputDir, outputFileName, override);
         System.out.printf("Vanilla IMPORT DUMP (OUT-2) -->\n%s\n", newSchem.toString());
+
+        try
+        {
+            world.closeEntityLookup();
+        }
+        catch (Exception ignored) {}
         return result;
     }
 
@@ -446,6 +462,11 @@ public class WorldUtils
         StructureTemplate template = new StructureTemplate();
         template.saveFromWorld(world, BlockPos.ORIGIN, size, ignoreEntities == false, Blocks.STRUCTURE_VOID);
 
+        try
+        {
+            world.closeEntityLookup();
+        }
+        catch (Exception ignored) {}
         return template;
     }
 

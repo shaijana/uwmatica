@@ -168,7 +168,31 @@ public abstract class MixinWorldRenderer
                 this.profiler.startTick();
             }
 
-            LitematicaRenderer.getInstance().piecewiseRenderEntities(this.posMatrix, this.ticks.getTickProgress(false), this.profiler);
+            LitematicaRenderer.getInstance().piecewiseRenderEntities(this.posMatrix, matrices, immediate, this.ticks.getTickProgress(false), this.profiler);
+            this.posMatrix = null;
+            this.ticks = null;
+            //this.profiler = null;
+        }
+    }
+
+    @Inject(method = "renderBlockEntities",
+            at = @At(value = "RETURN"))
+    private void litematica_onPostRenderBlockEntities(MatrixStack matrices, VertexConsumerProvider.Immediate entityVertexConsumers, VertexConsumerProvider.Immediate effectVertexConsumers, Camera camera, float tickProgress, CallbackInfo ci)
+    {
+        if (this.posMatrix != null &&
+                this.ticks != null)
+        {
+            if (this.profiler == null)
+            {
+                this.profiler = Profilers.get();
+            }
+
+            if (this.profiler instanceof ProfilerSystem ps && !((IMixinProfilerSystem) ps).litematica_isStarted())
+            {
+                this.profiler.startTick();
+            }
+
+            LitematicaRenderer.getInstance().piecewiseRenderBlockEntities(this.posMatrix, matrices, entityVertexConsumers, effectVertexConsumers, this.ticks.getTickProgress(false), this.profiler);
             this.posMatrix = null;
             this.ticks = null;
             //this.profiler = null;

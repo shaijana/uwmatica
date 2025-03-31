@@ -1,9 +1,9 @@
 package fi.dy.masa.litematica.util;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -28,7 +28,6 @@ import net.minecraft.world.tick.OrderedTick;
 import net.minecraft.world.tick.WorldTickScheduler;
 
 import fi.dy.masa.malilib.util.IntBoundingBox;
-import fi.dy.masa.malilib.util.data.Constants;
 import fi.dy.masa.malilib.util.nbt.NbtUtils;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.config.Configs;
@@ -404,7 +403,8 @@ public class SchematicPlacingUtils
                     if (p == null)
                     {
                         p = new Vec3d(x, y, z);
-                        NbtUtils.writeEntityPositionToTag(p, tag);
+//                        NbtUtils.writeEntityPositionToTag(p, tag);
+                        NbtUtils.putVec3dCodec(tag, p, "Pos");
                     }
 
                     tag.putInt("TileX", (int) p.x);

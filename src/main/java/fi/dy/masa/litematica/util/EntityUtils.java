@@ -25,6 +25,7 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 
 import fi.dy.masa.malilib.util.InventoryUtils;
+import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.mixin.entity.IMixinEntity;
@@ -168,11 +169,15 @@ public class EntityUtils
             {
                 Entity entity = optional.get();
                 entity.setUuid(UUID.randomUUID());
+
+//                Litematica.LOGGER.warn("[EntityUtils] createEntityFromNBTSingle() successful; type: [{}]", entity.getType().getName().getString());
+
                 return entity;
             }
         }
-        catch (Exception ignore)
+        catch (Exception err)
         {
+            Litematica.LOGGER.error("createEntityFromNBTSingle: Exception; {}", err.getLocalizedMessage());
         }
 
         return null;
@@ -328,6 +333,7 @@ public class EntityUtils
     private static void readLeashableEntityCustomData(Entity entity, NbtCompound nbt)
     {
         MinecraftClient mc = MinecraftClient.getInstance();
+        if (mc.world == null) return;
         assert entity instanceof Leashable;
         Leashable leashable = (Leashable) entity;
         ((IMixinEntity) entity).litematica_readCustomDataFromNbt(nbt);

@@ -1201,7 +1201,7 @@ public class WorldRendererSchematic
         return this.getModelForState(state).getParts(rand);
     }
 
-    public void renderEntities(Camera camera, Frustum frustum, Matrix4f posMatrix, float partialTicks, Profiler profiler)
+    public void renderEntities(Camera camera, Frustum frustum, Matrix4f posMatrix, MatrixStack matrices, VertexConsumerProvider.Immediate immediate, float partialTicks, Profiler profiler)
     {
         this.profiler = profiler;
 
@@ -1217,7 +1217,6 @@ public class WorldRendererSchematic
             double cameraY = camera.getPos().y;
             double cameraZ = camera.getPos().z;
 
-            MinecraftClient.getInstance().getBlockEntityRenderDispatcher().configure(this.world, camera, this.mc.crosshairTarget);
             this.entityRenderDispatcher.configure(this.world, camera, this.mc.targetedEntity);
 
             this.countEntitiesTotal = 0;
@@ -1234,12 +1233,12 @@ public class WorldRendererSchematic
             //  if this is missing ( Including the push() and pop() ... ?)
             //  Doing this restores the expected behavior of Entity Rendering in the Schematic World
 
-            MatrixStack matrixStack = new MatrixStack();
-            matrixStack.push();
-            matrixStack.multiplyPositionMatrix(posMatrix);
-            matrixStack.pop();
+//            MatrixStack matrixStack = new MatrixStack();
+//            matrixStack.push();
+//            matrixStack.multiplyPositionMatrix(posMatrix);
+//            matrixStack.pop();
 
-            VertexConsumerProvider.Immediate entityVertexConsumers = this.bufferBuilders.getEntityVertexConsumers();
+//            VertexConsumerProvider.Immediate entityVertexConsumers = this.bufferBuilders.getEntityVertexConsumers();
             LayerRange layerRange = DataManager.getRenderLayerRange();
 
             profiler.swap("regular_iterate");
@@ -1250,100 +1249,133 @@ public class WorldRendererSchematic
                 ChunkSchematic chunk = this.world.getChunk(pos.getX() >> 4, pos.getZ() >> 4);
                 List<Entity> list = chunk.getEntityList();
 
-                if (list.isEmpty() == false)
+//                Litematica.LOGGER.error("[WorldRenderer] Chunk: [{}], EntityList [{}]", pos.toShortString(), list.size());
+
+                for (Entity entityTmp : list)
                 {
-                    for (Entity entityTmp : list)
+                    if (!layerRange.isPositionWithinRange((int) entityTmp.getX(), (int) entityTmp.getY(), (int) entityTmp.getZ()))
                     {
-                        if (layerRange.isPositionWithinRange((int) entityTmp.getX(), (int) entityTmp.getY(), (int) entityTmp.getZ()) == false)
+                        continue;
+                    }
+
+                    boolean shouldRender = this.entityRenderDispatcher.shouldRender(entityTmp, frustum, cameraX, cameraY, cameraZ);
+
+                    if (shouldRender)
+                    {
+                        double lerpX = MathHelper.lerp(partialTicks, entityTmp.lastRenderX, entityTmp.getX());
+                        double lerpY = MathHelper.lerp(partialTicks, entityTmp.lastRenderY, entityTmp.getY());
+                        double lerpZ = MathHelper.lerp(partialTicks, entityTmp.lastRenderZ, entityTmp.getZ());
+
+                        double x = lerpX - cameraX;
+                        double y = lerpY - cameraY;
+                        double z = lerpZ - cameraZ;
+
+//                        Litematica.LOGGER.warn("[WorldRenderer] Chunk: [{}], EntityPos [{}] // Adj. Pos: X [{}], Y [{}], Z [{}]", pos.toShortString(), entityTmp.getBlockPos().toShortString(), x, y, z);
+
+                        matrices.push();
+                        this.entityRenderDispatcher.render(entityTmp, x, y, z, partialTicks, matrices, immediate, this.entityRenderDispatcher.getLight(entityTmp, partialTicks));
+                        ++this.countEntitiesRendered;
+                        matrices.pop();
+                    }
+//                    else
+//                    {
+//                        Litematica.LOGGER.warn("Skipping Entity at pos X: [{}], Y: [{}], Z: [{}] (Should Render = False)", entityTmp.getX(), entityTmp.getY(), entityTmp.getZ());
+//                    }
+                }
+            }
+        }
+    }
+
+    public void renderBlockEntities(Camera camera, Frustum frustum, Matrix4f posMatrix, MatrixStack matrices, VertexConsumerProvider.Immediate immediate, VertexConsumerProvider.Immediate effectVertexConsumers, float partialTicks, Profiler profiler)
+    {
+        this.profiler = profiler;
+
+        profiler.push("entities_prepare");
+
+        double cameraX = camera.getPos().x;
+        double cameraY = camera.getPos().y;
+        double cameraZ = camera.getPos().z;
+
+        MinecraftClient.getInstance().getBlockEntityRenderDispatcher().configure(this.world, camera, this.mc.crosshairTarget);
+        this.entityRenderDispatcher.configure(this.world, camera, this.mc.targetedEntity);
+
+//        MatrixStack matrixStack = new MatrixStack();
+//        matrixStack.push();
+//        matrixStack.multiplyPositionMatrix(posMatrix);
+//        matrixStack.pop();
+
+//        VertexConsumerProvider.Immediate immediate = this.bufferBuilders.getEntityVertexConsumers();
+        LayerRange layerRange = DataManager.getRenderLayerRange();
+
+        profiler.swap("block_entities");
+        this.profiler = profiler;
+        BlockEntityRenderDispatcher renderer = MinecraftClient.getInstance().getBlockEntityRenderDispatcher();
+
+        profiler.swap("block_entities_iterate");
+        for (ChunkRendererSchematicVbo chunkRenderer : this.renderInfos)
+        {
+            ChunkRenderDataSchematic data = chunkRenderer.getChunkRenderData();
+            List<BlockEntity> tiles = data.getBlockEntities();
+
+            if (!tiles.isEmpty())
+            {
+                BlockPos chunkOrigin = chunkRenderer.getOrigin();
+                ChunkSchematic chunk = this.world.getChunkProvider().getChunk(chunkOrigin.getX() >> 4, chunkOrigin.getZ() >> 4);
+
+                if (chunk != null && data.getTimeBuilt() >= chunk.getTimeCreated())
+                {
+                    for (BlockEntity te : tiles)
+                    {
+                        BlockPos pos = te.getPos();
+
+                        if (!layerRange.isPositionWithinRange(pos.getX(), pos.getY(), pos.getZ()))
                         {
                             continue;
                         }
 
-                        boolean shouldRender = this.entityRenderDispatcher.shouldRender(entityTmp, frustum, cameraX, cameraY, cameraZ);
-
-                        if (shouldRender)
+                        try
                         {
-                            double x = entityTmp.getX() - cameraX;
-                            double y = entityTmp.getY() - cameraY;
-                            double z = entityTmp.getZ() - cameraZ;
-
-                            matrixStack.push();
-
-                            // TODO --> this render() call does not seem to have a push() and pop(),
-                            //  and does not accept Matrix4f/Matrix4fStack as a parameter
-                            this.entityRenderDispatcher.render(entityTmp, x, y, z, partialTicks, matrixStack, entityVertexConsumers, this.entityRenderDispatcher.getLight(entityTmp, partialTicks));
-                            ++this.countEntitiesRendered;
-
-                            matrixStack.pop();
+                            matrices.push();
+                            matrices.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
+                            renderer.render(te, partialTicks, matrices, immediate);
+                            matrices.pop();
+                        }
+                        catch (Exception err)
+                        {
+                            Litematica.LOGGER.error("[Pass 1] Error rendering blockEntities; Exception: {}", err.getLocalizedMessage());
                         }
                     }
                 }
             }
-
-            profiler.swap("block_entities");
-            this.profiler = profiler;
-            BlockEntityRenderDispatcher renderer = MinecraftClient.getInstance().getBlockEntityRenderDispatcher();
-
-            profiler.swap("block_entities_iterate");
-            for (ChunkRendererSchematicVbo chunkRenderer : this.renderInfos)
-            {
-                ChunkRenderDataSchematic data = chunkRenderer.getChunkRenderData();
-                List<BlockEntity> tiles = data.getBlockEntities();
-
-                if (tiles.isEmpty() == false)
-                {
-                    BlockPos chunkOrigin = chunkRenderer.getOrigin();
-                    ChunkSchematic chunk = this.world.getChunkProvider().getChunk(chunkOrigin.getX() >> 4, chunkOrigin.getZ() >> 4);
-
-                    if (chunk != null && data.getTimeBuilt() >= chunk.getTimeCreated())
-                    {
-                        for (BlockEntity te : tiles)
-                        {
-                            try
-                            {
-                                BlockPos pos = te.getPos();
-                                matrixStack.push();
-                                matrixStack.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
-
-                                // TODO --> this render() call does not seem to have a push() and pop(),
-                                //  and does not accept Matrix4f/Matrix4fStack as a parameter
-                                renderer.render(te, partialTicks, matrixStack, entityVertexConsumers);
-
-                                matrixStack.pop();
-                            }
-                            catch (Exception ignore)
-                            {
-                            }
-                        }
-                    }
-                }
-            }
-
-            profiler.swap("block_entities_render");
-            synchronized (this.blockEntities)
-            {
-                for (BlockEntity te : this.blockEntities)
-                {
-                    try
-                    {
-                        BlockPos pos = te.getPos();
-                        matrixStack.push();
-                        matrixStack.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
-
-                        // TODO --> this render() call does not seem to have a push() and pop(),
-                        //  and does not accept Matrix4f/Matrix4fStack as a parameter
-                        renderer.render(te, partialTicks, matrixStack, entityVertexConsumers);
-
-                        matrixStack.pop();
-                    }
-                    catch (Exception ignore)
-                    {
-                    }
-                }
-            }
-
-            profiler.pop();
         }
+
+        profiler.swap("block_entities_render");
+        synchronized (this.blockEntities)
+        {
+            for (BlockEntity te : this.blockEntities)
+            {
+                BlockPos pos = te.getPos();
+
+                if (!layerRange.isPositionWithinRange(pos.getX(), pos.getY(), pos.getZ()))
+                {
+                    continue;
+                }
+
+                try
+                {
+                    matrices.push();
+                    matrices.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
+                    renderer.render(te, partialTicks, matrices, immediate);
+                    matrices.pop();
+                }
+                catch (Exception err)
+                {
+                    Litematica.LOGGER.error("[Pass 2] Error rendering blockEntities; Exception: {}", err.getLocalizedMessage());
+                }
+            }
+        }
+
+        profiler.pop();
     }
 
     /*

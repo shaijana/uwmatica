@@ -8,6 +8,8 @@ import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.Frustum;
 import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.profiler.Profiler;
 
 import fi.dy.masa.malilib.render.MaLiLibPipelines;
@@ -442,13 +444,25 @@ public class LitematicaRenderer
         this.cleanup();
     }
 
-    public void piecewiseRenderEntities(Matrix4f posMatrix, float partialTicks, Profiler profiler)
+    public void piecewiseRenderEntities(Matrix4f posMatrix, MatrixStack matrices, VertexConsumerProvider.Immediate immediate, float partialTicks, Profiler profiler)
     {
         if (this.renderPiecewiseBlocks)
         {
             profiler.push(Reference.MOD_ID+"_entities");
 
-            this.getWorldRenderer().renderEntities(this.getCamera(), this.frustum, posMatrix, partialTicks, profiler);
+            this.getWorldRenderer().renderEntities(this.getCamera(), this.frustum, posMatrix, matrices, immediate, partialTicks, profiler);
+
+            profiler.pop();
+        }
+    }
+
+    public void piecewiseRenderBlockEntities(Matrix4f posMatrix, MatrixStack matrices, VertexConsumerProvider.Immediate entityVertexConsumers, VertexConsumerProvider.Immediate effectVertexConsumers, float partialTicks, Profiler profiler)
+    {
+        if (this.renderPiecewiseBlocks)
+        {
+            profiler.push(Reference.MOD_ID+"_block_entities");
+
+            this.getWorldRenderer().renderBlockEntities(this.getCamera(), this.frustum, posMatrix, matrices, entityVertexConsumers, effectVertexConsumers, partialTicks, profiler);
 
             profiler.pop();
         }

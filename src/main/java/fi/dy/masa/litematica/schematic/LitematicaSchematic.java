@@ -392,6 +392,10 @@ public class LitematicaSchematic
                 {
                     this.placeEntitiesToWorld(world, origin, regionPos, regionSize, schematicPlacement, placement, entityList);
                 }
+                else
+                {
+                    Litematica.LOGGER.error("[Schem] Unable to place entites to world. (Ignore entities on?)");
+                }
             }
         }
 
@@ -615,6 +619,8 @@ public class LitematicaSchematic
             mirrorSub = mirrorSub == BlockMirror.FRONT_BACK ? BlockMirror.LEFT_RIGHT : BlockMirror.FRONT_BACK;
         }
 
+        Litematica.LOGGER.warn("[Schem] placeEntitiesToWorld: entityList size [{}]", entityList.size());
+
         for (EntityInfo info : entityList)
         {
             Entity entity = EntityUtils.createEntityAndPassengersFromNBT(info.nbt, world);
@@ -628,8 +634,14 @@ public class LitematicaSchematic
                 double y = pos.y + offY;
                 double z = pos.z + offZ;
 
+                Litematica.LOGGER.warn("[Schem] placeEntitiesToWorld: entity [{}]", entity.getType().getName().getString());
+
                 SchematicPlacingUtils.rotateEntity(entity, x, y, z, rotationCombined, mirrorMain, mirrorSub);
                 EntityUtils.spawnEntityAndPassengersInWorld(entity, world);
+            }
+            else
+            {
+                Litematica.LOGGER.error("[Schem] placeEntitiesToWorld: entity == null!");
             }
         }
     }
@@ -650,7 +662,8 @@ public class LitematicaSchematic
                 if (entity.saveNbt(tag))
                 {
                     Vec3d posVec = new Vec3d(entity.getX() - regionPosAbs.getX(), entity.getY() - regionPosAbs.getY(), entity.getZ() - regionPosAbs.getZ());
-                    NbtUtils.writeEntityPositionToTag(posVec, tag);
+//                    NbtUtils.writeEntityPositionToTag(posVec, tag);
+                    NbtUtils.putVec3dCodec(tag, posVec, "Pos");
                     list.add(new EntityInfo(posVec, tag));
                 }
             }
@@ -717,7 +730,8 @@ public class LitematicaSchematic
                             tag.putInt("TileZ", p.getZ() - regionPosAbs.getZ());
                         }
 
-                        NbtUtils.writeEntityPositionToTag(posVec, tag);
+//                        NbtUtils.writeEntityPositionToTag(posVec, tag);
+                        NbtUtils.putVec3dCodec(tag, posVec, "Pos");
                         list.add(new EntityInfo(posVec, tag));
                         existingEntities.add(uuid);
                     }
@@ -1627,7 +1641,8 @@ public class LitematicaSchematic
         for (int i = 0; i < size; ++i)
         {
             NbtCompound entityEntry = tagList.getCompoundOrEmpty(i);
-            Vec3d pos = NbtUtils.readVec3dFromListTag(entityEntry);
+//            Vec3d pos = NbtUtils.readVec3dFromListTag(entityEntry);
+            Vec3d pos = NbtUtils.getVec3dCodec(entityEntry, "Pos");
 
             if (pos != null && entityEntry.isEmpty() == false)
             {
@@ -2158,7 +2173,10 @@ public class LitematicaSchematic
         for (int i = 0; i < size; ++i)
         {
             NbtCompound entityData = tagList.getCompoundOrEmpty(i);
-            Vec3d posVec = NbtUtils.readEntityPositionFromTag(entityData);
+//            Vec3d posVec = NbtUtils.readEntityPositionFromTag(entityData);
+            Vec3d posVec = NbtUtils.getVec3dCodec(entityData, "Pos");
+
+//            Litematica.LOGGER.error("readEntitiesFromNBT: posVec [{}], NBT [{}]", posVec.toString(), entityData.toString());
 
             if (posVec != null && entityData.isEmpty() == false)
             {
@@ -2254,12 +2272,14 @@ public class LitematicaSchematic
         {
             NbtCompound tag = tagList.getCompoundOrEmpty(i);
             Vec3d posVec = NbtUtils.readVec3d(tag);
+//            Vec3d posVec = NbtUtils.getVec3dCodec(tag, "Pos");
             NbtCompound entityData = tag.getCompoundOrEmpty("EntityData");
 
             if (posVec != null && entityData.isEmpty() == false)
             {
                 // Update the correct position to the TileEntity NBT, where it is stored in version 2
-                NbtUtils.writeEntityPositionToTag(posVec, entityData);
+//                NbtUtils.writeEntityPositionToTag(posVec, entityData);
+                NbtUtils.putVec3dCodec(entityData, posVec, "Pos");
                 entityList.add(new EntityInfo(posVec, entityData));
             }
         }

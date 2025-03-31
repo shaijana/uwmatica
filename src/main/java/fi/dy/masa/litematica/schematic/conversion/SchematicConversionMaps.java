@@ -2,6 +2,7 @@ package fi.dy.masa.litematica.schematic.conversion;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import javax.annotation.Nullable;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
@@ -37,12 +38,18 @@ public class SchematicConversionMaps
     private static final HashMap<NbtCompound, NbtCompound> OLD_STATE_TO_NEW_STATE = new HashMap<>();
     private static final HashMap<NbtCompound, NbtCompound> NEW_STATE_TO_OLD_STATE = new HashMap<>();
     private static final ArrayList<ConversionData> CACHED_DATA = new ArrayList<>();
+    private static final ArrayList<ConversionDynamic> CACHED_DYNAMIC = new ArrayList<>();
 
     private static boolean initialized;
 
     public static void addEntry(int idMeta, String newStateString, String... oldStateStrings)
     {
         CACHED_DATA.add(new ConversionData(idMeta, newStateString, oldStateStrings));
+    }
+
+    public static void addDynamicEntry(int idMeta, Dynamic<?> newState, List<Dynamic<?>> oldStates)
+    {
+        CACHED_DYNAMIC.add(new ConversionDynamic(idMeta, newState, oldStates));
     }
 
     public static void computeMaps()
@@ -55,6 +62,24 @@ public class SchematicConversionMaps
         clearMaps();
         addOverrides();
 
+        if (!CACHED_DYNAMIC.isEmpty())
+        {
+            computeMapsDynamic();
+        }
+        else if (!CACHED_DATA.isEmpty())
+        {
+            computeMapsLegacy();
+        }
+        else
+        {
+            throw new RuntimeException("computeMaps(): No Cached Block State Flattening maps has been cached!");
+        }
+
+        initialized = true;
+    }
+
+    private static void computeMapsLegacy()
+    {
         for (ConversionData data : CACHED_DATA)
         {
             try
@@ -79,11 +104,39 @@ public class SchematicConversionMaps
             }
             catch (Exception e)
             {
-                Litematica.LOGGER.warn("addEntry(): Exception while adding blockstate conversion map entry for ID '{}' (fixed state: '{}')", data.idMeta, data.newStateString, e);
+                Litematica.LOGGER.warn("computeMapsLegacy(): Exception while adding blockstate conversion map entry for ID '{}' (fixed state: '{}')", data.idMeta, data.newStateString, e);
             }
         }
+    }
 
-        initialized = true;
+    private static void computeMapsDynamic()
+    {
+        for (ConversionDynamic entry : CACHED_DYNAMIC)
+        {
+            try
+            {
+                if (!entry.oldStates().isEmpty())
+                {
+                    String oldName = entry.oldStates().getFirst().get("Name").asString("");
+
+                    if (!oldName.isEmpty())
+                    {
+                        OLD_BLOCK_NAME_TO_SHIFTED_BLOCK_ID.putIfAbsent(oldName, entry.idMeta() & 0xFFF0);
+                    }
+                }
+
+                NbtCompound newStateTag = (NbtCompound) entry.newState().convert(NbtOps.INSTANCE).getValue();
+
+                if (!newStateTag.isEmpty())
+                {
+                    addIdMetaToBlockStateDynamic(entry.idMeta(), newStateTag, entry.oldStates());
+                }
+            }
+            catch (Exception e)
+            {
+                Litematica.LOGGER.warn("computeMapsDynamic(): Exception while adding blockstate conversion map entry for ID '{}' (fixed state: '{}')", entry.idMeta, entry.newState.toString(), e);
+            }
+        }
     }
 
     @Nullable
@@ -215,6 +268,57 @@ public class SchematicConversionMaps
         }
     }
 
+    private static void addIdMetaToBlockStateDynamic(int idMeta, NbtCompound newStateTag, List<Dynamic<?>> oldStates)
+    {
+        try
+        {
+            // The flattening map actually has outdated names for some blocks...
+            // Ie. some blocks were renamed after the flattening, so we need to handle those here.
+            String newName = newStateTag.getString("Name", "");
+            String overriddenName = ID_META_TO_UPDATED_NAME.get(idMeta);
+
+            if (overriddenName != null)
+            {
+                newName = overriddenName;
+                newStateTag.putString("Name", newName);
+            }
+
+            //RegistryEntryLookup<Block> lookup = Registries.BLOCK.getReadOnlyWrapper();
+            RegistryEntryLookup<Block> lookup = SchematicWorldHandler.INSTANCE.getRegistryManager().getOrThrow(RegistryKeys.BLOCK);
+            // Store the id + meta => state maps before renaming the block for the state <=> state maps
+            BlockState state = NbtHelper.toBlockState(lookup, newStateTag);
+            //System.out.printf("id: %5d, state: %s, tag: %s\n", idMeta, state, newStateTag);
+            ID_META_TO_BLOCKSTATE.putIfAbsent(idMeta, state);
+
+            // Don't override the id and meta for air, which is what unrecognized blocks will turn into
+            BLOCKSTATE_TO_ID_META.putIfAbsent(state, idMeta);
+
+            if (!oldStates.isEmpty())
+            {
+                String oldName = oldStates.getFirst().get("Name").asString("");
+
+                // Don't run the vanilla block rename for overridden names
+                if (overriddenName == null)
+                {
+                    newName = updateBlockName(newName, Configs.Generic.DATAFIXER_DEFAULT_SCHEMA.getIntegerValue());
+                    newStateTag.putString("Name", newName);
+                }
+
+                if (!oldName.equals(newName))
+                {
+                    OLD_NAME_TO_NEW_NAME.putIfAbsent(oldName, newName);
+                    NEW_NAME_TO_OLD_NAME.putIfAbsent(newName, oldName);
+                }
+
+                addOldStateToNewStateDynamic(newStateTag, oldStates);
+            }
+        }
+        catch (Exception e)
+        {
+            Litematica.LOGGER.warn("addIdMetaToBlockStateDynamic(): Exception while adding blockstate conversion map entry for ID '{}'", idMeta, e);
+        }
+    }
+
     private static void addOldStateToNewState(NbtCompound newStateTagIn, String... oldStateStrings)
     {
         try
@@ -266,6 +370,87 @@ public class SchematicConversionMaps
         catch (Exception e)
         {
             Litematica.LOGGER.warn("addOldStateToNewState(): Exception while adding new blockstate to old blockstate conversion map entry for '{}'", newStateTagIn, e);
+        }
+    }
+
+    private static void addOldStateToNewStateDynamic(NbtCompound newStateTagIn, List<Dynamic<?>> oldStates)
+    {
+        try
+        {
+            // A 1:1 mapping from the old state to the new state
+            if (oldStates.size() == 1)
+            {
+                NbtCompound oldStateTag = new NbtCompound();
+
+                try
+                {
+                    oldStateTag = (NbtCompound) oldStates.getFirst().convert(NbtOps.INSTANCE).getValue();
+                }
+                catch (Exception err)
+                {
+                    Litematica.LOGGER.warn("addOldStateToNewStateDynamic(): Exception while adding new blockstate to old blockstate conversion map entry for '{}'", newStateTagIn, err);
+                }
+
+                if (oldStateTag != null && !oldStateTag.isEmpty())
+                {
+                    OLD_STATE_TO_NEW_STATE.putIfAbsent(oldStateTag, newStateTagIn);
+                    NEW_STATE_TO_OLD_STATE.putIfAbsent(newStateTagIn, oldStateTag);
+                }
+            }
+            // Multiple old states collapsed into one new state.
+            // These are basically states where all the properties were not stored in metadata, but
+            // some of the property values were calculated in the getActualState() method.
+            else if (oldStates.size() > 1)
+            {
+                NbtCompound oldStateTag = new NbtCompound();
+
+                try
+                {
+                    oldStateTag = (NbtCompound) oldStates.getFirst().convert(NbtOps.INSTANCE).getValue();
+                }
+                catch (Exception err)
+                {
+                    Litematica.LOGGER.warn("addOldStateToNewStateDynamic(): Exception while adding new blockstate to old blockstate conversion map entry for '{}'", newStateTagIn, err);
+                }
+
+                // Same property names and same number of properties - just remap the block name.
+                // FIXME Is this going to be correct for everything?
+                if (oldStateTag != null && newStateTagIn.getKeys().equals(oldStateTag.getKeys()))
+                {
+                    String oldBlockName = oldStateTag.getString("Name", "");
+                    String newBlockName = OLD_NAME_TO_NEW_NAME.get(oldBlockName);
+
+                    if (newBlockName != null && !newBlockName.equals(oldBlockName))
+                    {
+                        for (Dynamic<?> entry : oldStates)
+                        {
+//                            oldStateTag = getStateTagFromString(oldStateString);
+
+                            try
+                            {
+                                oldStateTag = (NbtCompound) entry.convert(NbtOps.INSTANCE).getValue();
+                            }
+                            catch (Exception err)
+                            {
+                                Litematica.LOGGER.warn("addOldStateToNewStateDynamic(): Exception while adding new blockstate to old blockstate conversion map entry for '{}'", newStateTagIn, err);
+                            }
+
+                            if (oldStateTag != null)
+                            {
+                                NbtCompound newTag = oldStateTag.copy();
+                                newTag.putString("Name", newBlockName);
+
+                                OLD_STATE_TO_NEW_STATE.putIfAbsent(oldStateTag, newTag);
+                                NEW_STATE_TO_OLD_STATE.putIfAbsent(newTag, oldStateTag);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Litematica.LOGGER.warn("addOldStateToNewStateDynamic(): Exception while adding new blockstate to old blockstate conversion map entry for '{}'", newStateTagIn, e);
         }
     }
 
@@ -528,4 +713,7 @@ public class SchematicConversionMaps
             this.oldStateStrings = oldStateStrings;
         }
     }
+
+    public record ConversionDynamic(int idMeta, Dynamic<?> newState, List<Dynamic<?>> oldStates)
+    { }
 }

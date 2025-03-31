@@ -85,7 +85,8 @@ public class SchematicaSchematic
         for (int i = 0; i < size; ++i)
         {
             NbtCompound entityData = this.entities.get(i);
-            Vec3d posVec = NbtUtils.readEntityPositionFromTag(entityData);
+//            Vec3d posVec = NbtUtils.readEntityPositionFromTag(entityData);
+            Vec3d posVec = NbtUtils.getVec3dCodec(entityData, "Pos");
 
             if (posVec != null && entityData.isEmpty() == false)
             {
@@ -312,7 +313,8 @@ public class SchematicaSchematic
 
         for (NbtCompound tag : this.entities)
         {
-            Vec3d relativePos = NbtUtils.readEntityPositionFromTag(tag);
+//            Vec3d relativePos = NbtUtils.readEntityPositionFromTag(tag);
+            Vec3d relativePos = NbtUtils.getVec3dCodec(tag, "Pos");
 
             if (relativePos != null)
             {
@@ -414,7 +416,8 @@ public class SchematicaSchematic
             if (entity.saveNbt(tag))
             {
                 Vec3d pos = new Vec3d(entity.getX() - posStart.getX(), entity.getY() - posStart.getY(), entity.getZ() - posStart.getZ());
-                NbtUtils.writeEntityPositionToTag(pos, tag);
+//                NbtUtils.writeEntityPositionToTag(pos, tag);
+                NbtUtils.putVec3dCodec(tag, pos, "Pos");
 
                 this.entities.add(tag);
             }

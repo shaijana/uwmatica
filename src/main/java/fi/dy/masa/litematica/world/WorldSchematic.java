@@ -1,8 +1,6 @@
 package fi.dy.masa.litematica.world;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.function.Predicate;
 import javax.annotation.Nonnull;
 import com.google.common.collect.ImmutableList;
@@ -24,7 +22,6 @@ import net.minecraft.particle.ParticleEffect;
 import net.minecraft.recipe.BrewingRecipeRegistry;
 import net.minecraft.recipe.RecipeManager;
 import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.registry.RegistryEntryLookup;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
@@ -68,6 +65,8 @@ public class WorldSchematic extends World
     private final TickManager tickManager;
     private final RegistryEntry<DimensionType> dimensionType;
     private DimensionEffects dimensionEffects = new DimensionEffects.Overworld();
+    private HashMap<UUID, ChunkPos> entityMap;
+    private SchematicEntityLookup<Entity> entityLookup;
 
     public WorldSchematic(MutableWorldProperties properties,
                           @Nonnull DynamicRegistryManager registryManager,
@@ -93,6 +92,8 @@ public class WorldSchematic extends World
             this.setDimension(this.mc.world.getRegistryManager());
         }
         this.tickManager = new TickManager();
+        this.entityMap = new HashMap<>();
+        this.entityLookup = new SchematicEntityLookup<>();
     }
 
     @Override
@@ -212,14 +213,18 @@ public class WorldSchematic extends World
         int chunkZ = MathHelper.floor(entity.getZ() / 16.0D);
 
         if (!this.chunkManagerSchematic.isChunkLoaded(chunkX, chunkZ))
+        {
             return false;
-        entity.setId(this.nextEntityId++);
-        ChunkSchematic chunk = this.chunkManagerSchematic.getChunk(chunkX, chunkZ);
-        if(chunk == null)
-            return false;
-        chunk.addEntity(entity);
-        ++this.entityCount;
-        return true;
+        }
+        else
+        {
+            entity.setId(this.nextEntityId++);
+            this.chunkManagerSchematic.getChunk(chunkX, chunkZ).addEntity(entity);
+            ++this.entityCount;
+            this.entityMap.put(entity.getUuid(), new ChunkPos(chunkX, chunkZ));
+            this.entityLookup.put(entity);
+            return true;
+        }
     }
 
     public void unloadedEntities(int count)
@@ -231,8 +236,12 @@ public class WorldSchematic extends World
     @Override
     public Entity getEntityById(int id)
     {
-        // This shouldn't be used for anything in the mod, so just return null here
-        return null;
+        return this.entityLookup.get(id);
+    }
+
+    public void closeEntityLookup() throws Exception
+    {
+        this.entityLookup.close();
     }
 
     @Override
@@ -268,8 +277,7 @@ public class WorldSchematic extends World
     @Override
     protected EntityLookup<Entity> getEntityLookup()
     {
-        // This is not used in the mod
-        return null;
+        return this.entityLookup;
     }
 
     @Override
