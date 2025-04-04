@@ -136,6 +136,7 @@ public class ChunkRenderDispatcherLitematica
     protected boolean runChunkUploads(long finishTimeNano, Profiler profiler)
     {
         boolean ranTasks = false;
+//        LOGGER.warn("[Dispatch] runChunkUploads()");
 
         profiler.push("run_chunk_uploads");
         while (true)
@@ -199,6 +200,8 @@ public class ChunkRenderDispatcherLitematica
 
     protected boolean updateChunkLater(ChunkRendererSchematicVbo renderChunk, Profiler profiler)
     {
+//        LOGGER.warn("[Dispatch] updateChunkLater()");
+
         profiler.push("update_chunk_later");
         /* Threaded Code
         final ChunkRenderTaskSchematic generator = renderChunk.makeCompileTaskChunkSchematic(this::getCameraPos);
@@ -248,6 +251,8 @@ public class ChunkRenderDispatcherLitematica
 
     protected boolean updateChunkNow(ChunkRendererSchematicVbo chunkRenderer, Profiler profiler)
     {
+//        LOGGER.warn("[Dispatch] updateChunkNow()");
+
         profiler.push("update_chunk_now");
         /* Threaded Code
         try
@@ -288,6 +293,8 @@ public class ChunkRenderDispatcherLitematica
 
     protected void stopChunkUpdates(Profiler profiler)
     {
+//        LOGGER.warn("[Dispatch] stopChunkUpdates()");
+
         profiler.push("stop_chunk_updates");
         this.clearChunkUpdates();
         List<BufferAllocatorCache> list = new ArrayList<>();
@@ -312,6 +319,16 @@ public class ChunkRenderDispatcherLitematica
 
     public void freeRenderAllocators(BufferAllocatorCache allocatorCache)
     {
+        if (allocatorCache != null)
+        {
+            try
+            {
+                allocatorCache.close();
+            }
+            catch (Exception ignored) { }
+        }
+
+        allocatorCache = new BufferAllocatorCache();
         this.queueFreeRenderAllocators.add(allocatorCache);
     }
 
@@ -604,6 +621,8 @@ public class ChunkRenderDispatcherLitematica
 
     protected void stopWorkerThreads()
     {
+//        LOGGER.warn("[Dispatch] stopWorkerThreads()");
+
         this.clearChunkUpdates();
 
         for (ChunkRenderWorkerLitematica worker : this.listThreadedWorkers)

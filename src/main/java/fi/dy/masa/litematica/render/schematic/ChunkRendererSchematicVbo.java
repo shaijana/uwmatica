@@ -127,18 +127,6 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
         return this.existingOverlays;
     }
 
-    // fixme
-//    protected VertexBuffer getBlocksVertexBufferByLayer(RenderLayer layer)
-//    {
-//        return this.vertexBufferBlocks.computeIfAbsent(layer, l -> new VertexBuffer(GlUsage.STATIC_WRITE));
-//    }
-//
-//    protected VertexBuffer getOverlayVertexBuffer(OverlayRenderType type)
-//    {
-//        //if (GuiBase.isCtrlDown()) System.out.printf("getOverlayVertexBuffer: type: %s, buf: %s\n", type, this.vertexBufferOverlay[type.ordinal()]);
-//        return this.vertexBufferOverlay.computeIfAbsent(type, l -> new VertexBuffer(GlUsage.STATIC_WRITE));
-//    }
-
     protected @Nullable ChunkRenderObjectBuffers getBlockBuffersByLayer(RenderLayer layer)
     {
         if (this.gpuBufferCache.hasBuffersByLayer(layer))
@@ -337,10 +325,16 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
 
         //LOGGER.warn("[VBO] rebuildChunk() pos [{}]", this.position.toShortString());
 
-        Set<BlockEntity> tileEntities = new HashSet<>();
+//        Set<BlockEntity> tileEntities = new HashSet<>();
         BlockPos posChunk = this.position;
         LayerRange range = DataManager.getRenderLayerRange();
         BufferAllocatorCache allocators = task.getAllocatorCache();
+
+        if (!allocators.isClear())
+        {
+            // Using 'reset' will not warn us about 'unused buffers'
+            allocators.resetAll();
+        }
 
         this.existingOverlays.clear();
         this.hasOverlay = false;
@@ -393,7 +387,8 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
                         matrixStack.push();
                         matrixStack.translate(posMutable.getX() & 0xF, posMutable.getY() - bottomY, posMutable.getZ() & 0xF);
 
-                        this.renderBlocksAndOverlay(posMutable, data, allocators, tileEntities, usedLayers, matrixStack);
+//                        this.renderBlocksAndOverlay(posMutable, data, allocators, tileEntities, usedLayers, matrixStack);
+                        this.renderBlocksAndOverlay(posMutable, data, allocators, usedLayers, matrixStack);
 
                         matrixStack.pop();
                     }
@@ -449,13 +444,23 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
 
         try
         {
-            Set<BlockEntity> set = Sets.newHashSet(tileEntities);
-            Set<BlockEntity> set1 = Sets.newHashSet(this.setBlockEntities);
-            set.removeAll(this.setBlockEntities);
-            set1.removeAll(tileEntities);
-            this.setBlockEntities.clear();
-            this.setBlockEntities.addAll(tileEntities);
-            this.worldRenderer.updateBlockEntities(set1, set);
+            List<BlockEntity> noCull = data.getNoCullBlockEntities();
+            Set<BlockEntity> set = Sets.newHashSet(noCull);
+            Set<BlockEntity> set2;
+
+//            LOGGER.warn("[VBO] combine BE - noCull [{}], set [{}], setBE [{}]", noCull.size(), set.size(), this.setBlockEntities.size());
+
+            synchronized (this.setBlockEntities)
+            {
+                set2 = Sets.newHashSet(this.setBlockEntities);
+                set.removeAll(this.setBlockEntities);
+                noCull.forEach(set2::remove);
+                this.setBlockEntities.clear();
+                this.setBlockEntities.addAll(noCull);
+            }
+
+//            LOGGER.warn("[VBO] combine BE - set2 [{}], set [{}], setBE [{}]", set2.size(), set.size(), this.setBlockEntities.size());
+            this.worldRenderer.updateBlockEntities(set2, set);
             this.builderCache.clearAll();
         }
         finally
@@ -484,7 +489,8 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
         data.setTimeBuilt(this.world.getTime());
     }
 
-    protected void renderBlocksAndOverlay(BlockPos pos, @Nonnull ChunkRenderDataSchematic data, @Nonnull BufferAllocatorCache allocators, Set<BlockEntity> tileEntities,
+//    protected void renderBlocksAndOverlay(BlockPos pos, @Nonnull ChunkRenderDataSchematic data, @Nonnull BufferAllocatorCache allocators, Set<BlockEntity> tileEntities,
+    protected void renderBlocksAndOverlay(BlockPos pos, @Nonnull ChunkRenderDataSchematic data, @Nonnull BufferAllocatorCache allocators,
                                           Set<RenderLayer> usedLayers, MatrixStack matrixStack)
     {
         BlockState stateSchematic = this.schematicWorldView.getBlockState(pos);
@@ -507,7 +513,9 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
         {
             if (stateSchematic.hasBlockEntity())
             {
-                this.addBlockEntity(pos, data, tileEntities);
+//                this.addBlockEntity(pos, data, tileEntities);
+//                LOGGER.warn("[VBO] addBlocKEntity - state [{}]", stateSchematic.toString());
+                this.addBlockEntity(pos, data);
             }
 
             boolean translucent = Configs.Visuals.RENDER_BLOCKS_AS_TRANSLUCENT.getBooleanValue();
@@ -972,21 +980,24 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
         return overlayColor;
     }
 
-    private void addBlockEntity(BlockPos pos, ChunkRenderDataSchematic chunkRenderData, Set<BlockEntity> blockEntities)
+//    private void addBlockEntity(BlockPos pos, ChunkRenderDataSchematic chunkRenderData, Set<BlockEntity> blockEntities)
+    private <T extends BlockEntity> void addBlockEntity(BlockPos pos, ChunkRenderDataSchematic chunkRenderData)
     {
         BlockEntity te = this.schematicWorldView.getBlockEntity(pos, WorldChunk.CreationType.CHECK);
 
         if (te != null)
         {
-            BlockEntityRenderer<BlockEntity> tesr = MinecraftClient.getInstance().getBlockEntityRenderDispatcher().get(te);
+            BlockEntityRenderer<BlockEntity> tesr = this.worldRenderer.getBlockEntityRenderer().get(te);
 
             if (tesr != null)
             {
                 chunkRenderData.addBlockEntity(te);
 
+                // noCullingTE
                 if (tesr.rendersOutsideBoundingBox(te))
                 {
-                    blockEntities.add(te);
+//                    blockEntities.add(te);
+                    chunkRenderData.addNoCullBlockEntity(te);
                 }
             }
         }

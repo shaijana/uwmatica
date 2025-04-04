@@ -35,8 +35,8 @@ public abstract class MixinWorldRenderer
 //    @Unique private PostEffectProcessor postEffects = null;
 //    @Unique private int width;
 //    @Unique private int height;
-    @Unique private Matrix4f posMatrix = null;
-    @Unique private RenderTickCounter ticks = null;
+//    @Unique private Matrix4f posMatrix = null;
+//    @Unique private RenderTickCounter ticks = null;
     @Unique private Profiler profiler;
 
     @Inject(method = "reload()V", at = @At("RETURN"))
@@ -83,8 +83,8 @@ public abstract class MixinWorldRenderer
                                             Camera camera, GameRenderer gameRenderer, Matrix4f positionMatrix, Matrix4f matrix4f2, CallbackInfo ci,
                                             @Local Profiler profiler)
     {
-        this.posMatrix = positionMatrix;
-        this.ticks = tickCounter;
+//        this.posMatrix = positionMatrix;
+//        this.ticks = tickCounter;
         this.profiler = profiler;
     }
 
@@ -155,48 +155,34 @@ public abstract class MixinWorldRenderer
             at = @At(value = "RETURN"))
     private void litematica_onPostRenderEntities(MatrixStack matrices, VertexConsumerProvider.Immediate immediate, Camera camera, RenderTickCounter tickCounter, List<Entity> entities, CallbackInfo ci)
     {
-        if (this.posMatrix != null &&
-            this.ticks != null)
+        if (this.profiler == null)
         {
-            if (this.profiler == null)
-            {
-                this.profiler = Profilers.get();
-            }
-
-            if (this.profiler instanceof ProfilerSystem ps && !((IMixinProfilerSystem) ps).litematica_isStarted())
-            {
-                this.profiler.startTick();
-            }
-
-            LitematicaRenderer.getInstance().piecewiseRenderEntities(this.posMatrix, matrices, immediate, this.ticks.getTickProgress(false), this.profiler);
-            this.posMatrix = null;
-            this.ticks = null;
-            //this.profiler = null;
+            this.profiler = Profilers.get();
         }
+
+        if (this.profiler instanceof ProfilerSystem ps && !((IMixinProfilerSystem) ps).litematica_isStarted())
+        {
+            this.profiler.startTick();
+        }
+
+        LitematicaRenderer.getInstance().piecewiseRenderEntities(matrices, immediate, tickCounter.getTickProgress(false), this.profiler);
     }
 
     @Inject(method = "renderBlockEntities",
             at = @At(value = "RETURN"))
     private void litematica_onPostRenderBlockEntities(MatrixStack matrices, VertexConsumerProvider.Immediate entityVertexConsumers, VertexConsumerProvider.Immediate effectVertexConsumers, Camera camera, float tickProgress, CallbackInfo ci)
     {
-        if (this.posMatrix != null &&
-                this.ticks != null)
+        if (this.profiler == null)
         {
-            if (this.profiler == null)
-            {
-                this.profiler = Profilers.get();
-            }
-
-            if (this.profiler instanceof ProfilerSystem ps && !((IMixinProfilerSystem) ps).litematica_isStarted())
-            {
-                this.profiler.startTick();
-            }
-
-            LitematicaRenderer.getInstance().piecewiseRenderBlockEntities(this.posMatrix, matrices, entityVertexConsumers, effectVertexConsumers, this.ticks.getTickProgress(false), this.profiler);
-            this.posMatrix = null;
-            this.ticks = null;
-            //this.profiler = null;
+            this.profiler = Profilers.get();
         }
+
+        if (this.profiler instanceof ProfilerSystem ps && !((IMixinProfilerSystem) ps).litematica_isStarted())
+        {
+            this.profiler.startTick();
+        }
+
+        LitematicaRenderer.getInstance().piecewiseRenderBlockEntities(matrices, entityVertexConsumers, effectVertexConsumers, tickProgress, this.profiler);
     }
 
     /*

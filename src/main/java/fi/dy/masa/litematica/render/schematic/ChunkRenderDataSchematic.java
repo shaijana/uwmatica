@@ -37,6 +37,7 @@ public class ChunkRenderDataSchematic implements AutoCloseable
     };
 
     private final List<BlockEntity> blockEntities = new ArrayList<>();
+    private final List<BlockEntity> noCullBlockEntities = new ArrayList<>();
     private final Set<RenderLayer> blockLayersUsed = new ObjectArraySet<>();
     private final Set<RenderLayer> blockLayersStarted = new ObjectArraySet<>();
     private final Set<OverlayRenderType> overlayLayersUsed = new ObjectArraySet<>();
@@ -132,9 +133,19 @@ public class ChunkRenderDataSchematic implements AutoCloseable
         return this.blockEntities;
     }
 
+    public List<BlockEntity> getNoCullBlockEntities()
+    {
+        return this.noCullBlockEntities;
+    }
+
     protected void addBlockEntity(BlockEntity be)
     {
         this.blockEntities.add(be);
+    }
+
+    protected void addNoCullBlockEntity(BlockEntity be)
+    {
+        this.noCullBlockEntities.add(be);
     }
 
     protected BuiltBufferCache getBuiltBufferCache()
@@ -199,6 +210,7 @@ public class ChunkRenderDataSchematic implements AutoCloseable
         this.blockLayersStarted.clear();
         this.overlayLayersStarted.clear();
         this.blockEntities.clear();
+        this.noCullBlockEntities.clear();
         this.overlayEmpty = true;
         this.empty = true;
     }

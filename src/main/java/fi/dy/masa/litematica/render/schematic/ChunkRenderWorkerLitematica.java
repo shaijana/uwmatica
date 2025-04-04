@@ -41,11 +41,15 @@ public class ChunkRenderWorkerLitematica implements Runnable
         this.chunkRenderDispatcher = chunkRenderDispatcherIn;
         this.allocatorCache = allocatorCache;
         this.profiler = profiler;
+
+//        LOGGER.error("[LW] init() [Cache: {}]", allocatorCache != null);
     }
 
     @Override
     public void run()
     {
+//        LOGGER.warn("[LW] run()");
+
         if (this.profiler == null)
         {
             this.profiler = Profilers.get();
@@ -164,12 +168,12 @@ public class ChunkRenderWorkerLitematica implements Runnable
         profiler.push("process_task");
         task.getLock().lock();
 
-        //LOGGER.warn("[LW] processTask() task [{}] / [{}]", task.getType().name(), task.getStatus().name());
+//        LOGGER.warn("[LW] processTask() task [{}] / [{}]", task.getType().name(), task.getStatus().name());
         try
         {
             if (task.getStatus() != ChunkRenderTaskSchematic.Status.PENDING)
             {
-                if (task.isFinished() == false)
+                if (!task.isFinished())
                 {
                     LOGGER.warn("Chunk render task was {} when I expected it to be pending; ignoring task", (Object) task.getStatus());
                 }
@@ -193,7 +197,7 @@ public class ChunkRenderWorkerLitematica implements Runnable
         }
         else
         {
-            if (task.setRegionRenderCacheBuilder(this.getRegionRenderAllocatorCache()) == false)
+            if (!task.setRegionRenderCacheBuilder(this.getRegionRenderAllocatorCache()))
             {
                 profiler.pop();
                 throw new InterruptedException("No free Allocator Cache found");
@@ -359,7 +363,11 @@ public class ChunkRenderWorkerLitematica implements Runnable
     private void clearRenderAllocators(ChunkRenderTaskSchematic generator)
     {
         BufferAllocatorCache bufferAllocatorCache = generator.getAllocatorCache();
-        bufferAllocatorCache.clearAll();
+
+        if (bufferAllocatorCache != null && !bufferAllocatorCache.isClear())
+        {
+            bufferAllocatorCache.clearAll();
+        }
 
         if (this.allocatorCache == null)
         {
@@ -370,7 +378,11 @@ public class ChunkRenderWorkerLitematica implements Runnable
     private void resetRenderAllocators(ChunkRenderTaskSchematic generator)
     {
         BufferAllocatorCache bufferAllocatorCache = generator.getAllocatorCache();
-        bufferAllocatorCache.resetAll();
+
+        if (bufferAllocatorCache != null && !bufferAllocatorCache.isClear())
+        {
+            bufferAllocatorCache.resetAll();
+        }
 
         if (this.allocatorCache == null)
         {
@@ -380,6 +392,7 @@ public class ChunkRenderWorkerLitematica implements Runnable
 
     public void notifyToStop()
     {
+//        LOGGER.warn("[LW] stop()");
         this.shouldRun = false;
     }
 }

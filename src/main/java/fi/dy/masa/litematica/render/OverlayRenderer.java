@@ -482,8 +482,7 @@ public class OverlayRenderer
             fi.dy.masa.malilib.render.RenderUtils.blend(true);
             fi.dy.masa.malilib.render.RenderUtils.culling(false);
 
-            //buffer = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
-            buffer = ctx.start(MaLiLibPipelines.getPositionColorSimple());
+            buffer = ctx.start(MaLiLibPipelines.POSITION_COLOR_TRANSLUCENT_NO_DEPTH_NO_CULL);
 
             float alpha = (float) Configs.InfoOverlays.VERIFIER_ERROR_HILIGHT_ALPHA.getDoubleValue();
 

@@ -5,7 +5,6 @@ import java.nio.file.Path;
 import java.util.*;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import org.joml.Matrix4f;
 import org.joml.Matrix4fStack;
 
 import com.mojang.blaze3d.buffers.BufferType;
@@ -59,6 +58,7 @@ public class WorldRendererSchematic
 {
     private final MinecraftClient mc;
     private final EntityRenderDispatcher entityRenderDispatcher;
+    private final BlockEntityRenderDispatcher blockEntityRenderDispatcher;
     private final BlockRenderManager blockRenderManager;
     private final BlockModelRendererSchematic blockModelRenderer;
     private final Set<BlockEntity> blockEntities = new HashSet<>();
@@ -95,10 +95,11 @@ public class WorldRendererSchematic
     public WorldRendererSchematic(MinecraftClient mc)
     {
         this.mc = mc;
-        this.entityRenderDispatcher = mc.getEntityRenderDispatcher();
         this.bufferBuilders = mc.getBufferBuilders();
         this.renderChunkFactory = ChunkRendererSchematicVbo::new;
         this.blockRenderManager = MinecraftClient.getInstance().getBlockRenderManager();
+        this.entityRenderDispatcher = mc.getEntityRenderDispatcher();
+        this.blockEntityRenderDispatcher = mc.getBlockEntityRenderDispatcher();
         this.blockModelRenderer = new BlockModelRendererSchematic(mc.getBlockColors());
         this.blockModelRenderer.setBakedManager(mc.getBakedModelManager());
         this.profiler = null;
@@ -161,6 +162,16 @@ public class WorldRendererSchematic
         return this.profiler;
     }
 
+    protected EntityRenderDispatcher getEntityRenderer()
+    {
+        return this.entityRenderDispatcher;
+    }
+
+    protected BlockEntityRenderDispatcher getBlockEntityRenderer()
+    {
+        return this.blockEntityRenderDispatcher;
+    }
+
     public void setWorldAndLoadRenderers(@Nullable WorldSchematic worldSchematic)
     {
         this.lastCameraChunkUpdateX = Double.MIN_VALUE;
@@ -193,7 +204,11 @@ public class WorldRendererSchematic
 
             this.renderDispatcher = null;
             this.profiler = null;
-            this.blockEntities.clear();
+
+            synchronized (this.blockEntities)
+            {
+                this.blockEntities.clear();
+            }
         }
     }
 
@@ -682,11 +697,11 @@ public class WorldRendererSchematic
         return count;
     }
 
-    public void renderBlockOverlays(@Nullable Framebuffer otherFb, Camera camera, float lineWidth, Profiler profiler)
+    public void renderBlockOverlays(Camera camera, float lineWidth, Profiler profiler)
     {
         this.profiler = profiler;
-        this.renderBlockOverlay(OverlayRenderType.OUTLINE, otherFb, camera, lineWidth, profiler);
-        this.renderBlockOverlay(OverlayRenderType.QUAD, otherFb, camera, lineWidth, profiler);
+        this.renderBlockOverlay(OverlayRenderType.OUTLINE, camera, lineWidth, profiler);
+        this.renderBlockOverlay(OverlayRenderType.QUAD, camera, lineWidth, profiler);
     }
 
 //    public void renderBlockOverlayQuads(@Nullable Framebuffer otherFb, Matrix4f posMatrix, Matrix4f projMatrix, Frustum frustum, Camera camera, Fog fog, BufferBuilderStorage buffers, float lineWidth, Profiler profiler)
@@ -725,7 +740,7 @@ public class WorldRendererSchematic
     }
      */
 
-    protected void renderBlockOverlay(OverlayRenderType type, @Nullable Framebuffer otherFb, Camera camera, float lineWidth, Profiler profiler)
+    protected void renderBlockOverlay(OverlayRenderType type, Camera camera, float lineWidth, Profiler profiler)
     {
         profiler.push("overlay_" + type.name());
         this.profiler = profiler;
@@ -808,7 +823,7 @@ public class WorldRendererSchematic
 //                    matrix4fStack.mul(matrices.peek().getPositionMatrix());
                     matrix4fStack.translate((float) (chunkOrigin.getX() - x), (float) (chunkOrigin.getY() - y), (float) (chunkOrigin.getZ() - z));
 
-                    this.drawInternal(otherFb, pipeline, buffers, -1, offset, lineWidth, false, false, (type == OverlayRenderType.OUTLINE));
+                    this.drawInternal(null, pipeline, buffers, -1, offset, lineWidth, false, false, (type == OverlayRenderType.OUTLINE));
 
 //                    arrayList.add(new RenderPass.
 //                            RenderObject(0, buffers.getVertexBuffer(), gpuBuffer, indexType, 0, buffers.getIndexCount(),
@@ -1201,7 +1216,7 @@ public class WorldRendererSchematic
         return this.getModelForState(state).getParts(rand);
     }
 
-    public void renderEntities(Camera camera, Frustum frustum, Matrix4f posMatrix, MatrixStack matrices, VertexConsumerProvider.Immediate immediate, float partialTicks, Profiler profiler)
+    public void renderEntities(Camera camera, Frustum frustum, MatrixStack matrices, VertexConsumerProvider.Immediate immediate, float partialTicks, Profiler profiler)
     {
         this.profiler = profiler;
 
@@ -1286,18 +1301,17 @@ public class WorldRendererSchematic
         }
     }
 
-    public void renderBlockEntities(Camera camera, Frustum frustum, Matrix4f posMatrix, MatrixStack matrices, VertexConsumerProvider.Immediate immediate, VertexConsumerProvider.Immediate effectVertexConsumers, float partialTicks, Profiler profiler)
+    public void renderBlockEntities(Camera camera, Frustum frustum, MatrixStack matrices, VertexConsumerProvider.Immediate immediate, VertexConsumerProvider.Immediate immediate2, float partialTicks, Profiler profiler)
     {
         this.profiler = profiler;
 
-        profiler.push("entities_prepare");
+        profiler.push("block_entities_prepare");
 
         double cameraX = camera.getPos().x;
         double cameraY = camera.getPos().y;
         double cameraZ = camera.getPos().z;
 
-        MinecraftClient.getInstance().getBlockEntityRenderDispatcher().configure(this.world, camera, this.mc.crosshairTarget);
-        this.entityRenderDispatcher.configure(this.world, camera, this.mc.targetedEntity);
+        this.blockEntityRenderDispatcher.configure(this.world, camera, this.mc.crosshairTarget);
 
 //        MatrixStack matrixStack = new MatrixStack();
 //        matrixStack.push();
@@ -1309,9 +1323,8 @@ public class WorldRendererSchematic
 
         profiler.swap("block_entities");
         this.profiler = profiler;
-        BlockEntityRenderDispatcher renderer = MinecraftClient.getInstance().getBlockEntityRenderDispatcher();
 
-        profiler.swap("block_entities_iterate");
+        profiler.swap("render_be");
         for (ChunkRendererSchematicVbo chunkRenderer : this.renderInfos)
         {
             ChunkRenderDataSchematic data = chunkRenderer.getChunkRenderData();
@@ -1337,7 +1350,7 @@ public class WorldRendererSchematic
                         {
                             matrices.push();
                             matrices.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
-                            renderer.render(te, partialTicks, matrices, immediate);
+                            this.blockEntityRenderDispatcher.render(te, partialTicks, matrices, immediate2);
                             matrices.pop();
                         }
                         catch (Exception err)
@@ -1349,7 +1362,9 @@ public class WorldRendererSchematic
             }
         }
 
-        profiler.swap("block_entities_render");
+        immediate2.drawCurrentLayer();
+
+        profiler.swap("render_be_no_cull");
         synchronized (this.blockEntities)
         {
             for (BlockEntity te : this.blockEntities)
@@ -1365,7 +1380,7 @@ public class WorldRendererSchematic
                 {
                     matrices.push();
                     matrices.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
-                    renderer.render(te, partialTicks, matrices, immediate);
+                    this.blockEntityRenderDispatcher.render(te, partialTicks, matrices, immediate);
                     matrices.pop();
                 }
                 catch (Exception err)
@@ -1375,6 +1390,7 @@ public class WorldRendererSchematic
             }
         }
 
+        immediate.drawCurrentLayer();
         profiler.pop();
     }
 
@@ -1404,6 +1420,8 @@ public class WorldRendererSchematic
 
     public void updateBlockEntities(Collection<BlockEntity> toRemove, Collection<BlockEntity> toAdd)
     {
+//        int last = this.blockEntities.size();
+
         synchronized (this.blockEntities)
         {
             this.blockEntities.removeAll(toRemove);
