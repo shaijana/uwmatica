@@ -490,7 +490,7 @@ public class WorldRendererSchematic
         double y = cameraPos.y;
         double z = cameraPos.z;
 
-        if (renderLayer.isTranslucent())
+        if (renderLayer == RenderLayer.getTranslucent())
         {
             profiler.push("translucent_sort");
             this.profiler = profiler;
@@ -592,7 +592,7 @@ public class WorldRendererSchematic
 //                    continue;
 //                }
 
-                GpuBuffer gpuBuffer;
+                GpuBuffer indexBuffer;
                 VertexFormat.IndexType indexType;
 
                 if (buffers.getIndexBuffer() == null)
@@ -602,12 +602,12 @@ public class WorldRendererSchematic
                         indexCount = buffers.getIndexCount();
                     }
 
-                    gpuBuffer = null;
+                    indexBuffer = null;
                     indexType = null;
                 }
                 else
                 {
-                    gpuBuffer = buffers.getIndexBuffer();
+                    indexBuffer = buffers.getIndexBuffer();
                     indexType = buffers.getIndexType();
                 }
 
@@ -620,8 +620,10 @@ public class WorldRendererSchematic
                  */
 
                 arrayList.add(new RenderPass.
-                        RenderObject(0, buffers.getVertexBuffer(), gpuBuffer, indexType, 0, buffers.getIndexCount(),
-                                     uniform -> uniform.upload("ModelOffset", (float) (chunkOrigin.getX() - x), (float) (chunkOrigin.getY() - y), (float) (chunkOrigin.getZ() - z))));
+                        RenderObject(0, buffers.getVertexBuffer(), indexBuffer, indexType, 0, buffers.getIndexCount(),
+                                     uniform ->
+                                             uniform.upload("ModelOffset", (float) (chunkOrigin.getX() - x), (float) (chunkOrigin.getY() - y), (float) (chunkOrigin.getZ() - z)))
+                );
 
                 startedDrawing = true;
                 ++count;
@@ -717,7 +719,7 @@ public class WorldRendererSchematic
         float[] offset = new float[]{0.3f, 0.0f, 0.6f};
 
         Matrix4fStack matrix4fStack = RenderSystem.getModelViewStack();
-        MatrixStack matrices = new MatrixStack();
+//        MatrixStack matrices = new MatrixStack();
 
 //        ArrayList<RenderPass.RenderObject> arrayList = new ArrayList<>();
 //        RenderSystem.ShapeIndexBuffer shapeIndexBuffer = RenderSystem.getSequentialBuffer(pipeline.getVertexFormatMode());
