@@ -252,7 +252,7 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
         float y = (float) cameraPos.y - this.position.getY();
         float z = (float) cameraPos.z - this.position.getZ();
 
-        if (!data.isBlockLayerEmpty(layerTranslucent))
+        if (!data.isBlockLayerEmpty(layerTranslucent) && Configs.Visuals.RENDER_ENABLE_TRANSLUCENT_RESORTING.getBooleanValue())
         {
             this.getProfiler().swap("resort_blocks");
             //RenderSystem.setShader(ShaderProgramKeys.RENDERTYPE_TRANSLUCENT);
@@ -637,7 +637,7 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
 
                             for (BlockModelPart part : modelParts)
                             {
-                                final int light = WorldRenderer.getLightmapCoordinates(this.schematicWorldView, relPos);
+//                                final int light = WorldRenderer.getLightmapCoordinates(this.schematicWorldView, relPos);
                                 RenderUtils.drawBlockModelQuadOverlayBatched(part, stateSchematic, relPos, side, this.overlayColor, 0, bufferOverlayQuads);
                             }
                         }
@@ -1023,6 +1023,17 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
 
         if (gpuBuffers != null)
         {
+            if (gpuBuffers.vertexBuffer != null)
+            {
+                gpuBuffers.vertexBuffer.close();
+            }
+
+            if (gpuBuffers.indexBuffer != null)
+            {
+                gpuBuffers.indexBuffer.close();
+                gpuBuffers.indexBuffer = null;
+            }
+
             CommandEncoder encoder = RenderSystem.getDevice().createCommandEncoder();
 
             if (gpuBuffers.vertexBuffer.size() < meshData.getBuffer().remaining())
@@ -1107,6 +1118,17 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
 
         if (gpuBuffers != null)
         {
+            if (gpuBuffers.vertexBuffer != null)
+            {
+                gpuBuffers.vertexBuffer.close();
+            }
+
+            if (gpuBuffers.indexBuffer != null)
+            {
+                gpuBuffers.indexBuffer.close();
+                gpuBuffers.indexBuffer = null;
+            }
+
             CommandEncoder encoder = RenderSystem.getDevice().createCommandEncoder();
 
             if (gpuBuffers.vertexBuffer.size() < meshData.getBuffer().remaining())
@@ -1279,7 +1301,7 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
                 return;
             }
 
-            if (layer == RenderLayer.getTranslucent())
+            if (layer == RenderLayer.getTranslucent() && Configs.Visuals.RENDER_ENABLE_TRANSLUCENT_RESORTING.getBooleanValue())
             {
                 try
                 {
@@ -1406,7 +1428,7 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
                 return;
             }
 
-            if (layer.isTranslucent())
+            if (layer == RenderLayer.getTranslucent() && Configs.Visuals.RENDER_ENABLE_TRANSLUCENT_RESORTING.getBooleanValue())
             {
                 BuiltBuffer.SortState sortingData;
                 VertexSorter sorter = VertexSorter.byDistance(x, y, z);

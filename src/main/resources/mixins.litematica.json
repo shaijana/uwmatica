@@ -40,6 +40,8 @@
         "world.MixinWorld",
         "world.MixinWorldChunk"
     ],
+    "client": [],
+    "server": [],
     "injectors": {
         "defaultRequire": 1
     }

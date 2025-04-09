@@ -508,7 +508,7 @@ public class ChunkRenderDispatcherLitematica
             renderChunk.uploadBuffersByLayer(layer, builtBuffer);
         }
 
-        if (layer.isTranslucent())
+        if (layer == RenderLayer.getTranslucent() && Configs.Visuals.RENDER_ENABLE_TRANSLUCENT_RESORTING.getBooleanValue())
         {
             BuiltBuffer.SortState sorting = compiledChunk.getTransparentSortingDataForLayer(layer);
 

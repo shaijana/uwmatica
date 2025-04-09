@@ -63,7 +63,7 @@ public class WorldRendererSchematic
     private final BlockModelRendererSchematic blockModelRenderer;
     private final Set<BlockEntity> blockEntities = new HashSet<>();
     private final List<ChunkRendererSchematicVbo> renderInfos = new ArrayList<>(1024);
-    private final BufferBuilderStorage bufferBuilders;
+//    private final BufferBuilderStorage bufferBuilders;
     private Set<ChunkRendererSchematicVbo> chunksToUpdate = new LinkedHashSet<>();
     private WorldSchematic world;
     private ChunkRenderDispatcherSchematic chunkRendererDispatcher;
@@ -95,7 +95,7 @@ public class WorldRendererSchematic
     public WorldRendererSchematic(MinecraftClient mc)
     {
         this.mc = mc;
-        this.bufferBuilders = mc.getBufferBuilders();
+//        this.bufferBuilders = mc.getBufferBuilders();
         this.renderChunkFactory = ChunkRendererSchematicVbo::new;
         this.blockRenderManager = MinecraftClient.getInstance().getBlockRenderManager();
         this.entityRenderDispatcher = mc.getEntityRenderDispatcher();
@@ -262,14 +262,6 @@ public class WorldRendererSchematic
         this.chunksToUpdate.clear();
         this.renderDispatcher.stopChunkUpdates(profiler);
         this.profiler = null;
-
-//        if (this.defaultTex != null)
-//        {
-//            this.defaultTex.close();
-//            this.defaultTex = null;
-//        }
-//
-//        this.defaultTexId = -1;
     }
 
     public void setupTerrain(Camera camera, Frustum frustum, int frameCount, boolean playerSpectator, Profiler profiler)
@@ -704,42 +696,6 @@ public class WorldRendererSchematic
         this.renderBlockOverlay(OverlayRenderType.QUAD, camera, lineWidth, profiler);
     }
 
-//    public void renderBlockOverlayQuads(@Nullable Framebuffer otherFb, Matrix4f posMatrix, Matrix4f projMatrix, Frustum frustum, Camera camera, Fog fog, BufferBuilderStorage buffers, float lineWidth, Profiler profiler)
-//    {
-//        this.profiler = profiler;
-//        this.renderBlockOverlay(OverlayRenderType.QUAD, otherFb, camera, lineWidth, profiler);
-//    }
-//
-//    public void renderBlockOverlayOutlines(@Nullable Framebuffer otherFb, Matrix4f posMatrix, Matrix4f projMatrix, Frustum frustum, Camera camera, Fog fog, BufferBuilderStorage buffers, float lineWidth, Profiler profiler)
-//    {
-//        this.profiler = profiler;
-//        this.renderBlockOverlay(OverlayRenderType.OUTLINE, otherFb, camera, lineWidth, profiler);
-//    }
-
-    /*
-    Disable, as per IMS
-
-    protected static void initShader(ShaderProgram shader, Matrix4f matrix4f, Matrix4f projMatrix)
-    {
-        //for (int i = 0; i < 12; ++i) shader.addSampler("Sampler" + i, RenderSystem.getShaderTexture(i));
-
-        if (shader.modelViewMat != null) shader.modelViewMat.set(matrix4f);
-        if (shader.projectionMat != null) shader.projectionMat.set(projMatrix);
-        if (shader.textureMat != null) shader.textureMat.set(RenderSystem.getTextureMatrix());
-        if (shader.colorModulator != null) shader.colorModulator.set(RenderSystem.getShaderColor());
-        if (shader.glintAlpha != null) shader.glintAlpha.set(RenderSystem.getShaderGlintAlpha());
-        Fog fog = RenderSystem.getShaderFog();
-        if (shader.fogStart != null) shader.fogStart.set(fog.start());
-        if (shader.fogEnd != null) shader.fogEnd.set(fog.end());
-        if (shader.fogColor != null) shader.fogColor.setAndFlip(fog.red(), fog.green(), fog.blue(), fog.alpha());
-        if (shader.fogShape != null) shader.fogShape.set(fog.shape().getId());
-        Window window = MinecraftClient.getInstance().getWindow();
-        if (shader.screenSize != null) shader.screenSize.set((float) window.getFramebufferWidth(), (float) window.getFramebufferHeight());
-        if (shader.gameTime != null) shader.gameTime.set(RenderSystem.getShaderGameTime());
-        if (shader.lineWidth != null) shader.lineWidth.set(RenderSystem.getShaderLineWidth());
-    }
-     */
-
     protected void renderBlockOverlay(OverlayRenderType type, Camera camera, float lineWidth, Profiler profiler)
     {
         profiler.push("overlay_" + type.name());
@@ -847,94 +803,6 @@ public class WorldRendererSchematic
 //        RenderUtils.blend(false);
         profiler.pop();
     }
-
-//    protected void bindTexture(Identifier id, int textureId, int width, int height) throws RuntimeException
-//    {
-//        if (textureId < 0 || textureId > 12)
-//        {
-//            throw new RuntimeException("Invalid textureId of: "+textureId+" for texture: "+id.toString());
-//        }
-//
-//        try
-//        {
-//            // Verify that we potentially have the correct texture by checking various values
-//            while (!this.isTextureValid(width, height))
-//            {
-//                this.defaultTex = (ResourceTexture) fi.dy.masa.malilib.render.RenderUtils.tex().getTexture(id);
-//
-//                if (this.isTextureValid(width, height))
-//                {
-//                    if (this.defaultTex != null)
-//                    {
-//                        this.defaultTexId = textureId;
-//                        this.defaultTex.setFilter(TriState.DEFAULT, false);
-//                        RenderSystem.setShaderTexture(textureId, this.defaultTex.getGlTexture());
-//                        return;
-//                    }
-//
-//                    break;
-//                }
-//            }
-//        }
-//        catch (Exception err)
-//        {
-//            throw new RuntimeException("Exception reading Texture ["+id.toString()+"]: "+err.getMessage());
-//        }
-//
-//        // General failure & cleanup
-//        if (this.defaultTex != null)
-//        {
-//            // Simple texture rebind since we already have a valid texture
-//            this.defaultTexId = textureId;
-//            RenderSystem.setShaderTexture(textureId, this.defaultTex.getGlTexture());
-//            return;
-//        }
-//
-//        Litematica.LOGGER.error("bindTexture: Error uploading texture [{}]", id.toString());
-//
-//        if (this.defaultTex != null)
-//        {
-//            this.defaultTex.close();
-//        }
-//
-//        this.defaultTex = null;
-//    }
-//
-//    private boolean isTextureValid(int width, int height)
-//    {
-//        if (this.defaultTex == null)
-//        {
-//            return false;
-//        }
-//
-//        try (TextureContents content = this.defaultTex.loadContents(fi.dy.masa.malilib.render.RenderUtils.mc().getResourceManager()))
-//        {
-//            NativeImage image = content.image();
-//
-//            if (image == null || image.getWidth() != width || image.getHeight() != height)
-//            {
-//                this.defaultTex.close();
-//                this.defaultTex = null;
-//                return false;
-//            }
-//        }
-//        catch (Exception e)
-//        {
-//            this.defaultTex.close();
-//            this.defaultTex = null;
-//            return false;
-//        }
-//
-//        if (((IMixinAbstractTexture) this.defaultTex).malilib_getGlTexture() == null ||
-//            this.defaultTex.getGlTexture().isClosed())
-//        {
-//            this.defaultTex.close();
-//            this.defaultTex = null;
-//            return false;
-//        }
-//
-//        return true;
-//    }
 
     private void dumpTexture(@Nonnull GpuTexture gpuTexture, Identifier id)
     {
