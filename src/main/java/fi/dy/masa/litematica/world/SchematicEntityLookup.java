@@ -30,6 +30,11 @@ public class SchematicEntityLookup<T extends EntityLike> implements EntityLookup
         }
     }
 
+    protected int size()
+    {
+        return this.list.size();
+    }
+
     protected void remove(UUID uuid)
     {
         synchronized (this.list)

@@ -95,11 +95,7 @@ public class SchematicWorldHandler
             Litematica.debugLog("Removing the schematic world...");
             if (this.world != null)
             {
-                try
-                {
-                    this.world.closeEntityLookup();
-                }
-                catch (Exception ignored) { }
+                this.world.clearEntities();
             }
             this.world = null;
             LitematicaRenderer.getInstance().onSchematicWorldChanged(null);

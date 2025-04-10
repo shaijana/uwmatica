@@ -496,7 +496,7 @@ public class SchematicConversionMaps
         catch (Exception e)
         {
             Litematica.LOGGER.warn("updateBlockStates: failed to update Block State [{}], preserving original state (data may become lost)",
-                                   oldBlockState.contains("Name") ? oldBlockState.getString("Name") : "?");
+                                   oldBlockState.contains("Name") ? oldBlockState.getString("Name", "?") : "?");
             return oldBlockState;
         }
     }
@@ -511,7 +511,7 @@ public class SchematicConversionMaps
         {
             BlockPos pos = NbtUtils.readBlockPos(oldBlockEntity);
             Litematica.LOGGER.warn("updateBlockEntity: failed to update Block Entity [{}] at [{}], preserving original state (data may become lost)",
-                                   oldBlockEntity.contains("id") ? oldBlockEntity.getString("id") : "?", pos != null ? pos.toShortString() : "?");
+                                   oldBlockEntity.contains("id") ? oldBlockEntity.getString("id", "?") : "?", pos != null ? pos.toShortString() : "?");
             return oldBlockEntity;
         }
     }
@@ -525,7 +525,7 @@ public class SchematicConversionMaps
         catch (Exception e)
         {
             Litematica.LOGGER.warn("updateEntity: failed to update Entity [{}], preserving original state (data may become lost)",
-                                   oldEntity.contains("id") ? oldEntity.getString("id") : "?");
+                                   oldEntity.contains("id") ? oldEntity.getString("id", "?") : "?");
             return oldEntity;
         }
     }

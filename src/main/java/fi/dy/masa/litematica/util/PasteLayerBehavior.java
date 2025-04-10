@@ -7,18 +7,17 @@ import net.minecraft.util.StringIdentifiable;
 import fi.dy.masa.malilib.config.IConfigOptionListEntry;
 import fi.dy.masa.malilib.util.StringUtils;
 
-public enum ReplaceBehavior implements IConfigOptionListEntry, StringIdentifiable
+public enum PasteLayerBehavior implements IConfigOptionListEntry, StringIdentifiable
 {
-    NONE            ("none",            "litematica.gui.label.replace_behavior.none"),
-    ALL             ("all",             "litematica.gui.label.replace_behavior.all"),
-    WITH_NON_AIR    ("with_non_air",    "litematica.gui.label.replace_behavior.with_non_air");
+    ALL             ("all",             "litematica.gui.label.paste_layer_behavior.all"),
+    RENDERED_ONLY   ("rendered_only",   "litematica.gui.label.paste_layer_behavior.rendered_only");
 
-    public static final StringIdentifiable.EnumCodec<ReplaceBehavior> CODEC = StringIdentifiable.createCodec(ReplaceBehavior::values);
-    public static final ImmutableList<ReplaceBehavior> VALUES = ImmutableList.copyOf(values());
+    public static final EnumCodec<PasteLayerBehavior> CODEC = StringIdentifiable.createCodec(PasteLayerBehavior::values);
+    public static final ImmutableList<PasteLayerBehavior> VALUES = ImmutableList.copyOf(values());
     private final String configString;
     private final String translationKey;
 
-    ReplaceBehavior(String configString, String translationKey)
+    PasteLayerBehavior(String configString, String translationKey)
     {
         this.configString = configString;
         this.translationKey = translationKey;
@@ -66,14 +65,14 @@ public enum ReplaceBehavior implements IConfigOptionListEntry, StringIdentifiabl
     }
 
     @Override
-    public ReplaceBehavior fromString(String name)
+    public PasteLayerBehavior fromString(String name)
     {
         return fromStringStatic(name);
     }
 
-    public static ReplaceBehavior fromStringStatic(String name)
+    public static PasteLayerBehavior fromStringStatic(String name)
     {
-        for (ReplaceBehavior val : VALUES)
+        for (PasteLayerBehavior val : PasteLayerBehavior.values())
         {
             if (val.configString.equalsIgnoreCase(name))
             {
@@ -81,6 +80,6 @@ public enum ReplaceBehavior implements IConfigOptionListEntry, StringIdentifiabl
             }
         }
 
-        return ReplaceBehavior.NONE;
+        return PasteLayerBehavior.ALL;
     }
 }

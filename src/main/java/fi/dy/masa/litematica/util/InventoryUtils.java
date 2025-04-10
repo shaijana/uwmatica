@@ -462,7 +462,7 @@ public class InventoryUtils
 
         if (nbt.contains("id"))
         {
-            result.append(nbt.getString("id"));
+            result.append(nbt.getString("id", "?"));
         }
         else
         {

@@ -31,6 +31,7 @@ import fi.dy.masa.malilib.util.IntBoundingBox;
 import fi.dy.masa.malilib.util.nbt.NbtUtils;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.config.Configs;
+import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.schematic.LitematicaSchematic;
 import fi.dy.masa.litematica.schematic.LitematicaSchematic.EntityInfo;
 import fi.dy.masa.litematica.schematic.container.LitematicaBlockStateContainer;
@@ -43,6 +44,7 @@ public class SchematicPlacingUtils
                                                   ChunkPos chunkPos,
                                                   SchematicPlacement schematicPlacement,
                                                   ReplaceBehavior replace,
+                                                  PasteLayerBehavior layerBehavior,
                                                   boolean notifyNeighbors)
     {
         LitematicaSchematic schematic = schematicPlacement.getSchematic();
@@ -77,7 +79,7 @@ public class SchematicPlacingUtils
 
                     if (placeBlocksWithinChunk(world, chunkPos, regionName, container, blockEntityMap,
                                                origin, schematicPlacement, placement, scheduledBlockTicks,
-                                               scheduledFluidTicks, replace, notifyNeighbors) == false)
+                                               scheduledFluidTicks, replace, layerBehavior, notifyNeighbors) == false)
                     {
                         allSuccess = false;
                         Litematica.LOGGER.warn("Invalid/missing schematic data in schematic '{}' for sub-region '{}'", schematic.getMetadata().getName(), regionName);
@@ -88,7 +90,7 @@ public class SchematicPlacingUtils
                     if (schematicPlacement.ignoreEntities() == false &&
                         placement.ignoreEntities() == false && entityList != null)
                     {
-                        placeEntitiesToWorldWithinChunk(world, chunkPos, entityList, origin, schematicPlacement, placement);
+                        placeEntitiesToWorldWithinChunk(world, chunkPos, entityList, origin, schematicPlacement, placement, layerBehavior);
                     }
                 }
             }
@@ -109,7 +111,9 @@ public class SchematicPlacingUtils
                                                  SubRegionPlacement placement,
                                                  @Nullable Map<BlockPos, OrderedTick<Block>> scheduledBlockTicks,
                                                  @Nullable Map<BlockPos, OrderedTick<Fluid>> scheduledFluidTicks,
-                                                 ReplaceBehavior replace, boolean notifyNeighbors)
+                                                 ReplaceBehavior replace,
+                                                 PasteLayerBehavior layerBehavior,
+                                                 boolean notifyNeighbors)
     {
         IntBoundingBox bounds = schematicPlacement.getBoxWithinChunkForRegion(regionName, chunkPos.x, chunkPos.z);
         Vec3i regionSize = schematicPlacement.getSchematic().getAreaSizeAsVec3i(regionName);
@@ -203,6 +207,12 @@ public class SchematicPlacingUtils
 
                     BlockPos pos = PositionUtils.getTransformedPlacementPosition(posMutable, schematicPlacement, placement);
                     pos = pos.add(regionPosTransformed).add(origin);
+
+                    if (!shouldPasteBlock(pos, layerBehavior))
+                    {
+//                        Litematica.LOGGER.error("placeBlocksWithinChunk(): Skipping block at pos [{}]", pos.toShortString());
+                        continue;
+                    }
 
                     BlockState stateOld = world.getBlockState(pos);
 
@@ -346,7 +356,8 @@ public class SchematicPlacingUtils
                                                        List<EntityInfo> entityList,
                                                        BlockPos origin,
                                                        SchematicPlacement schematicPlacement,
-                                                       SubRegionPlacement placement)
+                                                       SubRegionPlacement placement,
+                                                       PasteLayerBehavior layerBehavior)
     {
         BlockPos regionPos = placement.getPos();
 
@@ -384,6 +395,12 @@ public class SchematicPlacingUtils
             double y = pos.y + offY;
             double z = pos.z + offZ;
             float[] origRot = new float[2];
+
+            if (!shouldPasteEntity(new Vec3d(x, y, z), layerBehavior))
+            {
+//                Litematica.LOGGER.error("placeEntitiesToWorldWithinChunk(): Skipping Entity at pos [{}]", pos.toString());
+                continue;
+            }
 
             if (x >= minX && x < maxX && z >= minZ && z < maxZ)
             {
@@ -483,5 +500,25 @@ public class SchematicPlacingUtils
 
         entity.refreshPositionAndAngles(x, y, z, rotationYaw, entity.getPitch());
         EntityUtils.setEntityRotations(entity, rotationYaw, entity.getPitch());
+    }
+
+    public static boolean shouldPasteBlock(BlockPos pos, PasteLayerBehavior layerBehavior)
+    {
+        if (layerBehavior == PasteLayerBehavior.ALL)
+        {
+            return true;
+        }
+
+        return DataManager.getRenderLayerRange().isPositionWithinRange(pos);
+    }
+
+    public static boolean shouldPasteEntity(Vec3d pos, PasteLayerBehavior layerBehavior)
+    {
+        if (layerBehavior == PasteLayerBehavior.ALL)
+        {
+            return true;
+        }
+
+        return DataManager.getRenderLayerRange().isPositionWithinRange((int) pos.getX(), (int) pos.getY(), (int) pos.getZ());
     }
 }

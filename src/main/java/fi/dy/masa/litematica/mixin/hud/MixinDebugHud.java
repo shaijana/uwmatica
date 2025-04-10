@@ -34,12 +34,17 @@ public abstract class MixinDebugHud
             list.add(String.format("%s[Litematica]%s %s",
                                    pre, rst, renderer.getDebugInfoRenders()));
 
-            String str = String.format("E: %d TE: TODO 1.17+ C: %d, CT: %d, CV: %d",
+            String str = String.format("E: %d TE: %d C: %d, CT: %d, CV: %d",
                                        world.getRegularEntityCount(),
+//                                       world.getEntityDebug(),
+                                       world.getChunkProvider().getTileEntityCount(),
                                        world.getChunkProvider().getLoadedChunkCount(),
                                        DataManager.getSchematicPlacementManager().getTouchedChunksCount(),
-                                       DataManager.getSchematicPlacementManager().getLastVisibleChunksCount());
+                                       DataManager.getSchematicPlacementManager().getLastVisibleChunksCount()
+            );
+
             list.add(String.format("%s[Litematica]%s %s %s", pre, rst, renderer.getDebugInfoEntities(), str));
+//            list.add(String.format("%s[Litematica]%s %s", pre, rst, world.asString()));
         }
     }
 }

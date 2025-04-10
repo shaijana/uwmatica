@@ -341,7 +341,7 @@ public class SchematicaSchematic
         {
             NbtCompound tag = entry.getValue();
 
-            if (tag.getString("id").equals("minecraft:structure_block") &&
+            if (tag.getString("id", "?").equals("minecraft:structure_block") &&
                 StructureBlockMode.valueOf(tag.getString("mode", "?")) == StructureBlockMode.DATA)
             {
                 BlockPos pos = entry.getKey();

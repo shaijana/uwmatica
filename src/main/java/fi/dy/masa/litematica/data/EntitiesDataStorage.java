@@ -1159,7 +1159,7 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
 
         // TODO --> Split out the task this way (I should have done this under sakura.12, etc),
         //  So we need to check if the "Task" is not included for now... (Wait for the updates to bake in)
-        if ((nbt.contains("Task") && nbt.getString("Task").equals("BulkEntityReply")) ||
+        if ((nbt.contains("Task") && nbt.getString("Task", "").equals("BulkEntityReply")) ||
             nbt.contains("Task") == false)
         {
             NbtList tileList = nbt.contains("TileEntities") ? nbt.getListOrEmpty("TileEntities") : new NbtList();
