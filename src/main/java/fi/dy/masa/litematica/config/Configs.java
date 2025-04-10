@@ -20,6 +20,7 @@ import fi.dy.masa.malilib.util.JsonUtils;
 import fi.dy.masa.malilib.util.MessageOutputType;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.Reference;
+import fi.dy.masa.litematica.compat.lwgl.RenderCompat;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.selection.CornerSelectionMode;
 import fi.dy.masa.litematica.util.*;
@@ -399,6 +400,7 @@ public class Configs implements IConfigHandler
                 ConfigUtils.readConfigBase(root, "InfoOverlays", InfoOverlays.OPTIONS);
                 ConfigUtils.readConfigBase(root, "Visuals", Visuals.OPTIONS);
 
+                RenderCompat.checkGpuVisuals();
                 //Litematica.debugLog("loadFromFile(): Successfully loaded config file '{}'.", configFile.toAbsolutePath());
             }
             else
