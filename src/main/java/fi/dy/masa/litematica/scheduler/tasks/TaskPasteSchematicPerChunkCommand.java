@@ -39,6 +39,7 @@ import fi.dy.masa.malilib.util.IntBoundingBox;
 import fi.dy.masa.malilib.util.LayerRange;
 import fi.dy.masa.malilib.util.game.BlockUtils;
 import fi.dy.masa.malilib.util.position.PositionUtils;
+import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.mixin.block.IMixinAbstractBlock;
@@ -289,13 +290,16 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
 
     protected boolean shouldSetBlock(BlockState stateSchematic, BlockState stateClient)
     {
+        boolean matched = stateClient == stateSchematic;
+//        Litematica.LOGGER.error("shouldSetBlock(): matched: [{}]/CBOnly [{}], client: [{}], schem: [{}]", matched, this.changedBlockOnly, stateClient.toString(), stateSchematic.toString());
+
         if (stateSchematic.hasBlockEntity() && Configs.Generic.PASTE_IGNORE_BE_ENTIRELY.getBooleanValue())
         {
             return false;
         }
 
         if ((stateSchematic.isAir() && stateClient.isAir()) ||
-            (this.changedBlockOnly && stateClient == stateSchematic))
+            (this.changedBlockOnly && matched))
         {
             return false;
         }

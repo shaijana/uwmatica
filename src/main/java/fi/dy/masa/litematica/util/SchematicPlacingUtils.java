@@ -37,6 +37,7 @@ import fi.dy.masa.litematica.schematic.LitematicaSchematic.EntityInfo;
 import fi.dy.masa.litematica.schematic.container.LitematicaBlockStateContainer;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
 import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement;
+import fi.dy.masa.litematica.world.WorldSchematic;
 
 public class SchematicPlacingUtils
 {
@@ -51,6 +52,14 @@ public class SchematicPlacingUtils
         Set<String> regionsTouchingChunk = schematicPlacement.getRegionsTouchingChunk(chunkPos.x, chunkPos.z);
         BlockPos origin = schematicPlacement.getOrigin();
         boolean allSuccess = true;
+
+        // Don't enable selective pasting while loading the schematic to the schematic world
+        // since this function has a dual purpose; this would cause things to fail to load.
+        if (world instanceof WorldSchematic &&
+            layerBehavior != PasteLayerBehavior.ALL)
+        {
+            layerBehavior = PasteLayerBehavior.ALL;
+        }
 
         try
         {
