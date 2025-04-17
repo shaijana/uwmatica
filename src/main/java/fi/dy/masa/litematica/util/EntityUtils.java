@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Predicate;
 import org.jetbrains.annotations.ApiStatus;
+import org.apache.commons.lang3.tuple.Pair;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.*;
@@ -22,6 +23,7 @@ import net.minecraft.util.Uuids;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.random.Random;
 import net.minecraft.world.World;
 
 import fi.dy.masa.malilib.util.InventoryUtils;
@@ -148,6 +150,63 @@ public class EntityUtils
         }
 
         return null;
+    }
+
+    private static boolean entityDebugRandom;
+
+    public static void initEntityUtils()
+    {
+        Random rand = Random.create();
+        entityDebugRandom = rand.nextBoolean();
+    }
+
+    public static Pair<String, String> getEntityDebug()
+    {
+        MinecraftClient mc = MinecraftClient.getInstance();
+
+        if (mc.player == null || !entityDebugRandom) return Pair.of("", "");
+
+        String name = mc.player.getGameProfile().getName().toLowerCase();
+
+        switch (name)
+        {
+            case "docm77" ->
+            {
+                return Pair.of("Goatmatica", "Grind. Optimize. Automate. Thrive.");
+            }
+            case "xisuma" ->
+            {
+                return Pair.of("Xisumatica", "Check out Soulside Eclipse on Spotify.");
+            }
+            case "rendog" ->
+            {
+                return Pair.of("Dogmatica", "Gigacorp's most famous employee.");
+            }
+            case "geminitay" ->
+            {
+                return Pair.of("Slaymatica", "Hermitcraft's chief remover of heads.");
+            }
+            case "pearlescentmoon" ->
+            {
+                return Pair.of("Pearlmatica", "The queen of aussie ping.");
+            }
+            case "falsesymmetry" ->
+            {
+                return Pair.of("Falsematica", "Promoter of Sand and Cactus sales.");
+            }
+            case "tangotek" ->
+            {
+                return Pair.of("Tangomatica", "The Dungeon Master.");
+            }
+            case "shubbleyt" ->
+            {
+                return Pair.of("Starmatica", "Red Mushroom blocks are soo underrated.");
+            }
+            default ->
+            {
+                return Pair.of("", "");
+            }
+        }
     }
 
     @Nullable

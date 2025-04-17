@@ -503,6 +503,7 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
     @Override
     public void onWorldJoin()
     {
+        EntityUtils.initEntityUtils();
         // NO-OP
     }
 
