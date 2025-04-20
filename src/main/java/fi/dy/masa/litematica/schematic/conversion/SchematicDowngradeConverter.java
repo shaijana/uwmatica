@@ -18,6 +18,7 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.DyeColor;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Util;
 import net.minecraft.util.Uuids;
 import net.minecraft.util.math.BlockPos;
 
@@ -28,7 +29,7 @@ import fi.dy.masa.litematica.Litematica;
 
 public class SchematicDowngradeConverter
 {
-    private static final AnsiLogger LOGGER = new AnsiLogger(SchematicDowngradeConverter.class, true, true);
+//    private static final AnsiLogger LOGGER = new AnsiLogger(SchematicDowngradeConverter.class, true, true);
 
     public static NbtCompound downgradeEntity_to_1_20_4(NbtCompound oldEntity, int minecraftDataVersion, @Nonnull DynamicRegistryManager registryManager)
     {
@@ -1404,9 +1405,9 @@ public class SchematicDowngradeConverter
         String customName2 = dispNbt.getString("CustomName", "");   // Only if invoked without it being stored in a Chest
         String name = profile.getString("name", "");                // The regular Skull Owner Name
         //UUID uuid = profile.getUuid("id");
-        UUID uuid = profile.get("id", Uuids.CODEC, registryManager.getOps(NbtOps.INSTANCE)).orElse(UUID.randomUUID());
+        UUID uuid = profile.get("id", Uuids.CODEC, registryManager.getOps(NbtOps.INSTANCE)).orElse(Util.NIL_UUID);
 
-        LOGGER.debug("processSkullProfile(): oldNBT [{}]", profile.toString());
+//        LOGGER.debug("processSkullProfile(): oldNBT [{}]", profile.toString());
         if (name.isEmpty() && !customName1.isEmpty())
         {
             try
@@ -1423,7 +1424,7 @@ public class SchematicDowngradeConverter
                     name = customName1;
                 }
 
-                LOGGER.debug("processSkullProfile(): customName1 [{}], disp [{}] // name [{}]", customName1, disp != null ? disp.getString() : "<null>", name);
+//                LOGGER.debug("processSkullProfile(): customName1 [{}], disp [{}] // name [{}]", customName1, disp != null ? disp.getString() : "<null>", name);
             }
             catch (Exception e)
             {
@@ -1447,7 +1448,7 @@ public class SchematicDowngradeConverter
                     name = customName2;
                 }
 
-                LOGGER.debug("processSkullProfile(): customName2 [{}], disp[{}] // name [{}]", customName2, disp != null ? disp.getString() : "<null>", name);
+//                LOGGER.debug("processSkullProfile(): customName2 [{}], disp[{}] // name [{}]", customName2, disp != null ? disp.getString() : "<null>", name);
             }
             catch (Exception e)
             {
@@ -1458,9 +1459,9 @@ public class SchematicDowngradeConverter
 
         newProfile.putString("Name", name);
         //newProfile.putUuid("Id", uuid);
-        newProfile.put("Id", Uuids.CODEC, uuid);
+        newProfile.put("Id", Uuids.INT_STREAM_CODEC, uuid);
 
-        LOGGER.debug("processSkullProfile(): name [{}], uuid [{}]", name, uuid.toString());
+//        LOGGER.debug("processSkullProfile(): name [{}], uuid [{}]", name, uuid.toString());
 
         NbtList properties = profile.getListOrEmpty("properties");
         NbtCompound newProperties = new NbtCompound();
@@ -1471,7 +1472,7 @@ public class SchematicDowngradeConverter
             String propName = property.getString("name", "");
             String propValue = property.getString("value", "");
 
-            LOGGER.debug("processSkullProfile(): entry[{}], name [{}]", i, propName);
+//            LOGGER.debug("processSkullProfile(): entry[{}], name [{}]", i, propName);
 
             if (propName.equals("textures"))
             {
@@ -1484,7 +1485,7 @@ public class SchematicDowngradeConverter
         }
 
         newProfile.put("Properties", newProperties);
-        LOGGER.debug("processSkullProfile(): newNBT [{}]", newProfile.toString());
+//        LOGGER.debug("processSkullProfile(): newNBT [{}]", newProfile.toString());
 
         return newProfile;
     }
