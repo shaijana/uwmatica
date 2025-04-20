@@ -1299,7 +1299,7 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
 
         if (!chunkRenderData.isBlockLayerEmpty(layer))
         {
-            BuiltBuffer built;
+            BuiltBuffer meshData;
 
             if (chunkRenderData.getBuiltBufferCache().hasBuiltBufferByLayer(layer))
             {
@@ -1309,16 +1309,16 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
             if (this.builderCache.hasBufferByLayer(layer))
             {
                 BufferBuilder builder = this.builderCache.getBufferByLayer(layer, allocators);
-                built = builder.endNullable();
+                meshData = builder.endNullable();
 
-                if (built == null)
+                if (meshData == null)
                 {
                     chunkRenderData.setBlockLayerUnused(layer);
                     return;
                 }
                 else
                 {
-                    chunkRenderData.getBuiltBufferCache().storeBuiltBufferByLayer(layer, built);
+                    chunkRenderData.getBuiltBufferCache().storeBuiltBufferByLayer(layer, meshData);
                 }
             }
             else
@@ -1348,7 +1348,7 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
 
         if (!chunkRenderData.isOverlayTypeEmpty(type))
         {
-            BuiltBuffer built;
+            BuiltBuffer meshData;
 
             if (chunkRenderData.getBuiltBufferCache().hasBuiltBufferByType(type))
             {
@@ -1358,16 +1358,16 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
             if (this.builderCache.hasBufferByOverlay(type))
             {
                 BufferBuilder builder = this.builderCache.getBufferByOverlay(type, allocators);
-                built = builder.endNullable();
+                meshData = builder.endNullable();
 
-                if (built == null)
+                if (meshData == null)
                 {
                     chunkRenderData.setOverlayTypeUnused(type);
                     return;
                 }
                 else
                 {
-                    chunkRenderData.getBuiltBufferCache().storeBuiltBufferByType(type, built);
+                    chunkRenderData.getBuiltBufferCache().storeBuiltBufferByType(type, meshData);
                 }
             }
             else
