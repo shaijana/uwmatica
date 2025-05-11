@@ -506,15 +506,56 @@ public class DataManager implements IDirectoryCache
             dir = getDefaultBaseSchematicDirectory();
         }
 
-        if (!Files.exists(dir))
+        if (!Files.exists(dir) || !Files.isDirectory(dir))
         {
-            FileUtils.createDirectoriesIfMissing(dir);
+            try
+            {
+                if (Files.exists(dir))
+                {
+                    Files.delete(dir);
+                }
+
+                Files.createDirectory(dir);
+                Litematica.LOGGER.warn("getSchematicsBaseDirectory(): Created schematic directory '{}'", dir.toAbsolutePath().toString());
+            }
+            catch (Exception err)
+            {
+                Litematica.LOGGER.error("Failed to create the schematic directory '{}'; {}", dir.toAbsolutePath().toString(), err.getLocalizedMessage());
+            }
         }
 
         if (!Files.isDirectory(dir))
         {
-            Litematica.LOGGER.warn("Failed to create the schematic directory '{}'", dir.toAbsolutePath());
+            Litematica.LOGGER.error("Failed to create the schematic directory '{}'", dir.toAbsolutePath().toString());
         }
+
+        if (!Files.isWritable(dir))
+        {
+            Litematica.LOGGER.error("Schematic directory '{}'; is not writeable.", dir.toAbsolutePath().toString());
+        }
+
+//        if (SystemProperties.OS_NAME.toLowerCase().contains("linux"))
+//        {
+//            try
+//            {
+//                Set<PosixFilePermission> perms = Files.getPosixFilePermissions(dir);
+//
+//                System.out.print("Directory POSIX permissions:");
+//
+//                for (PosixFilePermission perm : perms)
+//                {
+//                    System.out.printf(" %s", perm.name());
+//                }
+//
+//                System.out.print("\n");
+//            }
+//            catch (Exception err)
+//            {
+//                Litematica.LOGGER.error("Schematic directory '{}'; Exception getting POSIX permissions; {}", dir.toAbsolutePath().toString(), err.getLocalizedMessage());
+//            }
+//        }
+
+        Litematica.debugLog("getSchematicsBaseDirectory(): Schematic directory debug '{}'", dir.toAbsolutePath().toString());
 
         return dir;
     }
