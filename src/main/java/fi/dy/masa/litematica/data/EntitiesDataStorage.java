@@ -52,6 +52,7 @@ import fi.dy.masa.litematica.Reference;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.network.ServuxLitematicaHandler;
 import fi.dy.masa.litematica.network.ServuxLitematicaPacket;
+import fi.dy.masa.litematica.schematic.LitematicaSchematic;
 import fi.dy.masa.litematica.util.EntityUtils;
 import fi.dy.masa.litematica.util.PositionUtils;
 import fi.dy.masa.litematica.util.WorldUtils;
@@ -1158,10 +1159,11 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
             return;
         }
 
+        String task = nbt.getString("Task", "BulkEntityReply");
+
         // TODO --> Split out the task this way (I should have done this under sakura.12, etc),
         //  So we need to check if the "Task" is not included for now... (Wait for the updates to bake in)
-        if ((nbt.contains("Task") && nbt.getString("Task", "").equals("BulkEntityReply")) ||
-            nbt.contains("Task") == false)
+        if (task.equals("BulkEntityReply"))
         {
             NbtList tileList = nbt.contains("TileEntities") ? nbt.getListOrEmpty("TileEntities") : new NbtList();
             NbtList entityList = nbt.contains("Entities") ? nbt.getListOrEmpty("Entities") : new NbtList();
