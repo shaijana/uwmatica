@@ -19,6 +19,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.util.Util;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
@@ -866,11 +867,10 @@ public class SchematicPlacementManager
         }
     }
 
-    // Attempt to slice the schematic if oversized.
+    // Attempt to slice the schematic if oversized, and transmit it as a file.
     private void sliceForServux(LitematicaSchematic litematic, NbtCompound nbt, final int maxSize, boolean printMessage)
     {
-        final long sessionKey = Random.create().nextLong();
-
+        final long sessionKey = Random.create(Util.getMeasuringTimeMs()).nextLong();
         nbt.remove("Schematics");
         litematic.sendTransmitFile(nbt, sessionKey, printMessage);
     }
