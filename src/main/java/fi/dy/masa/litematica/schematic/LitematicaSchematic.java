@@ -1356,6 +1356,7 @@ public class LitematicaSchematic
         output.putInt("TotalSlices", totalSlices);
         output.putString("Task", "Litematic-TransmitEnd");
         ServuxLitematicaHandler.getInstance().encodeClientData(ServuxLitematicaPacket.ResponseC2SStart(output));
+        Litematica.debugLog("receiveFileTransmit: Treansmitted file '{}', [tS: {}, tB: {}]", file.toAbsolutePath().toString(), totalSlices, totalBytes);
 
         if (printMessage)
         {
