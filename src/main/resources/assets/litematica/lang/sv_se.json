@@ -908,7 +908,7 @@
     "litematica.message.error.schematic_save_failed": "Det gick inte att spara schemat till filen '%s'",
     "litematica.message.error.schematic_save_interrupted": "Schematisk sparning avbruten eller stoppad",
     "litematica.message.error.schematic_save_no_area_selected": "§cSchematisk sparning misslyckades - inget område valt§r",
-    "litematica.message.error.schematic_transmit_fail": "§cSchematic transmit to Servux has failed.  CHeck that the litematic file is readable§r",
+    "litematica.message.error.schematic_transmit_fail": "§cSchematic transmit to Servux has failed.  Check that the litematic file is readable§r",
     "litematica.message.error.schematic_transmit_not_available": "§cSchematic transmission to Servux not available.  Connect to a Servux server§r",
     "litematica.message.grabbed_element_for_moving": "Ta ett element för att flytta",
     "litematica.message.in_memory_schematic_created": "Skapade ett schema i minnet som '%s'",

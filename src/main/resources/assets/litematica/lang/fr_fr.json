@@ -908,7 +908,7 @@
     "litematica.message.error.schematic_save_failed": "Impossible d'enregistrer le schéma dans le fichier '%s'",
     "litematica.message.error.schematic_save_interrupted": "Sauvegarde schématique interrompue ou arrêtée",
     "litematica.message.error.schematic_save_no_area_selected": "§cÉchec de l'enregistrement du schéma - aucune zone sélectionnée§r",
-    "litematica.message.error.schematic_transmit_fail": "§cSchematic transmit to Servux has failed.  CHeck that the litematic file is readable§r",
+    "litematica.message.error.schematic_transmit_fail": "§cSchematic transmit to Servux has failed.  Check that the litematic file is readable§r",
     "litematica.message.error.schematic_transmit_not_available": "§cSchematic transmission to Servux not available.  Connect to a Servux server§r",
     "litematica.message.grabbed_element_for_moving": "A saisi un élément à déplacer",
     "litematica.message.in_memory_schematic_created": "Création d'un schéma en mémoire en tant que «%s»",

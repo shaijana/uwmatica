@@ -908,7 +908,7 @@
     "litematica.message.error.schematic_save_failed": "Не удалось сохранить схему в файл '%s'",
     "litematica.message.error.schematic_save_interrupted": "Сохранение схемы привело к ошибке или было остановлено",
     "litematica.message.error.schematic_save_no_area_selected": "§cНе удалось сохранить схему - не выбран регион§r",
-    "litematica.message.error.schematic_transmit_fail": "§cSchematic transmit to Servux has failed.  CHeck that the litematic file is readable§r",
+    "litematica.message.error.schematic_transmit_fail": "§cSchematic transmit to Servux has failed.  Check that the litematic file is readable§r",
     "litematica.message.error.schematic_transmit_not_available": "§cSchematic transmission to Servux not available.  Connect to a Servux server§r",
     "litematica.message.grabbed_element_for_moving": "Элемент захвачен",
     "litematica.message.in_memory_schematic_created": "Создана временная схема '%s'",
