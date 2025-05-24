@@ -541,8 +541,7 @@ public class DataManager implements IDirectoryCache
             Litematica.LOGGER.error("Schematic directory '{}'; is not writeable.", dir.toAbsolutePath().toString());
         }
 
-        Litematica.debugLog("getSchematicsBaseDirectory(): Schematic directory debug '{}'", dir.toAbsolutePath().toString());
-
+//        Litematica.debugLog("getSchematicsBaseDirectory(): Schematic directory debug '{}'", dir.toAbsolutePath().toString());
         return dir;
     }
 
@@ -578,8 +577,7 @@ public class DataManager implements IDirectoryCache
             Litematica.LOGGER.error("Schematic transmit directory '{}'; is not writeable.", dir.toAbsolutePath().toString());
         }
 
-        Litematica.debugLog("getSchematicTransmitDirectory(): Schematic transmit directory debug '{}'", dir.toAbsolutePath().toString());
-
+//        Litematica.debugLog("getSchematicTransmitDirectory(): Schematic transmit directory debug '{}'", dir.toAbsolutePath().toString());
         return dir;
     }
 

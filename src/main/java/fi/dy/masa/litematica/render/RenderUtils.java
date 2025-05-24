@@ -708,8 +708,16 @@ public class RenderUtils
         buffer.vertex(e, fx[0], fy[0], fz[0]).color(color.r, color.g, color.b, color.a).normal(e, 0.0f, 0.0f, 0.0f);
     }
 
+    public static boolean hasQuads(List<BlockModelPart> modelParts)
+    {
+        if (modelParts.isEmpty()) return false;
+        return modelParts.getFirst().getQuads(Direction.NORTH).size() > 0;
+    }
+
     public static void drawBlockModelQuadOverlayBatched(List<BlockModelPart> modelParts, BlockState state, BlockPos pos, Color4f color, double expand, BufferBuilder buffer)
     {
+//        System.out.printf("drawBlockModelQuadOverlayBatched - pos [%s], parts [%d], state [%s]\n", pos.toShortString(), modelParts.size(), state.toString());
+
         for (final BlockModelPart part : modelParts)
         {
             drawBlockModelQuadOverlayBatched(part, state, pos, color, expand, buffer);
@@ -730,15 +738,16 @@ public class RenderUtils
     public static void drawBlockModelQuadOverlayBatched(BlockModelPart modelPart, BlockState state, BlockPos pos, Direction side, Color4f color, double expand, BufferBuilder buffer)
     {
         // modelPart.getQuads(state, side, RAND)
-
+//        System.out.printf("drawBlockModelQuadOverlayBatched - pos [%s], side [%s], state [%s]\n", pos.toShortString(), side != null ? side.asString() : "<null>", state.toString());
         renderModelQuadOverlayBatched(pos, buffer, color, modelPart.getQuads(side));
     }
 
     private static void renderModelQuadOverlayBatched(BlockPos pos, BufferBuilder buffer, Color4f color, List<BakedQuad> quads)
     {
         //final int size = quads.size();
+//        System.out.printf("renderModelQuadOverlayBatched - pos [%s], quads [%d]\n", pos.toShortString(), quads.size());
 
-        for (BakedQuad quad : quads)
+        for (final BakedQuad quad : quads)
         {
 //            final float b = worldIn.getBrightness(quad.face(), quad.shade());
 //            final int[] lo = new int[]{light, light, light, light};
