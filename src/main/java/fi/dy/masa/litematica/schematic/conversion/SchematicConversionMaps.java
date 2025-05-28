@@ -710,7 +710,7 @@ public class SchematicConversionMaps
             return nbt;
         }
 
-        String id = nbt.getString("id");
+        String id = nbt.getString("id", "");
         Identifier newId = null;
 
         switch (id)
@@ -737,11 +737,11 @@ public class SchematicConversionMaps
         // Fix any erroneous Items tags with the null "tag" tag.
         if (nbt.contains("Items"))
         {
-            NbtList items = fixItemsTag(nbt.getList("Items", Constants.NBT.TAG_COMPOUND));
+            NbtList items = fixItemsTag(nbt.getListOrEmpty("Items"));
             nbt.put("Items", items);
         }
 
-        String id = nbt.getString("id");
+        String id = nbt.getString("id", "");
         Identifier newId = null;
         String type = "";
         boolean boatFix = false;
