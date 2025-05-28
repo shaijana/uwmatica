@@ -21,6 +21,7 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.decoration.AbstractDecorationEntity;
+import net.minecraft.entity.decoration.BlockAttachedEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.inventory.Inventory;
@@ -744,6 +745,14 @@ public class LitematicaSchematic
                             tag.putInt("TileX", p.getX() - regionPosAbs.getX());
                             tag.putInt("TileY", p.getY() - regionPosAbs.getY());
                             tag.putInt("TileZ", p.getZ() - regionPosAbs.getZ());
+                        }
+
+                        if (entity instanceof BlockAttachedEntity bae)
+                        {
+                            BlockPos p = bae.getAttachedBlockPos();
+                            BlockPos pAdj = new BlockPos(p.getX() - regionPosAbs.getX(), p.getY() - regionPosAbs.getY(), p.getZ() - regionPosAbs.getZ());
+
+                            tag.put("block_pos", BlockPos.CODEC, pAdj);
                         }
 
 //                        NbtUtils.writeEntityPositionToTag(posVec, tag);

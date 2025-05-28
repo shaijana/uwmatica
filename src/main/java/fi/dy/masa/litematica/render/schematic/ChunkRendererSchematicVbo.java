@@ -276,26 +276,26 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
         //if (GuiBase.isCtrlDown()) System.out.printf("resortTransparency\n");
         //if (Configs.Visuals.ENABLE_SCHEMATIC_OVERLAY.getBooleanValue())
 
-        if (Configs.Visuals.SCHEMATIC_OVERLAY_ENABLE_RESORTING.getBooleanValue())
-        {
-            this.getProfiler().swap("resort_overlay");
-            OverlayRenderType type = OverlayRenderType.QUAD;
-
-            if (!data.isOverlayTypeEmpty(type))
-            {
-                if (data.getBuiltBufferCache().hasBuiltBufferByType(type))
-                {
-                    try
-                    {
-                        this.resortRenderOverlay(type, x, y, z, data, allocators);
-                    }
-                    catch (Exception e)
-                    {
-                        LOGGER.error("resortTransparency() [VBO] caught exception for overlay type [{}] // {}", type.getDrawMode().name(), e.toString());
-                    }
-                }
-            }
-        }
+//        if (Configs.Visuals.SCHEMATIC_OVERLAY_ENABLE_RESORTING.getBooleanValue())
+//        {
+//            this.getProfiler().swap("resort_overlay");
+//            OverlayRenderType type = OverlayRenderType.QUAD;
+//
+//            if (!data.isOverlayTypeEmpty(type))
+//            {
+//                if (data.getBuiltBufferCache().hasBuiltBufferByType(type))
+//                {
+//                    try
+//                    {
+//                        this.resortRenderOverlay(type, x, y, z, data, allocators);
+//                    }
+//                    catch (Exception e)
+//                    {
+//                        LOGGER.error("resortTransparency() [VBO] caught exception for overlay type [{}] // {}", type.getDrawMode().name(), e.toString());
+//                    }
+//                }
+//            }
+//        }
 
         this.getProfiler().pop();
         this.profiler = null;
@@ -1195,7 +1195,8 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
     {
         //LOGGER.warn("[VBO] uploadBuffersByType() Overlay [{}], IndexCount [{}]", type.name(), meshData.getDrawParameters().indexCount());
         ChunkRenderObjectBuffers gpuBuffers = this.gpuBufferCache.getBuffersByType(type);
-        boolean useResorting = Configs.Visuals.SCHEMATIC_OVERLAY_ENABLE_RESORTING.getBooleanValue();
+//        boolean useResorting = Configs.Visuals.SCHEMATIC_OVERLAY_ENABLE_RESORTING.getBooleanValue();
+        boolean useResorting = false;
 
         if (gpuBuffers != null)
         {
@@ -1446,17 +1447,17 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
                 return;
             }
 
-            if (type.isTranslucent() && Configs.Visuals.SCHEMATIC_OVERLAY_ENABLE_RESORTING.getBooleanValue())
-            {
-                try
-                {
-                    this.resortRenderOverlay(type, x, y, z, chunkRenderData, allocators);
-                }
-                catch (Exception e)
-                {
-                    throw new RuntimeException(e.toString());
-                }
-            }
+//            if (type.isTranslucent() && Configs.Visuals.SCHEMATIC_OVERLAY_ENABLE_RESORTING.getBooleanValue())
+//            {
+//                try
+//                {
+//                    this.resortRenderOverlay(type, x, y, z, chunkRenderData, allocators);
+//                }
+//                catch (Exception e)
+//                {
+//                    throw new RuntimeException(e.toString());
+//                }
+//            }
         }
     }
 
@@ -1582,32 +1583,32 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
                 return;
             }
 
-            if (type.isTranslucent() && Configs.Visuals.SCHEMATIC_OVERLAY_ENABLE_RESORTING.getBooleanValue())
-            {
-                BuiltBuffer.SortState sortingData;
-                VertexSorter sorter = VertexSorter.byDistance(x, y, z);
-
-                if (!chunkRenderData.hasTransparentSortingDataForOverlay(type))
-                {
-                    sortingData = built.sortQuads(allocator, sorter);
-
-                    if (sortingData == null)
-                    {
-                        throw new InterruptedException("Sort State failure");
-                    }
-
-                    chunkRenderData.setTransparentSortingDataForOverlay(type, sortingData);
-                }
-                else
-                {
-                    sortingData = chunkRenderData.getTransparentSortingDataForOverlay(type);
-                }
-
-                if (sortingData == null)
-                {
-                    throw new InterruptedException("Sorting Data failure");
-                }
-            }
+//            if (type.isTranslucent() && Configs.Visuals.SCHEMATIC_OVERLAY_ENABLE_RESORTING.getBooleanValue())
+//            {
+//                BuiltBuffer.SortState sortingData;
+//                VertexSorter sorter = VertexSorter.byDistance(x, y, z);
+//
+//                if (!chunkRenderData.hasTransparentSortingDataForOverlay(type))
+//                {
+//                    sortingData = built.sortQuads(allocator, sorter);
+//
+//                    if (sortingData == null)
+//                    {
+//                        throw new InterruptedException("Sort State failure");
+//                    }
+//
+//                    chunkRenderData.setTransparentSortingDataForOverlay(type, sortingData);
+//                }
+//                else
+//                {
+//                    sortingData = chunkRenderData.getTransparentSortingDataForOverlay(type);
+//                }
+//
+//                if (sortingData == null)
+//                {
+//                    throw new InterruptedException("Sorting Data failure");
+//                }
+//            }
         }
     }
 

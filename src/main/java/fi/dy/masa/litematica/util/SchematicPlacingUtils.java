@@ -475,6 +475,14 @@ public class SchematicPlacingUtils
                     tag.putInt("TileX", (int) p.x);
                     tag.putInt("TileY", (int) p.y);
                     tag.putInt("TileZ", (int) p.z);
+
+                    // Block-Attached Pos (1.21.5+) Fix
+                    BlockPos px = tag.get("block_pos", BlockPos.CODEC).orElse(null);
+
+                    if (px != null)
+                    {
+                        tag.put("block_pos", BlockPos.CODEC, new BlockPos((int) x, (int) y, (int) z));
+                    }
                 }
 
                 NbtList rotation = tag.getListOrEmpty("Rotation");

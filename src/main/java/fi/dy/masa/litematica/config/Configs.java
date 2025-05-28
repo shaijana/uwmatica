@@ -232,7 +232,7 @@ public class Configs implements IConfigHandler
         public static final ConfigBoolean       RENDER_SCHEMATIC_TILE_ENTITIES      = new ConfigBoolean("renderSchematicTileEntities", true).apply(VISUALS_KEY);
         public static final ConfigBoolean       RENDER_TRANSLUCENT_INNER_SIDES      = new ConfigBoolean("renderTranslucentBlockInnerSides", false).apply(VISUALS_KEY);
         public static final ConfigBoolean       SCHEMATIC_OVERLAY_ENABLE_OUTLINES   = new ConfigBoolean("schematicOverlayEnableOutlines",  true).apply(VISUALS_KEY);
-        public static final ConfigBoolean       SCHEMATIC_OVERLAY_ENABLE_RESORTING  = new ConfigBoolean("schematicOverlayEnableResorting",  false).apply(VISUALS_KEY);
+//        public static final ConfigBoolean       SCHEMATIC_OVERLAY_ENABLE_RESORTING  = new ConfigBoolean("schematicOverlayEnableResorting",  false).apply(VISUALS_KEY);
         public static final ConfigBoolean       SCHEMATIC_OVERLAY_ENABLE_SIDES      = new ConfigBoolean("schematicOverlayEnableSides",     true).apply(VISUALS_KEY);
         public static final ConfigBoolean       SCHEMATIC_OVERLAY_MODEL_OUTLINE     = new ConfigBoolean("schematicOverlayModelOutline",    true).apply(VISUALS_KEY);
         public static final ConfigBoolean       SCHEMATIC_OVERLAY_MODEL_SIDES       = new ConfigBoolean("schematicOverlayModelSides",      true).apply(VISUALS_KEY);
@@ -276,7 +276,7 @@ public class Configs implements IConfigHandler
                 RENDER_SCHEMATIC_TILE_ENTITIES,
                 RENDER_TRANSLUCENT_INNER_SIDES,
                 SCHEMATIC_OVERLAY_ENABLE_OUTLINES,
-                SCHEMATIC_OVERLAY_ENABLE_RESORTING,
+//                SCHEMATIC_OVERLAY_ENABLE_RESORTING,
                 SCHEMATIC_OVERLAY_ENABLE_SIDES,
                 SCHEMATIC_OVERLAY_MODEL_OUTLINE,
                 SCHEMATIC_OVERLAY_MODEL_SIDES,
