@@ -1196,7 +1196,6 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
         //LOGGER.warn("[VBO] uploadBuffersByType() Overlay [{}], IndexCount [{}]", type.name(), meshData.getDrawParameters().indexCount());
         ChunkRenderObjectBuffers gpuBuffers = this.gpuBufferCache.getBuffersByType(type);
 //        boolean useResorting = Configs.Visuals.SCHEMATIC_OVERLAY_ENABLE_RESORTING.getBooleanValue();
-        boolean useResorting = false;
 
         if (gpuBuffers != null)
         {
@@ -1230,34 +1229,35 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
             }
 
             // Resorting
-            if (meshData.getSortedBuffer() != null && useResorting)
-            {
-//                LOGGER.warn("[VBO] uploadBuffersByType() Overlay [{}], RESORTING", type.name());
-
-                if (gpuBuffers.indexBuffer != null && gpuBuffers.indexBuffer.size() >= meshData.getSortedBuffer().remaining())
-                {
-                    if (!gpuBuffers.indexBuffer.isClosed())
-                    {
-//                        LOGGER.warn("[VBO] uploadBuffersByType() Overlay [{}], RESORTING --> WRITE BUFFER", type.name());
-                        encoder.writeToBuffer(gpuBuffers.indexBuffer, meshData.getSortedBuffer(), 0);
-                    }
-                }
-                else
-                {
-                    if (gpuBuffers.indexBuffer != null)
-                    {
-                        gpuBuffers.indexBuffer.close();
-                    }
-
-//                    LOGGER.warn("[VBO] uploadBuffersByType() Overlay [{}], RESORTING --> CREATE/SET INDEX BUFFER", type.name());
-                    gpuBuffers.setIndexBuffer(
-                            RenderSystem.getDevice()
-                                        .createBuffer(() -> "SortedBuffer: Overlay/" + gpuBuffers.getName() + " VBO Section: [" + this.chunkRelativePos.toShortString() + "]",
-                                                      BufferType.INDICES, BufferUsage.STATIC_WRITE, meshData.getSortedBuffer())
-                    );
-                }
-            }
-            else if (gpuBuffers.indexBuffer != null)
+//            if (meshData.getSortedBuffer() != null && useResorting)
+//            {
+////                LOGGER.warn("[VBO] uploadBuffersByType() Overlay [{}], RESORTING", type.name());
+//
+//                if (gpuBuffers.indexBuffer != null && gpuBuffers.indexBuffer.size() >= meshData.getSortedBuffer().remaining())
+//                {
+//                    if (!gpuBuffers.indexBuffer.isClosed())
+//                    {
+////                        LOGGER.warn("[VBO] uploadBuffersByType() Overlay [{}], RESORTING --> WRITE BUFFER", type.name());
+//                        encoder.writeToBuffer(gpuBuffers.indexBuffer, meshData.getSortedBuffer(), 0);
+//                    }
+//                }
+//                else
+//                {
+//                    if (gpuBuffers.indexBuffer != null)
+//                    {
+//                        gpuBuffers.indexBuffer.close();
+//                    }
+//
+////                    LOGGER.warn("[VBO] uploadBuffersByType() Overlay [{}], RESORTING --> CREATE/SET INDEX BUFFER", type.name());
+//                    gpuBuffers.setIndexBuffer(
+//                            RenderSystem.getDevice()
+//                                        .createBuffer(() -> "SortedBuffer: Overlay/" + gpuBuffers.getName() + " VBO Section: [" + this.chunkRelativePos.toShortString() + "]",
+//                                                      BufferType.INDICES, BufferUsage.STATIC_WRITE, meshData.getSortedBuffer())
+//                    );
+//                }
+//            }
+//            else
+            if (gpuBuffers.indexBuffer != null)
             {
 //                LOGGER.warn("[VBO] uploadBuffersByType() Overlay [{}], ELSE --> CLEAR INDEX BUFFER", type.name());
                 gpuBuffers.indexBuffer.close();
@@ -1278,12 +1278,12 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
                                 .createBuffer(() -> "VertexBuffer: Overlay/" + name.get() + " VBO Section: [" + this.chunkRelativePos.toShortString() + "]",
                                               BufferType.VERTICES, BufferUsage.STATIC_WRITE, meshData.getBuffer()
                                 );
-            GpuBuffer indexBuffer =
-                    meshData.getSortedBuffer() != null && useResorting ?
-                    RenderSystem.getDevice()
-                                .createBuffer(() -> "IndexBuffer: " + name.get() + " VBO Section: [" + this.chunkRelativePos.toShortString() + "]",
-                                              BufferType.INDICES, BufferUsage.STATIC_WRITE, meshData.getSortedBuffer()
-                                ) : null;
+            GpuBuffer indexBuffer = null;
+//                    meshData.getSortedBuffer() != null && useResorting ?
+//                    RenderSystem.getDevice()
+//                                .createBuffer(() -> "IndexBuffer: " + name.get() + " VBO Section: [" + this.chunkRelativePos.toShortString() + "]",
+//                                              BufferType.INDICES, BufferUsage.STATIC_WRITE, meshData.getSortedBuffer()
+//                                ) : null;
 
 //            LOGGER.warn("[VBO] uploadBuffersByType() Overlay [{}], NEW VERTEX BUFFER --> SAVE", type.name());
             this.gpuBufferCache.storeBuffersByType(type,
