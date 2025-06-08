@@ -732,6 +732,8 @@ public class RenderUtils
             {
                 totalSize += part.getQuads(face).size();
             }
+
+            totalSize += part.getQuads(null).size();
         }
 
         return totalSize > 0;
