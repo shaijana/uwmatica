@@ -10,6 +10,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.data.EntitiesDataStorage;
+import fi.dy.masa.litematica.event.SchematicPlacementEventHandler;
 import fi.dy.masa.litematica.network.ServuxLitematicaHandler;
 import fi.dy.masa.litematica.network.ServuxLitematicaPacket;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
@@ -310,7 +311,13 @@ public class SchematicPlacementManager
         {
             this.schematicPlacements.add(placement);
             this.addTouchedChunksFor(placement);
+            ((SchematicPlacementEventHandler) SchematicPlacementEventHandler.getInstance()).onPlacementAdded(placement);
             this.onPlacementAdded();
+
+            if (this.selectedPlacement == null)
+            {
+                this.setSelectedSchematicPlacement(placement);
+            }
 
             if (printMessages)
             {
@@ -450,6 +457,7 @@ public class SchematicPlacementManager
     {
         if (placement == null || this.schematicPlacements.contains(placement))
         {
+            ((SchematicPlacementEventHandler) SchematicPlacementEventHandler.getInstance()).onPlacementSelected(this.selectedPlacement, placement);
             this.selectedPlacement = placement;
             OverlayRenderer.getInstance().updatePlacementCache();
             // Forget the last viewed material list when changing the placement selection
@@ -614,6 +622,8 @@ public class SchematicPlacementManager
 
     protected void onPlacementModified(SchematicPlacement placement)
     {
+        ((SchematicPlacementEventHandler) SchematicPlacementEventHandler.getInstance()).onPlacementUpdated(placement);
+
         if (placement.isEnabled())
         {
             OverlayRenderer.getInstance().updatePlacementCache();

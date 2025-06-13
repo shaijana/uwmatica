@@ -32,6 +32,7 @@ import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.data.SchematicHolder;
+import fi.dy.masa.litematica.event.SchematicPlacementEventHandler;
 import fi.dy.masa.litematica.materials.MaterialListBase;
 import fi.dy.masa.litematica.materials.MaterialListPlacement;
 import fi.dy.masa.litematica.render.OverlayRenderer;
@@ -90,6 +91,8 @@ public class SchematicPlacement
         this.enabled = enabled;
         this.enableRender = enableRender;
         this.placementManager = placementManager;
+
+        ((SchematicPlacementEventHandler) SchematicPlacementEventHandler.getInstance()).onPlacementInit(this);
     }
 
     public static SchematicPlacement createFor(LitematicaSchematic schematic, BlockPos origin, String name, boolean enabled, boolean enableRender)
@@ -97,6 +100,8 @@ public class SchematicPlacement
         SchematicPlacement placement = new SchematicPlacement(schematic, origin, name, enabled, enableRender);
         placement.setBoxesBBColorNext();
         placement.resetAllSubRegionsToSchematicValues(InfoUtils.INFO_MESSAGE_CONSUMER);
+
+        ((SchematicPlacementEventHandler) SchematicPlacementEventHandler.getInstance()).onPlacementCreateFor(placement, schematic, origin, name, enabled, enableRender);
 
         return placement;
     }
@@ -131,6 +136,8 @@ public class SchematicPlacement
     {
         SchematicPlacement placement = new SchematicPlacement(schematic, origin, "?", true, true);
         placement.resetAllSubRegionsToSchematicValues(InfoUtils.INFO_MESSAGE_CONSUMER, false);
+
+        ((SchematicPlacementEventHandler) SchematicPlacementEventHandler.getInstance()).onPlacementCreateForConversion(placement, schematic, origin);
 
         return placement;
     }
@@ -215,6 +222,7 @@ public class SchematicPlacement
     public void toggleLocked()
     {
         this.locked = ! this.locked;
+        ((SchematicPlacementEventHandler) SchematicPlacementEventHandler.getInstance()).onToggleLocked(this, this.locked);
     }
 
     public void setCoordinateLocked(CoordinateType coord, boolean locked)
@@ -262,6 +270,7 @@ public class SchematicPlacement
     public void setName(String name)
     {
         this.name = name;
+        ((SchematicPlacementEventHandler) SchematicPlacementEventHandler.getInstance()).onSetName(this, name);
     }
 
     public SchematicPlacement setBoxesBBColor(int color)
@@ -749,6 +758,7 @@ public class SchematicPlacement
             this.placementManager.onPrePlacementChange(this);
 
             this.enabled = enabled;
+            ((SchematicPlacementEventHandler) SchematicPlacementEventHandler.getInstance()).onSetEnabled(this, enabled);
             this.onModified(this.placementManager);
         }
     }
@@ -766,6 +776,7 @@ public class SchematicPlacement
             this.placementManager.onPrePlacementChange(this);
 
             this.enableRender = render;
+            ((SchematicPlacementEventHandler) SchematicPlacementEventHandler.getInstance()).onSetRender(this, render);
             this.onModified(this.placementManager);
         }
     }
@@ -796,6 +807,7 @@ public class SchematicPlacement
             this.placementManager.onPrePlacementChange(this);
 
             this.origin = origin;
+            ((SchematicPlacementEventHandler) SchematicPlacementEventHandler.getInstance()).onSetOrigin(this, origin);
             this.onModified(this.placementManager);
         }
 
@@ -816,6 +828,7 @@ public class SchematicPlacement
             this.placementManager.onPrePlacementChange(this);
 
             this.rotation = rotation;
+            ((SchematicPlacementEventHandler) SchematicPlacementEventHandler.getInstance()).onSetRotation(this, rotation);
             this.onModified(this.placementManager);
         }
 
@@ -836,6 +849,7 @@ public class SchematicPlacement
             this.placementManager.onPrePlacementChange(this);
 
             this.mirror = mirror;
+            ((SchematicPlacementEventHandler) SchematicPlacementEventHandler.getInstance()).onSetMirror(this, mirror);
             this.onModified(this.placementManager);
         }
 
@@ -864,6 +878,7 @@ public class SchematicPlacement
 
     public void onRemoved()
     {
+        ((SchematicPlacementEventHandler) SchematicPlacementEventHandler.getInstance()).onPlacementRemoved(this);
         USED_COLORS.remove(this.boxesBBColor);
 
         if (USED_COLORS.isEmpty())
@@ -922,6 +937,8 @@ public class SchematicPlacement
 
                 obj.add("placements", arr);
             }
+
+            ((SchematicPlacementEventHandler) SchematicPlacementEventHandler.getInstance()).onSavePlacementToJson(this, obj);
 
             return obj;
         }
@@ -1025,6 +1042,8 @@ public class SchematicPlacement
             schematicPlacement.checkAreSubRegionsModified();
             schematicPlacement.updateEnclosingBox();
 
+            ((SchematicPlacementEventHandler) SchematicPlacementEventHandler.getInstance()).onPlacementCreateFromJson(schematicPlacement, schematic, pos, name, rotation, mirror, enabled, enableRender);
+
             return schematicPlacement;
         }
 
@@ -1086,6 +1105,9 @@ public class SchematicPlacement
         compound.putString("ReplaceMode", Configs.Generic.PASTE_REPLACE_BEHAVIOR.getStringValue());
         compound.putString("PasteLayerBehavior", Configs.Generic.PASTE_LAYER_BEHAVIOR.getStringValue());
         compound.put("RenderLayerRange", LayerRange.CODEC, DataManager.getRenderLayerRange());
+
+        ((SchematicPlacementEventHandler) SchematicPlacementEventHandler.getInstance()).onSavePlacementToNbt(this, compound);
+
         return compound;
     }
 
@@ -1132,6 +1154,8 @@ public class SchematicPlacement
         placement.checkAreSubRegionsModified();
         placement.updateEnclosingBox();
 
+        ((SchematicPlacementEventHandler) SchematicPlacementEventHandler.getInstance()).onPlacementCreateFromNbt(placement, schematic, origin, name, rot, mirror, placement.enabled, placement.enableRender);
+
         return placement;
     }
     public static @Nullable SchematicPlacement createFromNbt(@Nonnull LitematicaSchematic schematic, NbtCompound nbt)
@@ -1175,6 +1199,8 @@ public class SchematicPlacement
 
         placement.checkAreSubRegionsModified();
         placement.updateEnclosingBox();
+
+        ((SchematicPlacementEventHandler) SchematicPlacementEventHandler.getInstance()).onPlacementCreateFromNbt(placement, schematic, origin, name, rot, mirror, placement.enabled, placement.enableRender);
 
         return placement;
     }

@@ -8,7 +8,6 @@ import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.BufferBuilderStorage;
 import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.Fog;
 import net.minecraft.client.render.Frustum;
 import net.minecraft.util.profiler.Profiler;
 
@@ -27,7 +26,7 @@ import fi.dy.masa.litematica.tool.ToolMode;
 public class RenderHandler implements IRenderer
 {
     @Override
-    public void onRenderWorldPreWeather(Framebuffer fb, Matrix4f posMatrix, Matrix4f projMatrix, Frustum frustum, Camera camera, Fog fog, BufferBuilderStorage buffers, Profiler profiler)
+    public void onRenderWorldPreWeather(Framebuffer fb, Matrix4f posMatrix, Matrix4f projMatrix, Frustum frustum, Camera camera, BufferBuilderStorage buffers, Profiler profiler)
     {
 //        MinecraftClient mc = MinecraftClient.getInstance();
 //
@@ -37,7 +36,7 @@ public class RenderHandler implements IRenderer
     }
 
     @Override
-    public void onRenderWorldLastAdvanced(Framebuffer fb, Matrix4f posMatrix, Matrix4f projMatrix, Frustum frustum, Camera camera, Fog fog, BufferBuilderStorage buffers, Profiler profiler)
+    public void onRenderWorldLastAdvanced(Framebuffer fb, Matrix4f posMatrix, Matrix4f projMatrix, Frustum frustum, Camera camera, BufferBuilderStorage buffers, Profiler profiler)
     {
         MinecraftClient mc = MinecraftClient.getInstance();
 
@@ -86,13 +85,13 @@ public class RenderHandler implements IRenderer
                 {
                     ToolHud.getInstance().renderHud(drawContext);
                     profiler.swap("overlay_hover_info");
-                    OverlayRenderer.getInstance().renderHoverInfo(mc, drawContext, profiler);
+                    OverlayRenderer.getInstance().renderHoverInfo(drawContext, mc, profiler);
                 }
 
                 if (GuiSchematicManager.hasPendingPreviewTask())
                 {
                     profiler.swap("overlay_preview_frame");
-                    OverlayRenderer.getInstance().renderPreviewFrame(mc, drawContext, profiler);
+                    OverlayRenderer.getInstance().renderPreviewFrame(drawContext, mc, profiler);
                 }
             }
 

@@ -47,6 +47,7 @@ import fi.dy.masa.malilib.util.data.Constants;
 import fi.dy.masa.malilib.util.InventoryUtils;
 import fi.dy.masa.malilib.util.nbt.NbtKeys;
 import fi.dy.masa.malilib.util.nbt.NbtUtils;
+import fi.dy.masa.malilib.util.nbt.NbtView;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.Reference;
 import fi.dy.masa.litematica.config.Configs;
@@ -642,18 +643,26 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
         if (world != null)
         {
             Entity entity = world.getEntityById(entityId);
-            NbtCompound nbt = new NbtCompound();
 
-            if (entity != null && entity.saveSelfNbt(nbt))
+            if (entity != null)
             {
-                Pair<Entity, NbtCompound> pair = Pair.of(entity, nbt);
+                NbtView view = NbtView.getWriter(world.getRegistryManager());
+                entity.writeData(view.getWriter());
+                NbtCompound nbt = view.readNbt();
+                Identifier id = EntityType.getId(entity.getType());
 
-                synchronized (this.entityCache)
+                if (nbt != null && id != null)
                 {
-                    this.entityCache.put(entityId, Pair.of(System.currentTimeMillis(), pair));
-                }
+                    nbt.putString("id", id.toString());
+                    Pair<Entity, NbtCompound> pair = Pair.of(entity, nbt);
 
-                return pair;
+                    synchronized (this.entityCache)
+                    {
+                        this.entityCache.put(entityId, Pair.of(System.currentTimeMillis(), pair));
+                    }
+
+                    return pair;
+                }
             }
         }
 
@@ -1055,7 +1064,8 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
                 this.blockEntityCache.put(pos, Pair.of(System.currentTimeMillis(), Pair.of(blockEntity, nbt)));
             }
 
-            blockEntity.read(nbt, this.getClientWorld().getRegistryManager());
+            NbtView view = NbtView.getReader(nbt, this.getClientWorld().getRegistryManager());
+            blockEntity.read(view.getReader());
             ChunkPos chunkPos = new ChunkPos(pos);
 
             if (this.hasPendingChunk(chunkPos) && this.hasServuxServer() == false)
@@ -1094,7 +1104,8 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
 
                     if (Configs.Generic.ENTITY_DATA_LOAD_NBT.getBooleanValue())
                     {
-                        blockEntity2.read(nbt, this.getClientWorld().getRegistryManager());
+                        NbtView view = NbtView.getReader(nbt, this.getClientWorld().getRegistryManager());
+                        blockEntity2.read(view.getReader());
                         this.getClientWorld().addBlockEntity(blockEntity2);
                     }
 

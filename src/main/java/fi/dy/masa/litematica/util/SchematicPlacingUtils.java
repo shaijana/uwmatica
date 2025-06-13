@@ -33,6 +33,7 @@ import net.minecraft.world.tick.WorldTickScheduler;
 
 import fi.dy.masa.malilib.util.IntBoundingBox;
 import fi.dy.masa.malilib.util.nbt.NbtUtils;
+import fi.dy.masa.malilib.util.nbt.NbtView;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
@@ -290,7 +291,8 @@ public class SchematicPlacingUtils
 
                             try
                             {
-                                te.read(teNBT, world.getRegistryManager());
+                                NbtView view = NbtView.getReader(teNBT, world.getRegistryManager());
+                                te.read(view.getReader());
 
                                 if (ignoreInventories && te instanceof Inventory)
                                 {
