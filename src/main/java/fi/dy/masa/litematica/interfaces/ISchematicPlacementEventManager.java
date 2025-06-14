@@ -1,15 +1,15 @@
 package fi.dy.masa.litematica.interfaces;
 
-import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
-import fi.dy.masa.litematica.schematic.placement.SchematicPlacementEventFlag;
-import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement;
-
 import java.util.List;
 import javax.annotation.Nonnull;
 
 import net.minecraft.util.BlockMirror;
 import net.minecraft.util.BlockRotation;
 import net.minecraft.util.math.BlockPos;
+
+import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
+import fi.dy.masa.litematica.schematic.placement.SchematicPlacementEventFlag;
+import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement;
 
 public interface ISchematicPlacementEventManager
 {
@@ -19,13 +19,17 @@ public interface ISchematicPlacementEventManager
 
     void invokePostPlacementChange(@Nonnull ISchematicPlacementEventListener listener, @Nonnull SchematicPlacement placement);
 
-    void invokeSetSubRegionEnabled(@Nonnull ISchematicPlacementEventListener listener, @Nonnull SubRegionPlacement placement, boolean toggle);
+    void invokePlacementModified(@Nonnull ISchematicPlacementEventListener listener, @Nonnull SchematicPlacement placement);
 
-    void invokeSetSubRegionOrigin(@Nonnull ISchematicPlacementEventListener listener, @Nonnull SubRegionPlacement placement, BlockPos pos);
+    void invokeSetSubRegionEnabled(@Nonnull ISchematicPlacementEventListener listener, @Nonnull SubRegionPlacement subRegion, boolean toggle);
 
-    void invokeSetSubRegionMirror(@Nonnull ISchematicPlacementEventListener listener, @Nonnull SubRegionPlacement placement, BlockMirror mirror);
+    void invokeSetSubRegionOrigin(@Nonnull ISchematicPlacementEventListener listener, @Nonnull SubRegionPlacement subRegion, BlockPos pos);
 
-    void invokeSetSubRegionRotation(@Nonnull ISchematicPlacementEventListener listener, @Nonnull SubRegionPlacement placement, BlockRotation rot);
+    void invokeSetSubRegionMirror(@Nonnull ISchematicPlacementEventListener listener, @Nonnull SubRegionPlacement subRegion, BlockMirror mirror);
 
-    void invokeResetSubRegion(@Nonnull ISchematicPlacementEventListener listener, @Nonnull SubRegionPlacement placement);
+    void invokeSetSubRegionRotation(@Nonnull ISchematicPlacementEventListener listener, @Nonnull SubRegionPlacement subRegion, BlockRotation rot);
+
+    void invokeSubRegionModified(@Nonnull ISchematicPlacementEventListener listener, @Nonnull SchematicPlacement placement, @Nonnull String subRegionName);
+
+    void invokeResetSubRegion(@Nonnull ISchematicPlacementEventListener listener, @Nonnull SubRegionPlacement subRegion);
 }

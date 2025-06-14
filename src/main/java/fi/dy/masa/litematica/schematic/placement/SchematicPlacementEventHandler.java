@@ -7,7 +7,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.ApiStatus;
-import org.jetbrains.annotations.NotNull;
 
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.BlockMirror;
@@ -85,8 +84,22 @@ public class SchematicPlacementEventHandler implements ISchematicPlacementEventM
      * Requires All Events Flag
      */
     @Override
-    public void invokeSetSubRegionEnabled(@NotNull ISchematicPlacementEventListener listener,
-                                          @NotNull SubRegionPlacement placement, boolean toggle)
+    public void invokePlacementModified(@Nonnull ISchematicPlacementEventListener listener,
+                                        @Nonnull SchematicPlacement placement)
+    {
+        if (this.handlers.containsKey(listener) &&
+            this.handlers.get(listener).contains(SchematicPlacementEventFlag.ALL_EVENTS))
+        {
+            placement.onModified(placement.placementManager);
+        }
+    }
+
+    /**
+     * Requires All Events Flag
+     */
+    @Override
+    public void invokeSetSubRegionEnabled(@Nonnull ISchematicPlacementEventListener listener,
+                                          @Nonnull SubRegionPlacement placement, boolean toggle)
     {
         if (this.handlers.containsKey(listener) &&
             this.handlers.get(listener).contains(SchematicPlacementEventFlag.ALL_EVENTS))
@@ -99,8 +112,8 @@ public class SchematicPlacementEventHandler implements ISchematicPlacementEventM
      * Requires All Events Flag
      */
     @Override
-    public void invokeSetSubRegionOrigin(@NotNull ISchematicPlacementEventListener listener,
-                                         @NotNull SubRegionPlacement placement, BlockPos pos)
+    public void invokeSetSubRegionOrigin(@Nonnull ISchematicPlacementEventListener listener,
+                                         @Nonnull SubRegionPlacement placement, BlockPos pos)
     {
         if (this.handlers.containsKey(listener) &&
             this.handlers.get(listener).contains(SchematicPlacementEventFlag.ALL_EVENTS))
@@ -113,8 +126,8 @@ public class SchematicPlacementEventHandler implements ISchematicPlacementEventM
      * Requires All Events Flag
      */
     @Override
-    public void invokeSetSubRegionMirror(@NotNull ISchematicPlacementEventListener listener,
-                                         @NotNull SubRegionPlacement placement, BlockMirror mirror)
+    public void invokeSetSubRegionMirror(@Nonnull ISchematicPlacementEventListener listener,
+                                         @Nonnull SubRegionPlacement placement, BlockMirror mirror)
     {
         if (this.handlers.containsKey(listener) &&
             this.handlers.get(listener).contains(SchematicPlacementEventFlag.ALL_EVENTS))
@@ -127,8 +140,8 @@ public class SchematicPlacementEventHandler implements ISchematicPlacementEventM
      * Requires All Events Flag
      */
     @Override
-    public void invokeSetSubRegionRotation(@NotNull ISchematicPlacementEventListener listener,
-                                           @NotNull SubRegionPlacement placement, BlockRotation rot)
+    public void invokeSetSubRegionRotation(@Nonnull ISchematicPlacementEventListener listener,
+                                           @Nonnull SubRegionPlacement placement, BlockRotation rot)
     {
         if (this.handlers.containsKey(listener) &&
             this.handlers.get(listener).contains(SchematicPlacementEventFlag.ALL_EVENTS))
@@ -141,13 +154,28 @@ public class SchematicPlacementEventHandler implements ISchematicPlacementEventM
      * Requires All Events Flag
      */
     @Override
-    public void invokeResetSubRegion(@NotNull ISchematicPlacementEventListener listener,
-                                     @NotNull SubRegionPlacement placement)
+    public void invokeResetSubRegion(@Nonnull ISchematicPlacementEventListener listener,
+                                     @Nonnull SubRegionPlacement placement)
     {
         if (this.handlers.containsKey(listener) &&
             this.handlers.get(listener).contains(SchematicPlacementEventFlag.ALL_EVENTS))
         {
             placement.resetToOriginalValues();
+        }
+    }
+
+    /**
+     * Requires All Events Flag
+     */
+    @Override
+    public void invokeSubRegionModified(@Nonnull ISchematicPlacementEventListener listener,
+                                        @Nonnull SchematicPlacement placement,
+                                        @Nonnull String regionName)
+    {
+        if (this.handlers.containsKey(listener) &&
+            this.handlers.get(listener).contains(SchematicPlacementEventFlag.ALL_EVENTS))
+        {
+            placement.onModified(regionName, placement.placementManager);
         }
     }
 

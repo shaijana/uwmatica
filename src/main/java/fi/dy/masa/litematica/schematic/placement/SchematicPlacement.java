@@ -862,14 +862,14 @@ public class SchematicPlacement
         return this.setBoxesBBColor(getNextBoxColor());
     }
 
-    private void onModified(SchematicPlacementManager manager)
+    protected void onModified(SchematicPlacementManager manager)
     {
         this.updateEnclosingBox();
         manager.onPostPlacementChange(this);
         OverlayRenderer.getInstance().updatePlacementCache();
     }
 
-    private void onModified(String regionName, SchematicPlacementManager manager)
+    protected void onModified(String regionName, SchematicPlacementManager manager)
     {
         this.checkAreSubRegionsModified();
         this.updateEnclosingBox();
