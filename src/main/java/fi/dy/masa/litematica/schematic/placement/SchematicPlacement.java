@@ -46,6 +46,7 @@ public class SchematicPlacement
     private static final Set<Integer> USED_COLORS = new HashSet<>();
     private static int nextColorIndex;
 
+    private final UUID hashId;      // This is meant to uniquely identify each Placement at creation.
     protected final SchematicPlacementManager placementManager;
     private final Map<String, SubRegionPlacement> relativeSubRegionPlacements = new HashMap<>();
     private final int subRegionCount;
@@ -77,11 +78,22 @@ public class SchematicPlacement
 
     public SchematicPlacement(LitematicaSchematic schematic, BlockPos origin, String name, boolean enabled, boolean enableRender)
     {
-        this(schematic, origin, name, enabled, enableRender, DataManager.getSchematicPlacementManager());
+        this(schematic, origin, name, enabled, enableRender, DataManager.getSchematicPlacementManager(), null);
+    }
+
+    public SchematicPlacement(LitematicaSchematic schematic, BlockPos origin, String name, boolean enabled, boolean enableRender, UUID hash)
+    {
+        this(schematic, origin, name, enabled, enableRender, DataManager.getSchematicPlacementManager(), hash);
     }
 
     public SchematicPlacement(LitematicaSchematic schematic, BlockPos origin, String name, boolean enabled, boolean enableRender, SchematicPlacementManager placementManager)
     {
+        this(schematic, origin, name, enabled, enableRender, placementManager, null);
+    }
+
+    public SchematicPlacement(LitematicaSchematic schematic, BlockPos origin, String name, boolean enabled, boolean enableRender, SchematicPlacementManager placementManager, @Nullable UUID hash)
+    {
+        this.hashId = hash != null ? hash : UUID.randomUUID();
         this.schematic = schematic;
         this.schematicFile = schematic.getFile();
         this.origin = origin;
@@ -96,7 +108,12 @@ public class SchematicPlacement
 
     public static SchematicPlacement createFor(LitematicaSchematic schematic, BlockPos origin, String name, boolean enabled, boolean enableRender)
     {
-        SchematicPlacement placement = new SchematicPlacement(schematic, origin, name, enabled, enableRender);
+        return createFor(schematic, origin, name, enabled, enableRender, null);
+    }
+
+    public static SchematicPlacement createFor(LitematicaSchematic schematic, BlockPos origin, String name, boolean enabled, boolean enableRender, UUID hash)
+    {
+        SchematicPlacement placement = new SchematicPlacement(schematic, origin, name, enabled, enableRender, hash);
         placement.setBoxesBBColorNext();
         placement.resetAllSubRegionsToSchematicValues(InfoUtils.INFO_MESSAGE_CONSUMER);
 
@@ -133,7 +150,12 @@ public class SchematicPlacement
      */
     public static SchematicPlacement createTemporary(LitematicaSchematic schematic, BlockPos origin)
     {
-        SchematicPlacement placement = new SchematicPlacement(schematic, origin, "?", true, true);
+        return createTemporary(schematic, origin, null);
+    }
+
+    public static SchematicPlacement createTemporary(LitematicaSchematic schematic, BlockPos origin, UUID hash)
+    {
+        SchematicPlacement placement = new SchematicPlacement(schematic, origin, "?", true, true, hash);
         placement.resetAllSubRegionsToSchematicValues(InfoUtils.INFO_MESSAGE_CONSUMER, false);
 
         ((SchematicPlacementEventHandler) SchematicPlacementEventHandler.getInstance()).onPlacementCreateForConversion(placement, schematic, origin);
@@ -279,6 +301,8 @@ public class SchematicPlacement
         USED_COLORS.add(color);
         return this;
     }
+
+    public UUID getHashId() { return this.hashId; }
 
     public BlockPos getOrigin()
     {
@@ -913,6 +937,7 @@ public class SchematicPlacement
             obj.add("locked_coords", new JsonPrimitive(this.coordinateLockMask));
             obj.add("bb_color", new JsonPrimitive(this.boxesBBColor));
             obj.add("verifier_type", new JsonPrimitive(this.verifierType.getStringValue()));
+            obj.add("hash_code", new JsonPrimitive(this.hashId.toString()));
 
             if (this.selectedSubRegionName != null)
             {
@@ -976,6 +1001,7 @@ public class SchematicPlacement
                 return null;
             }
 
+            UUID hashCode = JsonUtils.hasString(obj, "hash_code") ? UUID.fromString(JsonUtils.getString(obj, "hash_code")) : null;
             String name = obj.get("name").getAsString();
             BlockPos pos = new BlockPos(posArr.get(0).getAsInt(), posArr.get(1).getAsInt(), posArr.get(2).getAsInt());
             BlockRotation rotation = BlockRotation.valueOf(obj.get("rotation").getAsString());
@@ -983,7 +1009,7 @@ public class SchematicPlacement
             boolean enabled = JsonUtils.getBoolean(obj, "enabled");
             boolean enableRender = JsonUtils.getBoolean(obj, "enable_render");
 
-            SchematicPlacement schematicPlacement = new SchematicPlacement(schematic, pos, name, enabled, enableRender);
+            SchematicPlacement schematicPlacement = new SchematicPlacement(schematic, pos, name, enabled, enableRender, hashCode);
             schematicPlacement.rotation = rotation;
             schematicPlacement.mirror = mirror;
             schematicPlacement.ignoreEntities = JsonUtils.getBoolean(obj, "ignore_entities");
@@ -1074,6 +1100,7 @@ public class SchematicPlacement
     {
         NbtCompound compound = new NbtCompound();
         compound.putString("Name", this.name);
+        compound.putString("HashCode", this.hashId.toString());
 
         if (withSchematic)
         {
@@ -1114,12 +1141,13 @@ public class SchematicPlacement
     public static @Nullable SchematicPlacement createFromNbt(NbtCompound nbt)
     {
         String name = nbt.getString("Name", "?");
+        UUID hashCode = nbt.contains("HashCode") ? UUID.fromString(nbt.getString("HashCode", "")) : null;
         LitematicaSchematic schematic = new LitematicaSchematic(Path.of(name), nbt.getCompoundOrEmpty("Schematics"), FileType.LITEMATICA_SCHEMATIC);
         BlockPos origin = NbtUtils.readBlockPosFromArrayTag(nbt, "Origin");
         BlockRotation rot = BlockRotation.values()[nbt.getInt("Rotation", 0)];
         BlockMirror mirror = BlockMirror.values()[nbt.getInt("Mirror", 0)];
 
-        SchematicPlacement placement = SchematicPlacement.createFor(schematic, origin, name, true, true);
+        SchematicPlacement placement = SchematicPlacement.createFor(schematic, origin, name, true, true, hashCode);
         placement.rotation = rot;
         placement.mirror = mirror;
         NbtCompound subs = nbt.getCompoundOrEmpty("SubRegions");
@@ -1160,11 +1188,12 @@ public class SchematicPlacement
     public static @Nullable SchematicPlacement createFromNbt(@Nonnull LitematicaSchematic schematic, NbtCompound nbt)
     {
         String name = nbt.getString("Name", "?");
+        UUID hashCode = nbt.contains("HashCode") ? UUID.fromString(nbt.getString("HashCode", "")) : null;
         BlockPos origin = NbtUtils.readBlockPosFromArrayTag(nbt, "Origin");
         BlockRotation rot = BlockRotation.values()[nbt.getInt("Rotation", 0)];
         BlockMirror mirror = BlockMirror.values()[nbt.getInt("Mirror", 0)];
 
-        SchematicPlacement placement = SchematicPlacement.createFor(schematic, origin, name, true, true);
+        SchematicPlacement placement = SchematicPlacement.createFor(schematic, origin, name, true, true, hashCode);
         placement.rotation = rot;
         placement.mirror = mirror;
         NbtCompound subs = nbt.getCompoundOrEmpty("SubRegions");
