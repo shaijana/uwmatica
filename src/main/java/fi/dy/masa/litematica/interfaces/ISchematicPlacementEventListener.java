@@ -22,13 +22,13 @@ public interface ISchematicPlacementEventListener
      * Event callback when a Schematic Placement object is initialized.
      * @param placement ()
      */
-    void onPlacementInit(SchematicPlacement placement);
+    default void onPlacementInit(SchematicPlacement placement) {}
 
     /**
      * Event callback when a Schematic Placement object is initialized.
      * @param subRegion ()
      */
-    void onSubRegionInit(SubRegionPlacement subRegion);
+    default void onSubRegionInit(SubRegionPlacement subRegion) {}
 
     /**
      * Event callback when a Schematic Placement is created based on a Litematic.
@@ -39,7 +39,7 @@ public interface ISchematicPlacementEventListener
      * @param enabled ()
      * @param enableRender ()
      */
-    void onPlacementCreateFor(SchematicPlacement placement, LitematicaSchematic schematic, BlockPos origin, String name, boolean enabled, boolean enableRender);
+    default void onPlacementCreateFor(SchematicPlacement placement, LitematicaSchematic schematic, BlockPos origin, String name, boolean enabled, boolean enableRender) {}
 
     /**
      * Event callback when a Schematic Placement is created for Litematic Conversion purposes; such as Converting from a Sponge Schematic.
@@ -47,7 +47,7 @@ public interface ISchematicPlacementEventListener
      * @param schematic ()
      * @param origin ()
      */
-    void onPlacementCreateForConversion(SchematicPlacement placement, LitematicaSchematic schematic, BlockPos origin);
+    default void onPlacementCreateForConversion(SchematicPlacement placement, LitematicaSchematic schematic, BlockPos origin) {}
 
     /**
      * Event callback when a Schematic Placement is created from loading it via the JSON Config.
@@ -58,7 +58,7 @@ public interface ISchematicPlacementEventListener
      * @param enabled ()
      * @param enableRender ()
      */
-    void onPlacementCreateFromJson(SchematicPlacement placement, LitematicaSchematic schematic, BlockPos origin, String name, BlockRotation rotation, BlockMirror mirror, boolean enabled, boolean enableRender, JsonObject obj);
+    default void onPlacementCreateFromJson(SchematicPlacement placement, LitematicaSchematic schematic, BlockPos origin, String name, BlockRotation rotation, BlockMirror mirror, boolean enabled, boolean enableRender, JsonObject obj) {}
 
     /**
      * Event callback when a Schematic Placement is created from loading it via an NbtCompound (Litematic Transmit).
@@ -69,21 +69,21 @@ public interface ISchematicPlacementEventListener
      * @param enabled ()
      * @param enableRender ()
      */
-    void onPlacementCreateFromNbt(SchematicPlacement placement, LitematicaSchematic schematic, BlockPos origin, String name, BlockRotation rotation, BlockMirror mirror, boolean enabled, boolean enableRender, NbtCompound nbt);
+    default void onPlacementCreateFromNbt(SchematicPlacement placement, LitematicaSchematic schematic, BlockPos origin, String name, BlockRotation rotation, BlockMirror mirror, boolean enabled, boolean enableRender, NbtCompound nbt) {}
 
     /**
      * Event callback when a Schematic Placement is being saved to JSON.
      * @param placement ()
      * @param json ()
      */
-    void onSavePlacementToJson(SchematicPlacement placement, JsonObject json);
+    default void onSavePlacementToJson(SchematicPlacement placement, JsonObject json) {}
 
     /**
      * Event callback when a Schematic Placement is being saved to NBT (To Servux for pasting, etc.).
      * @param placement ()
      * @param nbt ()
      */
-    void onSavePlacementToNbt(SchematicPlacement placement, NbtCompound nbt);
+    default void onSavePlacementToNbt(SchematicPlacement placement, NbtCompound nbt) {}
 
     /**
      * Event callback when a Schematic Placement is created from loading it via the JSON Config.
@@ -93,110 +93,110 @@ public interface ISchematicPlacementEventListener
      * @param enabled ()
      * @param enableRender ()
      */
-    void onSubRegionCreateFromJson(SubRegionPlacement subRegion, BlockPos origin, String name, BlockRotation rotation, BlockMirror mirror, boolean enabled, boolean enableRender, JsonObject obj);
+    default void onSubRegionCreateFromJson(SubRegionPlacement subRegion, BlockPos origin, String name, BlockRotation rotation, BlockMirror mirror, boolean enabled, boolean enableRender, JsonObject obj) {}
 
     /**
      * Event callback when a Schematic Placement is being saved to JSON.
      * @param subRegion ()
      * @param json ()
      */
-    void onSaveSubRegionToJson(SubRegionPlacement subRegion, JsonObject json);
+    default void onSaveSubRegionToJson(SubRegionPlacement subRegion, JsonObject json) {}
 
     /**
      * Event callback when a Schematic Placement is toggled Locked/Unlocked.
      * @param placement ()
      * @param toggle ()
      */
-    void onToggleLocked(SchematicPlacement placement, boolean toggle);
+    default void onToggleLocked(SchematicPlacement placement, boolean toggle) {}
 
     /**
      * Event callback when a Schematic Placement is toggled Enabled/Disabled.
      * @param placement ()
      * @param toggle ()
      */
-    void onSetEnabled(SchematicPlacement placement, boolean toggle);
+    default void onSetEnabled(SchematicPlacement placement, boolean toggle) {}
 
     /**
      * Event callback when a Schematic Placement is toggled to Render.
      * @param placement ()
      * @param toggle ()
      */
-    void onSetRender(SchematicPlacement placement, boolean toggle);
+    default void onSetRender(SchematicPlacement placement, boolean toggle) {}
 
     /**
      * Event callback when a Schematic Placement is renamed.
      * @param placement ()
      * @param name ()
      */
-    void onSetName(SchematicPlacement placement, String name);
+    default void onSetName(SchematicPlacement placement, String name) {}
 
     /**
      * Event callback when a Schematic Placement adjusts the Block Origin Pos..
      * @param placement ()
      * @param origin ()
      */
-    void onSetOrigin(SchematicPlacement placement, BlockPos origin);
+    default void onSetOrigin(SchematicPlacement placement, BlockPos origin) {}
 
     /**
      * Event callback when a Schematic Placement's Block Mirroring is changed.
      * @param placement ()
      * @param mirror ()
      */
-    void onSetMirror(SchematicPlacement placement, BlockMirror mirror);
+    default void onSetMirror(SchematicPlacement placement, BlockMirror mirror) {}
 
     /**
      * Event callback when a Schematic Placement's Block Rotation is changed.
      * @param placement ()
      * @param rotation ()
      */
-    void onSetRotation(SchematicPlacement placement, BlockRotation rotation);
+    default void onSetRotation(SchematicPlacement placement, BlockRotation rotation) {}
 
     /**
      * Event callback when a Schematic Placement is reset.
      * @param placement ()
      */
-    void onPlacementReset(SchematicPlacement placement);
+    default void onPlacementReset(SchematicPlacement placement) {}
 
     /**
      * Event callback when a Schematic Placement is toggled Enabled/Disabled.
      * @param subRegion ()
      * @param toggle ()
      */
-    void onSetSubRegionEnabled(SubRegionPlacement subRegion, boolean toggle);
+    default void onSetSubRegionEnabled(SubRegionPlacement subRegion, boolean toggle) {}
 
     /**
      * Event callback when a Schematic Placement is toggled to Render.
      * @param subRegion ()
      * @param toggle ()
      */
-    void onSetSubRegionRender(SubRegionPlacement subRegion, boolean toggle);
+    default void onSetSubRegionRender(SubRegionPlacement subRegion, boolean toggle) {}
 
     /**
      * Event callback when a Schematic Placement adjusts the Block Origin Pos..
      * @param subRegion ()
      * @param origin ()
      */
-    void onSetSubRegionOrigin(SubRegionPlacement subRegion, BlockPos origin);
+    default void onSetSubRegionOrigin(SubRegionPlacement subRegion, BlockPos origin) {}
 
     /**
      * Event callback when a Schematic Placement's Block Mirroring is changed.
      * @param subRegion ()
      * @param mirror ()
      */
-    void onSetSubRegionMirror(SubRegionPlacement subRegion, BlockMirror mirror);
+    default void onSetSubRegionMirror(SubRegionPlacement subRegion, BlockMirror mirror) {}
 
     /**
      * Event callback when a Schematic Placement's Block Rotation is changed.
      * @param subRegion ()
      * @param rotation ()
      */
-    void onSetSubRegionRotation(SubRegionPlacement subRegion, BlockRotation rotation);
+    default void onSetSubRegionRotation(SubRegionPlacement subRegion, BlockRotation rotation) {}
 
     /**
      * Event callback when a Schematic Placement is reset.
      * @param subRegion ()
      */
-    void onSubRegionReset(SubRegionPlacement subRegion);
+    default void onSubRegionReset(SubRegionPlacement subRegion) {}
 
     /**
      * Event callback when a Schematic Placement is toggled as Selected.
@@ -204,7 +204,7 @@ public interface ISchematicPlacementEventListener
      * @param prevPlacement ()
      * @param selected ()
      */
-    void onPlacementSelected(@Nullable SchematicPlacement prevPlacement, @Nullable SchematicPlacement selected);
+    default void onPlacementSelected(@Nullable SchematicPlacement prevPlacement, @Nullable SchematicPlacement selected) {}
 
     /**
      * Event callback when a Schematic Placement is added to the Placement Manager.
@@ -222,5 +222,5 @@ public interface ISchematicPlacementEventListener
      * Event callback when a Schematic Placement was updated by any means.
      * @param placement ()
      */
-    void onPlacementUpdated(SchematicPlacement placement);
+    default void onPlacementUpdated(SchematicPlacement placement) {}
 }
