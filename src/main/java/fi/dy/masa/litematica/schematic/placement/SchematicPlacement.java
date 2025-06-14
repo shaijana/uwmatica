@@ -32,7 +32,6 @@ import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.data.SchematicHolder;
-import fi.dy.masa.litematica.event.SchematicPlacementEventHandler;
 import fi.dy.masa.litematica.materials.MaterialListBase;
 import fi.dy.masa.litematica.materials.MaterialListPlacement;
 import fi.dy.masa.litematica.render.OverlayRenderer;
@@ -627,7 +626,8 @@ public class SchematicPlacement
             // Marks the currently touched chunks before doing the modification
             this.placementManager.onPrePlacementChange(this);
 
-            this.relativeSubRegionPlacements.get(regionName).setRotation(rotation);
+            SubRegionPlacement placement = this.relativeSubRegionPlacements.get(regionName);
+            placement.setRotation(rotation);
             this.onModified(regionName, this.placementManager);
         }
     }
@@ -713,6 +713,7 @@ public class SchematicPlacement
             this.placementManager.onPrePlacementChange(this);
         }
 
+        ((SchematicPlacementEventHandler) SchematicPlacementEventHandler.getInstance()).onPlacementReset(this);
         Map<String, BlockPos> areaPositions = this.schematic.getAreaPositions();
         this.relativeSubRegionPlacements.clear();
         this.regionPlacementsModified = false;
@@ -1041,7 +1042,6 @@ public class SchematicPlacement
 
             schematicPlacement.checkAreSubRegionsModified();
             schematicPlacement.updateEnclosingBox();
-
             ((SchematicPlacementEventHandler) SchematicPlacementEventHandler.getInstance()).onPlacementCreateFromJson(schematicPlacement, schematic, pos, name, rotation, mirror, enabled, enableRender);
 
             return schematicPlacement;

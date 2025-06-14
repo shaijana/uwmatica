@@ -10,7 +10,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.data.EntitiesDataStorage;
-import fi.dy.masa.litematica.event.SchematicPlacementEventHandler;
 import fi.dy.masa.litematica.network.ServuxLitematicaHandler;
 import fi.dy.masa.litematica.network.ServuxLitematicaPacket;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;

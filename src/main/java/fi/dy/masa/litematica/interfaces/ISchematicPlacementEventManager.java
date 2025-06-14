@@ -1,6 +1,6 @@
 package fi.dy.masa.litematica.interfaces;
 
-import fi.dy.masa.litematica.data.SchematicPlacementEventFlag;
+import fi.dy.masa.litematica.schematic.placement.SchematicPlacementEventFlag;
 
 import java.util.List;
 

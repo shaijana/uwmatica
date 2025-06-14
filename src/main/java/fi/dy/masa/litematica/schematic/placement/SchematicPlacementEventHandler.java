@@ -1,4 +1,4 @@
-package fi.dy.masa.litematica.event;
+package fi.dy.masa.litematica.schematic.placement;
 
 import java.util.HashMap;
 import java.util.List;
@@ -12,11 +12,9 @@ import net.minecraft.util.BlockRotation;
 import net.minecraft.util.math.BlockPos;
 
 import fi.dy.masa.litematica.Litematica;
-import fi.dy.masa.litematica.data.SchematicPlacementEventFlag;
 import fi.dy.masa.litematica.interfaces.ISchematicPlacementEventListener;
 import fi.dy.masa.litematica.interfaces.ISchematicPlacementEventManager;
 import fi.dy.masa.litematica.schematic.LitematicaSchematic;
-import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
 
 /**
  * This was primarily created for mods like Syncmatica with complicated Mixin's that can be fragile.
@@ -45,6 +43,22 @@ public class SchematicPlacementEventHandler implements ISchematicPlacementEventM
         }
     }
 
+    public void invokePrePlacementChange(ISchematicPlacementEventListener listener, SchematicPlacement placement)
+    {
+        if (this.handlers.containsKey(listener))
+        {
+            placement.placementManager.onPrePlacementChange(placement);
+        }
+    }
+
+    public void invokePostPlacementChange(ISchematicPlacementEventListener listener, SchematicPlacement placement)
+    {
+        if (this.handlers.containsKey(listener))
+        {
+            placement.placementManager.onPostPlacementChange(placement);
+        }
+    }
+
     @ApiStatus.Internal
     public void onPlacementInit(SchematicPlacement placement)
     {
@@ -54,6 +68,20 @@ public class SchematicPlacementEventHandler implements ISchematicPlacementEventM
                     if (list.contains(SchematicPlacementEventFlag.INIT))
                     {
                         handler.onPlacementInit(placement);
+                    }
+                }
+        );
+    }
+
+    @ApiStatus.Internal
+    public void onSubRegionInit(SubRegionPlacement subRegion)
+    {
+        this.handlers.forEach(
+                (handler, list) ->
+                {
+                    if (list.contains(SchematicPlacementEventFlag.INIT_SUBREGION))
+                    {
+                        handler.onSubRegionInit(subRegion);
                     }
                 }
         );
@@ -138,6 +166,34 @@ public class SchematicPlacementEventHandler implements ISchematicPlacementEventM
                     if (list.contains(SchematicPlacementEventFlag.TO_NBT))
                     {
                         handler.onSavePlacementToNbt(placement, nbt);
+                    }
+                }
+        );
+    }
+
+    @ApiStatus.Internal
+    public void onSubRegionCreateFromJson(SubRegionPlacement subRegion, BlockPos origin, String name, BlockRotation rotation, BlockMirror mirror, boolean enabled, boolean enableRender)
+    {
+        this.handlers.forEach(
+                (handler, list) ->
+                {
+                    if (list.contains(SchematicPlacementEventFlag.SUBREGION_FROM_JSON))
+                    {
+                        handler.onSubRegionCreateFromJson(subRegion, origin, name, rotation, mirror, enabled, enableRender);
+                    }
+                }
+        );
+    }
+
+    @ApiStatus.Internal
+    public void onSaveSubRegionToJson(SubRegionPlacement subRegion, JsonObject jsonObject)
+    {
+        this.handlers.forEach(
+                (handler, list) ->
+                {
+                    if (list.contains(SchematicPlacementEventFlag.SUBREGION_TO_JSON))
+                    {
+                        handler.onSaveSubRegionToJson(subRegion, jsonObject);
                     }
                 }
         );
@@ -236,6 +292,104 @@ public class SchematicPlacementEventHandler implements ISchematicPlacementEventM
                     if (list.contains(SchematicPlacementEventFlag.SET_ROTATION))
                     {
                         handler.onSetRotation(placement, rotation);
+                    }
+                }
+        );
+    }
+
+    @ApiStatus.Internal
+    public void onPlacementReset(SchematicPlacement placement)
+    {
+        this.handlers.forEach(
+                (handler, list) ->
+                {
+                    if (list.contains(SchematicPlacementEventFlag.ON_RESET))
+                    {
+                        handler.onPlacementReset(placement);
+                    }
+                }
+        );
+    }
+
+    @ApiStatus.Internal
+    public void onSetSubRegionEnabled(SubRegionPlacement subRegion, boolean enabled)
+    {
+        this.handlers.forEach(
+                (handler, list) ->
+                {
+                    if (list.contains(SchematicPlacementEventFlag.SET_SUBREGION_ENABLED))
+                    {
+                        handler.onSetSubRegionEnabled(subRegion, enabled);
+                    }
+                }
+        );
+    }
+
+    @ApiStatus.Internal
+    public void onSetSubRegionRender(SubRegionPlacement subRegion, boolean enabled)
+    {
+        this.handlers.forEach(
+                (handler, list) ->
+                {
+                    if (list.contains(SchematicPlacementEventFlag.SET_SUBREGION_RENDER))
+                    {
+                        handler.onSetSubRegionRender(subRegion, enabled);
+                    }
+                }
+        );
+    }
+
+    @ApiStatus.Internal
+    public void onSetSubRegionOrigin(SubRegionPlacement subRegion, BlockPos origin)
+    {
+        this.handlers.forEach(
+                (handler, list) ->
+                {
+                    if (list.contains(SchematicPlacementEventFlag.SET_SUBREGION_ORIGIN))
+                    {
+                        handler.onSetSubRegionOrigin(subRegion, origin);
+                    }
+                }
+        );
+    }
+
+    @ApiStatus.Internal
+    public void onSetSubRegionMirror(SubRegionPlacement subRegion, BlockMirror mirror)
+    {
+        this.handlers.forEach(
+                (handler, list) ->
+                {
+                    if (list.contains(SchematicPlacementEventFlag.SET_SUBREGION_MIRROR))
+                    {
+                        handler.onSetSubRegionMirror(subRegion, mirror);
+                    }
+                }
+        );
+    }
+
+    @ApiStatus.Internal
+    public void onSetSubRegionRotation(SubRegionPlacement subRegion, BlockRotation rotation)
+    {
+        this.handlers.forEach(
+                (handler, list) ->
+                {
+                    if (list.contains(SchematicPlacementEventFlag.SET_SUBREGION_ROTATION))
+                    {
+                        handler.onSetSubRegionRotation(subRegion, rotation);
+                    }
+                }
+        );
+    }
+
+    @ApiStatus.Internal
+    public void onSubRegionReset(SubRegionPlacement subRegion)
+    {
+        this.handlers.forEach(
+                (handler, list) ->
+                {
+                    if (list.contains(SchematicPlacementEventFlag.ON_SUBREGION_RESET))
+                    {
+                        handler.onSubRegionReset(subRegion);
                     }
                 }
         );
