@@ -302,7 +302,7 @@ public class SubRegionPlacement
                 Litematica.LOGGER.warn("Placement.fromJson(): Invalid rotation or mirror value for a placement");
             }
 
-            SchematicPlacementEventHandler.getInstance().onSubRegionCreateFromJson(placement, pos, placement.getName(), placement.getRotation(), placement.getMirror(), placement.isEnabled(), placement.renderingEnabled);
+            SchematicPlacementEventHandler.getInstance().onSubRegionCreateFromJson(placement, pos, placement.getName(), placement.getRotation(), placement.getMirror(), placement.isEnabled(), placement.renderingEnabled, obj);
 
             return placement;
         }

@@ -58,7 +58,7 @@ public interface ISchematicPlacementEventListener
      * @param enabled ()
      * @param enableRender ()
      */
-    void onPlacementCreateFromJson(SchematicPlacement placement, LitematicaSchematic schematic, BlockPos origin, String name, BlockRotation rotation, BlockMirror mirror, boolean enabled, boolean enableRender);
+    void onPlacementCreateFromJson(SchematicPlacement placement, LitematicaSchematic schematic, BlockPos origin, String name, BlockRotation rotation, BlockMirror mirror, boolean enabled, boolean enableRender, JsonObject obj);
 
     /**
      * Event callback when a Schematic Placement is created from loading it via an NbtCompound (Litematic Transmit).
@@ -69,7 +69,7 @@ public interface ISchematicPlacementEventListener
      * @param enabled ()
      * @param enableRender ()
      */
-    void onPlacementCreateFromNbt(SchematicPlacement placement, LitematicaSchematic schematic, BlockPos origin, String name, BlockRotation rotation, BlockMirror mirror, boolean enabled, boolean enableRender);
+    void onPlacementCreateFromNbt(SchematicPlacement placement, LitematicaSchematic schematic, BlockPos origin, String name, BlockRotation rotation, BlockMirror mirror, boolean enabled, boolean enableRender, NbtCompound nbt);
 
     /**
      * Event callback when a Schematic Placement is being saved to JSON.
@@ -93,7 +93,7 @@ public interface ISchematicPlacementEventListener
      * @param enabled ()
      * @param enableRender ()
      */
-    void onSubRegionCreateFromJson(SubRegionPlacement subRegion, BlockPos origin, String name, BlockRotation rotation, BlockMirror mirror, boolean enabled, boolean enableRender);
+    void onSubRegionCreateFromJson(SubRegionPlacement subRegion, BlockPos origin, String name, BlockRotation rotation, BlockMirror mirror, boolean enabled, boolean enableRender, JsonObject obj);
 
     /**
      * Event callback when a Schematic Placement is being saved to JSON.

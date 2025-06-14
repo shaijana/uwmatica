@@ -1040,9 +1040,9 @@ public class SchematicPlacement
                 }
             }
 
+            ((SchematicPlacementEventHandler) SchematicPlacementEventHandler.getInstance()).onPlacementCreateFromJson(schematicPlacement, schematic, pos, name, rotation, mirror, enabled, enableRender, obj);
             schematicPlacement.checkAreSubRegionsModified();
             schematicPlacement.updateEnclosingBox();
-            ((SchematicPlacementEventHandler) SchematicPlacementEventHandler.getInstance()).onPlacementCreateFromJson(schematicPlacement, schematic, pos, name, rotation, mirror, enabled, enableRender);
 
             return schematicPlacement;
         }
@@ -1151,10 +1151,9 @@ public class SchematicPlacement
             }
         }
 
+        ((SchematicPlacementEventHandler) SchematicPlacementEventHandler.getInstance()).onPlacementCreateFromNbt(placement, schematic, origin, name, rot, mirror, placement.enabled, placement.enableRender, nbt);
         placement.checkAreSubRegionsModified();
         placement.updateEnclosingBox();
-
-        ((SchematicPlacementEventHandler) SchematicPlacementEventHandler.getInstance()).onPlacementCreateFromNbt(placement, schematic, origin, name, rot, mirror, placement.enabled, placement.enableRender);
 
         return placement;
     }
@@ -1197,10 +1196,9 @@ public class SchematicPlacement
             }
         }
 
+        ((SchematicPlacementEventHandler) SchematicPlacementEventHandler.getInstance()).onPlacementCreateFromNbt(placement, schematic, origin, name, rot, mirror, placement.enabled, placement.enableRender, nbt);
         placement.checkAreSubRegionsModified();
         placement.updateEnclosingBox();
-
-        ((SchematicPlacementEventHandler) SchematicPlacementEventHandler.getInstance()).onPlacementCreateFromNbt(placement, schematic, origin, name, rot, mirror, placement.enabled, placement.enableRender);
 
         return placement;
     }
