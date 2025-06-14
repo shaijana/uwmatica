@@ -5,6 +5,8 @@ package fi.dy.masa.litematica.schematic.placement;
  */
 public enum SchematicPlacementEventFlag
 {
+    ALL_EVENTS,
+
     INIT,
     CREATE_FOR,
     FOR_CONVERSION,

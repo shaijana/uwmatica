@@ -1,7 +1,9 @@
 package fi.dy.masa.litematica.schematic.placement;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.ApiStatus;
@@ -27,8 +29,8 @@ public class SchematicPlacementEventHandler implements ISchematicPlacementEventM
     public static SchematicPlacementEventHandler getInstance() { return INSTANCE; }
 
     @Override
-    public void registerSchematicPlacementEventListener(ISchematicPlacementEventListener listener,
-                                                        List<SchematicPlacementEventFlag> flags)
+    public void registerSchematicPlacementEventListener(@Nonnull ISchematicPlacementEventListener listener,
+                                                        @Nonnull List<SchematicPlacementEventFlag> flags)
     {
         if (flags.isEmpty())
         {
@@ -39,21 +41,40 @@ public class SchematicPlacementEventHandler implements ISchematicPlacementEventM
 
         if (!this.handlers.containsKey(listener))
         {
-            this.handlers.put(listener, flags);
+            if (flags.contains(SchematicPlacementEventFlag.ALL_EVENTS))
+            {
+                this.handlers.put(listener, Arrays.stream(SchematicPlacementEventFlag.values()).toList());
+            }
+            else
+            {
+                this.handlers.put(listener, flags);
+            }
         }
     }
 
-    public void invokePrePlacementChange(ISchematicPlacementEventListener listener, SchematicPlacement placement)
+    /**
+     * Requires All Events Flag
+     */
+    @Override
+    public void invokePrePlacementChange(@Nonnull ISchematicPlacementEventListener listener,
+                                         @Nonnull SchematicPlacement placement)
     {
-        if (this.handlers.containsKey(listener))
+        if (this.handlers.containsKey(listener) &&
+            this.handlers.get(listener).contains(SchematicPlacementEventFlag.ALL_EVENTS))
         {
             placement.placementManager.onPrePlacementChange(placement);
         }
     }
 
-    public void invokePostPlacementChange(ISchematicPlacementEventListener listener, SchematicPlacement placement)
+    /**
+     * Requires All Events Flag
+     */
+    @Override
+    public void invokePostPlacementChange(@Nonnull ISchematicPlacementEventListener listener,
+                                          @Nonnull SchematicPlacement placement)
     {
-        if (this.handlers.containsKey(listener))
+        if (this.handlers.containsKey(listener) &&
+            this.handlers.get(listener).contains(SchematicPlacementEventFlag.ALL_EVENTS))
         {
             placement.placementManager.onPostPlacementChange(placement);
         }
