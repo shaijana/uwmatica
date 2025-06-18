@@ -1,5 +1,6 @@
 package fi.dy.masa.litematica.mixin.render;
 
+import fi.dy.masa.litematica.compat.sodium.SodiumCompat;
 import net.minecraft.client.render.BlockRenderLayerGroup;
 import net.minecraft.client.render.SectionRenderState;
 import org.spongepowered.asm.mixin.Mixin;
@@ -15,6 +16,9 @@ public class MixinSectionRenderState
     @Inject(method = "renderSection", at = @At("TAIL"))
     private void litematica_drawBlockLayerGroup(BlockRenderLayerGroup blockRenderLayerGroup, CallbackInfo ci)
     {
-        LitematicaRenderer.getInstance().piecewiseDrawBlockLayerGroup(blockRenderLayerGroup);
+        if (!SodiumCompat.hasSodium())
+        {
+            LitematicaRenderer.getInstance().piecewiseDrawBlockLayerGroup(blockRenderLayerGroup);
+        }
     }
 }

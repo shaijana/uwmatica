@@ -443,7 +443,7 @@ public class WidgetSchematicVerificationResult extends WidgetListEntrySortable<B
                     fi.dy.masa.litematica.render.RenderUtils.renderBackgroundMask(drawContext, x + 1, y + 1, this.totalWidth - 1, this.totalHeight - 1);
                 }
 
-                Matrix3x2fStack matrixStack = drawContext.getMatrices();
+//                Matrix3x2fStack matrixStack = drawContext.getMatrices();
 //                matrixStack.push();
 
                 RenderUtils.drawOutlinedBox(drawContext, x, y, this.totalWidth, this.totalHeight, 0xFF000000, GuiBase.COLOR_HORIZONTAL_BAR);

@@ -156,7 +156,7 @@ public class MaterialListHudRenderer implements IInfoHudRenderer
 
         if (scale != 1d)
         {
-//            matrixStack.push();
+            matrixStack.pushMatrix();
             matrixStack.scale((float) scale, (float) scale);
         }
 
@@ -204,10 +204,10 @@ public class MaterialListHudRenderer implements IInfoHudRenderer
             y += lineHeight;
         }
 
-//        if (scale != 1d)
-//        {
-//            matrixStack.pop();
-//        }
+        if (scale != 1d)
+        {
+            matrixStack.popMatrix();
+        }
 
         return contentHeight + 4;
     }

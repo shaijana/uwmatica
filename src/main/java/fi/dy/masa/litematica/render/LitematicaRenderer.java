@@ -1,6 +1,8 @@
 package fi.dy.masa.litematica.render;
 
 import javax.annotation.Nullable;
+
+import fi.dy.masa.litematica.compat.sodium.SodiumCompat;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 

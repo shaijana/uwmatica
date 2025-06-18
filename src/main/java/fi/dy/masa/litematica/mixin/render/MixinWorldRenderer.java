@@ -2,6 +2,7 @@ package fi.dy.masa.litematica.mixin.render;
 
 import java.util.List;
 import com.llamalad7.mixinextras.sugar.Local;
+import fi.dy.masa.litematica.compat.sodium.SodiumCompat;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 import org.joml.Vector4f;
@@ -91,6 +92,11 @@ public abstract class MixinWorldRenderer
         }
 
         LitematicaRenderer.getInstance().piecewisePrepareAndUpdate(this.frustum, this.profiler);
+
+        if (SodiumCompat.hasSodium())
+        {
+            LitematicaRenderer.getInstance().scheduleTranslucentSorting(camera.getPos(), this.profiler);
+        }
     }
 
     @Inject(method = "translucencySort", at = @At("TAIL"))
@@ -106,7 +112,10 @@ public abstract class MixinWorldRenderer
             this.profiler.startTick();
         }
 
-        LitematicaRenderer.getInstance().scheduleTranslucentSorting(cameraPos, this.profiler);
+        if (!SodiumCompat.hasSodium())
+        {
+            LitematicaRenderer.getInstance().scheduleTranslucentSorting(cameraPos, this.profiler);
+        }
     }
 
     @Inject(method = "render",
@@ -156,6 +165,13 @@ public abstract class MixinWorldRenderer
 //        }
 
         LitematicaRenderer.getInstance().piecewisePrepareBlockLayers(matrix4fc, d, e, f, this.profiler);
+
+        // Fix Sodium Compat
+        if (SodiumCompat.hasSodium())
+        {
+            LitematicaRenderer.getInstance().piecewiseDrawBlockLayerGroup(BlockRenderLayerGroup.OPAQUE);
+            SodiumCompat.startBlockOutlineEnabled();
+        }
     }
 
     @Inject(method = "renderEntities",
@@ -190,6 +206,20 @@ public abstract class MixinWorldRenderer
         }
 
         LitematicaRenderer.getInstance().piecewiseRenderBlockEntities(matrices, entityVertexConsumers, effectVertexConsumers, tickProgress, this.profiler);
+    }
+
+    @Inject(method = "renderTargetBlockOutline(Lnet/minecraft/client/render/Camera;Lnet/minecraft/client/render/VertexConsumerProvider$Immediate;Lnet/minecraft/client/util/math/MatrixStack;Z)V",
+            at = @At("HEAD"))
+    private void litematica_onRenderTargetOutline(Camera camera, VertexConsumerProvider.Immediate vertexConsumers,
+                                                  MatrixStack matrices, boolean translucent, CallbackInfo ci)
+    {
+        // Fix Sodium Compat
+        if (SodiumCompat.hasSodium() && translucent)
+        {
+            LitematicaRenderer.getInstance().piecewiseDrawBlockLayerGroup(BlockRenderLayerGroup.TRANSLUCENT);
+            LitematicaRenderer.getInstance().piecewiseDrawBlockLayerGroup(BlockRenderLayerGroup.TRIPWIRE);
+            SodiumCompat.endBlockOutlineEnabled();
+        }
     }
 
     /*

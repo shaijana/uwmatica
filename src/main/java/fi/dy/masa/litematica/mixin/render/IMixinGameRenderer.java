@@ -10,4 +10,7 @@ public interface IMixinGameRenderer
 {
     @Accessor("fogRenderer")
     FogRenderer litematica_getFogRenderer();
+
+    @Accessor("blockOutlineEnabled")
+    boolean litematica_isBlockOutlineEnabled();
 }
