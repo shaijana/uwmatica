@@ -71,7 +71,7 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
     }
 
     private final static ServuxLitematicaHandler<ServuxLitematicaPacket.Payload> HANDLER = ServuxLitematicaHandler.getInstance();
-    private final static MinecraftClient mc = MinecraftClient.getInstance();
+    private final MinecraftClient mc;
     //private int uptimeTicks = 0;
     private boolean servuxServer = false;
     private boolean hasInValidServux = false;
@@ -118,13 +118,16 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
     {
         if (this.clientWorld == null)
         {
-            clientWorld = mc.world;
+            this.clientWorld = this.mc.world;
         }
 
-        return clientWorld;
+        return this.clientWorld;
     }
 
-    private EntitiesDataStorage() { }
+    private EntitiesDataStorage()
+    {
+        this.mc = MinecraftClient.getInstance();
+    }
 
     @Override
     public void onClientTick(MinecraftClient mc)
@@ -207,11 +210,11 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
         return ServuxLitematicaHandler.CHANNEL_ID;
     }
 
-    private static ClientPlayNetworkHandler getVanillaHandler()
+    private ClientPlayNetworkHandler getVanillaHandler()
     {
-        if (mc.player != null)
+        if (this.mc.player != null)
         {
-            return mc.player.networkHandler;
+            return this.mc.player.networkHandler;
         }
 
         return null;
@@ -590,8 +593,10 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
 //                Litematica.debugLog("requestBlockEntity: be at pos [{}] queue at [{}] ms", pos.toShortString(), this.getCacheTimeout() / 4);
                 this.pendingBlockEntitiesQueue.add(pos);
             }
-
-            return this.refreshBlockEntityFromWorld(world, pos);
+            else
+            {
+                return this.refreshBlockEntityFromWorld(world, pos);
+            }
         }
 
         return null;
@@ -659,8 +664,12 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
         {
             this.pendingEntitiesQueue.add(entityId);
         }
+        else
+        {
+            return this.refreshEntityFromWorld(world, entityId);
+        }
 
-        return this.refreshEntityFromWorld(world, entityId);
+        return null;
     }
 
     private @Nullable Pair<Entity, NbtCompound> refreshEntityFromWorld(World world, int entityId)
@@ -871,7 +880,7 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
             return;
         }
 
-        ClientPlayNetworkHandler handler = getVanillaHandler();
+        ClientPlayNetworkHandler handler = this.getVanillaHandler();
 
         if (handler != null)
         {
