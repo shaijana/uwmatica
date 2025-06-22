@@ -593,10 +593,8 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
 //                Litematica.debugLog("requestBlockEntity: be at pos [{}] queue at [{}] ms", pos.toShortString(), this.getCacheTimeout() / 4);
                 this.pendingBlockEntitiesQueue.add(pos);
             }
-            else
-            {
-                return this.refreshBlockEntityFromWorld(world, pos);
-            }
+
+            return this.refreshBlockEntityFromWorld(world, pos);
         }
 
         return null;
@@ -664,12 +662,8 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
         {
             this.pendingEntitiesQueue.add(entityId);
         }
-        else
-        {
-            return this.refreshEntityFromWorld(world, entityId);
-        }
 
-        return null;
+        return this.refreshEntityFromWorld(world, entityId);
     }
 
     private @Nullable Pair<Entity, NbtCompound> refreshEntityFromWorld(World world, int entityId)
