@@ -221,15 +221,22 @@ public class PlacementHandler
                 return null;
             }
 
-            if (state.canPlaceAt(context.getWorld(), context.getPos()))
+            if (Configs.Generic.EASY_PLACE_SP_VALIDATION.getBooleanValue())
             {
-                //System.out.printf("[PHv3] validator passed for \"%s\"\n", property.get().getName());
-                oldState = state;
+                if (state.canPlaceAt(context.getWorld(), context.getPos()))
+                {
+                    //System.out.printf("[PHv3] validator passed for \"%s\"\n", property.get().getName());
+                    oldState = state;
+                }
+                else
+                {
+                    //System.out.printf("[PHv3] validator failed for \"%s\"\n", property.get().getName());
+                    state = oldState;
+                }
             }
             else
             {
-                //System.out.printf("[PHv3] validator failed for \"%s\"\n", property.get().getName());
-                state = oldState;
+                oldState = state;
             }
             
             // Consume the bits used for the facing
@@ -277,15 +284,22 @@ public class PlacementHandler
                             //System.out.printf("[PHv3] applying \"%s\": %s\n", prop.getName(), value);
                             state = state.with(prop, value);
 
-                            if (state.canPlaceAt(context.getWorld(), context.getPos()))
+                            if (Configs.Generic.EASY_PLACE_SP_VALIDATION.getBooleanValue())
                             {
-                                //System.out.printf("[PHv3] validator passed for \"%s\"\n", prop.getName());
-                                oldState = state;
+                                if (state.canPlaceAt(context.getWorld(), context.getPos()))
+                                {
+                                    //System.out.printf("[PHv3] validator passed for \"%s\"\n", prop.getName());
+                                    oldState = state;
+                                }
+                                else
+                                {
+                                    //System.out.printf("[PHv3] validator failed for \"%s\"\n", prop.getName());
+                                    state = oldState;
+                                }
                             }
                             else
                             {
-                                //System.out.printf("[PHv3] validator failed for \"%s\"\n", prop.getName());
-                                state = oldState;
+                                oldState = state;
                             }
                         }
 
