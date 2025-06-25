@@ -328,16 +328,21 @@ public class PlacementHandler
             state = state.with(Properties.WATERLOGGED, true);
         }
 
-        if (state.canPlaceAt(context.getWorld(), context.getPos()))
+        if (Configs.Generic.EASY_PLACE_SP_VALIDATION.getBooleanValue())
         {
-            //System.out.printf("[PHv3] validator passed for \"%s\"\n", state);
-            return state;
+            if (state.canPlaceAt(context.getWorld(), context.getPos()))
+            {
+                //System.out.printf("[PHv3] validator passed for \"%s\"\n", state);
+                return state;
+            }
+            else
+            {
+                //System.out.printf("[PHv3] validator failed for \"%s\"\n", state);
+                return null;
+            }
         }
-        else
-        {
-            //System.out.printf("[PHv3] validator failed for \"%s\"\n", state);
-            return null;
-        }
+
+        return state;
     }
 
     private static BlockState applyDirectionProperty(BlockState state, UseContext context,
