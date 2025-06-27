@@ -253,7 +253,11 @@ public class SchematicPlacingUtils
                         {
                             Direction facingAdj = type == ChestType.LEFT ? facing.rotateCounterclockwise(Direction.Axis.Y) : facing.rotateClockwise(Direction.Axis.Y);
                             BlockPos posAdj = origPos.offset(facingAdj);
-                            teNBT = blockEntityMap.getOrDefault(posAdj, teNBT).copy();
+
+                            if (blockEntityMap.containsKey(posAdj))
+                            {
+                                teNBT = blockEntityMap.getOrDefault(posAdj, teNBT).copy();
+                            }
                         }
                     }
 
