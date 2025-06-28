@@ -342,7 +342,7 @@ public class GuiMaterialList extends GuiListBase<MaterialListEntry, WidgetMateri
 
             private final String translationKey;
 
-            private Type(String translationKey)
+            Type(String translationKey)
             {
                 this.translationKey = translationKey;
             }
