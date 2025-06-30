@@ -119,12 +119,16 @@ public class MaterialListJsonEntry
 
                 // FIXME --> Correct math ?
                 LOGGER.warn("build(): ResultStack: [{}] // Result Count: [{}]", resultStack.toString(), resultCount);
-                final float adjusted = ((float) total / resultCount);
-                final int floor = MathHelper.floor(adjusted);
-                final int diff = total - floor;
-                final int adjustedTotal = resultCount > 1 ? diff : total;
+                int adjustedTotal = total;
 
-                LOGGER.warn("build(): adjusted: [{}], floor: [{}], diff: [{}] // AdjustedTotal: [{}]", adjusted, floor, diff, adjustedTotal);
+                if (total > resultCount)
+                {
+                    final float adjusted = ((float) total / resultCount);
+                    final int floor = MathHelper.floor(adjusted);
+                    final int diff = total - floor;
+                    adjustedTotal = resultCount > 1 ? diff : total;
+                    LOGGER.warn("build(): adjusted: [{}], floor: [{}], diff: [{}] // AdjustedTotal: [{}]", adjusted, floor, diff, adjustedTotal);
+                }
 
                 if (ded.containsKey(itemEntry))
                 {
