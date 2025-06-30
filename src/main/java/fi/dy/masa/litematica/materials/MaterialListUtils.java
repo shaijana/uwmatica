@@ -14,6 +14,7 @@ import net.minecraft.item.BlockItem;
 import net.minecraft.item.BundleItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.Vec3i;
 
@@ -60,7 +61,7 @@ public class MaterialListUtils
 
         MinecraftClient mc = MinecraftClient.getInstance();
 
-        return getMaterialList(countsTotal, countsTotal, new Object2IntOpenHashMap<>(), mc.player);
+        return getMaterialList(countsTotal, new Object2IntOpenHashMap<>(), new Object2IntOpenHashMap<>(), mc.player);
     }
 
     public static List<MaterialListEntry> getMaterialList(
