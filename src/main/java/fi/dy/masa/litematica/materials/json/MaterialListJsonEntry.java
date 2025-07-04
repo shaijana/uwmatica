@@ -86,11 +86,10 @@ public class MaterialListJsonEntry
         RecipeDisplayEntry entry = pair.getRight();
         RecipeBookCategory category = entry.category();
         RecipeBookUtils.Type type = RecipeBookUtils.Type.fromRecipeDisplay(entry.display());
-
         ContextParameterMap map = RecipeBookUtils.getMap(mc);
         List<ItemStack> resultStacks = entry.getStacks(map);
         ItemStack resultStack = resultStacks.getFirst();
-        final int resultCount = resultStack.getCount();
+        int resultCount = resultStack.getCount();
 
         // Stacks was already verified
         if (entry.craftingRequirements().isPresent())
@@ -121,13 +120,14 @@ public class MaterialListJsonEntry
                 LOGGER.warn("build(): ResultStack: [{}] // Result Count: [{}]", resultStack.toString(), resultCount);
                 int adjustedTotal = total;
 
-                if (total > resultCount)
+                if (resultCount > 1)
                 {
                     final float adjusted = ((float) total / resultCount);
                     final int floor = MathHelper.floor(adjusted);
-                    final int diff = total - floor;
-                    adjustedTotal = resultCount > 1 ? diff : total;
-                    LOGGER.warn("build(): adjusted: [{}], floor: [{}], diff: [{}] // AdjustedTotal: [{}]", adjusted, floor, diff, adjustedTotal);
+                    final int remainderCount = MathHelper.floor(resultCount * (adjusted - floor));
+                    adjustedTotal = Math.max(floor + (remainderCount > 0 ? 1 : 0), (remainderCount > 0 ? 1 : 0));
+
+                    LOGGER.warn("build(): adjusted: [{}], floor: [{}] // remainderCount: [{}] // AdjustedTotal: [{}]", adjusted, floor, remainderCount, adjustedTotal);
                 }
 
                 if (ded.containsKey(itemEntry))

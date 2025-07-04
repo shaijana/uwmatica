@@ -57,6 +57,8 @@ public class MaterialListJson
                 }
         );
 
+        cache.simplifyEntrySteps();
+
         return true;
     }
 
@@ -79,6 +81,8 @@ public class MaterialListJson
                     cache.buildStepsBase(base, new ArrayList<>());
                 }
         );
+
+        cache.simplifyEntrySteps();
 
         return true;
     }

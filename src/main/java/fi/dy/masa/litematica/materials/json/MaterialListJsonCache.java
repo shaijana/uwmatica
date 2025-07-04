@@ -3,6 +3,7 @@ package fi.dy.masa.litematica.materials.json;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Stream;
 import com.google.common.collect.Iterables;
 import com.google.gson.JsonArray;
@@ -31,6 +32,7 @@ public class MaterialListJsonCache
 {
     private static final AnsiLogger LOGGER = new AnsiLogger(MaterialListJsonCache.class, true, true);
     private final List<Entry> entries;
+    private final String GATHER_KEY = "GATHER";
 
     public MaterialListJsonCache()
     {
@@ -146,7 +148,6 @@ public class MaterialListJsonCache
         this.entries.clear();
     }
 
-    // TODO
     public Pair<Step, List<Step>> buildStepsBase(MaterialListJsonBase base, List<Step> lastSteps)
     {
         RegistryEntry<Item> resultItem = base.getInput();
@@ -157,6 +158,11 @@ public class MaterialListJsonCache
         Step stonecutterStep;
         Step recipeStep;
         Step finalStep = null;
+
+//        Step baseStep = new Step(resultItem, total, RecipeBookUtils.Type.UNKNOWN, "RESULT", -1);
+//        LOGGER.debug("buildStepsEntryEach: (Basic) from resultItem [{}]", resultItem.getIdAsString());
+//        baseStep.debug();
+//        lastSteps.addFirst(baseStep);
 
         LOGGER.debug("buildStepsBase: resultItem: [{}], count [{}], lastSteps [{}]", resultItem.getIdAsString(), total, lastSteps.size());
 
@@ -216,12 +222,15 @@ public class MaterialListJsonCache
 
             for (MaterialListJsonBase baseEach : requirements)
             {
+                LOGGER.debug("buildStepsBase: buildStepsBaseEach (Requirements) PRE steps size [{}]", lastSteps.size());
                 Pair<Step, List<Step>> pair = this.buildStepsBaseEach(baseEach, lastSteps);
 
                 if (pair.getRight() != null && !pair.getRight().isEmpty())
                 {
                     list = this.combineSteps(list, pair.getRight());
                 }
+
+                LOGGER.debug("buildStepsBase: buildStepsBaseEach (Requirements) POST steps size [{}], list size [{}]", lastSteps.size(), list.size());
 
                 if (pair.getLeft() != null)
                 {
@@ -245,7 +254,8 @@ public class MaterialListJsonCache
             return Pair.of(null, List.of());
         }
 
-        return Pair.of(finalStep, lastSteps);
+        LOGGER.debug("buildStepsBase: No-Entry (Default) steps size [{}] -->", lastSteps.size());
+        return Pair.of(null, List.of());
     }
 
     public Pair<Step, List<Step>> buildStepsBaseEach(MaterialListJsonBase base, List<Step> lastSteps)
@@ -282,7 +292,7 @@ public class MaterialListJsonCache
             );
         }
 
-        Step stepOut = new Step(stepItem, stepCount, typeIn, "GATHER", -1);
+        Step stepOut = new Step(stepItem, stepCount, typeIn, GATHER_KEY, -1);
         LOGGER.debug("buildStepsEntryEach: (Basic) from resultItem [{}]", resultItem.getIdAsString());
         stepOut.debug();
 
@@ -290,6 +300,140 @@ public class MaterialListJsonCache
                 stepOut,
                 List.of()
         );
+    }
+
+    public void simplifyEntrySteps()
+    {
+        List<Step> otherSteps = new ArrayList<>();
+
+        for (int i = 0; i < this.entries.size(); i++)
+        {
+            Entry entry = this.entries.get(i);
+            List<Step> entrySteps = entry.steps();
+            int entryCount = entry.total();
+            LOGGER.debug("simplifyEntrySteps(): Entry[{}/{}]: steps [{}], otherSteps [{}]", i, entry.rawItem.getIdAsString(), entry.steps().size(), otherSteps.size());
+
+            if (i == 0)
+            {
+                LOGGER.debug("simplifyEntrySteps(): Entry[{}/{}]: --> UPDATE OTHER STEPS", i, entry.rawItem.getIdAsString());
+                otherSteps.addAll(entrySteps);
+            }
+
+            boolean updated = false;
+            boolean found = false;
+            List<Step> updatedSteps = new ArrayList<>();
+            int updatedCount = entryCount;
+            RegistryEntry<Item> prevStep = null;
+
+            for (Step step : entrySteps)
+            {
+                if (step.stepItem().equals(entry.rawItem()) && Objects.equals(step.category(), GATHER_KEY))
+                {
+                    if (step.count() >= entryCount)
+                    {
+                        if (step.count() > entryCount)
+                        {
+                            updatedCount = step.count();
+                            updated = true;
+                        }
+
+                        if (!found)
+                        {
+                            updatedSteps.add(step);
+                            found = true;
+                        }
+                        else
+                        {
+                            // Ignore it
+                            LOGGER.debug("simplifyEntrySteps(): Entry[{}/{}]: --> IGNORE STEP [Already matched/found]", i, entry.rawItem.getIdAsString());
+                            updated = true;
+                        }
+                    }
+                    else
+                    {
+                        // Ignore it
+                        LOGGER.debug("simplifyEntrySteps(): Entry[{}/{}]: --> IGNORE STEP [{} < {}]", i, entry.rawItem.getIdAsString(), step.count(), entryCount);
+                        updated = true;
+                    }
+                }
+                else
+                {
+                    if (prevStep != null && prevStep.equals(step.stepItem()))
+                    {
+                        LOGGER.debug("simplifyEntrySteps(): Entry[{}/{}]: --> IGNORE STEP [Equals Previous Item]", i, entry.rawItem.getIdAsString());
+                        updated = true;
+                    }
+                    else
+                    {
+                        updatedSteps.add(step);
+                    }
+                }
+
+                prevStep = step.stepItem();
+            }
+
+            if (updated)
+            {
+                LOGGER.debug("simplifyEntrySteps(): Entry[{}/{}]: --> SIMPLIFY STEPS [{} -> {}]", i, entry.rawItem.getIdAsString(), entrySteps.size(), updatedSteps.size());
+                Entry newEntry = new Entry(entry.rawItem(), updatedCount, updatedSteps);
+                this.entries.set(i, newEntry);
+                entrySteps.clear();
+                entrySteps.addAll(updatedSteps);
+
+                if (i == 0)
+                {
+                    otherSteps.clear();
+                    otherSteps.addAll(updatedSteps);
+                }
+            }
+
+            if (i == 0)
+            {
+                continue;
+            }
+
+            if (!otherSteps.isEmpty() && this.compareSteps(entrySteps, otherSteps))
+            {
+                LOGGER.debug("simplifyEntrySteps(): Entry[{}/{}]: --> REPLACE STEPS", i, entry.rawItem.getIdAsString());
+                this.entries.set(i, new Entry(entry.rawItem(), entry.total(), List.of()));
+            }
+            else
+            {
+                LOGGER.debug("simplifyEntrySteps(): Entry[{}/{}]: --> NEXT", i, entry.rawItem.getIdAsString());
+                otherSteps.clear();
+                otherSteps.addAll(entrySteps);
+            }
+        }
+    }
+
+    private boolean compareSteps(List<Step> left, List<Step> right)
+    {
+        if (left.size() != right.size())
+        {
+            return false;
+        }
+
+        int lCount = 0;
+
+        for (Step entry : left)
+        {
+            if (right.contains(entry))
+            {
+                lCount++;
+            }
+        }
+
+        int rCount = 0;
+
+        for (Step entry : right)
+        {
+            if (left.contains(entry))
+            {
+                rCount++;
+            }
+        }
+
+        return lCount == rCount;
     }
 
     public record Step(RegistryEntry<Item> stepItem, Integer count, RecipeBookUtils.Type type, String category, Integer networkId)
