@@ -155,6 +155,11 @@ public class GuiMaterialList extends GuiListBase<MaterialListEntry, WidgetMateri
             w = this.getStringWidth(str);
             this.addLabel(12, this.getScreenHeight() - 36, w, 12, 0xFFFFFFFF, str);
         }
+
+        if (this.mc.player == null)
+        {
+            this.addMessage(MessageType.WARNING, 3000, "litematica.message.warn.material_list.no_player_inv");
+        }
     }
 
     private int createButton(int x, int y, int width, ButtonListener.Type type)
