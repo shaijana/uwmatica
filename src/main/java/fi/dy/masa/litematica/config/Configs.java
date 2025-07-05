@@ -23,6 +23,7 @@ import fi.dy.masa.litematica.Reference;
 import fi.dy.masa.litematica.compat.lwgl.RenderCompat;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.selection.CornerSelectionMode;
+import fi.dy.masa.litematica.selection.SelectionMode;
 import fi.dy.masa.litematica.util.*;
 
 public class Configs implements IConfigHandler
@@ -302,6 +303,7 @@ public class Configs implements IConfigHandler
     {
         public static final ConfigOptionList    BLOCK_INFO_LINES_ALIGNMENT          = new ConfigOptionList("blockInfoLinesAlignment", HudAlignment.TOP_RIGHT).apply(INFO_OVERLAYS_KEY);
         public static final ConfigOptionList    BLOCK_INFO_OVERLAY_ALIGNMENT        = new ConfigOptionList("blockInfoOverlayAlignment", BlockInfoAlignment.TOP_CENTER).apply(INFO_OVERLAYS_KEY);
+        public static final ConfigOptionList    DEFAULT_SELECTION_MODE              = new ConfigOptionList("defaultSelectionMode", SelectionMode.SIMPLE).apply(INFO_OVERLAYS_KEY);
         public static final ConfigOptionList    INFO_HUD_ALIGNMENT                  = new ConfigOptionList("infoHudAlignment", HudAlignment.BOTTOM_RIGHT).apply(INFO_OVERLAYS_KEY);
         public static final ConfigOptionList    TOOL_HUD_ALIGNMENT                  = new ConfigOptionList("toolHudAlignment", HudAlignment.BOTTOM_LEFT).apply(INFO_OVERLAYS_KEY);
 
@@ -329,6 +331,8 @@ public class Configs implements IConfigHandler
         public static final ConfigBoolean       WARN_DISABLED_RENDERING             = new ConfigBoolean("warnDisabledRendering", true).apply(INFO_OVERLAYS_KEY);
 
         public static final ImmutableList<IConfigBase> OPTIONS = ImmutableList.of(
+                DEFAULT_SELECTION_MODE,
+
                 BLOCK_INFO_LINES_ENABLED,
                 BLOCK_INFO_OVERLAY_ENABLED,
                 INFO_OVERLAYS_TARGET_FLUIDS,
@@ -423,6 +427,7 @@ public class Configs implements IConfigHandler
             DataManager.getInstance().setToolItemComponents(Generic.TOOL_ITEM_COMPONENTS.getStringValue(), MinecraftClient.getInstance().world.getRegistryManager());
         }
         InventoryUtils.setPickBlockableSlots(Generic.PICK_BLOCKABLE_SLOTS.getStringValue());
+        DataManager.getSelectionManager().checkSelectionModeConfig();
     }
 
     public static void saveToFile()

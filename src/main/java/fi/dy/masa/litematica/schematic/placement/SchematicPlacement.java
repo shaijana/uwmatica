@@ -48,25 +48,25 @@ public class SchematicPlacement
 
     private final UUID hashId;      // This is meant to uniquely identify each Placement at creation.
     protected final SchematicPlacementManager placementManager;
-    private final Map<String, SubRegionPlacement> relativeSubRegionPlacements = new HashMap<>();
+    private final Map<String, SubRegionPlacement> relativeSubRegionPlacements;
     private final int subRegionCount;
     private SchematicVerifier verifier;
     private final LitematicaSchematic schematic;
     private BlockPos origin;
     private String name;
-    private BlockRotation rotation = BlockRotation.NONE;
-    private BlockMirror mirror = BlockMirror.NONE;
-    private BlockInfoListType verifierType = BlockInfoListType.ALL;
+    private BlockRotation rotation;
+    private BlockMirror mirror;
+    private BlockInfoListType verifierType;
     private boolean ignoreEntities;
     private boolean enabled;
     private boolean enableRender;
     private boolean renderEnclosingBox;
     private boolean regionPlacementsModified;
     private boolean locked;
-    private boolean shouldBeSaved = true;
+    private boolean shouldBeSaved;
     private int coordinateLockMask;
     private int boxesBBColor;
-    private Color4f boxesBBColorVec = new Color4f(0xFF, 0xFF, 0xFF);
+    private Color4f boxesBBColorVec;
     @Nullable
     private Box enclosingBox;
     @Nullable
@@ -93,14 +93,20 @@ public class SchematicPlacement
 
     public SchematicPlacement(LitematicaSchematic schematic, BlockPos origin, String name, boolean enabled, boolean enableRender, SchematicPlacementManager placementManager, @Nullable UUID hash)
     {
+        this.relativeSubRegionPlacements = new HashMap<>();
         this.hashId = hash != null ? hash : UUID.randomUUID();
         this.schematic = schematic;
         this.schematicFile = schematic.getFile();
         this.origin = origin;
         this.name = name;
+        this.rotation = BlockRotation.NONE;
+        this.mirror = BlockMirror.NONE;
+        this.verifierType = BlockInfoListType.ALL;
         this.subRegionCount = schematic.getSubRegionCount();
         this.enabled = enabled;
         this.enableRender = enableRender;
+        this.shouldBeSaved = true;
+        this.boxesBBColorVec = new Color4f(0xFF, 0xFF, 0xFF);
         this.placementManager = placementManager;
 
         ((SchematicPlacementEventHandler) SchematicPlacementEventHandler.getInstance()).onPlacementInit(this);
