@@ -14,19 +14,25 @@ import org.jetbrains.annotations.ApiStatus;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.recipe.Ingredient;
 import net.minecraft.recipe.NetworkRecipeId;
 import net.minecraft.recipe.RecipeDisplayEntry;
 import net.minecraft.recipe.book.RecipeBookCategory;
 import net.minecraft.recipe.display.SlotDisplay;
+import net.minecraft.registry.Registries;
 import net.minecraft.registry.RegistryOps;
 import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.registry.entry.RegistryEntryList;
+import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.util.context.ContextParameterMap;
 import net.minecraft.util.math.MathHelper;
 
+import fi.dy.masa.malilib.mixin.recipe.IMixinIngredient;
 import fi.dy.masa.malilib.util.game.RecipeBookUtils;
 import fi.dy.masa.malilib.util.log.AnsiLogger;
 import fi.dy.masa.litematica.Litematica;
+import fi.dy.masa.litematica.data.CachedTagManager;
 
 @ApiStatus.Experimental
 public class MaterialListJsonEntry
@@ -108,6 +114,15 @@ public class MaterialListJsonEntry
                 SlotDisplay display = ing.toDisplay();
                 ItemStack displayStack = display.getFirst(map);
                 RegistryEntry<Item> itemEntry = displayStack.getRegistryEntry();
+                RegistryEntryList<Item> ingEntries = ((IMixinIngredient) (Object) ing).malilib_getEntries();
+
+                if (ingEntries.size() > 1)
+                {
+                    itemEntry = overridePrimaryMaterial(ingEntries.get(0));
+                    display = new SlotDisplay.ItemSlotDisplay(itemEntry);
+                    displayStack = itemEntry.value().getDefaultStack();
+                    Litematica.LOGGER.warn("MaterialListJsonEntry#build(): ingredient [{}] reduced to a single item from [{}] entries", itemEntry.getIdAsString(), ingEntries.size());
+                }
 
                 if (prevItem != null && prevItem == itemEntry)
                 {
@@ -116,7 +131,6 @@ public class MaterialListJsonEntry
                     continue;
                 }
 
-                // FIXME --> Correct math ?
                 LOGGER.warn("build(): ResultStack: [{}] // Result Count: [{}]", resultStack.toString(), resultCount);
                 int adjustedTotal = total;
 
@@ -150,6 +164,65 @@ public class MaterialListJsonEntry
         }
 
         return result;
+    }
+
+    // Overrides for re-dying recipe's
+    private static RegistryEntry<Item> overridePrimaryMaterial(RegistryEntry<Item> firstItem)
+    {
+        if (firstItem.isIn(ItemTags.WOOL))
+        {
+            return Registries.ITEM.getEntry(Items.WHITE_WOOL);
+        }
+        else if (firstItem.isIn(ItemTags.WOOL_CARPETS))
+        {
+            return Registries.ITEM.getEntry(Items.WHITE_CARPET);
+        }
+        else if (firstItem.isIn(ItemTags.CANDLES))
+        {
+            return Registries.ITEM.getEntry(Items.CANDLE);
+        }
+        else if (firstItem.isIn(ItemTags.SHULKER_BOXES))
+        {
+            return Registries.ITEM.getEntry(Items.SHULKER_BOX);
+        }
+        else if (firstItem.isIn(ItemTags.BANNERS))
+        {
+            return Registries.ITEM.getEntry(Items.WHITE_BANNER);
+        }
+        else if (firstItem.isIn(ItemTags.TERRACOTTA))
+        {
+            return Registries.ITEM.getEntry(Items.TERRACOTTA);
+        }
+        else if (firstItem.isIn(ItemTags.BUNDLES))
+        {
+            return Registries.ITEM.getEntry(Items.BUNDLE);
+        }
+        else if (firstItem.isIn(ItemTags.HARNESSES))
+        {
+            return Registries.ITEM.getEntry(Items.WHITE_HARNESS);
+        }
+        else if (CachedTagManager.matchItemTag(CachedTagManager.GLASS_ITEMS_KEY, firstItem))
+        {
+            return Registries.ITEM.getEntry(Items.GLASS);
+        }
+        else if (CachedTagManager.matchItemTag(CachedTagManager.GLASS_PANE_ITEMS_KEY, firstItem))
+        {
+            return Registries.ITEM.getEntry(Items.GLASS_PANE);
+        }
+        else if (CachedTagManager.matchItemTag(CachedTagManager.CONCRETE_POWDER_ITEMS_KEY, firstItem))
+        {
+            return Registries.ITEM.getEntry(Items.WHITE_CONCRETE_POWDER);
+        }
+        else if (CachedTagManager.matchItemTag(CachedTagManager.CONCRETE_ITEMS_KEY, firstItem))
+        {
+            return Registries.ITEM.getEntry(Items.WHITE_CONCRETE);
+        }
+        else if (CachedTagManager.matchItemTag(CachedTagManager.GLAZED_TERRACOTTA_ITEMS_KEY, firstItem))
+        {
+            return Registries.ITEM.getEntry(Items.WHITE_GLAZED_TERRACOTTA);
+        }
+
+        return firstItem;
     }
 
     public Type getType() { return this.type; }
