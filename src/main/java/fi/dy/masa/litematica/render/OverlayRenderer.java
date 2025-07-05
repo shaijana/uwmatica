@@ -166,7 +166,7 @@ public class OverlayRenderer
                     if (currentSelection.isOriginSelected())
                     {
                         Color4f colorTmp = Color4f.fromColor(this.colorAreaOrigin, 0.4f);
-                        fi.dy.masa.malilib.render.RenderUtils.renderAreaSides(origin, origin, colorTmp, matrix4f);
+                        fi.dy.masa.malilib.render.RenderUtils.renderAreaSides(origin, origin, colorTmp, matrix4f, false);
                     }
 
                     profiler.swap("block_outlines");
@@ -216,7 +216,7 @@ public class OverlayRenderer
                             {
                                 float alpha = (float) Configs.Visuals.PLACEMENT_BOX_SIDE_ALPHA.getDoubleValue();
                                 color = new Color4f(color.r, color.g, color.b, alpha);
-                                fi.dy.masa.malilib.render.RenderUtils.renderAreaSides(box.getPos1(), box.getPos2(), color, matrix4f);
+                                fi.dy.masa.malilib.render.RenderUtils.renderAreaSides(box.getPos1(), box.getPos2(), color, matrix4f, false);
                             }
                         }
                     }
@@ -321,18 +321,18 @@ public class OverlayRenderer
                      ((boxType == BoxType.PLACEMENT_SELECTED || boxType == BoxType.PLACEMENT_UNSELECTED) &&
                        Configs.Visuals.RENDER_PLACEMENT_BOX_SIDES.getBooleanValue()))
                 {
-                    fi.dy.masa.malilib.render.RenderUtils.renderAreaSides(pos1, pos2, sideColor, matrix4f);
+                    fi.dy.masa.malilib.render.RenderUtils.renderAreaSides(pos1, pos2, sideColor, matrix4f, false);
                 }
 
                 if (box.getSelectedCorner() == Corner.CORNER_1)
                 {
                     Color4f color = Color4f.fromColor(this.colorPos1, 0.4f);
-                    fi.dy.masa.malilib.render.RenderUtils.renderAreaSides(pos1, pos1, color, matrix4f);
+                    fi.dy.masa.malilib.render.RenderUtils.renderAreaSides(pos1, pos1, color, matrix4f, false);
                 }
                 else if (box.getSelectedCorner() == Corner.CORNER_2)
                 {
                     Color4f color = Color4f.fromColor(this.colorPos2, 0.4f);
-                    fi.dy.masa.malilib.render.RenderUtils.renderAreaSides(pos2, pos2, color, matrix4f);
+                    fi.dy.masa.malilib.render.RenderUtils.renderAreaSides(pos2, pos2, color, matrix4f, false);
                 }
 
                 fi.dy.masa.malilib.render.RenderUtils.renderBlockOutline(pos1, expand, lineWidthBlockBox, color1, false);
@@ -340,7 +340,7 @@ public class OverlayRenderer
             }
             else
             {
-                fi.dy.masa.malilib.render.RenderUtils.renderBlockOutlineOverlapping(pos1, expand, lineWidthBlockBox, color1, color2, this.colorOverlapping, matrix4f, true);
+                fi.dy.masa.malilib.render.RenderUtils.renderBlockOutlineOverlapping(pos1, expand, lineWidthBlockBox, color1, color2, this.colorOverlapping, matrix4f, false);
             }
         }
         else
@@ -357,7 +357,7 @@ public class OverlayRenderer
         }
     }
 
-    public void renderSchematicVerifierMismatches(Matrix4f matrix4f, Profiler profiler)
+    public void renderSchematicVerifierMismatches(Matrix4f matrix4f, Profiler profiler, boolean renderThrough)
     {
         profiler.push("render_mismatches");
 
@@ -375,7 +375,7 @@ public class OverlayRenderer
                 List<BlockPos> posList = verifier.getSelectedMismatchBlockPositionsForRender();
                 BlockHitResult trace = RayTraceUtils.traceToPositions(posList, entity, 128);
                 BlockPos posLook = trace != null && trace.getType() == HitResult.Type.BLOCK ? trace.getBlockPos() : null;
-                this.renderSchematicMismatches(list, posLook, matrix4f, profiler);
+                this.renderSchematicMismatches(list, posLook, matrix4f, profiler, renderThrough);
             }
         }
 
@@ -383,10 +383,10 @@ public class OverlayRenderer
     }
 
     private void renderSchematicMismatches(List<MismatchRenderPos> posList, @Nullable BlockPos lookPos,
-                                           Matrix4f matrix4f, Profiler profiler)
+                                           Matrix4f matrix4f, Profiler profiler, boolean renderThrough)
     {
         profiler.push("batched_lines");
-        RenderContext ctx = new RenderContext(() -> "litematica:schematic_mistaches/batched_lines", MaLiLibPipelines.DEBUG_LINES_MASA_SIMPLE_NO_DEPTH_NO_CULL);
+        RenderContext ctx = new RenderContext(() -> "litematica:schematic_mistaches/batched_lines", renderThrough ? MaLiLibPipelines.DEBUG_LINES_MASA_SIMPLE_NO_DEPTH_NO_CULL : MaLiLibPipelines.DEBUG_LINES_MASA_SIMPLE_LEQUAL_DEPTH);
         BufferBuilder buffer = ctx.getBuilder();
 
         MismatchRenderPos lookedEntry = null;
@@ -438,7 +438,7 @@ public class OverlayRenderer
 
             profiler.swap("outlines");
 
-            buffer = ctx.start(() -> "litematica:schematic_mistaches/outlines", MaLiLibPipelines.DEBUG_LINES_MASA_SIMPLE_NO_DEPTH_NO_CULL);
+            buffer = ctx.start(() -> "litematica:schematic_mistaches/outlines", renderThrough ? MaLiLibPipelines.DEBUG_LINES_MASA_SIMPLE_NO_DEPTH_NO_CULL : MaLiLibPipelines.DEBUG_LINES_MASA_SIMPLE_LEQUAL_DEPTH);
 
             fi.dy.masa.malilib.render.RenderUtils.drawBlockBoundingBoxOutlinesBatchedLinesSimple(lookPos, lookedEntry.type.getColor(), 0.002, buffer);
         }
@@ -461,7 +461,7 @@ public class OverlayRenderer
         profiler.swap("sides");
         if (Configs.Visuals.RENDER_ERROR_MARKER_SIDES.getBooleanValue())
         {
-            buffer = ctx.start(() -> "litematica:schematic_mistaches/side_quads", MaLiLibPipelines.POSITION_COLOR_TRANSLUCENT_NO_DEPTH_NO_CULL);
+            buffer = ctx.start(() -> "litematica:schematic_mistaches/side_quads", renderThrough ? MaLiLibPipelines.POSITION_COLOR_TRANSLUCENT_NO_DEPTH_NO_CULL : MaLiLibPipelines.POSITION_COLOR_TRANSLUCENT_LEQUAL_DEPTH);
 
             float alpha = (float) Configs.InfoOverlays.VERIFIER_ERROR_HILIGHT_ALPHA.getDoubleValue();
 
