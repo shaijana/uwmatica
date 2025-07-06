@@ -1,23 +1,42 @@
 package fi.dy.masa.litematica.schematic;
 
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.stream.IntStream;
 import javax.annotation.Nullable;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.PrimitiveCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.Vec3i;
 
-import fi.dy.masa.malilib.util.Constants;
-import fi.dy.masa.malilib.util.Schema;
+import fi.dy.masa.malilib.util.data.Constants;
+import fi.dy.masa.malilib.util.data.Schema;
 import fi.dy.masa.malilib.util.nbt.NbtUtils;
-import fi.dy.masa.malilib.util.position.Vec3i;
 import fi.dy.masa.litematica.util.FileType;
 
 public class SchematicMetadata
 {
-    private String name = "?";
-    private String author = "?";
-    private String description = "";
-    private Vec3i enclosingSize = Vec3i.ZERO;
+    public static final Codec<SchematicMetadata> CODEC = RecordCodecBuilder.create(
+            inst -> inst.group(
+                    PrimitiveCodec.STRING.fieldOf("Name").forGetter(get -> get.name),
+                    PrimitiveCodec.STRING.fieldOf("Author").forGetter(get -> get.author),
+                    PrimitiveCodec.STRING.fieldOf("Description").forGetter(get -> get.description),
+                    PrimitiveCodec.INT.fieldOf("RegionCount").forGetter(get -> get.regionCount),
+                    PrimitiveCodec.INT.fieldOf("TotalVolume").forGetter(get -> get.totalVolume),
+                    PrimitiveCodec.INT.fieldOf("TotalBlocks").forGetter(get -> get.totalBlocks),
+                    PrimitiveCodec.LONG.fieldOf("TimeCreated").forGetter(get -> get.timeCreated),
+                    PrimitiveCodec.LONG.fieldOf("TimeModified").forGetter(get -> get.timeModified),
+                    Vec3i.CODEC.fieldOf("EnclosingSize").forGetter(get -> get.enclosingSize),
+                    PrimitiveCodec.INT_STREAM.optionalFieldOf("PreviewImageData", null).forGetter(get -> get.thumbnailPixelData)
+            ).apply(inst, SchematicMetadata::new)
+    );
+    private String name;
+    private String author;
+    private String description;
+    private Vec3i enclosingSize;
     private long timeCreated;
     private long timeModified;
     protected int minecraftDataVersion;
@@ -27,10 +46,34 @@ public class SchematicMetadata
     private int regionCount;
     protected int entityCount;
     protected int blockEntityCount;
-    private int totalVolume = -1;
-    private int totalBlocks = -1;
+    private int totalVolume;
+    private int totalBlocks;
     private boolean modifiedSinceSaved;
-    @Nullable protected int[] thumbnailPixelData;
+    @Nullable protected IntStream thumbnailPixelData;
+
+    public SchematicMetadata()
+    {
+        this.name = "?";
+        this.author = "?";
+        this.description = "";
+        this.enclosingSize = Vec3i.ZERO;
+        this.totalVolume = -1;
+        this.totalBlocks = -1;
+        this.thumbnailPixelData = null;
+    }
+
+    private SchematicMetadata(String name, String author, String desc, int regionCount, int volume, int blocks, long created, long modified, Vec3i size, @Nullable IntStream thumbnail)
+    {
+        this.name = name;
+        this.author = author;
+        this.description = desc;
+        this.regionCount = regionCount;
+        this.totalVolume = volume;
+        this.totalBlocks = blocks;
+        this.timeCreated = created;
+        this.timeModified = modified;
+        this.thumbnailPixelData = thumbnail;
+    }
 
     public String getName()
     {
@@ -50,7 +93,11 @@ public class SchematicMetadata
     @Nullable
     public int[] getPreviewImagePixelData()
     {
-        return this.thumbnailPixelData;
+        if (thumbnailPixelData == null) return null;
+
+        int[] result = this.thumbnailPixelData.toArray();
+        this.thumbnailPixelData = Arrays.stream(result.clone());
+        return result;
     }
 
     public int getRegionCount()
@@ -83,14 +130,14 @@ public class SchematicMetadata
         return this.enclosingSize;
     }
 
-    public net.minecraft.util.math.Vec3i getEnclosingSizeAsVanilla()
+    public Vec3i getEnclosingSizeAsVanilla()
     {
-        return this.enclosingSize.toVanilla();
+        return this.enclosingSize;
     }
 
     public BlockPos getEnclosingSizeAsBlockPos()
     {
-        return this.enclosingSize.toBlockPos();
+        return new BlockPos(this.enclosingSize);
     }
 
     public long getTimeCreated()
@@ -135,12 +182,7 @@ public class SchematicMetadata
 
     public FileType getFileType()
     {
-        if (this.type != null)
-        {
-            return this.type;
-        }
-
-        return FileType.UNKNOWN;
+        return Objects.requireNonNullElse(this.type, FileType.UNKNOWN);
     }
 
     public boolean hasBeenModified()
@@ -180,7 +222,14 @@ public class SchematicMetadata
 
     public void setPreviewImagePixelData(@Nullable int[] pixelData)
     {
-        this.thumbnailPixelData = pixelData;
+        if (pixelData == null)
+        {
+            this.thumbnailPixelData = null;
+        }
+        else
+        {
+            this.thumbnailPixelData = IntStream.of(pixelData);
+        }
     }
 
     public void setRegionCount(int regionCount)
@@ -205,7 +254,7 @@ public class SchematicMetadata
 
     public void setEnclosingSize(BlockPos enclosingSize)
     {
-        this.enclosingSize = Vec3i.of(enclosingSize);
+        this.enclosingSize = enclosingSize;
     }
 
     public void setTimeCreated(long timeCreated)
@@ -276,8 +325,10 @@ public class SchematicMetadata
 
         if (other.thumbnailPixelData != null)
         {
-            this.thumbnailPixelData = new int[other.thumbnailPixelData.length];
-            System.arraycopy(other.thumbnailPixelData, 0, this.thumbnailPixelData, 0, this.thumbnailPixelData.length);
+            int[] result = other.thumbnailPixelData.toArray();
+            //int[] result = new int[temp.length];
+            //System.arraycopy(temp, 0, result, 0, temp.length);
+            this.thumbnailPixelData = IntStream.of(result);
         }
         else
         {
@@ -322,7 +373,19 @@ public class SchematicMetadata
 
         if (this.thumbnailPixelData != null)
         {
-            nbt.putIntArray("PreviewImageData", this.thumbnailPixelData);
+            int[] result = this.thumbnailPixelData.toArray();
+            //int[] result = new int[temp.length];
+            //System.arraycopy(temp, 0, result, 0, temp.length);
+
+            if (result.length > 0)
+            {
+                nbt.putIntArray("PreviewImageData", result);
+                this.thumbnailPixelData = IntStream.of(result);
+            }
+            else
+            {
+                this.thumbnailPixelData = null;
+            }
         }
 
         return nbt;
@@ -330,40 +393,111 @@ public class SchematicMetadata
 
     public void readFromNBT(NbtCompound nbt)
     {
-        this.name = nbt.getString("Name");
-        this.author = nbt.getString("Author");
-        this.description = nbt.getString("Description");
-        this.regionCount = nbt.getInt("RegionCount");
-        this.timeCreated = nbt.getLong("TimeCreated");
-        this.timeModified = nbt.getLong("TimeModified");
+        this.name = nbt.getString("Name", "?");
+        this.author = nbt.getString("Author", "?");
+        this.description = nbt.getString("Description", "");
+        this.regionCount = nbt.getInt("RegionCount", 0);
+        this.timeCreated = nbt.getLong("TimeCreated", -1L);
+        this.timeModified = nbt.getLong("TimeModified", -1L);
 
-        if (nbt.contains("TotalVolume", Constants.NBT.TAG_ANY_NUMERIC))
+        if (nbt.contains("TotalVolume"))
         {
-            this.totalVolume = nbt.getInt("TotalVolume");
+            this.totalVolume = nbt.getInt("TotalVolume", 0);
         }
 
-        if (nbt.contains("TotalBlocks", Constants.NBT.TAG_ANY_NUMERIC))
+        if (nbt.contains("TotalBlocks"))
         {
-            this.totalBlocks = nbt.getInt("TotalBlocks");
+            this.totalBlocks = nbt.getInt("TotalBlocks", 0);
         }
 
-        if (nbt.contains("EnclosingSize", Constants.NBT.TAG_COMPOUND))
+        if (nbt.contains("EnclosingSize"))
         {
-            Vec3i size = NbtUtils.readVec3iFromTag(nbt.getCompound("EnclosingSize"));
+            Vec3i size = NbtUtils.readVec3iFromTag(nbt.getCompoundOrEmpty("EnclosingSize"));
 
             if (size != null)
             {
-                this.enclosingSize = size != null ? size : Vec3i.ZERO;
+                this.enclosingSize = size;
             }
         }
 
-        if (nbt.contains("PreviewImageData", Constants.NBT.TAG_INT_ARRAY))
+        if (nbt.contains("PreviewImageData"))
         {
-            this.thumbnailPixelData = nbt.getIntArray("PreviewImageData");
+            this.thumbnailPixelData = Arrays.stream(nbt.getIntArray("PreviewImageData").orElse(new int[0]));
         }
         else
         {
             this.thumbnailPixelData = null;
         }
+    }
+
+    /**
+     * FOR DEBUGGING PURPOSES ONLY
+     *
+     * @return ()
+     */
+    public NbtCompound writeToNbtExtra()
+    {
+        NbtCompound nbt = this.writeToNBT();
+
+        nbt.putString("FileType", this.type.name());
+
+        if (this.minecraftDataVersion > 0)
+        {
+            nbt.putInt("MinecraftDataVersion", this.minecraftDataVersion);
+        }
+
+        if (this.schematicVersion > 0)
+        {
+            nbt.putInt("SchematicVersion", this.schematicVersion);
+        }
+
+        if (this.schema != null)
+        {
+            nbt.putString("Schema", this.schema.toString());
+        }
+
+        if (this.entityCount > 0)
+        {
+            nbt.putInt("EntityCount", this.entityCount);
+        }
+
+        if (this.blockEntityCount > 0)
+        {
+            nbt.putInt("BlockEntityCount", this.blockEntityCount);
+        }
+
+        nbt.putBoolean("IsModified", this.modifiedSinceSaved);
+
+        return nbt;
+    }
+
+    /**
+     * FOR DEBUGGING PURPOSES ONLY
+     *
+     * @return ()
+     */
+    @Override
+    public String toString()
+    {
+        NbtCompound nbt = this.writeToNbtExtra();
+
+        if (nbt.contains("PreviewImageData"))
+        {
+            nbt.remove("PreviewImageData");
+            nbt.putBoolean("PreviewImageData", true);
+        }
+
+        return "SchematicMetadata[" + nbt.toString() + "]";
+    }
+
+    /**
+     * FOR DEBUGGING PURPOSES ONLY
+     *
+     */
+    public void dumpMetadata()
+    {
+        System.out.print ("SchematicMetadata() DUMP -->\n");
+        System.out.printf("   %s\n", this.toString());
+        System.out.print ("<END>\n");
     }
 }

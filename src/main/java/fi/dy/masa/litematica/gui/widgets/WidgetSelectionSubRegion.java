@@ -61,39 +61,39 @@ public class WidgetSelectionSubRegion extends WidgetListEntryBase<String>
     }
 
     @Override
-    public void render(int mouseX, int mouseY, boolean selected, DrawContext drawContext)
+    public void render(DrawContext drawContext, int mouseX, int mouseY, boolean selected)
     {
-        RenderUtils.color(1f, 1f, 1f, 1f);
+//        RenderUtils.color(1f, 1f, 1f, 1f);
 
         selected = this.entry.equals(this.selection.getCurrentSubRegionBoxName());
 
         // Draw a lighter background for the hovered and the selected entry
         if (selected || this.isMouseOver(mouseX, mouseY))
         {
-            RenderUtils.drawRect(this.x, this.y, this.width, this.height, 0xA0707070);
+            RenderUtils.drawRect(drawContext, this.x, this.y, this.width, this.height, 0xA0707070);
         }
         else if (this.isOdd)
         {
-            RenderUtils.drawRect(this.x, this.y, this.width, this.height, 0xA0101010);
+            RenderUtils.drawRect(drawContext, this.x, this.y, this.width, this.height, 0xA0101010);
         }
         // Draw a slightly lighter background for even entries
         else
         {
-            RenderUtils.drawRect(this.x, this.y, this.width, this.height, 0xA0303030);
+            RenderUtils.drawRect(drawContext, this.x, this.y, this.width, this.height, 0xA0303030);
         }
 
         if (selected)
         {
-            RenderUtils.drawOutline(this.x, this.y, this.width, this.height, 0xFFE0E0E0, 0.001f);
+            RenderUtils.drawOutline(drawContext, this.x, this.y, this.width, this.height, 0xFFE0E0E0); // 0.001f (zLevel), false (depthMask)
         }
 
-        this.drawString(this.x + 2, this.y + 7, 0xFFFFFFFF, this.entry, drawContext);
+        this.drawString(drawContext, this.x + 2, this.y + 7, 0xFFFFFFFF, this.entry);
 
-        super.render(mouseX, mouseY, selected, drawContext);
+        super.render(drawContext, mouseX, mouseY, selected);
     }
 
     @Override
-    public void postRenderHovered(int mouseX, int mouseY, boolean selected, DrawContext drawContext)
+    public void postRenderHovered(DrawContext drawContext, int mouseX, int mouseY, boolean selected)
     {
         List<String> text = new ArrayList<>();
 
@@ -126,7 +126,7 @@ public class WidgetSelectionSubRegion extends WidgetListEntryBase<String>
 
         if (GuiBase.isMouseOver(mouseX, mouseY, this.x, this.y, this.buttonsStartX - offset, this.height))
         {
-            RenderUtils.drawHoverText(mouseX, mouseY, text, drawContext);
+            RenderUtils.drawHoverText(drawContext, mouseX, mouseY, text);
         }
     }
 
@@ -172,7 +172,7 @@ public class WidgetSelectionSubRegion extends WidgetListEntryBase<String>
 
             private final String labelKey;
 
-            private ButtonType(String labelKey)
+            ButtonType(String labelKey)
             {
                 this.labelKey = labelKey;
             }
@@ -198,8 +198,7 @@ public class WidgetSelectionSubRegion extends WidgetListEntryBase<String>
         @Override
         public boolean setString(String string)
         {
-            String oldName = this.widget.entry;
-            return this.selection.renameSubRegionBox(oldName, string, this.widget.parent.getEditorGui());
+            return this.selection.renameSubRegionBox(this.widget.entry, string, this.widget.parent.getEditorGui());
         }
     }
 }

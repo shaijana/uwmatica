@@ -1,17 +1,26 @@
 package fi.dy.masa.litematica.schematic.projects;
 
-import javax.annotation.Nullable;
-import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import org.apache.commons.io.FileUtils;
+
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.BlockPos;
+
+import fi.dy.masa.malilib.gui.Message.MessageType;
+import fi.dy.masa.malilib.interfaces.ICompletionListener;
+import fi.dy.masa.malilib.util.FileUtils;
+import fi.dy.masa.malilib.util.GuiUtils;
+import fi.dy.masa.malilib.util.InfoUtils;
+import fi.dy.masa.malilib.util.JsonUtils;
+import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.scheduler.TaskScheduler;
 import fi.dy.masa.litematica.scheduler.tasks.TaskSaveSchematic;
@@ -21,41 +30,45 @@ import fi.dy.masa.litematica.selection.AreaSelection;
 import fi.dy.masa.litematica.selection.AreaSelectionSimple;
 import fi.dy.masa.litematica.selection.SelectionManager;
 import fi.dy.masa.litematica.selection.SelectionMode;
-import fi.dy.masa.litematica.util.EntityUtils;
-import fi.dy.masa.litematica.util.FileType;
-import fi.dy.masa.litematica.util.ToolUtils;
-import fi.dy.masa.malilib.gui.Message.MessageType;
-import fi.dy.masa.malilib.interfaces.ICompletionListener;
-import fi.dy.masa.malilib.util.GuiUtils;
-import fi.dy.masa.malilib.util.InfoUtils;
-import fi.dy.masa.malilib.util.JsonUtils;
-import fi.dy.masa.litematica.util.WorldUtils;
+import fi.dy.masa.litematica.util.*;
 
 public class SchematicProject
 {
     private final List<SchematicVersion> versions = new ArrayList<>();
-    private final File directory;
-    private File projectFile;
-    private BlockPos origin = BlockPos.ORIGIN;
-    private String projectName = "unnamed";
-    private AreaSelection selection = new AreaSelection();
-    private AreaSelection lastSeenArea = new AreaSelection();
-    private AreaSelectionSimple selectionSimple = new AreaSelectionSimple(true);
-    private SelectionMode selectionMode = SelectionMode.SIMPLE;
-    private int currentVersionId = -1;
-    private int lastCheckedOutVersion = -1;
+    private final Path directory;
+    private Path projectFile;
+    private BlockPos origin;
+    private String projectName;
+    private AreaSelection selection;
+    private AreaSelection lastSeenArea;
+    private AreaSelectionSimple selectionSimple;
+    private SelectionMode selectionMode;
+    private int currentVersionId;
+    private int lastCheckedOutVersion;
+    private int lastPastedVersion;
     private boolean saveInProgress;
     private boolean dirty;
     @Nullable
     private SchematicPlacement currentPlacement;
 
-    public SchematicProject(File directory, File projectFile)
+    public SchematicProject(Path directory, Path projectFile)
     {
         this.directory = directory;
         this.projectFile = projectFile;
+
+        this.origin = BlockPos.ORIGIN;
+        this.projectName = "unnamed";
+        this.selection = new AreaSelection();
+        this.lastSeenArea = new AreaSelection();
+        this.selectionSimple = new AreaSelectionSimple(true);
+        this.selectionMode = (SelectionMode) Configs.InfoOverlays.DEFAULT_SELECTION_MODE.getOptionListValue();
+        this.currentVersionId = -1;
+        this.lastCheckedOutVersion = -1;
+        this.lastPastedVersion = -1;
+        this.dirty = true;
     }
 
-    public File getDirectory()
+    public Path getDirectory()
     {
         return this.directory;
     }
@@ -83,15 +96,15 @@ public class SchematicProject
 
     public void setName(String name)
     {
-        File newFile = new File(this.directory, name + ".json");
+        Path newFile = this.directory.resolve(name + ".json");
 
-        if (newFile.exists() == false)
+        if (!Files.exists(newFile))
         {
             try
             {
-                if (this.projectFile.exists())
+                if (Files.exists(this.projectFile))
                 {
-                    FileUtils.moveFile(this.projectFile, newFile);
+                    FileUtils.move(this.projectFile, newFile);
                 }
 
                 this.projectName = name;
@@ -104,7 +117,7 @@ public class SchematicProject
             }
             catch (Exception e)
             {
-                InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, "litematica.error.schematic_projects.failed_to_rename_project_file_exception", newFile.getAbsolutePath());
+                InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, "litematica.error.schematic_projects.failed_to_rename_project_file_exception", newFile.toAbsolutePath());
             }
         }
         else
@@ -125,6 +138,9 @@ public class SchematicProject
         this.lastSeenArea = new AreaSelection();
 
         this.origin = origin;
+        // Reset the last pasted version after moving the entire project, as it makes no sense after that
+        this.lastPastedVersion = -1;
+
         SchematicVersion currentVersion = this.getCurrentVersion();
 
         if (currentVersion != null)
@@ -140,7 +156,7 @@ public class SchematicProject
         this.dirty = true;
     }
 
-    public File getProjectFile()
+    public Path getProjectFile()
     {
         return this.projectFile;
     }
@@ -165,9 +181,17 @@ public class SchematicProject
         return this.selectionMode;
     }
 
+    public void checkSelectionModeConfig()
+    {
+        if (this.dirty)
+        {
+            this.selectionMode = (SelectionMode) Configs.InfoOverlays.DEFAULT_SELECTION_MODE.getOptionListValue();
+        }
+    }
+
     public void switchSelectionMode()
     {
-        this.selectionMode = this.selectionMode.cycle(true);
+        this.selectionMode = (SelectionMode) this.selectionMode.cycle(true);
         this.dirty = true;
     }
 
@@ -271,16 +295,60 @@ public class SchematicProject
 
             this.cacheCurrentAreaFromPlacement();
 
-            ToolUtils.deleteSelectionVolumes(this.lastSeenArea, true, () ->
+            PlacementDeletionMode mode = (PlacementDeletionMode) Configs.Generic.SCHEMATIC_VCS_DELETE_MODE.getOptionListValue();
+
+            if (mode == PlacementDeletionMode.ENTIRE_VOLUME)
             {
-                DataManager.getSchematicPlacementManager().pastePlacementToWorld(this.currentPlacement, false, mc);
-            }, mc);
+                ToolUtils.deleteSelectionVolumes(this.lastSeenArea, true, this::pasteCurrentPlacement, mc);
+            }
+            else
+            {
+                if (this.lastPastedVersion < 0 || this.lastPastedVersion >= this.versions.size())
+                {
+                    InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, "No previous pasted version known, skipping delete");
+                    this.pasteCurrentPlacement();
+                    return;
+                }
+
+                /*
+                SchematicVersion version = this.versions.get(this.lastPastedVersion);
+                LitematicaSchematic schematic = LitematicaSchematic.createFromFile(this.directory, version.getFileName());
+
+                if (schematic != null)
+                {
+                    BlockPos areaPosition = this.origin.add(version.getAreaOffset());
+                    SchematicPlacement placement = new SchematicPlacement(schematic, areaPosition, version.getName(), true, false);
+                    ToolUtils.deleteBlocksByPlacement(placement, mode, this::pasteCurrentPlacement);
+                }
+                else
+                */
+                {
+                    this.pasteCurrentPlacement();
+                }
+            }
         }
+    }
+
+    protected void pasteCurrentPlacement()
+    {
+        this.lastPastedVersion = this.currentVersionId;
+        this.dirty = true;
+        MinecraftClient mc = MinecraftClient.getInstance();
+        DataManager.getSchematicPlacementManager().pastePlacementToWorld(this.currentPlacement, false, mc);
     }
 
     public void deleteLastSeenArea(MinecraftClient mc)
     {
         ToolUtils.deleteSelectionVolumes(this.lastSeenArea, true, mc);
+    }
+
+    public void deleteBlocksByPlacement()
+    {
+        if (this.currentPlacement != null)
+        {
+            PlacementDeletionMode mode = (PlacementDeletionMode) Configs.Generic.SCHEMATIC_VCS_DELETE_MODE.getOptionListValue();
+            ToolUtils.deleteBlocksByPlacement(this.currentPlacement, mode, null);
+        }
     }
 
     public void removeCurrentPlacement()
@@ -377,9 +445,9 @@ public class SchematicProject
         while (failsafe-- > 0)
         {
             String name = nameBase + String.format("%05d", version) + LitematicaSchematic.FILE_EXTENSION;
-            File file = new File(this.directory, name);
+            Path file = this.directory.resolve(name);
 
-            if (file.exists() == false)
+            if (!Files.exists(file))
             {
                 return name;
             }
@@ -397,14 +465,15 @@ public class SchematicProject
         this.selection = new AreaSelection();
         this.selectionSimple = new AreaSelectionSimple(true);
         this.lastSeenArea = new AreaSelection();
-        this.lastCheckedOutVersion = -1;
         this.currentVersionId = -1;
+        this.lastCheckedOutVersion = -1;
+        this.lastPastedVersion = -1;
         this.saveInProgress = false;
     }
 
     public boolean saveToFile()
     {
-        if (this.dirty == false || JsonUtils.writeJsonToFile(this.toJson(), this.projectFile))
+        if (this.dirty == false || JsonUtils.writeJsonToFileAsPath(this.toJson(), this.projectFile))
         {
             this.dirty = false;
             return true;
@@ -420,6 +489,7 @@ public class SchematicProject
         obj.add("name", new JsonPrimitive(this.projectName));
         obj.add("origin", JsonUtils.blockPosToJson(this.origin));
         obj.add("current_version_id", new JsonPrimitive(this.currentVersionId));
+        obj.add("last_pasted_version", new JsonPrimitive(this.lastPastedVersion));
         obj.add("selection_normal", this.selection.toJson());
         obj.add("selection_simple", this.selectionSimple.toJson());
         obj.add("last_seen_area", this.lastSeenArea.toJson());
@@ -441,14 +511,14 @@ public class SchematicProject
     }
 
     @Nullable
-    public static SchematicProject fromJson(JsonObject obj, File projectFile, boolean createPlacement)
+    public static SchematicProject fromJson(JsonObject obj, Path projectFile, boolean createPlacement)
     {
         BlockPos origin = JsonUtils.blockPosFromJson(obj, "origin");
 
         if (JsonUtils.hasString(obj, "name") && JsonUtils.hasInteger(obj, "current_version_id") && origin != null)
         {
-            projectFile = fi.dy.masa.malilib.util.FileUtils.getCanonicalFileIfPossible(projectFile);
-            SchematicProject project = new SchematicProject(projectFile.getParentFile(), projectFile);
+            projectFile = FileUtils.getRealPathIfPossible(projectFile);
+            SchematicProject project = new SchematicProject(projectFile.getParent(), projectFile);
             project.projectName = JsonUtils.getString(obj, "name");
             project.origin = origin;
 
@@ -469,7 +539,11 @@ public class SchematicProject
 
             if (JsonUtils.hasString(obj, "selection_mode"))
             {
-                project.selectionMode = SelectionMode.fromString(JsonUtils.getString(obj, "selection_mode"));
+                project.selectionMode = SelectionMode.fromStringStatic(JsonUtils.getString(obj, "selection_mode"));
+            }
+            else
+            {
+                project.selectionMode = (SelectionMode) Configs.InfoOverlays.DEFAULT_SELECTION_MODE.getOptionListValue();
             }
 
             if (JsonUtils.hasArray(obj, "versions"))
@@ -490,6 +564,11 @@ public class SchematicProject
                         }
                     }
                 }
+            }
+
+            if (JsonUtils.hasInteger(obj, "last_pasted_version"))
+            {
+                project.lastPastedVersion = JsonUtils.getInteger(obj, "last_pasted_version");
             }
 
             int id = project.versions.size() - 1;
@@ -522,7 +601,7 @@ public class SchematicProject
             return false;
         }
 
-        if (this.directory == null || this.directory.exists() == false || this.directory.isDirectory() == false)
+        if (this.directory == null || !Files.exists(this.directory) || !Files.isDirectory(this.directory))
         {
             InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, "litematica.error.schematic_projects.invalid_project_directory");
             return false;
@@ -569,14 +648,7 @@ public class SchematicProject
             }
             else
             {
-                mc.execute(new Runnable()
-                {
-                    @Override
-                    public void run()
-                    {
-                        SaveCompletionListener.this.saveVersion();
-                    }
-                });
+                mc.execute(SaveCompletionListener.this::saveVersion);
             }
         }
 

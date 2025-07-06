@@ -3,7 +3,23 @@ package fi.dy.masa.litematica.gui;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
+
 import net.minecraft.util.math.BlockPos;
+
+import fi.dy.masa.malilib.config.options.ConfigHotkey;
+import fi.dy.masa.malilib.gui.*;
+import fi.dy.masa.malilib.gui.Message.MessageType;
+import fi.dy.masa.malilib.gui.button.ButtonBase;
+import fi.dy.masa.malilib.gui.button.ButtonGeneric;
+import fi.dy.masa.malilib.gui.button.ButtonOnOff;
+import fi.dy.masa.malilib.gui.button.IButtonActionListener;
+import fi.dy.masa.malilib.gui.interfaces.ISelectionListener;
+import fi.dy.masa.malilib.gui.interfaces.ITextFieldListener;
+import fi.dy.masa.malilib.gui.widgets.WidgetCheckBox;
+import fi.dy.masa.malilib.interfaces.IStringConsumerFeedback;
+import fi.dy.masa.malilib.util.StringUtils;
+import fi.dy.masa.malilib.util.position.PositionUtils.CoordinateType;
+import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.config.Hotkeys;
 import fi.dy.masa.litematica.data.DataManager;
@@ -18,23 +34,6 @@ import fi.dy.masa.litematica.selection.SelectionMode;
 import fi.dy.masa.litematica.util.PositionUtils;
 import fi.dy.masa.litematica.util.PositionUtils.Corner;
 import fi.dy.masa.litematica.util.SchematicUtils;
-import fi.dy.masa.malilib.config.options.ConfigHotkey;
-import fi.dy.masa.malilib.gui.GuiBase;
-import fi.dy.masa.malilib.gui.GuiListBase;
-import fi.dy.masa.malilib.gui.GuiTextFieldGeneric;
-import fi.dy.masa.malilib.gui.GuiTextFieldInteger;
-import fi.dy.masa.malilib.gui.GuiTextInput;
-import fi.dy.masa.malilib.gui.Message.MessageType;
-import fi.dy.masa.malilib.gui.button.ButtonBase;
-import fi.dy.masa.malilib.gui.button.ButtonGeneric;
-import fi.dy.masa.malilib.gui.button.ButtonOnOff;
-import fi.dy.masa.malilib.gui.button.IButtonActionListener;
-import fi.dy.masa.malilib.gui.interfaces.ISelectionListener;
-import fi.dy.masa.malilib.gui.interfaces.ITextFieldListener;
-import fi.dy.masa.malilib.gui.widgets.WidgetCheckBox;
-import fi.dy.masa.malilib.interfaces.IStringConsumerFeedback;
-import fi.dy.masa.malilib.util.PositionUtils.CoordinateType;
-import fi.dy.masa.malilib.util.StringUtils;
 
 public class GuiAreaSelectionEditorNormal extends GuiListBase<String, WidgetSelectionSubRegion, WidgetListSelectionSubRegions>
                                           implements ISelectionListener<String>
@@ -47,6 +46,7 @@ public class GuiAreaSelectionEditorNormal extends GuiListBase<String, WidgetSele
     protected int xNext;
     protected int yNext;
     protected int xOrigin;
+    protected int xSet;
     @Nullable protected String selectionId;
 
     public GuiAreaSelectionEditorNormal(AreaSelection selection)
@@ -107,12 +107,13 @@ public class GuiAreaSelectionEditorNormal extends GuiListBase<String, WidgetSele
 
         int width = 202;
         this.textFieldSelectionName = new GuiTextFieldGeneric(x, y + 2, width, 16, this.textRenderer);
-        this.textFieldSelectionName.setText(this.selection.getName());
+        this.textFieldSelectionName.setTextWrapper(this.selection.getName());
         this.addTextField(this.textFieldSelectionName, new TextFieldListenerDummy());
         x += width + 4;
         x += this.createButton(x, y, -1, ButtonListener.Type.SET_SELECTION_NAME) + 10;
         y += 20;
 
+        this.xSet = x;
         this.yNext = y;
     }
 
@@ -131,6 +132,12 @@ public class GuiAreaSelectionEditorNormal extends GuiListBase<String, WidgetSele
         // Manual Origin defined
         if (this.selection.getExplicitOrigin() != null)
         {
+            // Adjust x for Chinese or other narrow width langs
+            if ((this.xSet - xSave) > 5)
+            {
+                xSave = this.xSet + 5;
+            }
+
             x = Math.max(xSave, this.xOrigin);
             this.createCoordinateInputs(x, 5, width, Corner.NONE);
         }
@@ -142,7 +149,7 @@ public class GuiAreaSelectionEditorNormal extends GuiListBase<String, WidgetSele
 
         this.addRenderingDisabledWarning(120, y + 2);
 
-        y = this.height - 26;
+        y = this.getScreenHeight() - 26;
 
         ButtonListenerChangeMenu.ButtonType type = ButtonListenerChangeMenu.ButtonType.AREA_SELECTION_BROWSER;
         String label = StringUtils.translate(type.getLabelKey());
@@ -161,7 +168,7 @@ public class GuiAreaSelectionEditorNormal extends GuiListBase<String, WidgetSele
         type = ButtonListenerChangeMenu.ButtonType.MAIN_MENU;
         label = StringUtils.translate(type.getLabelKey());
         int buttonWidth = this.getStringWidth(label) + 10;
-        x = this.width - buttonWidth - 10;
+        x = this.getScreenWidth() - buttonWidth - 10;
         button = new ButtonGeneric(x, y, buttonWidth, 20, label);
         this.addButton(button, new ButtonListenerChangeMenu(type, this.getParent()));
 
@@ -178,7 +185,7 @@ public class GuiAreaSelectionEditorNormal extends GuiListBase<String, WidgetSele
             String hotkeyVal = hotkey.getKeybind().getKeysDisplayString();
             String str = StringUtils.translate("litematica.warning.area_editor.area_rendering_disabled", configName, hotkeyName, hotkeyVal);
             List<String> lines = new ArrayList<>();
-            int maxLineLength = this.width - x - 20;
+            int maxLineLength = this.getScreenWidth() - x - 20;
             StringUtils.splitTextToLines(lines, str, maxLineLength);
             this.addLabel(x, y, maxLineLength, lines.size() * (StringUtils.getFontHeight() + 1), 0xFFFFAA00, lines);
         }
@@ -190,7 +197,7 @@ public class GuiAreaSelectionEditorNormal extends GuiListBase<String, WidgetSele
 
     protected void createOrigin()
     {
-        BlockPos origin = fi.dy.masa.malilib.util.PositionUtils.getEntityBlockPos(this.mc.player);
+        BlockPos origin = fi.dy.masa.malilib.util.position.PositionUtils.getEntityBlockPos(this.mc.player);
         this.selection.setExplicitOrigin(origin);
     }
 
@@ -269,7 +276,7 @@ public class GuiAreaSelectionEditorNormal extends GuiListBase<String, WidgetSele
 
         GuiTextFieldInteger textField = new GuiTextFieldInteger(x + offset, y, width, 16, this.textRenderer);
         TextFieldListener listener = new TextFieldListener(coordType, corner, this);
-        textField.setText(text);
+        textField.setTextWrapper(text);
         this.addTextField(textField, listener);
 
         this.createCoordinateButton(x + offset + width + 4, y, corner, coordType, type);
@@ -392,7 +399,7 @@ public class GuiAreaSelectionEditorNormal extends GuiListBase<String, WidgetSele
 
     protected void renameSelection()
     {
-        String newName = this.textFieldSelectionName.getText();
+        String newName = this.textFieldSelectionName.getTextWrapper();
 
         if (DataManager.getSchematicProjectsManager().hasProjectOpen())
         {
@@ -455,7 +462,7 @@ public class GuiAreaSelectionEditorNormal extends GuiListBase<String, WidgetSele
 
                 case CHANGE_SELECTION_MODE:
                     SelectionManager manager = DataManager.getSelectionManager();
-                    SelectionMode newMode = manager.getSelectionMode().cycle(true);
+                    SelectionMode newMode = (SelectionMode) manager.getSelectionMode().cycle(true);
 
                     if (newMode == SelectionMode.NORMAL && manager.hasNormalSelection() == false)
                     {
@@ -511,7 +518,7 @@ public class GuiAreaSelectionEditorNormal extends GuiListBase<String, WidgetSele
                 case MOVE_TO_PLAYER:
                     if (this.parent.mc.player != null)
                     {
-                        BlockPos pos = fi.dy.masa.malilib.util.PositionUtils.getEntityBlockPos(this.parent.mc.player);
+                        BlockPos pos = fi.dy.masa.malilib.util.position.PositionUtils.getEntityBlockPos(this.parent.mc.player);
 
                         if (this.corner == Corner.NONE)
                         {
@@ -598,7 +605,7 @@ public class GuiAreaSelectionEditorNormal extends GuiListBase<String, WidgetSele
         @Override
         public boolean onTextChange(GuiTextFieldGeneric textField)
         {
-            this.parent.updatePosition(textField.getText(), this.corner, this.type);
+            this.parent.updatePosition(textField.getTextWrapper(), this.corner, this.type);
             return false;
         }
     }
@@ -676,13 +683,13 @@ public class GuiAreaSelectionEditorNormal extends GuiListBase<String, WidgetSele
     @Override
     protected int getBrowserWidth()
     {
-        return this.width - 20;
+        return this.getScreenWidth() - 20;
     }
 
     @Override
     protected int getBrowserHeight()
     {
-        return this.height - 146;
+        return this.getScreenHeight() - 146;
     }
 
     @Override

@@ -78,6 +78,7 @@ public class KeyCallbacks
         Hotkeys.RERENDER_SCHEMATIC.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.SAVE_AREA_AS_IN_MEMORY_SCHEMATIC.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.SAVE_AREA_AS_SCHEMATIC_TO_FILE.getKeybind().setCallback(callbackHotkeys);
+        Hotkeys.SCHEMATIC_VCS_DELETE_BY_PLACEMENT.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.SCHEMATIC_VERSION_CYCLE_NEXT.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.SCHEMATIC_VERSION_CYCLE_PREVIOUS.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.SELECTION_GROW_HOTKEY.getKeybind().setCallback(callbackHotkeys);
@@ -90,6 +91,7 @@ public class KeyCallbacks
         Hotkeys.UNLOAD_CURRENT_SCHEMATIC.getKeybind().setCallback(callbackHotkeys);
         Hotkeys.ADD_SELECTION_BOX.getKeybind().setCallback(callbackMessage);
         Hotkeys.DELETE_SELECTION_BOX.getKeybind().setCallback(callbackMessage);
+        Hotkeys.EASY_PLACE_FIRST.getKeybind().setCallback(new KeyCallbackToggleBooleanConfigWithMessage(Configs.Generic.EASY_PLACE_FIRST));
         Hotkeys.EASY_PLACE_TOGGLE.getKeybind().setCallback(new KeyCallbackToggleBooleanConfigWithMessage(Configs.Generic.EASY_PLACE_MODE));
         Hotkeys.MOVE_ENTIRE_SELECTION.getKeybind().setCallback(callbackMessage);
         Hotkeys.SELECTION_MODE_CYCLE.getKeybind().setCallback(callbackMessage);
@@ -508,6 +510,14 @@ public class KeyCallbacks
                 {
                     boolean removeEntities = true; // TODO
                     ToolUtils.deleteSelectionVolumes(removeEntities, this.mc);
+                    return true;
+                }
+            }
+            else if (key == Hotkeys.SCHEMATIC_VCS_DELETE_BY_PLACEMENT.getKeybind())
+            {
+                if (DataManager.getSchematicProjectsManager().hasProjectOpen())
+                {
+                    DataManager.getSchematicProjectsManager().deleteBlocksByPlacement();
                     return true;
                 }
             }

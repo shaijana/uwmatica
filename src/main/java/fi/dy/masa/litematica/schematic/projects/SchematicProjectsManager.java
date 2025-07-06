@@ -1,27 +1,37 @@
 package fi.dy.masa.litematica.schematic.projects;
 
-import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Objects;
 import javax.annotation.Nullable;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+
 import net.minecraft.client.MinecraftClient;
-import fi.dy.masa.litematica.config.Configs;
-import fi.dy.masa.litematica.gui.GuiSchematicProjectManager;
-import fi.dy.masa.litematica.gui.GuiSchematicProjectsBrowser;
+import net.minecraft.util.math.BlockPos;
+
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.util.GuiUtils;
 import fi.dy.masa.malilib.util.InfoUtils;
 import fi.dy.masa.malilib.util.JsonUtils;
+import fi.dy.masa.litematica.config.Configs;
+import fi.dy.masa.litematica.gui.GuiSchematicProjectManager;
+import fi.dy.masa.litematica.gui.GuiSchematicProjectsBrowser;
 
 public class SchematicProjectsManager
 {
     //private static final Pattern PATTERN_NAME_NUMBER = Pattern.compile("(.*)([0-9]+)$");
-    private final MinecraftClient mc = MinecraftClient.getInstance();
-
+    private final MinecraftClient mc;
     @Nullable
     private SchematicProject currentProject;
+
+    public SchematicProjectsManager()
+    {
+        this.mc = MinecraftClient.getInstance();
+        this.currentProject = null;
+    }
 
     public void openSchematicProjectsGui()
     {
@@ -56,17 +66,24 @@ public class SchematicProjectsManager
         return this.currentProject != null && Configs.Generic.UNHIDE_SCHEMATIC_PROJECTS.getBooleanValue();
     }
 
-    public void createNewProject(File dir, String projectName)
+    public void createNewProject(Path dir, String projectName)
     {
         this.closeCurrentProject();
 
-        this.currentProject = new SchematicProject(dir, new File(dir, projectName + ".json"));
+        BlockPos origin = BlockPos.ORIGIN;
+
+        if (this.mc.player != null)
+        {
+            origin = fi.dy.masa.malilib.util.position.PositionUtils.getEntityBlockPos(this.mc.player);
+        }
+
+        this.currentProject = new SchematicProject(dir, dir.resolve(projectName + ".json"));
         this.currentProject.setName(projectName);
-        this.currentProject.setOrigin(fi.dy.masa.malilib.util.PositionUtils.getEntityBlockPos(this.mc.player));
+        this.currentProject.setOrigin(origin);
         this.currentProject.saveToFile();
     }
 
-    public boolean openProject(File projectFile)
+    public boolean openProject(Path projectFile)
     {
         this.closeCurrentProject();
 
@@ -78,19 +95,25 @@ public class SchematicProjectsManager
             return false;
         }
 
+        this.currentProject.checkSelectionModeConfig();
         return true;
     }
 
     @Nullable
-    public SchematicProject loadProjectFromFile(File projectFile, boolean createPlacement)
+    public SchematicProject loadProjectFromFile(Path projectFile, boolean createPlacement)
     {
-        if (projectFile.getName().endsWith(".json") && projectFile.exists() && projectFile.isFile() && projectFile.canRead())
+        if (projectFile.getFileName().endsWith(".json") && Files.exists(projectFile) && Files.isRegularFile(projectFile) && Files.isReadable(projectFile))
         {
-            JsonElement el = JsonUtils.parseJsonFile(projectFile);
+            JsonElement el = JsonUtils.parseJsonFileAsPath(projectFile);
 
             if (el != null && el.isJsonObject())
             {
-                return SchematicProject.fromJson(el.getAsJsonObject(), projectFile, createPlacement);
+                SchematicProject project = SchematicProject.fromJson(el.getAsJsonObject(), projectFile, createPlacement);
+                if (project != null)
+                {
+                    project.checkSelectionModeConfig();
+                }
+                return project;
             }
         }
 
@@ -182,13 +205,26 @@ public class SchematicProjectsManager
         return false;
     }
 
+    public boolean deleteBlocksByPlacement()
+    {
+        SchematicProject project = this.getCurrentProject();
+
+        if (project != null)
+        {
+            project.deleteBlocksByPlacement();
+            return true;
+        }
+
+        return false;
+    }
+
     public JsonObject toJson()
     {
         JsonObject obj = new JsonObject();
 
         if (this.currentProject != null)
         {
-            obj.add("current_project", new JsonPrimitive(this.currentProject.getProjectFile().getAbsolutePath()));
+            obj.add("current_project", new JsonPrimitive(this.currentProject.getProjectFile().toAbsolutePath().toString()));
         }
 
         return obj;
@@ -198,8 +234,13 @@ public class SchematicProjectsManager
     {
         if (JsonUtils.hasString(obj, "current_project"))
         {
-            File file = new File(JsonUtils.getString(obj, "current_project"));
+            Path file = Path.of(Objects.requireNonNull(JsonUtils.getString(obj, "current_project")));
             this.currentProject = this.loadProjectFromFile(file, true);
+
+            if (this.currentProject != null)
+            {
+                this.currentProject.checkSelectionModeConfig();
+            }
         }
     }
 }

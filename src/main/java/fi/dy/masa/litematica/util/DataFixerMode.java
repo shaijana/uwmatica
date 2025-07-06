@@ -2,14 +2,18 @@ package fi.dy.masa.litematica.util;
 
 import javax.annotation.Nullable;
 import com.google.common.collect.ImmutableList;
+
+import net.minecraft.util.StringIdentifiable;
+
 import fi.dy.masa.malilib.config.IConfigOptionListEntry;
-import fi.dy.masa.malilib.util.Schema;
 import fi.dy.masa.malilib.util.StringUtils;
+import fi.dy.masa.malilib.util.data.Schema;
 import fi.dy.masa.litematica.config.Configs;
 
-public enum DataFixerMode implements IConfigOptionListEntry
+public enum DataFixerMode implements IConfigOptionListEntry, StringIdentifiable
 {
     ALWAYS                  ("always", "litematica.gui.label.data_fixer_mode.always"),
+    BELOW_1215              ("below_1215", "litematica.gui.label.data_fixer_mode.below_1215"),
     BELOW_1205              ("below_1205", "litematica.gui.label.data_fixer_mode.below_1205"),
     BELOW_120X              ("below_120X", "litematica.gui.label.data_fixer_mode.below_120X"),
     BELOW_119X              ("below_119X", "litematica.gui.label.data_fixer_mode.below_119X"),
@@ -19,6 +23,7 @@ public enum DataFixerMode implements IConfigOptionListEntry
     BELOW_112X              ("below_112X", "litematica.gui.label.data_fixer_mode.below_112X"),
     NEVER                   ("never", "litematica.gui.label.data_fixer_mode.never");
 
+    public static final StringIdentifiable.EnumCodec<DataFixerMode> CODEC = StringIdentifiable.createCodec(DataFixerMode::values);
     public static final ImmutableList<DataFixerMode> VALUES = ImmutableList.copyOf(values());
 
     private final String configString;
@@ -28,6 +33,12 @@ public enum DataFixerMode implements IConfigOptionListEntry
     {
         this.configString = configString;
         this.translationKey = translationKey;
+    }
+
+    @Override
+    public String asString()
+    {
+        return this.configString;
     }
 
     @Override
@@ -93,6 +104,15 @@ public enum DataFixerMode implements IConfigOptionListEntry
         switch (config)
         {
             case ALWAYS -> { return schema; }
+            case BELOW_1215 ->
+            {
+                if (dataVersion < Schema.SCHEMA_1_21_05.getDataVersion())
+                {
+                    return schema;
+                }
+
+                return null;
+            }
             case BELOW_1205 ->
             {
                 if (dataVersion < Schema.SCHEMA_1_20_05.getDataVersion())

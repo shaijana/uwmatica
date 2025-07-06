@@ -1,7 +1,6 @@
 package fi.dy.masa.litematica.gui.widgets;
 
-import java.io.File;
-import java.io.FileFilter;
+import java.nio.file.Path;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -9,8 +8,8 @@ import javax.annotation.Nullable;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
+import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.util.Identifier;
@@ -19,8 +18,8 @@ import net.minecraft.util.math.Vec3i;
 import fi.dy.masa.malilib.gui.interfaces.ISelectionListener;
 import fi.dy.masa.malilib.gui.widgets.WidgetFileBrowserBase;
 import fi.dy.masa.malilib.render.RenderUtils;
-import fi.dy.masa.malilib.util.Schema;
 import fi.dy.masa.malilib.util.StringUtils;
+import fi.dy.masa.malilib.util.data.Schema;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.Reference;
 import fi.dy.masa.litematica.data.DataManager;
@@ -34,9 +33,9 @@ public class WidgetSchematicBrowser extends WidgetFileBrowserBase
 {
     protected static final FileFilter SCHEMATIC_FILTER = new FileFilterSchematics();
 
-    protected final Map<File, SchematicMetadata> cachedMetadata = new HashMap<>();
-    protected final Map<File, SchematicSchema> cachedVersion = new HashMap<>();
-    protected final Map<File, Pair<Identifier, NativeImageBackedTexture>> cachedPreviewImages = new HashMap<>();
+    protected final Map<Path, SchematicMetadata> cachedMetadata = new HashMap<>();
+    protected final Map<Path, SchematicSchema> cachedVersion = new HashMap<>();
+    protected final Map<Path, Pair<Identifier, NativeImageBackedTexture>> cachedPreviewImages = new HashMap<>();
     protected final GuiSchematicBrowserBase parent;
     protected final int infoWidth;
     protected final int infoHeight;
@@ -48,7 +47,7 @@ public class WidgetSchematicBrowser extends WidgetFileBrowserBase
 
         this.title = StringUtils.translate("litematica.gui.title.schematic_browser");
         this.infoWidth = 170;
-        this.infoHeight = 290;
+        this.infoHeight = 310;
         this.parent = parent;
     }
 
@@ -67,7 +66,7 @@ public class WidgetSchematicBrowser extends WidgetFileBrowserBase
     }
 
     @Override
-    protected File getRootDirectory()
+    protected Path getRootDirectory()
     {
         return DataManager.getSchematicsBaseDirectory();
     }
@@ -79,18 +78,18 @@ public class WidgetSchematicBrowser extends WidgetFileBrowserBase
     }
 
     @Override
-    protected void drawAdditionalContents(int mouseX, int mouseY, DrawContext drawContext)
+    protected void drawAdditionalContents(DrawContext drawContext, int mouseX, int mouseY)
     {
-        this.drawSelectedSchematicInfo(this.getLastSelectedEntry(), drawContext);
+        this.drawSelectedSchematicInfo(drawContext, this.getLastSelectedEntry());
     }
 
-    protected void drawSelectedSchematicInfo(@Nullable DirectoryEntry entry, DrawContext drawContext)
+    protected void drawSelectedSchematicInfo(DrawContext drawContext, @Nullable DirectoryEntry entry)
     {
         int x = this.posX + this.totalWidth - this.infoWidth;
         int y = this.posY;
         int height = Math.min(this.infoHeight, this.parent.getMaxInfoHeight());
 
-        RenderUtils.drawOutlinedBox(x, y, this.infoWidth, height, 0xA0000000, COLOR_HORIZONTAL_BAR);
+        RenderUtils.drawOutlinedBox(drawContext, x, y, this.infoWidth, height, 0xA0000000, COLOR_HORIZONTAL_BAR);
 
         if (entry == null)
         {
@@ -113,7 +112,7 @@ public class WidgetSchematicBrowser extends WidgetFileBrowserBase
 
         if (meta != null)
         {
-            RenderUtils.color(1f, 1f, 1f, 1f);
+//            RenderUtils.color(1f, 1f, 1f, 1f);
 
             x += 3;
             y += 3;
@@ -148,7 +147,7 @@ public class WidgetSchematicBrowser extends WidgetFileBrowserBase
             this.drawString(drawContext, str, x, y, textColor);
             y += 12;
 
-            if (this.parent.height >= 340)
+            if (this.parent.getScreenHeight() >= 340)
             {
                 str = StringUtils.translate("litematica.gui.label.schematic_info.total_volume", meta.getTotalVolume());
                 this.drawString(drawContext, str, x, y, textColor);
@@ -214,13 +213,22 @@ public class WidgetSchematicBrowser extends WidgetFileBrowserBase
                         this.drawString(drawContext, str, x, y, textColor);
                         y += 12;
                     }
+                    // Not supported
+//                    case SCHEMATICA_SCHEMATIC ->  {}
                 }
 
                 Schema schema = Schema.getSchemaByDataVersion(version.minecraftDataVersion());
 
                 if (schema != null)
                 {
-                    str = StringUtils.translate("litematica.gui.label.schematic_info.schema", schema.getString(), version.minecraftDataVersion());
+                    if (version.minecraftDataVersion() - LitematicaSchematic.MINECRAFT_DATA_VERSION > 100)
+                    {
+                        str = StringUtils.translate("litematica.gui.label.schematic_info.schema.newer", schema.getString(), version.minecraftDataVersion());
+                    }
+                    else
+                    {
+                        str = StringUtils.translate("litematica.gui.label.schematic_info.schema", schema.getString(), version.minecraftDataVersion());
+                    }
                     this.drawString(drawContext, str, x, y, textColor);
                     y += 12;
                 }
@@ -236,21 +244,22 @@ public class WidgetSchematicBrowser extends WidgetFileBrowserBase
 
             if (pair != null)
             {
-                y += 14;
+                //y += 14;
+                y += 12;
 
                 int iconSize = pair.getRight().getImage().getWidth();
                 boolean needsScaling = height < this.infoHeight;
 
-                RenderUtils.color(1f, 1f, 1f, 1f);
+//                RenderUtils.color(1f, 1f, 1f, 1f);
 
                 if (needsScaling)
                 {
                     iconSize = height - y + this.posY - 6;
                 }
 
-                RenderUtils.drawOutlinedBox(x + 4, y, iconSize, iconSize, 0xA0000000, COLOR_HORIZONTAL_BAR);
+                RenderUtils.drawOutlinedBox(drawContext, x + 4, y, iconSize, iconSize, 0xA0000000, COLOR_HORIZONTAL_BAR);
 
-                drawContext.drawTexture(RenderLayer::getGuiTextured, pair.getLeft(), x + 4, y, 0.0F, 0.0F, iconSize, iconSize, iconSize, iconSize);
+                drawContext.drawTexture(RenderPipelines.GUI_TEXTURED, pair.getLeft(), x + 4, y, 0.0F, 0.0F, iconSize, iconSize, iconSize, iconSize);
             }
         }
     }
@@ -267,7 +276,7 @@ public class WidgetSchematicBrowser extends WidgetFileBrowserBase
     @Nullable
     protected SchematicMetadata getSchematicMetadata(DirectoryEntry entry)
     {
-        File file = new File(entry.getDirectory(), entry.getName());
+        Path file = entry.getDirectory().resolve(entry.getName());
         SchematicMetadata meta = this.cachedMetadata.get(file);
 
         if (meta == null && this.cachedMetadata.containsKey(file) == false)
@@ -291,7 +300,7 @@ public class WidgetSchematicBrowser extends WidgetFileBrowserBase
     @Nullable
     protected Pair<SchematicSchema, SchematicMetadata> getSchematicVersionAndMetadata(DirectoryEntry entry)
     {
-        File file = new File(entry.getDirectory(), entry.getName());
+        Path file = entry.getDirectory().resolve(entry.getName());
         SchematicMetadata meta = this.cachedMetadata.get(file);
         SchematicSchema version = this.cachedVersion.get(file);
 
@@ -325,7 +334,7 @@ public class WidgetSchematicBrowser extends WidgetFileBrowserBase
         }
     }
 
-    private void createPreviewImage(File file, SchematicMetadata meta)
+    private void createPreviewImage(Path file, SchematicMetadata meta)
     {
         int[] previewImageData = meta.getPreviewImagePixelData();
 
@@ -338,8 +347,8 @@ public class WidgetSchematicBrowser extends WidgetFileBrowserBase
                 try
                 {
                     NativeImage image = new NativeImage(size, size, false);
-                    NativeImageBackedTexture tex = new NativeImageBackedTexture(image);
-                    Identifier rl = Identifier.of(Reference.MOD_ID, DigestUtils.sha1Hex(file.getAbsolutePath()));
+                    Identifier rl = Identifier.of(Reference.MOD_ID, DigestUtils.sha1Hex(file.toAbsolutePath().toString()));
+                    NativeImageBackedTexture tex = new NativeImageBackedTexture(rl::toString, image);
                     this.mc.getTextureManager().registerTexture(rl, tex);
 
                     for (int y = 0, i = 0; y < size; ++y)
@@ -348,7 +357,7 @@ public class WidgetSchematicBrowser extends WidgetFileBrowserBase
                         {
                             int val = previewImageData[i++];
                             // Swap the color channels from ARGB to ABGR
-                            val = (val & 0xFF00FF00) | (val & 0xFF0000) >> 16 | (val & 0xFF) << 16;
+                            //val = (val & 0xFF00FF00) | (val & 0xFF0000) >> 16 | (val & 0xFF) << 16;
                             image.setColorArgb(x, y, val);
                         }
                     }
@@ -359,18 +368,19 @@ public class WidgetSchematicBrowser extends WidgetFileBrowserBase
                 }
                 catch (Exception e)
                 {
-                    Litematica.logger.warn("Failed to create a preview image", e);
+                    Litematica.LOGGER.warn("Failed to create a preview image", e);
                 }
             }
         }
     }
 
-    public static class FileFilterSchematics implements FileFilter
+    public static class FileFilterSchematics extends FileFilter
     {
         @Override
-        public boolean accept(File pathName)
+        public boolean accept(Path pathName)
         {
-            String name = pathName.getName();
+            String name = pathName.getFileName().toString();
+
             return  name.endsWith(".litematic") ||
                     name.endsWith(".schem") ||
                     name.endsWith(".schematic") ||

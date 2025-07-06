@@ -1,6 +1,7 @@
 package fi.dy.masa.litematica.data;
 
-import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,6 +30,7 @@ import fi.dy.masa.litematica.render.infohud.InfoHud;
 import fi.dy.masa.litematica.scheduler.TaskScheduler;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacementManager;
 import fi.dy.masa.litematica.schematic.projects.SchematicProjectsManager;
+import fi.dy.masa.litematica.schematic.transmit.SchematicBufferManager;
 import fi.dy.masa.litematica.schematic.verifier.SchematicVerifier;
 import fi.dy.masa.litematica.selection.AreaSelectionSimple;
 import fi.dy.masa.litematica.selection.SelectionManager;
@@ -41,8 +43,9 @@ public class DataManager implements IDirectoryCache
 {
     private static final DataManager INSTANCE = new DataManager();
 
-    private static final Map<String, File> LAST_DIRECTORIES = new HashMap<>();
+    private static final Map<String, Path> LAST_DIRECTORIES = new HashMap<>();
     private static final ArrayList<ToBooleanFunction<Text>> CHAT_LISTENERS = new ArrayList<>();
+    public static final Identifier CARPET_HELLO = Identifier.of("carpet", "hello");
 
     private static ItemStack toolItem = new ItemStack(Items.STICK);
     private ItemStack toolItemComponents = null;
@@ -53,10 +56,10 @@ public class DataManager implements IDirectoryCache
     private static long clientTickStart;
     private boolean hasIntegratedServer = false;
 
-    public static Identifier CARPET_HELLO = Identifier.of("carpet", "hello");
     private final SelectionManager selectionManager = new SelectionManager();
     private final SchematicPlacementManager schematicPlacementManager = new SchematicPlacementManager();
     private final SchematicProjectsManager schematicProjectsManager = new SchematicProjectsManager();
+    private final SchematicBufferManager schematicBufferManager = new SchematicBufferManager();
     private LayerRange renderRange = new LayerRange(SchematicWorldRefresher.INSTANCE);
     private ToolMode operationMode = ToolMode.SCHEMATIC_PLACEMENT;
     private AreaSelectionSimple areaSimple = new AreaSelectionSimple(true);
@@ -213,6 +216,11 @@ public class DataManager implements IDirectoryCache
         return getInstance().schematicProjectsManager;
     }
 
+    public static SchematicBufferManager getSchematicBufferManager()
+    {
+        return getInstance().schematicBufferManager;
+    }
+
     @Nullable
     public static MaterialListBase getMaterialList()
     {
@@ -259,13 +267,13 @@ public class DataManager implements IDirectoryCache
 
     @Override
     @Nullable
-    public File getCurrentDirectoryForContext(String context)
+    public Path getCurrentDirectoryForContext(String context)
     {
         return LAST_DIRECTORIES.get(context);
     }
 
     @Override
-    public void setCurrentDirectoryForContext(String context, File dir)
+    public void setCurrentDirectoryForContext(String context, Path dir)
     {
         LAST_DIRECTORIES.put(context, dir);
     }
@@ -274,8 +282,8 @@ public class DataManager implements IDirectoryCache
     {
         getInstance().loadPerDimensionData();
 
-        File file = getCurrentStorageFile(true);
-        JsonElement element = JsonUtils.parseJsonFile(file);
+        Path file = getCurrentStorageFile(true);
+        JsonElement element = JsonUtils.parseJsonFileAsPath(file);
 
         if (element != null && element.isJsonObject())
         {
@@ -294,9 +302,9 @@ public class DataManager implements IDirectoryCache
 
                     if (el.isJsonPrimitive())
                     {
-                        File dir = new File(el.getAsString());
+                        Path dir = Path.of(el.getAsString());
 
-                        if (dir.exists() && dir.isDirectory())
+                        if (Files.exists(dir) && Files.isDirectory(dir))
                         {
                             LAST_DIRECTORIES.put(name, dir);
                         }
@@ -310,7 +318,7 @@ public class DataManager implements IDirectoryCache
                 {
                     configGuiTab = ConfigGuiTab.valueOf(root.get("config_gui_tab").getAsString());
                 }
-                catch (Exception e) {}
+                catch (Exception ignored) {}
 
                 if (configGuiTab == null)
                 {
@@ -341,9 +349,9 @@ public class DataManager implements IDirectoryCache
         JsonObject root = new JsonObject();
         JsonObject objDirs = new JsonObject();
 
-        for (Map.Entry<String, File> entry : LAST_DIRECTORIES.entrySet())
+        for (Map.Entry<String, Path> entry : LAST_DIRECTORIES.entrySet())
         {
-            objDirs.add(entry.getKey(), new JsonPrimitive(entry.getValue().getAbsolutePath()));
+            objDirs.add(entry.getKey(), new JsonPrimitive(entry.getValue().toAbsolutePath().toString()));
         }
 
         root.add("last_directories", objDirs);
@@ -351,8 +359,8 @@ public class DataManager implements IDirectoryCache
         root.add("create_placement_on_load", new JsonPrimitive(createPlacementOnLoad));
         root.add("config_gui_tab", new JsonPrimitive(configGuiTab.name()));
 
-        File file = getCurrentStorageFile(true);
-        JsonUtils.writeJsonToFile(root, file);
+        Path file = getCurrentStorageFile(true);
+        JsonUtils.writeJsonToFileAsPath(root, file);
 
         canSave = false;
     }
@@ -379,8 +387,8 @@ public class DataManager implements IDirectoryCache
 
         root.add("block_entities", EntitiesDataStorage.getInstance().toJson());
 
-        File file = getCurrentStorageFile(false);
-        JsonUtils.writeJsonToFile(root, file);
+        Path file = getCurrentStorageFile(false);
+        JsonUtils.writeJsonToFileAsPath(root, file);
     }
 
     private void loadPerDimensionData()
@@ -390,8 +398,8 @@ public class DataManager implements IDirectoryCache
         this.schematicProjectsManager.clear();
         this.materialList = null;
 
-        File file = getCurrentStorageFile(false);
-        JsonElement element = JsonUtils.parseJsonFile(file);
+        Path file = getCurrentStorageFile(false);
+        JsonElement element = JsonUtils.parseJsonFileAsPath(file);
 
         if (element != null && element.isJsonObject())
         {
@@ -433,7 +441,7 @@ public class DataManager implements IDirectoryCache
             {
                 this.operationMode = ToolMode.valueOf(obj.get("operation_mode").getAsString());
             }
-            catch (Exception e) {}
+            catch (Exception ignored) {}
 
             if (this.operationMode == null)
             {
@@ -482,71 +490,143 @@ public class DataManager implements IDirectoryCache
         }
     }
 
-    public static File getDefaultBaseSchematicDirectory()
+    public static Path getDefaultBaseSchematicDirectory()
     {
-        return FileUtils.getCanonicalFileIfPossible(new File(FileUtils.getMinecraftDirectory(), "schematics"));
+        return FileUtils.getRealPathIfPossible(FileUtils.getMinecraftDirectoryAsPath().resolve("schematics"));
     }
 
-    public static File getCurrentConfigDirectory()
+    public static Path getCurrentConfigDirectory()
     {
-        return new File(FileUtils.getConfigDirectory(), Reference.MOD_ID);
+        return FileUtils.getConfigDirectoryAsPath().resolve(Reference.MOD_ID);
     }
 
-    public static File getSchematicsBaseDirectory()
+    public static Path getSchematicsBaseDirectory()
     {
-        File dir;
+        Path dir;
 
         if (Configs.Generic.CUSTOM_SCHEMATIC_BASE_DIRECTORY_ENABLED.getBooleanValue())
         {
-            dir = new File(Configs.Generic.CUSTOM_SCHEMATIC_BASE_DIRECTORY.getStringValue());
+            dir = Path.of(Configs.Generic.CUSTOM_SCHEMATIC_BASE_DIRECTORY.getStringValue());
         }
         else
         {
             dir = getDefaultBaseSchematicDirectory();
         }
 
-        if (dir.exists() == false && dir.mkdirs() == false)
+        if (!Files.exists(dir) || !Files.isDirectory(dir))
         {
-            Litematica.logger.warn("Failed to create the schematic directory '{}'", dir.getAbsolutePath());
+            try
+            {
+                if (Files.exists(dir))
+                {
+                    Files.delete(dir);
+                }
+
+                Files.createDirectory(dir);
+                Litematica.LOGGER.warn("getSchematicsBaseDirectory(): Created schematic directory '{}'", dir.toAbsolutePath().toString());
+            }
+            catch (Exception err)
+            {
+                Litematica.LOGGER.error("Failed to create the schematic directory '{}'; {}", dir.toAbsolutePath().toString(), err.getLocalizedMessage());
+            }
         }
 
+        if (!Files.isDirectory(dir))
+        {
+            Litematica.LOGGER.error("Failed to create the schematic directory '{}'", dir.toAbsolutePath().toString());
+        }
+
+        if (!Files.isWritable(dir))
+        {
+            Litematica.LOGGER.error("Schematic directory '{}'; is not writeable.", dir.toAbsolutePath().toString());
+        }
+
+//        Litematica.debugLog("getSchematicsBaseDirectory(): Schematic directory debug '{}'", dir.toAbsolutePath().toString());
         return dir;
     }
 
-    public static File getAreaSelectionsBaseDirectory()
+    public static Path getSchematicTransmitDirectory()
     {
-        File dir;
+        Path dir = getSchematicsBaseDirectory().resolve("transmit");
+
+        if (!Files.exists(dir) || !Files.isDirectory(dir))
+        {
+            try
+            {
+                if (Files.exists(dir))
+                {
+                    Files.delete(dir);
+                }
+
+                Files.createDirectory(dir);
+                Litematica.LOGGER.warn("getSchematicTransmitDirectory(): Created schematic transmit directory '{}'", dir.toAbsolutePath().toString());
+            }
+            catch (Exception err)
+            {
+                Litematica.LOGGER.error("Failed to create the schematic transmit directory '{}'; {}", dir.toAbsolutePath().toString(), err.getLocalizedMessage());
+            }
+        }
+
+        if (!Files.isDirectory(dir))
+        {
+            Litematica.LOGGER.error("Failed to create the schematic transmit directory '{}'", dir.toAbsolutePath().toString());
+        }
+
+        if (!Files.isWritable(dir))
+        {
+            Litematica.LOGGER.error("Schematic transmit directory '{}'; is not writeable.", dir.toAbsolutePath().toString());
+        }
+
+//        Litematica.debugLog("getSchematicTransmitDirectory(): Schematic transmit directory debug '{}'", dir.toAbsolutePath().toString());
+        return dir;
+    }
+
+    public static Path getAreaSelectionsBaseDirectory()
+    {
+        Path dir;
         String name = StringUtils.getWorldOrServerName();
 
         if (Configs.Generic.AREAS_PER_WORLD.getBooleanValue() && name != null)
         {
             // The 'area_selections' sub-directory is to prevent showing the world name or server IP in the browser,
             // as the root directory name is shown in the navigation widget
-            dir = FileUtils.getCanonicalFileIfPossible(new File(new File(new File(getCurrentConfigDirectory(), "area_selections_per_world"), name), "area_selections"));
+            //dir = FileUtils.getCanonicalFileIfPossible(new File(new File(new File(getCurrentConfigDirectory(), "area_selections_per_world"), name), "area_selections"));
+
+            dir = FileUtils.getRealPathIfPossible(getCurrentConfigDirectory().resolve("area_selections_per_world").resolve(name).resolve("area_selections"));
         }
         else
         {
-            dir = FileUtils.getCanonicalFileIfPossible(new File(getCurrentConfigDirectory(), "area_selections"));
+            dir = FileUtils.getRealPathIfPossible(getCurrentConfigDirectory().resolve("area_selections"));
         }
 
-        if (dir.exists() == false && dir.mkdirs() == false)
+        if (!Files.exists(dir))
         {
-            Litematica.logger.warn("Failed to create the area selections base directory '{}'", dir.getAbsolutePath());
+            FileUtils.createDirectoriesIfMissing(dir);
+        }
+
+        if (!Files.isDirectory(dir))
+        {
+            Litematica.LOGGER.warn("Failed to create the area selections base directory '{}'", dir.toAbsolutePath());
         }
 
         return dir;
     }
 
-    private static File getCurrentStorageFile(boolean globalData)
+    private static Path getCurrentStorageFile(boolean globalData)
     {
-        File dir = getCurrentConfigDirectory();
+        Path dir = getCurrentConfigDirectory();
 
-        if (dir.exists() == false && dir.mkdirs() == false)
+        if (!Files.exists(dir))
         {
-            Litematica.logger.warn("Failed to create the config directory '{}'", dir.getAbsolutePath());
+            FileUtils.createDirectoriesIfMissing(dir);
         }
 
-        return new File(dir, StringUtils.getStorageFileName(globalData, Reference.MOD_ID + "_", ".json", "default"));
+        if (!Files.isDirectory(dir))
+        {
+            Litematica.LOGGER.warn("Failed to create the config directory '{}'", dir.toAbsolutePath());
+        }
+
+        return dir.resolve(StringUtils.getStorageFileName(globalData, Reference.MOD_ID + "_", ".json", "default"));
     }
 
     /**

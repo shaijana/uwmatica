@@ -1,8 +1,21 @@
 package fi.dy.masa.litematica.gui;
 
-import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import javax.annotation.Nullable;
+
 import net.minecraft.client.MinecraftClient;
+
+import fi.dy.masa.malilib.gui.GuiBase;
+import fi.dy.masa.malilib.gui.Message.MessageType;
+import fi.dy.masa.malilib.gui.button.ButtonBase;
+import fi.dy.masa.malilib.gui.button.IButtonActionListener;
+import fi.dy.masa.malilib.interfaces.ICompletionListener;
+import fi.dy.masa.malilib.interfaces.IStringConsumer;
+import fi.dy.masa.malilib.util.FileNameUtils;
+import fi.dy.masa.malilib.util.FileUtils;
+import fi.dy.masa.malilib.util.GuiUtils;
+import fi.dy.masa.malilib.util.StringUtils;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.scheduler.TaskScheduler;
@@ -10,15 +23,6 @@ import fi.dy.masa.litematica.scheduler.tasks.TaskSaveSchematic;
 import fi.dy.masa.litematica.schematic.LitematicaSchematic;
 import fi.dy.masa.litematica.selection.AreaSelection;
 import fi.dy.masa.litematica.selection.SelectionManager;
-import fi.dy.masa.malilib.gui.GuiBase;
-import fi.dy.masa.malilib.gui.Message.MessageType;
-import fi.dy.masa.malilib.gui.button.ButtonBase;
-import fi.dy.masa.malilib.gui.button.IButtonActionListener;
-import fi.dy.masa.malilib.interfaces.ICompletionListener;
-import fi.dy.masa.malilib.interfaces.IStringConsumer;
-import fi.dy.masa.malilib.util.FileUtils;
-import fi.dy.masa.malilib.util.GuiUtils;
-import fi.dy.masa.malilib.util.StringUtils;
 
 public class GuiSchematicSave extends GuiSchematicSaveBase implements ICompletionListener
 {
@@ -48,11 +52,11 @@ public class GuiSchematicSave extends GuiSchematicSaveBase implements ICompletio
 
         if (area != null)
         {
-            this.defaultText = FileUtils.generateSafeFileName(area.getName());
+            this.defaultText = FileNameUtils.generateSafeFileName(area.getName());
 
             if (Configs.Generic.GENERATE_LOWERCASE_NAMES.getBooleanValue())
             {
-                this.defaultText = FileUtils.generateSimpleSafeFileName(this.defaultText);
+                this.defaultText = FileNameUtils.generateSimpleSafeFileName(this.defaultText);
             }
         }
     }
@@ -64,7 +68,7 @@ public class GuiSchematicSave extends GuiSchematicSaveBase implements ICompletio
     }
 
     @Override
-    public File getDefaultDirectory()
+    public Path getDefaultDirectory()
     {
         return DataManager.getSchematicsBaseDirectory();
     }
@@ -115,12 +119,12 @@ public class GuiSchematicSave extends GuiSchematicSaveBase implements ICompletio
         {
             if (this.type == ButtonType.SAVE)
             {
-                File dir = this.gui.getListWidget().getCurrentDirectory();
+                Path dir = this.gui.getListWidget().getCurrentDirectory();
                 String fileName = this.gui.getTextFieldText();
 
-                if (dir.isDirectory() == false)
+                if (!Files.isDirectory(dir))
                 {
-                    this.gui.addMessage(MessageType.ERROR, "litematica.error.schematic_save.invalid_directory", dir.getAbsolutePath());
+                    this.gui.addMessage(MessageType.ERROR, "litematica.error.schematic_save.invalid_directory", dir.toAbsolutePath());
                     return;
                 }
 
@@ -157,7 +161,7 @@ public class GuiSchematicSave extends GuiSchematicSaveBase implements ICompletio
                             fileNameTmp += LitematicaSchematic.FILE_EXTENSION;
                         }
 
-                        if (FileUtils.canWriteToFile(dir, fileNameTmp, overwrite) == false)
+                        if (FileUtils.canWriteToFileAsPath(dir, fileNameTmp, overwrite) == false)
                         {
                             this.gui.addMessage(MessageType.ERROR, "litematica.error.schematic_write_to_file_failed.exists", fileNameTmp);
                             return;

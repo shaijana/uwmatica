@@ -31,7 +31,7 @@ public class GuiMainMenu extends GuiBase
         int y = 30;
         int width = this.getButtonWidth();
 
-        this.bindTexture(ButtonIcons.TEXTURE);
+//        this.bindTexture(ButtonIcons.TEXTURE, this.getDrawContext());
         this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.SCHEMATIC_PLACEMENTS);
         y += 22;
         this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.LOADED_SCHEMATICS);
@@ -52,7 +52,7 @@ public class GuiMainMenu extends GuiBase
         label = StringUtils.translate("litematica.gui.button.tool_mode", DataManager.getToolMode().getName());
         int width2 = this.getStringWidth(label) + 10;
 
-        y = this.height - 26;
+        y = this.getScreenHeight() - 26;
         button = new ButtonGeneric(x, y, width2, 20, label);
 //        this.addButton(button, new ButtonListenerCycleToolMode(this)); //Shaijana
 

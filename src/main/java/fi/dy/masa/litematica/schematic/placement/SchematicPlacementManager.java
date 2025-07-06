@@ -1,13 +1,6 @@
 package fi.dy.masa.litematica.schematic.placement;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import com.google.common.collect.ArrayListMultimap;
@@ -26,11 +19,13 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.util.Util;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.random.Random;
 import net.minecraft.world.World;
 
 import fi.dy.masa.litematica.config.Configs;
@@ -47,15 +42,10 @@ import fi.dy.masa.litematica.scheduler.tasks.TaskPasteSchematicPerChunkDirect;
 import fi.dy.masa.litematica.scheduler.tasks.TaskPasteSchematicSetblockToMcfunction;
 import fi.dy.masa.litematica.schematic.LitematicaSchematic;
 import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement.RequiredEnabled;
-import fi.dy.masa.litematica.util.EntityUtils;
-import fi.dy.masa.litematica.util.PositionUtils;
+import fi.dy.masa.litematica.util.*;
 import fi.dy.masa.litematica.util.PositionUtils.ChunkPosDistanceComparator;
-import fi.dy.masa.litematica.util.RayTraceUtils;
 import fi.dy.masa.litematica.util.RayTraceUtils.RayTraceWrapper;
 import fi.dy.masa.litematica.util.RayTraceUtils.RayTraceWrapper.HitType;
-import fi.dy.masa.litematica.util.ReplaceBehavior;
-import fi.dy.masa.litematica.util.SchematicPlacingUtils;
-import fi.dy.masa.litematica.util.WorldUtils;
 import fi.dy.masa.litematica.world.SchematicWorldHandler;
 import fi.dy.masa.litematica.world.WorldSchematic;
 import fi.dy.masa.malilib.config.options.ConfigHotkey;
@@ -63,6 +53,7 @@ import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.GuiConfirmAction;
 import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.interfaces.IConfirmationListener;
+import fi.dy.masa.malilib.network.PacketSplitter;
 import fi.dy.masa.malilib.util.InfoUtils;
 import fi.dy.masa.malilib.util.IntBoundingBox;
 import fi.dy.masa.malilib.util.JsonUtils;
@@ -194,12 +185,13 @@ public class SchematicPlacementManager
                     if (placements.isEmpty() == false)
                     {
                         ReplaceBehavior behavior = (ReplaceBehavior) Configs.Generic.PLACEMENT_REPLACE_BEHAVIOR.getOptionListValue();
+                        PasteLayerBehavior layers = (PasteLayerBehavior) Configs.Generic.PASTE_LAYER_BEHAVIOR.getOptionListValue();
 
                         for (SchematicPlacement placement : placements)
                         {
                             if (placement.isEnabled())
                             {
-                                SchematicPlacingUtils.placeToWorldWithinChunk(worldSchematic, pos, placement, behavior, false);
+                                SchematicPlacingUtils.placeToWorldWithinChunk(worldSchematic, pos, placement, behavior, layers, false);
                             }
                         }
 
@@ -318,7 +310,13 @@ public class SchematicPlacementManager
         {
             this.schematicPlacements.add(placement);
             this.addTouchedChunksFor(placement);
+            ((SchematicPlacementEventHandler) SchematicPlacementEventHandler.getInstance()).onPlacementAdded(placement);
             this.onPlacementAdded();
+
+            if (this.selectedPlacement == null)
+            {
+                this.setSelectedSchematicPlacement(placement);
+            }
 
             if (printMessages)
             {
@@ -386,6 +384,11 @@ public class SchematicPlacementManager
             this.selectedPlacement = null;
         }
 
+        if (placement.hasVerifier())
+        {
+            placement.getSchematicVerifier().reset();
+        }
+
         boolean ret = this.schematicPlacements.remove(placement);
         this.removeTouchedChunksFor(placement);
 
@@ -427,6 +430,11 @@ public class SchematicPlacementManager
 
             if (placement.getSchematic() == schematic)
             {
+                if (placement.hasVerifier())
+                {
+                    placement.getSchematicVerifier().reset();
+                }
+
                 removed |= this.removeSchematicPlacement(placement, false);
                 --i;
             }
@@ -448,6 +456,7 @@ public class SchematicPlacementManager
     {
         if (placement == null || this.schematicPlacements.contains(placement))
         {
+            ((SchematicPlacementEventHandler) SchematicPlacementEventHandler.getInstance()).onPlacementSelected(this.selectedPlacement, placement);
             this.selectedPlacement = placement;
             OverlayRenderer.getInstance().updatePlacementCache();
             // Forget the last viewed material list when changing the placement selection
@@ -612,6 +621,8 @@ public class SchematicPlacementManager
 
     protected void onPlacementModified(SchematicPlacement placement)
     {
+        ((SchematicPlacementEventHandler) SchematicPlacementEventHandler.getInstance()).onPlacementUpdated(placement);
+
         if (placement.isEnabled())
         {
             OverlayRenderer.getInstance().updatePlacementCache();
@@ -817,8 +828,20 @@ public class SchematicPlacementManager
                         Litematica.debugLog("Found a Servux server, I am sending the Schematic Placement to it.");
                         InfoUtils.showGuiOrActionBarMessage(MessageType.INFO, "litematica.message.paste_with_servux");
                         NbtCompound nbt = schematicPlacement.toNbt(true);
-                        nbt.putString("Task", "LitematicaPaste");
-                        ServuxLitematicaHandler.getInstance().encodeClientData(ServuxLitematicaPacket.ResponseC2SStart(nbt));
+                        final int maxSize = PacketSplitter.DEFAULT_MAX_RECEIVE_SIZE_S2C - 4096;
+
+                        // Slice Extra-large schematics... :(
+//                        if (Configs.Generic.PASTE_SERVUX_EXPERIMENTAL.getBooleanValue())
+                        if (nbt.getSizeInBytes() > maxSize)
+                        {
+                            Litematica.LOGGER.warn("[Servux Paste]: Slicing Oversided Schematic for Servux Paste ...");
+                            this.sliceForServux(schematicPlacement.getSchematic(), nbt, maxSize, printMessage);
+                        }
+                        else
+                        {
+                            nbt.putString("Task", "LitematicaPaste");
+                            ServuxLitematicaHandler.getInstance().encodeClientData(ServuxLitematicaPacket.ResponseC2SStart(nbt));
+                        }
                     }
                     else
                     {
@@ -851,6 +874,14 @@ public class SchematicPlacementManager
         {
             InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, "litematica.error.generic.creative_mode_only");
         }
+    }
+
+    // Attempt to slice the schematic if oversized, and transmit it as a file.
+    private void sliceForServux(LitematicaSchematic litematic, NbtCompound nbt, final int maxSize, boolean printMessage)
+    {
+        final long sessionKey = Random.create(Util.getMeasuringTimeMs()).nextLong();
+        nbt.remove("Schematics");
+        litematic.sendTransmitFile(nbt, sessionKey, printMessage);
     }
 
     public void clear()

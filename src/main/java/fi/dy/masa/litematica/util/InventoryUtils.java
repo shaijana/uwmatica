@@ -3,7 +3,7 @@ package fi.dy.masa.litematica.util;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
-import com.llamalad7.mixinextras.lib.apache.commons.tuple.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.annotation.Experimental;
 
 import net.minecraft.block.Block;
@@ -15,7 +15,6 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.MiningToolItem;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.screen.ScreenHandler;
@@ -30,10 +29,14 @@ import net.minecraft.world.World;
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.render.InventoryOverlay;
+import fi.dy.masa.malilib.util.EquipmentUtils;
 import fi.dy.masa.malilib.util.InfoUtils;
+import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.EntitiesDataStorage;
 import fi.dy.masa.litematica.world.WorldSchematic;
+
+import org.jetbrains.annotations.ApiStatus;
 
 public class InventoryUtils
 {
@@ -64,18 +67,20 @@ public class InventoryUtils
 
     public static void setPickedItemToHand(ItemStack stack, MinecraftClient mc)
     {
+        if (mc.player == null) return;
         int slotNum = mc.player.getInventory().getSlotWithStack(stack);
         setPickedItemToHand(slotNum, stack, mc);
     }
 
     public static void setPickedItemToHand(int sourceSlot, ItemStack stack, MinecraftClient mc)
     {
+        if (mc.player == null) return;
         PlayerEntity player = mc.player;
         PlayerInventory inventory = player.getInventory();
 
         if (PlayerInventory.isValidHotbarIndex(sourceSlot))
         {
-            inventory.selectedSlot = sourceSlot;
+            inventory.setSelectedSlot(sourceSlot);
         }
         else
         {
@@ -99,11 +104,11 @@ public class InventoryUtils
 
             if (hotbarSlot != -1)
             {
-                inventory.selectedSlot = hotbarSlot;
+                inventory.setSelectedSlot(hotbarSlot);
 
                 if (EntityUtils.isCreativeMode(player))
                 {
-                    inventory.main.set(hotbarSlot, stack.copy());
+                    inventory.getMainStacks().set(hotbarSlot, stack.copy());
                 }
                 else
                 {
@@ -146,14 +151,14 @@ public class InventoryUtils
                 }
 
                 setPickedItemToHand(stack, mc);
-                mc.interactionManager.clickCreativeStack(mc.player.getStackInHand(Hand.MAIN_HAND), 36 + inv.selectedSlot);
+                mc.interactionManager.clickCreativeStack(mc.player.getStackInHand(Hand.MAIN_HAND), 36 + inv.getSelectedSlot());
 
                 //return true;
             }
             else
             {
                 int slot = inv.getSlotWithStack(stack);
-                boolean shouldPick = inv.selectedSlot != slot;
+                boolean shouldPick = inv.getSelectedSlot() != slot;
 
                 if (shouldPick && slot != -1)
                 {
@@ -192,17 +197,18 @@ public class InventoryUtils
         return (Configs.Generic.PICK_BLOCK_AVOID_DAMAGEABLE.getBooleanValue() == false ||
                 stack.isDamageable() == false) &&
                (Configs.Generic.PICK_BLOCK_AVOID_TOOLS.getBooleanValue() == false ||
-                (stack.getItem() instanceof MiningToolItem) == false);
+                //(stack.getItem() instanceof MiningToolItem) == false);
+                (EquipmentUtils.isRegularTool(stack)) == false);
     }
 
     private static int getPickBlockTargetSlot(PlayerEntity player)
     {
-        if (PICK_BLOCKABLE_SLOTS.isEmpty())
+        if (PICK_BLOCKABLE_SLOTS.isEmpty() || player == null)
         {
             return -1;
         }
 
-        int slotNum = player.getInventory().selectedSlot;
+        int slotNum = player.getInventory().getSelectedSlot();
 
         if (canPickToSlot(player.getInventory(), slotNum))
         {
@@ -335,11 +341,11 @@ public class InventoryUtils
                 if (pair != null)
                 {
                     nbt = pair.getRight();
+                    be = pair.getLeft();
                 }
             }
 
-            //Litematica.logger.warn("getTarget():2: pos [{}], be [{}], nbt [{}]", pos.toShortString(), be != null, nbt != null);
-
+//            Litematica.LOGGER.warn("getTarget():2: pos [{}], be [{}], nbt [{}]", pos.toShortString(), be != null, nbt != null);
             InventoryOverlay.Context ctx = getTargetInventoryFromBlock(world, pos, be, nbt);
 
             if (world instanceof WorldSchematic)
@@ -403,14 +409,39 @@ public class InventoryUtils
             }
         }
 
-        //Litematica.logger.warn("getTarget(): [SchematicWorld? {}] pos [{}], inv [{}], be [{}], nbt [{}]", world instanceof WorldSchematic ? "YES" : "NO", pos.toShortString(), inv != null, be != null, nbt != null ? nbt.getString("id") : new NbtCompound());
+//        Litematica.LOGGER.warn("getTarget(): [SchematicWorld? {}] pos [{}], inv [{}], be [{}], nbt [{}]", world instanceof WorldSchematic ? "YES" : "NO", pos.toShortString(), inv != null, be != null, nbt != null ? nbt.getString("id") : new NbtCompound());
 
         if (inv == null || nbt == null)
         {
             return null;
         }
 
-        return new InventoryOverlay.Context(InventoryOverlay.getBestInventoryType(inv, nbt), inv, be != null ? be : world.getBlockEntity(pos), null, nbt);
+        return new InventoryOverlay.Context(InventoryOverlay.getBestInventoryType(inv, nbt), inv, be != null ? be : world.getBlockEntity(pos), null, nbt, new Refresher());
+    }
+
+    // This really isn't used for this use case; but this is just here for Compat
+    public static class Refresher implements InventoryOverlay.Refresher
+    {
+
+        @Override
+        public InventoryOverlay.Context onContextRefresh(InventoryOverlay.Context data, World world)
+        {
+            // Refresh data
+            if (data.be() != null)
+            {
+                getTargetInventory(world, data.be().getPos());
+                data = getTargetInventoryFromBlock(data.be().getWorld(), data.be().getPos(), data.be(), data.nbt());
+            }
+            /*
+            else if (data.entity() != null)
+            {
+                EntitiesDataStorage.getInstance().requestEntity(world, data.entity().getId());
+                data = getTargetInventoryFromEntity(data.entity(), data.nbt());
+            }
+             */
+
+            return data;
+        }
     }
 
     /**
@@ -432,7 +463,7 @@ public class InventoryUtils
 
         if (nbt.contains("id"))
         {
-            result.append(nbt.getString("id"));
+            result.append(nbt.getString("id", "?"));
         }
         else
         {
@@ -440,7 +471,7 @@ public class InventoryUtils
         }
         if (nbt.contains("components"))
         {
-            NbtCompound components = nbt.getCompound("components");
+            NbtCompound components = nbt.getCompoundOrEmpty("components");
             int count = 0;
 
             result.append("[");
@@ -462,7 +493,7 @@ public class InventoryUtils
         }
         if (nbt.contains("count"))
         {
-            int count = nbt.getInt("count");
+            int count = nbt.getInt("count", 1);
 
             if (count > 1)
             {
@@ -481,23 +512,24 @@ public class InventoryUtils
      * @param threshold the number of items at or below which the re-stocking will happen
      * @param allowHotbar whether to allow taking items from other hotbar slots
      */
-    @Experimental
-    public static void PRW_preRestockHand(PlayerEntity player,
-                                          Hand hand,
-                                          int threshold,
-                                          boolean allowHotbar)
+    @ApiStatus.Experimental
+    public static void preRestockHand(PlayerEntity player,
+                                      Hand hand,
+                                      int threshold,
+                                      boolean allowHotbar)
     {
+        if (player == null) return;
         PlayerInventory container = player.getInventory();
         final ItemStack handStack = player.getStackInHand(hand);
         final int count = handStack.getCount();
         final int max = handStack.getMaxCount();
 
         if (handStack.isEmpty() == false &&
-            PRW_getCursorStack().isEmpty() &&
+            getCursorStack().isEmpty() &&
             (count <= threshold && count < max))
         {
             int endSlot = allowHotbar ? 44 : 35;
-            int currentMainHandSlot = PRW_getSelectedHotbarSlot() + 36;
+            int currentMainHandSlot = getSelectedHotbarSlot() + 36;
             int currentSlot = hand == Hand.MAIN_HAND ? currentMainHandSlot : 45;
 
             for (int slotNum = 9; slotNum <= endSlot; ++slotNum)
@@ -531,8 +563,8 @@ public class InventoryUtils
         }
     }
 
-    @Experimental
-    public static ItemStack PRW_getCursorStack()
+    @ApiStatus.Experimental
+    public static ItemStack getCursorStack()
     {
         PlayerEntity player = MinecraftClient.getInstance().player;
         if (player == null)
@@ -540,11 +572,11 @@ public class InventoryUtils
             return ItemStack.EMPTY;
         }
         PlayerInventory inv = player.getInventory();
-        return inv != null ? inv.getMainHandStack() : ItemStack.EMPTY;
+        return inv != null ? inv.getSelectedStack() : ItemStack.EMPTY;
     }
 
-    @Experimental
-    public static int PRW_getSelectedHotbarSlot()
+    @ApiStatus.Experimental
+    public static int getSelectedHotbarSlot()
     {
         PlayerEntity player = MinecraftClient.getInstance().player;
         if (player == null)
@@ -552,6 +584,6 @@ public class InventoryUtils
             return 0;
         }
         PlayerInventory inv = player.getInventory();
-        return inv != null ? inv.selectedSlot : 0;
+        return inv != null ? inv.getSelectedSlot() : 0;
     }
 }

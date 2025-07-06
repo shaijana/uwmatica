@@ -1,31 +1,6 @@
 package fi.dy.masa.litematica.schematic.conversion;
 
-import net.minecraft.block.AbstractBannerBlock;
-import net.minecraft.block.AbstractFireBlock;
-import net.minecraft.block.AbstractRedstoneGateBlock;
-import net.minecraft.block.AbstractSkullBlock;
-import net.minecraft.block.BannerBlock;
-import net.minecraft.block.BedBlock;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.ChorusPlantBlock;
-import net.minecraft.block.DoorBlock;
-import net.minecraft.block.FenceBlock;
-import net.minecraft.block.FenceGateBlock;
-import net.minecraft.block.HorizontalConnectingBlock;
-import net.minecraft.block.NoteBlock;
-import net.minecraft.block.PaneBlock;
-import net.minecraft.block.RedstoneWireBlock;
-import net.minecraft.block.RepeaterBlock;
-import net.minecraft.block.SkullBlock;
-import net.minecraft.block.SnowyBlock;
-import net.minecraft.block.StairsBlock;
-import net.minecraft.block.TallPlantBlock;
-import net.minecraft.block.TripwireBlock;
-import net.minecraft.block.VineBlock;
-import net.minecraft.block.WallBannerBlock;
-import net.minecraft.block.WallSkullBlock;
+import net.minecraft.block.*;
 import net.minecraft.block.enums.BedPart;
 import net.minecraft.block.enums.DoubleBlockHalf;
 import net.minecraft.block.enums.WireConnection;
@@ -38,11 +13,11 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.BlockView;
 
-import fi.dy.masa.litematica.mixin.IMixinFenceGateBlock;
-import fi.dy.masa.litematica.mixin.IMixinRedstoneWireBlock;
-import fi.dy.masa.litematica.mixin.IMixinStairsBlock;
-import fi.dy.masa.litematica.mixin.IMixinVineBlock;
-import fi.dy.masa.malilib.util.Constants;
+import fi.dy.masa.malilib.util.data.Constants;
+import fi.dy.masa.litematica.mixin.block.IMixinFenceGateBlock;
+import fi.dy.masa.litematica.mixin.block.IMixinRedstoneWireBlock;
+import fi.dy.masa.litematica.mixin.block.IMixinStairsBlock;
+import fi.dy.masa.litematica.mixin.block.IMixinVineBlock;
 
 public class SchematicConversionFixers
 {
@@ -63,10 +38,10 @@ public class SchematicConversionFixers
     public static final IStateFixer FIXER_BANNER = (reader, state, pos) -> {
         NbtCompound tag = reader.getBlockEntityData(pos);
 
-        if (tag != null && tag.contains("Base", Constants.NBT.TAG_INT))
+        if (tag != null && tag.contains("Base"))
         {
             DyeColor colorOrig = ((AbstractBannerBlock) state.getBlock()).getColor();
-            DyeColor colorFromData = DyeColor.byId(15 - tag.getInt("Base"));
+            DyeColor colorFromData = DyeColor.byIndex(15 - tag.getInt("Base", 0));
 
             if (colorOrig != colorFromData)
             {
@@ -102,10 +77,10 @@ public class SchematicConversionFixers
     public static final IStateFixer FIXER_BANNER_WALL = (reader, state, pos) -> {
         NbtCompound tag = reader.getBlockEntityData(pos);
 
-        if (tag != null && tag.contains("Base", Constants.NBT.TAG_INT))
+        if (tag != null && tag.contains("Base"))
         {
             DyeColor colorOrig = ((AbstractBannerBlock) state.getBlock()).getColor();
-            DyeColor colorFromData = DyeColor.byId(15 - tag.getInt("Base"));
+            DyeColor colorFromData = DyeColor.byIndex(15 - tag.getInt("Base", 0));
 
             if (colorOrig != colorFromData)
             {
@@ -141,9 +116,9 @@ public class SchematicConversionFixers
     public static final IStateFixer FIXER_BED = (reader, state, pos) -> {
         NbtCompound tag = reader.getBlockEntityData(pos);
 
-        if (tag != null && tag.contains("color", Constants.NBT.TAG_INT))
+        if (tag != null && tag.contains("color"))
         {
-            int colorId = tag.getInt("color");
+            int colorId = tag.getInt("color", -1);
             Direction facing = state.get(BedBlock.FACING);
             BedPart part = state.get(BedBlock.PART);
             Boolean occupied = state.get(BedBlock.OCCUPIED);
@@ -181,7 +156,7 @@ public class SchematicConversionFixers
 
     public static final IStateFixer FIXER_DIRT_SNOWY = (reader, state, pos) -> {
         Block block = reader.getBlockState(pos.up()).getBlock();
-        return state.with(SnowyBlock.SNOWY, Boolean.valueOf(block == Blocks.SNOW_BLOCK || block == Blocks.SNOW));
+        return state.with(SnowyBlock.SNOWY, (block == Blocks.SNOW_BLOCK || block == Blocks.SNOW));
     };
 
     public static final IStateFixer FIXER_DOOR = (reader, state, pos) -> {
@@ -226,13 +201,13 @@ public class SchematicConversionFixers
     public static final IStateFixer FIXER_FENCE = (reader, state, pos) -> {
         FenceBlock fence = (FenceBlock) state.getBlock();
 
-        for (Direction side : fi.dy.masa.malilib.util.PositionUtils.HORIZONTAL_DIRECTIONS)
+        for (Direction side : fi.dy.masa.malilib.util.position.PositionUtils.HORIZONTAL_DIRECTIONS)
         {
             BlockPos posAdj = pos.offset(side);
             BlockState stateAdj = reader.getBlockState(posAdj);
             Direction sideOpposite = side.getOpposite();
             boolean flag = stateAdj.isSideSolidFullSquare(reader, posAdj, sideOpposite);
-            state = state.with(HORIZONTAL_CONNECTING_BLOCK_PROPS[side.getId()], fence.canConnect(stateAdj, flag, sideOpposite));
+            state = state.with(HORIZONTAL_CONNECTING_BLOCK_PROPS[side.getIndex()], fence.canConnect(stateAdj, flag, sideOpposite));
         }
 
         return state;
@@ -264,13 +239,13 @@ public class SchematicConversionFixers
     public static final IStateFixer FIXER_FLOWER_POT = (reader, state, pos) -> {
         NbtCompound tag = reader.getBlockEntityData(pos);
 
-        if (tag != null && tag.contains("Item", 8))
+        if (tag != null && tag.contains("Item"))
         {
-            String itemName = tag.getString("Item");
+            String itemName = tag.getString("Item", "");
 
             if (itemName.length() > 0 && tag.contains("Data"))
             {
-                int meta = tag.getInt("Data");
+                int meta = tag.getInt("Data", 0);
 
                 switch (itemName)
                 {
@@ -316,8 +291,8 @@ public class SchematicConversionFixers
         if (tag != null)
         {
             state = state
-                        .with(NoteBlock.POWERED, tag.getBoolean("powered"))
-                        .with(NoteBlock.NOTE, MathHelper.clamp(tag.getByte("note"), 0, 24))
+                        .with(NoteBlock.POWERED, tag.getBoolean("powered", false))
+                        .with(NoteBlock.NOTE, MathHelper.clamp(tag.getByte("note", (byte) 0), 0, 24))
                         .with(NoteBlock.INSTRUMENT, reader.getBlockState(pos.down()).getInstrument());
         }
 
@@ -327,13 +302,13 @@ public class SchematicConversionFixers
     public static final IStateFixer FIXER_PANE = (reader, state, pos) -> {
         PaneBlock pane = (PaneBlock) state.getBlock();
 
-        for (Direction side : fi.dy.masa.malilib.util.PositionUtils.HORIZONTAL_DIRECTIONS)
+        for (Direction side : fi.dy.masa.malilib.util.position.PositionUtils.HORIZONTAL_DIRECTIONS)
         {
             BlockPos posAdj = pos.offset(side);
             BlockState stateAdj = reader.getBlockState(posAdj);
             Direction sideOpposite = side.getOpposite();
             boolean flag = stateAdj.isSideSolidFullSquare(reader, posAdj, sideOpposite);
-            state = state.with(HORIZONTAL_CONNECTING_BLOCK_PROPS[side.getId()], pane.connectsTo(stateAdj, flag));
+            state = state.with(HORIZONTAL_CONNECTING_BLOCK_PROPS[side.getIndex()], pane.connectsTo(stateAdj, flag));
         }
 
         return state;
@@ -364,7 +339,7 @@ public class SchematicConversionFixers
     public static final IStateFixer FIXER_SIGN = (reader, state, pos) -> {
         NbtCompound tag = reader.getBlockEntityData(pos);
 
-        if (tag != null && tag.contains("Text1", Constants.NBT.TAG_STRING))
+        if (tag != null && tag.contains("Text1"))
         {
             NbtList textList = new NbtList();
             textList.add(tag.get("Text1"));
@@ -374,8 +349,8 @@ public class SchematicConversionFixers
 
             NbtCompound frontTextTag = new NbtCompound();
             frontTextTag.put("messages", textList);
-            frontTextTag.putString("color", tag.getString("Color"));
-            frontTextTag.putByte("has_glowing_text", tag.getByte("GlowingText"));
+            frontTextTag.putString("color", tag.getString("Color", ""));
+            frontTextTag.putByte("has_glowing_text", tag.getByte("GlowingText", (byte) 0));
 
             tag.put("front_text", frontTextTag);
 
@@ -395,7 +370,7 @@ public class SchematicConversionFixers
 
         if (tag != null && tag.contains("SkullType"))
         {
-            int id = MathHelper.clamp(tag.getByte("SkullType"), 0, 5);
+            int id = MathHelper.clamp(tag.getByte("SkullType", (byte) 0), 0, 5);
 
             // ;_; >_> <_<
             if (id == 2) { id = 3; } else if (id == 3) { id = 2; }
@@ -431,7 +406,7 @@ public class SchematicConversionFixers
                 }
             }
 
-            state = state.with(BannerBlock.ROTATION, MathHelper.clamp(tag.getByte("Rot"), 0, 15));
+            state = state.with(BannerBlock.ROTATION, MathHelper.clamp(tag.getByte("Rot", (byte) 0), 0, 15));
         }
 
         return state;
@@ -440,9 +415,9 @@ public class SchematicConversionFixers
     public static final IStateFixer FIXER_SKULL_WALL = (reader, state, pos) -> {
         NbtCompound tag = reader.getBlockEntityData(pos);
 
-        if (tag != null && tag.contains("SkullType", Constants.NBT.TAG_BYTE))
+        if (tag != null && tag.contains("SkullType"))
         {
-            int id = MathHelper.clamp(tag.getByte("SkullType"), 0, 5);
+            int id = MathHelper.clamp(tag.getByte("SkullType", (byte) 0), 0, 5);
 
             // ;_; >_> <_<
             if (id == 2) { id = 3; } else if (id == 3) { id = 2; }
@@ -515,10 +490,10 @@ public class SchematicConversionFixers
         TripwireBlock wire = (TripwireBlock) state.getBlock();
 
         return state
-                .with(TripwireBlock.NORTH, ((TripwireBlock) wire).shouldConnectTo(reader.getBlockState(pos.north()), Direction.NORTH))
-                .with(TripwireBlock.SOUTH, ((TripwireBlock) wire).shouldConnectTo(reader.getBlockState(pos.south()), Direction.SOUTH))
-                .with(TripwireBlock.WEST, ((TripwireBlock) wire).shouldConnectTo(reader.getBlockState(pos.west()), Direction.WEST))
-                .with(TripwireBlock.EAST, ((TripwireBlock) wire).shouldConnectTo(reader.getBlockState(pos.east()), Direction.EAST));
+                .with(TripwireBlock.NORTH, wire.shouldConnectTo(reader.getBlockState(pos.north()), Direction.NORTH))
+                .with(TripwireBlock.SOUTH, wire.shouldConnectTo(reader.getBlockState(pos.south()), Direction.SOUTH))
+                .with(TripwireBlock.WEST, wire.shouldConnectTo(reader.getBlockState(pos.west()), Direction.WEST))
+                .with(TripwireBlock.EAST, wire.shouldConnectTo(reader.getBlockState(pos.east()), Direction.EAST));
     };
 
     public static final IStateFixer FIXER_VINE = (reader, state, pos) -> {

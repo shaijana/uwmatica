@@ -4,7 +4,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
 import com.google.gson.JsonObject;
-import com.llamalad7.mixinextras.lib.apache.commons.tuple.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 
 import com.mojang.datafixers.util.Either;
 import net.minecraft.block.*;
@@ -17,12 +17,20 @@ import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.mob.PiglinEntity;
+import net.minecraft.entity.passive.AbstractHorseEntity;
+import net.minecraft.entity.passive.VillagerEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.DoubleInventory;
 import net.minecraft.inventory.Inventory;
+import net.minecraft.inventory.SimpleInventory;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.registry.tag.BlockTags;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.*;
@@ -31,24 +39,29 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 
 import fi.dy.masa.malilib.interfaces.IClientTickHandler;
+import fi.dy.masa.malilib.interfaces.IDataSyncer;
+import fi.dy.masa.malilib.mixin.entity.IMixinAbstractHorseEntity;
+import fi.dy.masa.malilib.mixin.entity.IMixinPiglinEntity;
+import fi.dy.masa.malilib.mixin.network.IMixinDataQueryHandler;
 import fi.dy.masa.malilib.network.ClientPlayHandler;
 import fi.dy.masa.malilib.network.IPluginClientPlayHandler;
-import fi.dy.masa.malilib.util.Constants;
+import fi.dy.masa.malilib.util.data.Constants;
 import fi.dy.masa.malilib.util.InventoryUtils;
 import fi.dy.masa.malilib.util.nbt.NbtKeys;
 import fi.dy.masa.malilib.util.nbt.NbtUtils;
+import fi.dy.masa.malilib.util.nbt.NbtView;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.Reference;
 import fi.dy.masa.litematica.config.Configs;
-import fi.dy.masa.litematica.mixin.IMixinDataQueryHandler;
 import fi.dy.masa.litematica.network.ServuxLitematicaHandler;
 import fi.dy.masa.litematica.network.ServuxLitematicaPacket;
+import fi.dy.masa.litematica.schematic.LitematicaSchematic;
 import fi.dy.masa.litematica.util.EntityUtils;
 import fi.dy.masa.litematica.util.PositionUtils;
 import fi.dy.masa.litematica.util.WorldUtils;
 import fi.dy.masa.litematica.world.WorldSchematic;
 
-public class EntitiesDataStorage implements IClientTickHandler
+public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
 {
     private static final EntitiesDataStorage INSTANCE = new EntitiesDataStorage();
 
@@ -58,13 +71,16 @@ public class EntitiesDataStorage implements IClientTickHandler
     }
 
     private final static ServuxLitematicaHandler<ServuxLitematicaPacket.Payload> HANDLER = ServuxLitematicaHandler.getInstance();
-    private final static MinecraftClient mc = MinecraftClient.getInstance();
-    private int uptimeTicks = 0;
+    private final MinecraftClient mc;
+    //private int uptimeTicks = 0;
     private boolean servuxServer = false;
     private boolean hasInValidServux = false;
     private String servuxVersion;
     private final long chunkTimeoutMs = 5000;
     // Wait 5 seconds for loaded Client Chunks to receive Entity Data
+    private boolean checkOpStatus = true;
+    private boolean hasOpStatus = false;
+    private long lastOpCheck = 0L;
 
     // Data Cache
     private final ConcurrentHashMap<BlockPos, Pair<Long, Pair<BlockEntity, NbtCompound>>> blockEntityCache = new ConcurrentHashMap<>();
@@ -90,43 +106,52 @@ public class EntitiesDataStorage implements IClientTickHandler
     private final HashMap<ChunkPos, Set<BlockPos>> pendingBackupChunk_BlockEntities = new HashMap<>();
     private final HashMap<ChunkPos, Set<Integer>>  pendingBackupChunk_Entities      = new HashMap<>();
 
+    @Override
     @Nullable
     public World getWorld()
     {
         return fi.dy.masa.malilib.util.WorldUtils.getBestWorld(mc);
     }
 
-    private ClientWorld getClientWorld()
+    @Override
+    public ClientWorld getClientWorld()
     {
         if (this.clientWorld == null)
         {
-            clientWorld = mc.world;
+            this.clientWorld = this.mc.world;
         }
 
-        return clientWorld;
+        return this.clientWorld;
     }
 
     private EntitiesDataStorage()
     {
+        this.mc = MinecraftClient.getInstance();
     }
 
     @Override
     public void onClientTick(MinecraftClient mc)
     {
-        this.uptimeTicks++;
-        if (System.currentTimeMillis() - this.serverTickTime > 50)
+        long now = System.currentTimeMillis();
+        //this.uptimeTicks++;
+
+        if (now - this.serverTickTime > 50)
         {
             // In this block, we do something every server tick
             if (Configs.Generic.ENTITY_DATA_SYNC.getBooleanValue() == false)
             {
-                this.serverTickTime = System.currentTimeMillis();
+                this.serverTickTime = now;
 
                 if (DataManager.getInstance().hasIntegratedServer() == false && this.hasServuxServer())
                 {
                     this.servuxServer = false;
                     HANDLER.unregisterPlayReceiver();
                 }
-                return;
+
+                if (Configs.Generic.ENTITY_DATA_SYNC_BACKUP.getBooleanValue() == false)
+                {
+                    return;
+                }
             }
             else if (DataManager.getInstance().hasIntegratedServer() == false &&
                     this.hasServuxServer() == false &&
@@ -139,7 +164,7 @@ public class EntitiesDataStorage implements IClientTickHandler
             }
 
             // Expire cached NBT
-            this.tickCache();
+            this.tickCache(now);
 
             // 5 queries / server tick
             for (int i = 0; i < Configs.Generic.SERVER_NBT_REQUEST_RATE.getIntegerValue(); i++)
@@ -149,12 +174,14 @@ public class EntitiesDataStorage implements IClientTickHandler
                     var iter = this.pendingBlockEntitiesQueue.iterator();
                     BlockPos pos = iter.next();
                     iter.remove();
+
                     if (this.hasServuxServer())
                     {
                         requestServuxBlockEntityData(pos);
                     }
-                    else
+                    else if (this.shouldUseQuery())
                     {
+                        // Only check once if we have OP
                         requestQueryBlockEntity(pos);
                     }
                 }
@@ -167,8 +194,9 @@ public class EntitiesDataStorage implements IClientTickHandler
                     {
                         requestServuxEntityData(entityId);
                     }
-                    else
+                    else if (this.shouldUseQuery())
                     {
+                        // Only check once if we have OP
                         requestQueryEntityData(entityId);
                     }
                 }
@@ -182,11 +210,11 @@ public class EntitiesDataStorage implements IClientTickHandler
         return ServuxLitematicaHandler.CHANNEL_ID;
     }
 
-    private static ClientPlayNetworkHandler getVanillaHandler()
+    private ClientPlayNetworkHandler getVanillaHandler()
     {
-        if (mc.player != null)
+        if (this.mc.player != null)
         {
-            return mc.player.networkHandler;
+            return this.mc.player.networkHandler;
         }
 
         return null;
@@ -197,6 +225,7 @@ public class EntitiesDataStorage implements IClientTickHandler
         return HANDLER;
     }
 
+    @Override
     public void reset(boolean isLogout)
     {
         if (isLogout)
@@ -208,26 +237,65 @@ public class EntitiesDataStorage implements IClientTickHandler
             this.hasInValidServux = false;
             this.sentBackupPackets = false;
             this.receivedBackupPackets = false;
+            this.checkOpStatus = false;
+            this.hasOpStatus = false;
+            this.lastOpCheck = 0L;
         }
         else
         {
             Litematica.debugLog("EntitiesDataStorage#reset() - dimension change or log-in");
-            this.serverTickTime = System.currentTimeMillis() - (this.getCacheTimeout() + 5000L);
-            this.tickCache();
-            this.serverTickTime = System.currentTimeMillis();
+            long now = System.currentTimeMillis();
+            this.serverTickTime = now - (this.getCacheTimeout() + 5000L);
+            this.tickCache(now);
+            this.serverTickTime = now;
             this.clientWorld = mc.world;
+            this.checkOpStatus = true;
+            this.lastOpCheck = now;
         }
+
         // Clear data
         this.blockEntityCache.clear();
         this.entityCache.clear();
         this.pendingBlockEntitiesQueue.clear();
         this.pendingEntitiesQueue.clear();
+
         // Litematic Save values
         this.completedChunks.clear();
         this.pendingChunks.clear();
         this.pendingChunkTimeout.clear();
         this.pendingBackupChunk_BlockEntities.clear();
         this.pendingBackupChunk_Entities.clear();
+    }
+
+    private boolean shouldUseQuery()
+    {
+        if (this.hasOpStatus)
+        {
+//            System.out.printf("shouldUseQuery: HAS OP\n");
+            return true;
+        }
+
+        if (this.checkOpStatus)
+        {
+            // Check for 15 minutes after login, or changing dimensions
+            if ((System.currentTimeMillis() - this.lastOpCheck) < 900000L)
+            {
+//                System.out.printf("shouldUseQuery: CHECK OP\n");
+                return true;
+            }
+
+            this.checkOpStatus = false;
+        }
+
+//        System.out.printf("shouldUseQuery: NOT-OP\n");
+        return false;
+    }
+
+    public void resetOpCheck()
+    {
+        this.hasOpStatus = false;
+        this.checkOpStatus = true;
+        this.lastOpCheck = System.currentTimeMillis();
     }
 
     private long getCacheTimeout()
@@ -240,11 +308,10 @@ public class EntitiesDataStorage implements IClientTickHandler
         return (long) (MathHelper.clamp((Configs.Generic.ENTITY_DATA_SYNC_CACHE_TIMEOUT.getFloatValue() * this.longCacheTimeout), 120.0f, 300.0f) * 1000L);
     }
 
-    private void tickCache()
+    private void tickCache(long nowTime)
     {
-        long nowTime = System.currentTimeMillis();
         long blockTimeout = this.getCacheTimeout();
-        long entityTimeout = this.getCacheTimeout() * 2;
+        long entityTimeout = this.getCacheTimeout();
         int count;
         boolean beEmpty = false;
         boolean entEmpty = false;
@@ -272,9 +339,9 @@ public class EntitiesDataStorage implements IClientTickHandler
             {
                 Pair<Long, Pair<BlockEntity, NbtCompound>> pair = this.blockEntityCache.get(pos);
 
-                if (nowTime - pair.getLeft() > blockTimeout || pair.getLeft() - nowTime > 0)
+                if (nowTime - pair.getLeft() > blockTimeout || pair.getLeft() > nowTime)
                 {
-                    Litematica.debugLog("entityCache: be at pos [{}] has timed out by [{}] ms", pos.toShortString(), blockTimeout);
+//                    Litematica.debugLog("litematicEntityCache: be at pos [{}] has timed out by [{}] ms", pos.toShortString(), blockTimeout);
                     this.blockEntityCache.remove(pos);
                 }
                 else
@@ -297,9 +364,9 @@ public class EntitiesDataStorage implements IClientTickHandler
             {
                 Pair<Long, Pair<Entity, NbtCompound>> pair = this.entityCache.get(entityId);
 
-                if (nowTime - pair.getLeft() > entityTimeout || pair.getLeft() - nowTime > 0)
+                if (nowTime - pair.getLeft() > entityTimeout || pair.getLeft() > nowTime)
                 {
-                    Litematica.debugLog("entityCache: entity Id [{}] has timed out by [{}] ms", entityId, entityTimeout);
+//                    Litematica.debugLog("litematicEntityCache: entity Id [{}] has timed out by [{}] ms", entityId, entityTimeout);
                     this.entityCache.remove(entityId);
                 }
                 else
@@ -321,6 +388,7 @@ public class EntitiesDataStorage implements IClientTickHandler
         }
     }
 
+    @Override
     public @Nullable NbtCompound getFromBlockEntityCacheNbt(BlockPos pos)
     {
         if (this.blockEntityCache.containsKey(pos))
@@ -331,6 +399,7 @@ public class EntitiesDataStorage implements IClientTickHandler
         return null;
     }
 
+    @Override
     public @Nullable BlockEntity getFromBlockEntityCache(BlockPos pos)
     {
         if (this.blockEntityCache.containsKey(pos))
@@ -341,6 +410,7 @@ public class EntitiesDataStorage implements IClientTickHandler
         return null;
     }
 
+    @Override
     public @Nullable NbtCompound getFromEntityCacheNbt(int entityId)
     {
         if (this.entityCache.containsKey(entityId))
@@ -351,6 +421,7 @@ public class EntitiesDataStorage implements IClientTickHandler
         return null;
     }
 
+    @Override
     public @Nullable Entity getFromEntityCache(int entityId)
     {
         if (this.entityCache.containsKey(entityId))
@@ -420,12 +491,14 @@ public class EntitiesDataStorage implements IClientTickHandler
         return false;
     }
 
+    @Override
     public void onGameInit()
     {
         ClientPlayHandler.getInstance().registerClientPlayHandler(HANDLER);
         HANDLER.registerPlayPayload(ServuxLitematicaPacket.Payload.ID, ServuxLitematicaPacket.Payload.CODEC, IPluginClientPlayHandler.BOTH_CLIENT);
     }
 
+    @Override
     public void onWorldPre()
     {
         if (DataManager.getInstance().hasIntegratedServer() == false)
@@ -434,8 +507,10 @@ public class EntitiesDataStorage implements IClientTickHandler
         }
     }
 
+    @Override
     public void onWorldJoin()
     {
+        EntityUtils.initEntityUtils();
         // NO-OP
     }
 
@@ -455,16 +530,16 @@ public class EntitiesDataStorage implements IClientTickHandler
     {
         if (DataManager.getInstance().hasIntegratedServer() == false)
         {
-            Litematica.debugLog("EntitiesDataStorage#receiveServuxMetadata(): received METADATA from Servux");
+            Litematica.debugLog("LitematicDataChannel: received METADATA from Servux");
 
             if (Configs.Generic.ENTITY_DATA_SYNC.getBooleanValue())
             {
-                if (data.getInt("version") != ServuxLitematicaPacket.PROTOCOL_VERSION)
+                if (data.getInt("version", -1) != ServuxLitematicaPacket.PROTOCOL_VERSION)
                 {
-                    Litematica.logger.warn("LitematicDataChannel: Mis-matched protocol version!");
+                    Litematica.LOGGER.warn("LitematicDataChannel: Mis-matched protocol version!");
                 }
 
-                this.setServuxVersion(data.getString("servux"));
+                this.setServuxVersion(data.getString("servux", "?"));
                 this.setIsServuxServer();
 
                 return true;
@@ -480,32 +555,55 @@ public class EntitiesDataStorage implements IClientTickHandler
         this.hasInValidServux = true;
     }
 
+    @Override
     public @Nullable Pair<BlockEntity, NbtCompound> requestBlockEntity(World world, BlockPos pos)
     {
         // Don't cache/request a BE for the Schematic World
         if (world instanceof WorldSchematic)
         {
-            BlockEntity be = world.getWorldChunk(pos).getBlockEntity(pos);
-
-            if (be != null)
-            {
-                NbtCompound nbt = be.createNbtWithIdentifyingData(world.getRegistryManager());
-
-                return Pair.of(be, nbt);
-            }
+            return this.refreshBlockEntityFromWorld(world, pos);
         }
         if (this.blockEntityCache.containsKey(pos))
         {
+            // Refresh at 25%
+            if (!DataManager.getInstance().hasIntegratedServer() &&
+                (Configs.Generic.ENTITY_DATA_SYNC.getBooleanValue() ||
+                 Configs.Generic.ENTITY_DATA_SYNC_BACKUP.getBooleanValue()))
+            {
+                if (System.currentTimeMillis() - this.blockEntityCache.get(pos).getLeft() > (this.getCacheTimeout() / 4))
+                {
+//                    Litematica.debugLog("requestBlockEntity: be at pos [{}] requeue at [{}] ms", pos.toShortString(), this.getCacheTimeout() / 4);
+                    this.pendingBlockEntitiesQueue.add(pos);
+                }
+            }
+
+            if (world instanceof ServerWorld)
+            {
+                return this.refreshBlockEntityFromWorld(world, pos);
+            }
+
             return this.blockEntityCache.get(pos).getRight();
         }
         else if (world.getBlockState(pos).getBlock() instanceof BlockEntityProvider)
         {
             if (DataManager.getInstance().hasIntegratedServer() == false &&
-                Configs.Generic.ENTITY_DATA_SYNC.getBooleanValue())
+                (Configs.Generic.ENTITY_DATA_SYNC.getBooleanValue() ||
+                 Configs.Generic.ENTITY_DATA_SYNC_BACKUP.getBooleanValue()))
             {
+//                Litematica.debugLog("requestBlockEntity: be at pos [{}] queue at [{}] ms", pos.toShortString(), this.getCacheTimeout() / 4);
                 this.pendingBlockEntitiesQueue.add(pos);
             }
 
+            return this.refreshBlockEntityFromWorld(world, pos);
+        }
+
+        return null;
+    }
+
+    private @Nullable Pair<BlockEntity, NbtCompound> refreshBlockEntityFromWorld(World world, BlockPos pos)
+    {
+        if (world != null && world.getBlockState(pos).hasBlockEntity())
+        {
             BlockEntity be = world.getWorldChunk(pos).getBlockEntity(pos);
 
             if (be != null)
@@ -513,9 +611,12 @@ public class EntitiesDataStorage implements IClientTickHandler
                 NbtCompound nbt = be.createNbtWithIdentifyingData(world.getRegistryManager());
                 Pair<BlockEntity, NbtCompound> pair = Pair.of(be, nbt);
 
-                synchronized (this.blockEntityCache)
+                if (!(world instanceof WorldSchematic))
                 {
-                    this.blockEntityCache.put(pos, Pair.of(System.currentTimeMillis(), pair));
+                    synchronized (this.blockEntityCache)
+                    {
+                        this.blockEntityCache.put(pos, Pair.of(System.currentTimeMillis(), pair));
+                    }
                 }
 
                 return pair;
@@ -525,43 +626,81 @@ public class EntitiesDataStorage implements IClientTickHandler
         return null;
     }
 
+    @Override
     public @Nullable Pair<Entity, NbtCompound> requestEntity(World world, int entityId)
     {
+        // Don't cache/request for the Schematic World
         if (world instanceof WorldSchematic)
         {
-            return null;
+            return this.refreshEntityFromWorld(world, entityId);
         }
         if (this.entityCache.containsKey(entityId))
         {
+            // Refresh at 25%
+            if (!DataManager.getInstance().hasIntegratedServer() &&
+                (Configs.Generic.ENTITY_DATA_SYNC.getBooleanValue() ||
+                 Configs.Generic.ENTITY_DATA_SYNC_BACKUP.getBooleanValue()))
+            {
+                if (System.currentTimeMillis() - this.entityCache.get(entityId).getLeft() > (this.getCacheTimeout() / 4))
+                {
+                    //Litematica.debugLog("requestEntity: entity Id [{}] requeue at [{}] ms", entityId, this.getCacheTimeout() / 4);
+                    this.pendingEntitiesQueue.add(entityId);
+                }
+            }
+
+            // Refresh from Server World
+            if (world instanceof ServerWorld)
+            {
+                return this.refreshEntityFromWorld(world, entityId);
+            }
+
             return this.entityCache.get(entityId).getRight();
         }
         if (DataManager.getInstance().hasIntegratedServer() == false &&
-            Configs.Generic.ENTITY_DATA_SYNC.getBooleanValue())
+            (Configs.Generic.ENTITY_DATA_SYNC.getBooleanValue() ||
+             Configs.Generic.ENTITY_DATA_SYNC_BACKUP.getBooleanValue()))
         {
             this.pendingEntitiesQueue.add(entityId);
         }
 
+        return this.refreshEntityFromWorld(world, entityId);
+    }
+
+    private @Nullable Pair<Entity, NbtCompound> refreshEntityFromWorld(World world, int entityId)
+    {
         if (world != null)
         {
             Entity entity = world.getEntityById(entityId);
-            NbtCompound nbt = new NbtCompound();
 
-            if (entity != null && entity.saveSelfNbt(nbt))
+            if (entity != null)
             {
-                Pair<Entity, NbtCompound> pair = Pair.of(entity, nbt);
+                NbtView view = NbtView.getWriter(world.getRegistryManager());
+                entity.writeData(view.getWriter());
+                NbtCompound nbt = view.readNbt();
+                Identifier id = EntityType.getId(entity.getType());
 
-                synchronized (this.entityCache)
+                if (nbt != null && id != null)
                 {
-                    this.entityCache.put(entityId, Pair.of(System.currentTimeMillis(), pair));
-                }
+                    nbt.putString("id", id.toString());
+                    Pair<Entity, NbtCompound> pair = Pair.of(entity, nbt.copy());
 
-                return pair;
+                    if (!(world instanceof WorldSchematic))
+                    {
+                        synchronized (this.entityCache)
+                        {
+                            this.entityCache.put(entityId, Pair.of(System.currentTimeMillis(), pair));
+                        }
+                    }
+
+                    return pair;
+                }
             }
         }
 
         return null;
     }
 
+    @Override
     @Nullable
     public Inventory getBlockInventory(World world, BlockPos pos, boolean useNbt)
     {
@@ -582,14 +721,20 @@ public class EntitiesDataStorage implements IClientTickHandler
                 BlockEntity be = this.blockEntityCache.get(pos).getRight().getLeft();
                 BlockState state = world.getBlockState(pos);
 
-                if (state.getBlock() instanceof AirBlock || state.equals(Blocks.AIR.getDefaultState()))
+                if (state.isIn(BlockTags.AIR) || !state.hasBlockEntity())
                 {
+                    synchronized (this.blockEntityCache)
+                    {
+                        this.blockEntityCache.remove(pos);
+                    }
+
+                    // Don't keep requesting if we're tick warping or something.
                     return null;
                 }
 
                 if (be instanceof Inventory inv1)
                 {
-                    if (be instanceof ChestBlockEntity)
+                    if (be instanceof ChestBlockEntity && state.contains(ChestBlock.CHEST_TYPE))
                     {
                         ChestType type = state.get(ChestBlock.CHEST_TYPE);
 
@@ -635,7 +780,8 @@ public class EntitiesDataStorage implements IClientTickHandler
             }
         }
 
-        if (Configs.Generic.ENTITY_DATA_SYNC.getBooleanValue())
+        if (Configs.Generic.ENTITY_DATA_SYNC.getBooleanValue() ||
+            Configs.Generic.ENTITY_DATA_SYNC_BACKUP.getBooleanValue())
         {
             this.requestBlockEntity(world, pos);
         }
@@ -643,9 +789,9 @@ public class EntitiesDataStorage implements IClientTickHandler
         return null;
     }
 
-    /*
+    @Override
     @Nullable
-    public Inventory getEntityInventory(int entityId, boolean useNbt)
+    public Inventory getEntityInventory(World world, int entityId, boolean useNbt)
     {
         if (world instanceof WorldSchematic)
         {
@@ -668,9 +814,9 @@ public class EntitiesDataStorage implements IClientTickHandler
                 {
                     inv = (Inventory) entity;
                 }
-                else if (entity instanceof PlayerEntity player)
+                else if (entity instanceof PlayerEntity player && player != null)
                 {
-                    inv = new SimpleInventory(player.getInventory().main.toArray(new ItemStack[36]));
+                    inv = new SimpleInventory(player.getInventory().getMainStacks().toArray(new ItemStack[36]));
                 }
                 else if (entity instanceof VillagerEntity)
                 {
@@ -692,14 +838,14 @@ public class EntitiesDataStorage implements IClientTickHandler
             }
         }
 
-        if (Configs.Generic.ENTITY_DATA_SYNC.getBooleanValue())
+        if (Configs.Generic.ENTITY_DATA_SYNC.getBooleanValue() ||
+            Configs.Generic.ENTITY_DATA_SYNC_BACKUP.getBooleanValue())
         {
-            this.requestEntity(entityId);
+            this.requestEntity(world, entityId);
         }
 
         return null;
     }
-     */
 
     private void requestQueryBlockEntity(BlockPos pos)
     {
@@ -717,7 +863,7 @@ public class EntitiesDataStorage implements IClientTickHandler
             {
                 handleBlockEntityData(pos, nbtCompound, null);
             });
-            this.transactionToBlockPosOrEntityId.put(((IMixinDataQueryHandler) handler.getDataQueryHandler()).litematica_currentTransactionId(), Either.left(pos));
+            this.transactionToBlockPosOrEntityId.put(((IMixinDataQueryHandler) handler.getDataQueryHandler()).malilib_currentTransactionId(), Either.left(pos));
         }
     }
 
@@ -728,7 +874,7 @@ public class EntitiesDataStorage implements IClientTickHandler
             return;
         }
 
-        ClientPlayNetworkHandler handler = getVanillaHandler();
+        ClientPlayNetworkHandler handler = this.getVanillaHandler();
 
         if (handler != null)
         {
@@ -737,7 +883,7 @@ public class EntitiesDataStorage implements IClientTickHandler
             {
                 handleEntityData(entityId, nbtCompound);
             });
-            this.transactionToBlockPosOrEntityId.put(((IMixinDataQueryHandler) handler.getDataQueryHandler()).litematica_currentTransactionId(), Either.right(entityId));
+            this.transactionToBlockPosOrEntityId.put(((IMixinDataQueryHandler) handler.getDataQueryHandler()).malilib_currentTransactionId(), Either.right(entityId));
         }
     }
 
@@ -929,6 +1075,7 @@ public class EntitiesDataStorage implements IClientTickHandler
         return false;
     }
 
+    @Override
     @Nullable
     public BlockEntity handleBlockEntityData(BlockPos pos, NbtCompound nbt, @Nullable Identifier type)
     {
@@ -939,7 +1086,7 @@ public class EntitiesDataStorage implements IClientTickHandler
 
         if (blockEntity != null && (type == null || type.equals(BlockEntityType.getId(blockEntity.getType()))))
         {
-            if (nbt.contains(NbtKeys.ID, Constants.NBT.TAG_STRING) == false)
+            if (nbt.contains(NbtKeys.ID) == false)
             {
                 Identifier id = BlockEntityType.getId(blockEntity.getType());
 
@@ -951,17 +1098,11 @@ public class EntitiesDataStorage implements IClientTickHandler
 
             synchronized (this.blockEntityCache)
             {
-                if (this.blockEntityCache.containsKey(pos))
-                {
-                    this.blockEntityCache.replace(pos, Pair.of(System.currentTimeMillis(), Pair.of(blockEntity, nbt)));
-                }
-                else
-                {
-                    this.blockEntityCache.put(pos, Pair.of(System.currentTimeMillis(), Pair.of(blockEntity, nbt)));
-                }
+                this.blockEntityCache.put(pos, Pair.of(System.currentTimeMillis(), Pair.of(blockEntity, nbt)));
             }
 
-            blockEntity.read(nbt, this.getClientWorld().getRegistryManager());
+            NbtView view = NbtView.getReader(nbt, this.getClientWorld().getRegistryManager());
+            blockEntity.read(view.getReader());
             ChunkPos chunkPos = new ChunkPos(pos);
 
             if (this.hasPendingChunk(chunkPos) && this.hasServuxServer() == false)
@@ -984,7 +1125,7 @@ public class EntitiesDataStorage implements IClientTickHandler
 
                 if (blockEntity2 != null)
                 {
-                    if (nbt.contains(NbtKeys.ID, Constants.NBT.TAG_STRING) == false)
+                    if (nbt.contains(NbtKeys.ID) == false)
                     {
                         Identifier id = BlockEntityType.getId(beType);
 
@@ -995,19 +1136,13 @@ public class EntitiesDataStorage implements IClientTickHandler
                     }
                     synchronized (this.blockEntityCache)
                     {
-                        if (this.blockEntityCache.containsKey(pos))
-                        {
-                            this.blockEntityCache.replace(pos, Pair.of(System.currentTimeMillis(), Pair.of(blockEntity2, nbt)));
-                        }
-                        else
-                        {
-                            this.blockEntityCache.put(pos, Pair.of(System.currentTimeMillis(), Pair.of(blockEntity2, nbt)));
-                        }
+                        this.blockEntityCache.put(pos, Pair.of(System.currentTimeMillis(), Pair.of(blockEntity2, nbt)));
                     }
 
                     if (Configs.Generic.ENTITY_DATA_LOAD_NBT.getBooleanValue())
                     {
-                        blockEntity2.read(nbt, this.getClientWorld().getRegistryManager());
+                        NbtView view = NbtView.getReader(nbt, this.getClientWorld().getRegistryManager());
+                        blockEntity2.read(view.getReader());
                         this.getClientWorld().addBlockEntity(blockEntity2);
                     }
 
@@ -1026,6 +1161,7 @@ public class EntitiesDataStorage implements IClientTickHandler
         return null;
     }
 
+    @Override
     @Nullable
     public Entity handleEntityData(int entityId, NbtCompound nbt)
     {
@@ -1035,7 +1171,7 @@ public class EntitiesDataStorage implements IClientTickHandler
 
         if (entity != null)
         {
-            if (nbt.contains(NbtKeys.ID, Constants.NBT.TAG_STRING) == false)
+            if (nbt.contains(NbtKeys.ID) == false)
             {
                 Identifier id = EntityType.getId(entity.getType());
 
@@ -1046,14 +1182,7 @@ public class EntitiesDataStorage implements IClientTickHandler
             }
             synchronized (this.entityCache)
             {
-                if (this.entityCache.containsKey(entityId))
-                {
-                    this.entityCache.replace(entityId, Pair.of(System.currentTimeMillis(), Pair.of(entity, nbt)));
-                }
-                else
-                {
-                    this.entityCache.put(entityId, Pair.of(System.currentTimeMillis(), Pair.of(entity, nbt)));
-                }
+                this.entityCache.put(entityId, Pair.of(System.currentTimeMillis(), Pair.of(entity, nbt)));
             }
 
             if (Configs.Generic.ENTITY_DATA_LOAD_NBT.getBooleanValue())
@@ -1070,6 +1199,7 @@ public class EntitiesDataStorage implements IClientTickHandler
         return entity;
     }
 
+    @Override
     public void handleBulkEntityData(int transactionId, @Nullable NbtCompound nbt)
     {
         if (nbt == null)
@@ -1077,31 +1207,32 @@ public class EntitiesDataStorage implements IClientTickHandler
             return;
         }
 
+        String task = nbt.getString("Task", "BulkEntityReply");
+
         // TODO --> Split out the task this way (I should have done this under sakura.12, etc),
         //  So we need to check if the "Task" is not included for now... (Wait for the updates to bake in)
-        if ((nbt.contains("Task") && nbt.getString("Task").equals("BulkEntityReply")) ||
-            nbt.contains("Task") == false)
+        if (task.equals("BulkEntityReply"))
         {
-            NbtList tileList = nbt.contains("TileEntities") ? nbt.getList("TileEntities", Constants.NBT.TAG_COMPOUND) : new NbtList();
-            NbtList entityList = nbt.contains("Entities") ? nbt.getList("Entities", Constants.NBT.TAG_COMPOUND) : new NbtList();
-            ChunkPos chunkPos = new ChunkPos(nbt.getInt("chunkX"), nbt.getInt("chunkZ"));
+            NbtList tileList = nbt.contains("TileEntities") ? nbt.getListOrEmpty("TileEntities") : new NbtList();
+            NbtList entityList = nbt.contains("Entities") ? nbt.getListOrEmpty("Entities") : new NbtList();
+            ChunkPos chunkPos = new ChunkPos(nbt.getInt("chunkX", 0), nbt.getInt("chunkZ", 0));
 
             this.shouldUseLongTimeout = true;
 
             for (int i = 0; i < tileList.size(); ++i)
             {
-                NbtCompound te = tileList.getCompound(i);
+                NbtCompound te = tileList.getCompoundOrEmpty(i);
                 BlockPos pos = NbtUtils.readBlockPos(te);
-                Identifier type = Identifier.of(te.getString("id"));
+                Identifier type = Identifier.of(te.getString("id", ""));
 
                 this.handleBlockEntityData(pos, te, type);
             }
 
             for (int i = 0; i < entityList.size(); ++i)
             {
-                NbtCompound ent = entityList.getCompound(i);
-                Vec3d pos = NbtUtils.readEntityPositionFromTag(ent).toVanilla();
-                int entityId = ent.getInt("entityId");
+                NbtCompound ent = entityList.getCompoundOrEmpty(i);
+                Vec3d pos = NbtUtils.readEntityPositionFromTag(ent);
+                int entityId = ent.getInt("entityId", 0);
 
                 this.handleEntityData(entityId, ent);
             }
@@ -1114,8 +1245,16 @@ public class EntitiesDataStorage implements IClientTickHandler
         }
     }
 
+    @Override
     public void handleVanillaQueryNbt(int transactionId, NbtCompound nbt)
     {
+        if (this.checkOpStatus)
+        {
+            this.hasOpStatus = true;
+            this.checkOpStatus = false;
+            this.lastOpCheck = System.currentTimeMillis();
+        }
+
         Either<BlockPos, Integer> either = this.transactionToBlockPosOrEntityId.remove(transactionId);
 
         if (either != null)

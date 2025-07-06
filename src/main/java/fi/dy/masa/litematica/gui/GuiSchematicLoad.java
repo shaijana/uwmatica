@@ -1,17 +1,11 @@
 package fi.dy.masa.litematica.gui;
 
-import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collection;
+
 import net.minecraft.util.math.BlockPos;
-import fi.dy.masa.litematica.data.DataManager;
-import fi.dy.masa.litematica.data.SchematicHolder;
-import fi.dy.masa.litematica.gui.GuiMainMenu.ButtonListenerChangeMenu;
-import fi.dy.masa.litematica.materials.MaterialListSchematic;
-import fi.dy.masa.litematica.schematic.LitematicaSchematic;
-import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
-import fi.dy.masa.litematica.schematic.placement.SchematicPlacementManager;
-import fi.dy.masa.litematica.util.FileType;
-import fi.dy.masa.litematica.util.WorldUtils;
+
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.GuiStringListSelection;
 import fi.dy.masa.malilib.gui.Message.MessageType;
@@ -25,6 +19,15 @@ import fi.dy.masa.malilib.gui.widgets.WidgetFileBrowserBase.DirectoryEntry;
 import fi.dy.masa.malilib.util.GuiUtils;
 import fi.dy.masa.malilib.util.InfoUtils;
 import fi.dy.masa.malilib.util.StringUtils;
+import fi.dy.masa.litematica.data.DataManager;
+import fi.dy.masa.litematica.data.SchematicHolder;
+import fi.dy.masa.litematica.gui.GuiMainMenu.ButtonListenerChangeMenu;
+import fi.dy.masa.litematica.materials.MaterialListSchematic;
+import fi.dy.masa.litematica.schematic.LitematicaSchematic;
+import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
+import fi.dy.masa.litematica.schematic.placement.SchematicPlacementManager;
+import fi.dy.masa.litematica.util.FileType;
+import fi.dy.masa.litematica.util.WorldUtils;
 
 public class GuiSchematicLoad extends GuiSchematicBrowserBase
 {
@@ -42,7 +45,7 @@ public class GuiSchematicLoad extends GuiSchematicBrowserBase
     }
 
     @Override
-    public File getDefaultDirectory()
+    public Path getDefaultDirectory()
     {
         return DataManager.getSchematicsBaseDirectory();
     }
@@ -59,7 +62,7 @@ public class GuiSchematicLoad extends GuiSchematicBrowserBase
         super.initGui();
 
         int x = 12;
-        int y = this.height - 40;
+        int y = this.getScreenHeight() - 40;
         int buttonWidth;
         String label;
         ButtonGeneric button;
@@ -71,7 +74,7 @@ public class GuiSchematicLoad extends GuiSchematicBrowserBase
         checkbox.setChecked(DataManager.getCreatePlacementOnLoad(), false);
         this.addWidget(checkbox);
 
-        y = this.height - 26;
+        y = this.getScreenHeight() - 26;
         x += this.createButton(x, y, -1, ButtonListener.Type.LOAD_SCHEMATIC) + 4;
         x += this.createButton(x, y, -1, ButtonListener.Type.MATERIAL_LIST) + 4;
 
@@ -84,7 +87,7 @@ public class GuiSchematicLoad extends GuiSchematicBrowserBase
         type = ButtonListenerChangeMenu.ButtonType.MAIN_MENU;
         label = StringUtils.translate(type.getLabelKey());
         buttonWidth = this.getStringWidth(label) + 20;
-        x = this.width - buttonWidth - 10;
+        x = this.getScreenWidth() - buttonWidth - 10;
         button = new ButtonGeneric(x, y, buttonWidth, 20, label);
         this.addButton(button, new ButtonListenerChangeMenu(type, this.getParent()));
     }
@@ -133,11 +136,11 @@ public class GuiSchematicLoad extends GuiSchematicBrowserBase
                 return;
             }
 
-            File file = entry.getFullPath();
+            Path file = entry.getFullPath();
 
-            if (file.exists() == false || file.isFile() == false || file.canRead() == false)
+            if (!Files.exists(file) || !Files.isReadable(file))
             {
-                this.gui.addMessage(MessageType.ERROR, "litematica.error.schematic_load.cant_read_file", file.getName());
+                this.gui.addMessage(MessageType.ERROR, "litematica.error.schematic_load.cant_read_file", file.getFileName());
                 return;
             }
 
@@ -167,7 +170,7 @@ public class GuiSchematicLoad extends GuiSchematicBrowserBase
             }
             else
             {
-                this.gui.addMessage(MessageType.ERROR, "litematica.error.schematic_load.unsupported_type", file.getName());
+                this.gui.addMessage(MessageType.ERROR, "litematica.error.schematic_load.unsupported_type", file.getFileName());
             }
 
             if (schematic != null)
@@ -175,7 +178,7 @@ public class GuiSchematicLoad extends GuiSchematicBrowserBase
                 if (this.type == Type.LOAD_SCHEMATIC)
                 {
                     SchematicHolder.getInstance().addSchematic(schematic, true);
-                    this.gui.addMessage(MessageType.SUCCESS, "litematica.info.schematic_load.schematic_loaded", file.getName());
+                    this.gui.addMessage(MessageType.SUCCESS, "litematica.info.schematic_load.schematic_loaded", file.getFileName());
 
                     if (DataManager.getCreatePlacementOnLoad())
                     {
@@ -221,7 +224,7 @@ public class GuiSchematicLoad extends GuiSchematicBrowserBase
 
             private final String translationKey;
 
-            private Type(String translationKey)
+            Type(String translationKey)
             {
                 this.translationKey = translationKey;
             }

@@ -8,9 +8,10 @@ import javax.annotation.Nullable;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.block.StairsBlock;
+import net.minecraft.block.ChestBlock;
 import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.block.enums.StairShape;
+import net.minecraft.block.entity.ChestBlockEntity;
+import net.minecraft.block.enums.ChestType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.decoration.DisplayEntity;
@@ -24,27 +25,24 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.state.property.Properties;
 import net.minecraft.util.BlockMirror;
 import net.minecraft.util.BlockRotation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.*;
 import net.minecraft.util.math.Direction.AxisDirection;
 import net.minecraft.world.World;
 import net.minecraft.world.tick.OrderedTick;
 import net.minecraft.world.tick.WorldTickScheduler;
 
-import fi.dy.masa.malilib.util.Constants;
 import fi.dy.masa.malilib.util.IntBoundingBox;
 import fi.dy.masa.malilib.util.nbt.NbtUtils;
-import fi.dy.masa.malilib.util.position.Vec3d;
-import fi.dy.masa.malilib.util.position.Vec3i;
+import fi.dy.masa.malilib.util.nbt.NbtView;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.config.Configs;
-import fi.dy.masa.litematica.mixin.IMixinStairsBlock;
+import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.schematic.LitematicaSchematic;
 import fi.dy.masa.litematica.schematic.LitematicaSchematic.EntityInfo;
 import fi.dy.masa.litematica.schematic.container.LitematicaBlockStateContainer;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
 import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement;
+import fi.dy.masa.litematica.world.WorldSchematic;
 
 public class SchematicPlacingUtils
 {
@@ -52,12 +50,21 @@ public class SchematicPlacingUtils
                                                   ChunkPos chunkPos,
                                                   SchematicPlacement schematicPlacement,
                                                   ReplaceBehavior replace,
+                                                  PasteLayerBehavior layerBehavior,
                                                   boolean notifyNeighbors)
     {
         LitematicaSchematic schematic = schematicPlacement.getSchematic();
         Set<String> regionsTouchingChunk = schematicPlacement.getRegionsTouchingChunk(chunkPos.x, chunkPos.z);
         BlockPos origin = schematicPlacement.getOrigin();
         boolean allSuccess = true;
+
+        // Don't enable selective pasting while loading the schematic to the schematic world
+        // since this function has a dual purpose; this would cause things to fail to load.
+        if (world instanceof WorldSchematic &&
+            layerBehavior != PasteLayerBehavior.ALL)
+        {
+            layerBehavior = PasteLayerBehavior.ALL;
+        }
 
         try
         {
@@ -86,10 +93,10 @@ public class SchematicPlacingUtils
 
                     if (placeBlocksWithinChunk(world, chunkPos, regionName, container, blockEntityMap,
                                                origin, schematicPlacement, placement, scheduledBlockTicks,
-                                               scheduledFluidTicks, replace, notifyNeighbors) == false)
+                                               scheduledFluidTicks, replace, layerBehavior, notifyNeighbors) == false)
                     {
                         allSuccess = false;
-                        Litematica.logger.warn("Invalid/missing schematic data in schematic '{}' for sub-region '{}'", schematic.getMetadata().getName(), regionName);
+                        Litematica.LOGGER.warn("Invalid/missing schematic data in schematic '{}' for sub-region '{}'", schematic.getMetadata().getName(), regionName);
                     }
 
                     List<EntityInfo> entityList = schematic.getEntityListForRegion(regionName);
@@ -97,7 +104,7 @@ public class SchematicPlacingUtils
                     if (schematicPlacement.ignoreEntities() == false &&
                         placement.ignoreEntities() == false && entityList != null)
                     {
-                        placeEntitiesToWorldWithinChunk(world, chunkPos, entityList, origin, schematicPlacement, placement);
+                        placeEntitiesToWorldWithinChunk(world, chunkPos, entityList, origin, schematicPlacement, placement, layerBehavior);
                     }
                 }
             }
@@ -118,7 +125,9 @@ public class SchematicPlacingUtils
                                                  SubRegionPlacement placement,
                                                  @Nullable Map<BlockPos, OrderedTick<Block>> scheduledBlockTicks,
                                                  @Nullable Map<BlockPos, OrderedTick<Fluid>> scheduledFluidTicks,
-                                                 ReplaceBehavior replace, boolean notifyNeighbors)
+                                                 ReplaceBehavior replace,
+                                                 PasteLayerBehavior layerBehavior,
+                                                 boolean notifyNeighbors)
     {
         IntBoundingBox bounds = schematicPlacement.getBoxWithinChunkForRegion(regionName, chunkPos.x, chunkPos.z);
         Vec3i regionSize = schematicPlacement.getSchematic().getAreaSizeAsVec3i(regionName);
@@ -190,6 +199,8 @@ public class SchematicPlacingUtils
         final int posMinRelMinusRegY = posMinRel.getY() - regionPos.getY();
         final int posMinRelMinusRegZ = posMinRel.getZ() - regionPos.getZ();
 
+//        dumpBlockEntityMap(blockEntityMap);
+
         for (int y = startY; y <= endY; ++y)
         {
             for (int z = startZ; z <= endZ; ++z)
@@ -205,6 +216,7 @@ public class SchematicPlacingUtils
 
                     posMutable.set(x, y, z);
                     NbtCompound teNBT = blockEntityMap.get(posMutable);
+                    BlockPos origPos = posMutable.toImmutable();
 
                     posMutable.set(posMinRelMinusRegX + x,
                                    posMinRelMinusRegY + y,
@@ -212,6 +224,12 @@ public class SchematicPlacingUtils
 
                     BlockPos pos = PositionUtils.getTransformedPlacementPosition(posMutable, schematicPlacement, placement);
                     pos = pos.add(regionPosTransformed).add(origin);
+
+                    if (!shouldPasteBlock(pos, layerBehavior))
+                    {
+//                        Litematica.LOGGER.error("placeBlocksWithinChunk(): Skipping block at pos [{}]", pos.toShortString());
+                        continue;
+                    }
 
                     BlockState stateOld = world.getBlockState(pos);
 
@@ -221,72 +239,31 @@ public class SchematicPlacingUtils
                         continue;
                     }
 
-                    // Fix Stair Rotation / Mirroring
-                    StairShape stairShape = null;
-
-                    if (state.getBlock() instanceof StairsBlock && mirrorMain != BlockMirror.NONE)
+                    // Fix inventory of adjacent chest sides when mirrored
+                    if (state.hasBlockEntity() && state.isOf(Blocks.CHEST) &&
+                        !ignoreInventories && mirrorMain != BlockMirror.NONE &&
+                        !(state.get(ChestBlock.CHEST_TYPE) == ChestType.SINGLE) &&
+                        Configs.Generic.FIX_CHEST_MIRROR.getBooleanValue())
                     {
-                        stairShape = state.get(Properties.STAIR_SHAPE);
-                        /*
-                        System.out.printf("placeBlocksWithinChunk() - STAIRS: pre-Mirror:0: pos: [%s] // state [%s]\n",
-                                          pos.toShortString(), state.toString());
-                         */
+                        Direction facing = state.get(ChestBlock.FACING);
+                        Direction.Axis axis = facing.getAxis();
+                        ChestType type = state.get(ChestBlock.CHEST_TYPE).getOpposite();
+
+                        if (mirrorMain != BlockMirror.NONE && axis != Direction.Axis.Y)
+                        {
+                            Direction facingAdj = type == ChestType.LEFT ? facing.rotateCounterclockwise(Direction.Axis.Y) : facing.rotateClockwise(Direction.Axis.Y);
+                            BlockPos posAdj = origPos.offset(facingAdj);
+
+                            if (blockEntityMap.containsKey(posAdj))
+                            {
+                                teNBT = blockEntityMap.getOrDefault(posAdj, teNBT).copy();
+                            }
+                        }
                     }
 
                     if (mirrorMain != BlockMirror.NONE) { state = state.mirror(mirrorMain); }
                     if (mirrorSub != BlockMirror.NONE)  { state = state.mirror(mirrorSub); }
                     if (rotationCombined != BlockRotation.NONE) { state = state.rotate(rotationCombined); }
-
-                    if (state.getBlock() instanceof StairsBlock && stairShape != null)
-                    {
-                        /*
-                        System.out.printf("placeBlocksWithinChunk() - STAIRS:post-Mirror:1: pos: [%s] // state [%s] (ORG Shape: %s)\n",
-                                          pos.toShortString(), state.toString(),
-                                          stairShape.name());
-                         */
-
-                        if (mirrorMain != BlockMirror.NONE && stairShape != StairShape.STRAIGHT)
-                        {
-                            StairShape newShape = IMixinStairsBlock.litematica_invokeGetStairShape(state, world, pos);
-
-                            // Best case scenario, and don't cross Outer/Inner types
-                            if (newShape != StairShape.STRAIGHT &&
-                                !((stairShape == StairShape.INNER_LEFT || stairShape == StairShape.INNER_RIGHT) &&
-                                  newShape == StairShape.OUTER_LEFT || newShape == StairShape.OUTER_RIGHT) &&
-                                !((stairShape == StairShape.OUTER_LEFT || stairShape == StairShape.OUTER_RIGHT) &&
-                                  newShape == StairShape.INNER_LEFT || newShape == StairShape.INNER_RIGHT)
-                                )
-                            {
-                                state = state.with(StairsBlock.SHAPE, newShape);
-                            }
-                            else
-                            {
-                                // Flip Shape if Invoker fails (It works? :)
-                                if (stairShape == StairShape.INNER_LEFT)
-                                {
-                                    state = state.with(StairsBlock.SHAPE, StairShape.INNER_RIGHT);
-                                }
-                                else if (stairShape == StairShape.INNER_RIGHT)
-                                {
-                                    state = state.with(StairsBlock.SHAPE, StairShape.INNER_LEFT);
-                                }
-                                else if (stairShape == StairShape.OUTER_LEFT)
-                                {
-                                    state = state.with(StairsBlock.SHAPE, StairShape.OUTER_RIGHT);
-                                }
-                                else if (stairShape == StairShape.OUTER_RIGHT)
-                                {
-                                    state = state.with(StairsBlock.SHAPE, StairShape.OUTER_LEFT);
-                                }
-                            }
-                        }
-
-                        /*
-                        System.out.printf("placeBlocksWithinChunk() - STAIRS:post-Mirror:2: pos: [%s] // state [%s] (ORG Shape: %s)\n",
-                                          pos.toShortString(), state.toString(),
-                                          stairShape.name());
-                         */
-                    }
 
                     BlockEntity te = world.getBlockEntity(pos);
 
@@ -318,7 +295,8 @@ public class SchematicPlacingUtils
 
                             try
                             {
-                                te.read(teNBT, world.getRegistryManager());
+                                NbtView view = NbtView.getReader(teNBT, world.getRegistryManager());
+                                te.read(view.getReader());
 
                                 if (ignoreInventories && te instanceof Inventory)
                                 {
@@ -327,7 +305,7 @@ public class SchematicPlacingUtils
                             }
                             catch (Exception e)
                             {
-                                Litematica.logger.warn("Failed to load BlockEntity data for {} @ {}", state, pos);
+                                Litematica.LOGGER.warn("Failed to load BlockEntity data for {} @ {}", state, pos);
                             }
                         }
                     }
@@ -414,11 +392,26 @@ public class SchematicPlacingUtils
         return true;
     }
 
+    private static void dumpBlockEntityMap(Map<BlockPos, NbtCompound> teMap)
+    {
+        System.out.print("DUMP TE-MAP:\n");
+
+        for (BlockPos pos : teMap.keySet())
+        {
+            NbtCompound nbt = teMap.get(pos);
+
+            System.out.printf("  pos[%s]: %s\n", pos.toShortString(), nbt.toString());
+        }
+
+        System.out.print("DUMP TE-MAP -- END\n");
+    }
+
     public static void placeEntitiesToWorldWithinChunk(World world, ChunkPos chunkPos,
                                                        List<EntityInfo> entityList,
                                                        BlockPos origin,
                                                        SchematicPlacement schematicPlacement,
-                                                       SubRegionPlacement placement)
+                                                       SubRegionPlacement placement,
+                                                       PasteLayerBehavior layerBehavior)
     {
         BlockPos regionPos = placement.getPos();
 
@@ -450,17 +443,23 @@ public class SchematicPlacingUtils
         for (EntityInfo info : entityList)
         {
             Vec3d pos = info.posVec;
-            pos = Vec3d.of(PositionUtils.getTransformedPosition(pos.toVanilla(), schematicPlacement.getMirror(), schematicPlacement.getRotation()));
-            pos = Vec3d.of(PositionUtils.getTransformedPosition(pos.toVanilla(), placement.getMirror(), placement.getRotation()));
+            pos = PositionUtils.getTransformedPosition(pos, schematicPlacement.getMirror(), schematicPlacement.getRotation());
+            pos = PositionUtils.getTransformedPosition(pos, placement.getMirror(), placement.getRotation());
             double x = pos.x + offX;
             double y = pos.y + offY;
             double z = pos.z + offZ;
             float[] origRot = new float[2];
 
+            if (!shouldPasteEntity(new Vec3d(x, y, z), layerBehavior))
+            {
+//                Litematica.LOGGER.error("placeEntitiesToWorldWithinChunk(): Skipping Entity at pos [{}]", pos.toString());
+                continue;
+            }
+
             if (x >= minX && x < maxX && z >= minZ && z < maxZ)
             {
                 NbtCompound tag = info.nbt.copy();
-                String id = tag.getString("id");
+                String id = tag.getString("id", "");
 
                 // Avoid warning about invalid hanging position.
                 // Note that this position isn't technically correct, but it only needs to be within 16 blocks
@@ -475,17 +474,26 @@ public class SchematicPlacingUtils
                     if (p == null)
                     {
                         p = new Vec3d(x, y, z);
-                        NbtUtils.writeEntityPositionToTag(p, tag);
+//                        NbtUtils.writeEntityPositionToTag(p, tag);
+                        NbtUtils.putVec3dCodec(tag, p, "Pos");
                     }
 
                     tag.putInt("TileX", (int) p.x);
                     tag.putInt("TileY", (int) p.y);
                     tag.putInt("TileZ", (int) p.z);
+
+                    // Block-Attached Pos (1.21.5+) Fix
+                    BlockPos px = tag.get("block_pos", BlockPos.CODEC).orElse(null);
+
+                    if (px != null)
+                    {
+                        tag.put("block_pos", BlockPos.CODEC, new BlockPos((int) x, (int) y, (int) z));
+                    }
                 }
 
-                NbtList rotation = tag.getList("Rotation", Constants.NBT.TAG_FLOAT);
-                origRot[0] = rotation.getFloat(0);
-                origRot[1] = rotation.getFloat(1);
+                NbtList rotation = tag.getListOrEmpty("Rotation");
+                origRot[0] = rotation.getFloat(0, 0f);
+                origRot[1] = rotation.getFloat(1, 0f);
 
                 Entity entity = EntityUtils.createEntityAndPassengersFromNBT(tag, world);
 
@@ -554,5 +562,25 @@ public class SchematicPlacingUtils
 
         entity.refreshPositionAndAngles(x, y, z, rotationYaw, entity.getPitch());
         EntityUtils.setEntityRotations(entity, rotationYaw, entity.getPitch());
+    }
+
+    public static boolean shouldPasteBlock(BlockPos pos, PasteLayerBehavior layerBehavior)
+    {
+        if (layerBehavior == PasteLayerBehavior.ALL)
+        {
+            return true;
+        }
+
+        return DataManager.getRenderLayerRange().isPositionWithinRange(pos);
+    }
+
+    public static boolean shouldPasteEntity(Vec3d pos, PasteLayerBehavior layerBehavior)
+    {
+        if (layerBehavior == PasteLayerBehavior.ALL)
+        {
+            return true;
+        }
+
+        return DataManager.getRenderLayerRange().isPositionWithinRange((int) pos.getX(), (int) pos.getY(), (int) pos.getZ());
     }
 }

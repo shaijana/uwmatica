@@ -1,10 +1,11 @@
 package fi.dy.masa.litematica.gui;
 
 import javax.annotation.Nullable;
-import fi.dy.masa.litematica.gui.GuiMainMenu.ButtonListenerChangeMenu;
-import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
-import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement;
-import fi.dy.masa.litematica.util.PositionUtils;
+
+import net.minecraft.util.BlockMirror;
+import net.minecraft.util.BlockRotation;
+import net.minecraft.util.math.BlockPos;
+
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.GuiTextFieldInteger;
 import fi.dy.masa.malilib.gui.Message.MessageType;
@@ -16,11 +17,12 @@ import fi.dy.masa.malilib.gui.interfaces.ISelectionListener;
 import fi.dy.masa.malilib.gui.interfaces.ITextFieldListener;
 import fi.dy.masa.malilib.gui.widgets.WidgetCheckBox;
 import fi.dy.masa.malilib.util.GuiUtils;
-import fi.dy.masa.malilib.util.PositionUtils.CoordinateType;
 import fi.dy.masa.malilib.util.StringUtils;
-import net.minecraft.util.BlockMirror;
-import net.minecraft.util.BlockRotation;
-import net.minecraft.util.math.BlockPos;
+import fi.dy.masa.malilib.util.position.PositionUtils.CoordinateType;
+import fi.dy.masa.litematica.gui.GuiMainMenu.ButtonListenerChangeMenu;
+import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
+import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement;
+import fi.dy.masa.litematica.util.PositionUtils;
 
 public class GuiSubRegionConfiguration extends GuiBase
 {
@@ -41,7 +43,7 @@ public class GuiSubRegionConfiguration extends GuiBase
         super.initGui();
 
         int width = 120;
-        int x = this.width - width - 10;
+        int x = this.getScreenWidth() - width - 10;
         int y = 26;
 
         String label = StringUtils.translate("litematica.gui.label.placement_sub.region_name", this.placement.getName());
@@ -87,7 +89,7 @@ public class GuiSubRegionConfiguration extends GuiBase
 
         this.createButton(x, y, width, ButtonListener.Type.SLICE_TYPE);
 
-        y = this.height - 36;
+        y = this.getScreenHeight() - 36;
         label = StringUtils.translate("litematica.gui.button.placement_sub.placement_configuration");
         int buttonWidth = this.getStringWidth(label) + 10;
         x = 10;
@@ -97,7 +99,7 @@ public class GuiSubRegionConfiguration extends GuiBase
         ButtonListenerChangeMenu.ButtonType type = ButtonListenerChangeMenu.ButtonType.MAIN_MENU;
         label = StringUtils.translate(type.getLabelKey());
         int menuButtonWidth = this.getStringWidth(label) + 20;
-        x = GuiUtils.getScaledWindowWidth() >= 270 ? this.width - menuButtonWidth - 10 : x + buttonWidth + 4;
+        x = GuiUtils.getScaledWindowWidth() >= 270 ? this.getScreenWidth() - menuButtonWidth - 10 : x + buttonWidth + 4;
 
         button = new ButtonGeneric(x, y, menuButtonWidth, 20, label);
         this.addButton(button, new ButtonListenerChangeMenu(type, this.getParent()));
@@ -125,7 +127,7 @@ public class GuiSubRegionConfiguration extends GuiBase
         }
 
         GuiTextFieldInteger textField = new GuiTextFieldInteger(x + offset, y + 2, width, 14, this.textRenderer);
-        textField.setText(text);
+        textField.setTextWrapper(text);
         TextFieldListener listener = new TextFieldListener(type, this.schematicPlacement, this.placement, this);
         this.addTextField(textField, listener);
 
@@ -366,7 +368,7 @@ public class GuiSubRegionConfiguration extends GuiBase
         {
             try
             {
-                int value = Integer.parseInt(textField.getText());
+                int value = Integer.parseInt(textField.getTextWrapper());
                 // The sub-region placements are relative (but the setter below uses the
                 // absolute position and subtracts the placement origin internally)
                 BlockPos posOld = this.placement.getPos();

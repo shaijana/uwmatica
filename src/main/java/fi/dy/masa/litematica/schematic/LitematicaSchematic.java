@@ -1,9 +1,9 @@
 package fi.dy.masa.litematica.schematic;
 
-import java.io.File;
-import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -11,6 +11,7 @@ import com.google.common.collect.ImmutableMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import org.apache.commons.lang3.tuple.Pair;
 
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.SharedConstants;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -19,7 +20,9 @@ import net.minecraft.block.CarpetBlock;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.decoration.AbstractDecorationEntity;
+import net.minecraft.entity.decoration.BlockAttachedEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.inventory.Inventory;
@@ -43,13 +46,19 @@ import net.minecraft.world.tick.TickPriority;
 import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.interfaces.IStringConsumer;
 import fi.dy.masa.malilib.util.*;
-import fi.dy.masa.malilib.util.position.Vec3d;
-import fi.dy.masa.malilib.util.position.Vec3i;
+import fi.dy.masa.malilib.util.data.Constants;
+import fi.dy.masa.malilib.util.data.Schema;
 import fi.dy.masa.malilib.util.nbt.NbtUtils;
+import fi.dy.masa.malilib.util.nbt.NbtView;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.config.Configs;
+import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.data.EntitiesDataStorage;
-import fi.dy.masa.litematica.mixin.IMixinWorldTickScheduler;
+import fi.dy.masa.litematica.schematic.transmit.SchematicBuffer;
+import fi.dy.masa.litematica.schematic.transmit.SchematicBufferManager;
+import fi.dy.masa.litematica.mixin.world.IMixinWorldTickScheduler;
+import fi.dy.masa.litematica.network.ServuxLitematicaHandler;
+import fi.dy.masa.litematica.network.ServuxLitematicaPacket;
 import fi.dy.masa.litematica.schematic.container.ILitematicaBlockStatePalette;
 import fi.dy.masa.litematica.schematic.container.LitematicaBlockStateContainer;
 import fi.dy.masa.litematica.schematic.conversion.SchematicConversionFixers;
@@ -74,7 +83,7 @@ public class LitematicaSchematic
     public static final int MINECRAFT_DATA_VERSION_1_12   = 1139; // MC 1.12
     public static final int MINECRAFT_DATA_VERSION_1_13_2 = 1631; // MC 1.13.2
     public static final int MINECRAFT_DATA_VERSION_1_20_4 = 3700; // MC 1.20.4
-    public static final int MINECRAFT_DATA_VERSION = SharedConstants.getGameVersion().getSaveVersion().getId();
+    public static final int MINECRAFT_DATA_VERSION = SharedConstants.getGameVersion().dataVersion().id();
     public static final int SCHEMATIC_VERSION = 7;
     // This is basically a "sub-version" for the schematic version,
     // intended to help with possible data fix needs that are discovered.
@@ -90,15 +99,23 @@ public class LitematicaSchematic
     private final SchematicMetadata metadata = new SchematicMetadata();
     private final SchematicConverter converter;
     private int totalBlocksReadFromWorld;
-    @Nullable private final File schematicFile;
+    @Nullable private final Path schematicFile;
     private final FileType schematicType;
 
-    private LitematicaSchematic(@Nullable File file)
+    public LitematicaSchematic(Path file, NbtCompound nbt, FileType type)
+    {
+        this.readFromNBT(nbt);
+        this.schematicFile = file;
+        this.schematicType = type;
+        this.converter = SchematicConverter.createForLitematica();
+    }
+
+    private LitematicaSchematic(@Nullable Path file)
     {
         this(file, FileType.LITEMATICA_SCHEMATIC);
     }
 
-    private LitematicaSchematic(@Nullable File file, FileType schematicType)
+    private LitematicaSchematic(@Nullable Path file, FileType schematicType)
     {
         this.schematicFile = file;
         this.schematicType = schematicType;
@@ -106,7 +123,7 @@ public class LitematicaSchematic
     }
 
     @Nullable
-    public File getFile()
+    public Path getFile()
     {
         return this.schematicFile;
     }
@@ -172,7 +189,7 @@ public class LitematicaSchematic
     @Nullable
     public Vec3i getAreaSizeAsVec3i(String regionName)
     {
-        return Vec3i.of(this.subRegionSizes.get(regionName));
+        return this.subRegionSizes.get(regionName);
     }
 
     public Map<String, Box> getAreas()
@@ -227,6 +244,15 @@ public class LitematicaSchematic
         schematic.metadata.setSchematicVersion(SCHEMATIC_VERSION);
         schematic.metadata.setMinecraftDataVersion(MINECRAFT_DATA_VERSION);
         schematic.metadata.setFileType(FileType.LITEMATICA_SCHEMATIC);
+
+        // todo testing only
+        /*
+        for (String entry : schematic.blockContainers.keySet())
+        {
+            System.out.printf("BlockStateContainer[%s] --> [%s]\n", entry, LitematicaBlockStateContainer.CODEC.encodeStart(NbtOps.INSTANCE, schematic.blockContainers.get(entry)).resultOrPartial().orElse(null));
+        }
+        System.out.printf("MetaData --> [%s]\n", SchematicMetadata.CODEC.encodeStart(NbtOps.INSTANCE, schematic.metadata).resultOrPartial().orElse(null));
+         */
 
         return schematic;
     }
@@ -377,13 +403,17 @@ public class LitematicaSchematic
                 }
                 else
                 {
-                    Litematica.logger.warn("Invalid/missing schematic data in schematic '{}' for sub-region '{}'", this.metadata.getName(), regionName);
+                    Litematica.LOGGER.warn("Invalid/missing schematic data in schematic '{}' for sub-region '{}'", this.metadata.getName(), regionName);
                 }
 
                 if (ignoreEntities == false && schematicPlacement.ignoreEntities() == false &&
                     placement.ignoreEntities() == false && entityList != null)
                 {
                     this.placeEntitiesToWorld(world, origin, regionPos, regionSize, schematicPlacement, placement, entityList);
+                }
+                else
+                {
+                    Litematica.LOGGER.error("[Schem] Unable to place entites to world. (Ignore entities on?)");
                 }
             }
         }
@@ -522,7 +552,8 @@ public class LitematicaSchematic
 
                             try
                             {
-                                te.read(teNBT, world.getRegistryManager());
+                                NbtView view = NbtView.getReader(teNBT, world.getRegistryManager());
+                                te.read(view.getReader());
 
                                 if (ignoreInventories && te instanceof Inventory)
                                 {
@@ -531,7 +562,7 @@ public class LitematicaSchematic
                             }
                             catch (Exception e)
                             {
-                                Litematica.logger.warn("Failed to load TileEntity data for {} @ {}", state, pos);
+                                Litematica.LOGGER.warn("Failed to load TileEntity data for {} @ {}", state, pos);
                             }
                         }
                     }
@@ -608,6 +639,8 @@ public class LitematicaSchematic
             mirrorSub = mirrorSub == BlockMirror.FRONT_BACK ? BlockMirror.LEFT_RIGHT : BlockMirror.FRONT_BACK;
         }
 
+        Litematica.LOGGER.warn("[Schem] placeEntitiesToWorld: entityList size [{}]", entityList.size());
+
         for (EntityInfo info : entityList)
         {
             Entity entity = EntityUtils.createEntityAndPassengersFromNBT(info.nbt, world);
@@ -615,14 +648,20 @@ public class LitematicaSchematic
             if (entity != null)
             {
                 Vec3d pos = info.posVec;
-                pos = Vec3d.of(PositionUtils.getTransformedPosition(pos.toVanilla(), schematicPlacement.getMirror(), schematicPlacement.getRotation()));
-                pos = Vec3d.of(PositionUtils.getTransformedPosition(pos.toVanilla(), placement.getMirror(), placement.getRotation()));
+                pos = PositionUtils.getTransformedPosition(pos, schematicPlacement.getMirror(), schematicPlacement.getRotation());
+                pos = PositionUtils.getTransformedPosition(pos, placement.getMirror(), placement.getRotation());
                 double x = pos.x + offX;
                 double y = pos.y + offY;
                 double z = pos.z + offZ;
 
+                Litematica.LOGGER.warn("[Schem] placeEntitiesToWorld: entity [{}]", entity.getType().getName().getString());
+
                 SchematicPlacingUtils.rotateEntity(entity, x, y, z, rotationCombined, mirrorMain, mirrorSub);
                 EntityUtils.spawnEntityAndPassengersInWorld(entity, world);
+            }
+            else
+            {
+                Litematica.LOGGER.error("[Schem] placeEntitiesToWorld: entity == null!");
             }
         }
     }
@@ -638,12 +677,19 @@ public class LitematicaSchematic
 
             for (Entity entity : entities)
             {
-                NbtCompound tag = new NbtCompound();
+                NbtView view = NbtView.getWriter(world.getRegistryManager());
 
-                if (entity.saveNbt(tag))
+                entity.writeData(view.getWriter());
+                NbtCompound tag = view.readNbt();
+                Identifier id = EntityType.getId(entity.getType());
+
+                if (tag != null && id != null)
                 {
                     Vec3d posVec = new Vec3d(entity.getX() - regionPosAbs.getX(), entity.getY() - regionPosAbs.getY(), entity.getZ() - regionPosAbs.getZ());
-                    NbtUtils.writeEntityPositionToTag(posVec, tag);
+
+                    tag.putString("id", id.toString());
+//                    NbtUtils.writeEntityPositionToTag(posVec, tag);
+                    NbtUtils.putVec3dCodec(tag, posVec, "Pos");
                     list.add(new EntityInfo(posVec, tag));
                 }
             }
@@ -694,8 +740,13 @@ public class LitematicaSchematic
                     }
                     else
                     {
-                        entity.saveNbt(tag);
+                        NbtView view = NbtView.getWriter(world.getRegistryManager());
+                        entity.writeData(view.getWriter());
+                        tag = view.readNbt() != null ? view.readNbt() : new NbtCompound();
+                        Identifier id = EntityType.getId(entity.getType());
+                        tag.putString("id", id.toString());
                     }
+
                     if (!tag.isEmpty())
                     {
                         Vec3d posVec = new Vec3d(entity.getX() - regionPosAbs.getX(), entity.getY() - regionPosAbs.getY(), entity.getZ() - regionPosAbs.getZ());
@@ -710,7 +761,16 @@ public class LitematicaSchematic
                             tag.putInt("TileZ", p.getZ() - regionPosAbs.getZ());
                         }
 
-                        NbtUtils.writeEntityPositionToTag(posVec, tag);
+                        if (entity instanceof BlockAttachedEntity bae)
+                        {
+                            BlockPos p = bae.getAttachedBlockPos();
+                            BlockPos pAdj = new BlockPos(p.getX() - regionPosAbs.getX(), p.getY() - regionPosAbs.getY(), p.getZ() - regionPosAbs.getZ());
+
+                            tag.put("block_pos", BlockPos.CODEC, pAdj);
+                        }
+
+//                        NbtUtils.writeEntityPositionToTag(posVec, tag);
+                        NbtUtils.putVec3dCodec(tag, posVec, "Pos");
                         list.add(new EntityInfo(posVec, tag));
                         existingEntities.add(uuid);
                     }
@@ -776,7 +836,7 @@ public class LitematicaSchematic
                             {
                                 // TODO Add a TileEntity NBT cache from the Chunk packets, to get the original synced data (too)
                                 BlockPos pos = new BlockPos(x, y, z);
-                                NbtCompound tag = te.createNbtWithId(world.getRegistryManager());
+                                NbtCompound tag = te.createNbtWithIdentifyingData(world.getRegistryManager());
                                 NbtUtils.writeBlockPosToTag(pos, tag);
                                 tileEntityMap.put(pos, tag);
                             }
@@ -851,7 +911,7 @@ public class LitematicaSchematic
 
     public static boolean isExposed(World world, BlockPos pos)
     {
-        for (Direction dir : fi.dy.masa.malilib.util.PositionUtils.ALL_DIRECTIONS)
+        for (Direction dir : fi.dy.masa.malilib.util.position.PositionUtils.ALL_DIRECTIONS)
         {
             BlockPos posAdj = pos.offset(dir);
             BlockState stateAdj = world.getBlockState(posAdj);
@@ -957,7 +1017,7 @@ public class LitematicaSchematic
 
             if (box == null)
             {
-                Litematica.logger.error("null Box for sub-region '{}' while trying to save chunk-wise schematic", regionName);
+                Litematica.LOGGER.error("null Box for sub-region '{}' while trying to save chunk-wise schematic", regionName);
                 continue;
             }
 
@@ -968,7 +1028,7 @@ public class LitematicaSchematic
 
             if (container == null || tileEntityMap == null || blockTickMap == null || fluidTickMap == null)
             {
-                Litematica.logger.error("null map(s) for sub-region '{}' while trying to save chunk-wise schematic", regionName);
+                Litematica.LOGGER.error("null map(s) for sub-region '{}' while trying to save chunk-wise schematic", regionName);
                 continue;
             }
 
@@ -1019,7 +1079,7 @@ public class LitematicaSchematic
                             if (te != null)
                             {
                                 BlockPos pos = new BlockPos(x, y, z);
-                                NbtCompound tag = te.createNbtWithId(world.getRegistryManager());
+                                NbtCompound tag = te.createNbtWithIdentifyingData(world.getRegistryManager());
                                 NbtUtils.writeBlockPosToTag(pos, tag);
                                 tileEntityMap.put(pos, tag);
                             }
@@ -1235,6 +1295,165 @@ public class LitematicaSchematic
         return tagList;
     }
 
+    public void sendTransmitFile(NbtCompound nbtIn, final long sessionKey, boolean printMessage)
+    {
+        if (EntitiesDataStorage.getInstance().hasServuxServer() == false)
+        {
+            if (printMessage)
+            {
+                InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, "litematica.message.error.schematic_transmit_not_available");
+            }
+
+            Litematica.LOGGER.error("transmitFileToServux: Cannot transmit a Litematic without having Servux present.");
+            return;
+        }
+
+        if (printMessage)
+        {
+            InfoUtils.showGuiOrInGameMessage(MessageType.INFO, "litematica.message.schematic_transmit_start");
+        }
+
+        Path file = this.getFile();
+        NbtCompound output = new NbtCompound();
+
+        output.putString("Task", "Litematic-TransmitStart");
+        output.putString("FileName", file.getFileName().toString());
+        output.put("FileType", FileType.CODEC, this.schematicType);
+        output.putLong("SliceKey", sessionKey);
+
+        if (!nbtIn.isEmpty())
+        {
+            output.put("PlacementData", nbtIn);
+        }
+
+        ServuxLitematicaHandler.getInstance().encodeClientData(ServuxLitematicaPacket.ResponseC2SStart(output));
+
+        // File Stream
+        final int bufferSize = SchematicBuffer.BUFFER_SIZE;
+        byte[] buffer = new byte[bufferSize];
+        int totalBytes = 0;
+        int totalSlices = 0;
+        output.putLong("SliceKey", sessionKey);
+
+        try (InputStream is = Files.newInputStream(file))
+        {
+            int bytesRead = 0;
+            output.putString("Task", "Litematic-TransmitData");
+
+            while (bytesRead != -1)
+            {
+                output.remove("Slice");
+                output.remove("Size");
+                output.remove("Data");
+
+                bytesRead = is.read(buffer, 0, bufferSize);
+                output.putInt("Slice", totalSlices);
+                output.putInt("Size", bytesRead);
+                output.putByteArray("Data", buffer);
+                ServuxLitematicaHandler.getInstance().encodeClientData(ServuxLitematicaPacket.ResponseC2SStart(output));
+                totalBytes += bytesRead;
+                totalSlices++;
+            }
+        }
+        catch (Exception err)
+        {
+            if (printMessage)
+            {
+                InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, "litematica.message.error.schematic_transmit_fail");
+            }
+
+            output = new NbtCompound();
+            output.putLong("SliceKey", sessionKey);
+            output.putString("Task", "Litematic-TransmitCancel");
+            ServuxLitematicaHandler.getInstance().encodeClientData(ServuxLitematicaPacket.ResponseC2SStart(output));
+            Litematica.LOGGER.error("sliceForServux: Exception reading file; {}", err.getLocalizedMessage());
+            return;
+        }
+
+        // End Slice
+        output.remove("Slice");
+        output.remove("Size");
+        output.remove("Data");
+
+        output.putInt("TotalSize", totalBytes);
+        output.putInt("TotalSlices", totalSlices);
+        output.putString("Task", "Litematic-TransmitEnd");
+        ServuxLitematicaHandler.getInstance().encodeClientData(ServuxLitematicaPacket.ResponseC2SStart(output));
+        Litematica.debugLog("receiveFileTransmit: Treansmitted file '{}', [tS: {}, tB: {}]", file.toAbsolutePath().toString(), totalSlices, totalBytes);
+
+        if (printMessage)
+        {
+            InfoUtils.showGuiOrInGameMessage(MessageType.INFO, "litematica.message.schematic_transmit_complete", totalBytes);
+        }
+    }
+
+    public static @Nullable Pair<LitematicaSchematic, NbtCompound> receiveFileTransmit(NbtCompound nbt)
+    {
+        SchematicBufferManager manager = DataManager.getSchematicBufferManager();
+        String task = nbt.getString("Task", "");
+        final long key = nbt.getLong("SliceKey", -1L);
+
+        if (task.isEmpty() || key == -1L)
+        {
+            Litematica.LOGGER.error("receiveFileTransmit: Invalid sessionKey or Task received.");
+            return null;
+        }
+
+        switch (task)
+        {
+            case "Litematic-TransmitStart" ->
+            {
+                FileType type = nbt.get("FileType", FileType.CODEC).orElse(FileType.LITEMATICA_SCHEMATIC);
+                String name = nbt.getString("FileName", "default_file");
+
+                manager.createBuffer(name, type, key, nbt.getCompoundOrEmpty("PlacementData"));
+            }
+            case "Litematic-TransmitData" ->
+            {
+                final int slice = nbt.getInt("Slice", -1);
+                final int size = nbt.getInt("Size", -1);
+                final byte[] data = nbt.getByteArray("Data").orElse(new byte[0]);
+
+                if (slice < 0 || size < 0 || data.length == 0)
+                {
+                    Litematica.LOGGER.error("receiveFileTransmit: Invalid Slice Data received for session key [{}]", key);
+                    return null;
+                }
+
+                manager.receiveSlice(key, slice, data, size);
+            }
+            case "Litematic-TransmitCancel" ->
+            {
+                Litematica.LOGGER.warn("receiveFileTransmit: Cancel received for session key [{}]", key);
+                manager.cancelBuffer(key);
+            }
+            case "Litematic-TransmitEnd" ->
+            {
+                final int totalSize = nbt.getInt("TotalSize", -1);
+                final int totalSlices = nbt.getInt("TotalSlices", -1);
+                Path dir = DataManager.getSchematicTransmitDirectory();
+                NbtCompound optional = manager.getOptionalNbt(key);
+                LitematicaSchematic schematic = manager.finishBuffer(key, dir);
+
+                if (schematic == null)
+                {
+                    Litematica.LOGGER.warn("receiveFileTransmit: Failed to create Schematic for finishing session key [{}]", key);
+                    return null;
+                }
+
+                // Successful transmission
+                Litematica.debugLog("receiveFileTransmit: Received file '{}', [tS: {}, tB: {}]", schematic.getFile().toAbsolutePath().toString(), totalSlices, totalSize);
+                return Pair.of(schematic, optional);
+            }
+            default ->
+            {
+                Litematica.LOGGER.error("receiveFileTransmit: Invalid sessionKey or Task received.");
+            }
+        }
+
+        return null;
+    }
+
     private boolean readFromNBT(NbtCompound nbt)
     {
         this.blockContainers.clear();
@@ -1245,18 +1464,23 @@ public class LitematicaSchematic
         this.subRegionSizes.clear();
         //this.metadata.clearModifiedSinceSaved();
 
-        if (nbt.contains("Version", Constants.NBT.TAG_INT))
+        if (nbt.contains("Version"))
         {
-            final int version = nbt.getInt("Version");
-            final int minecraftDataVersion = nbt.contains("MinecraftDataVersion") ? nbt.getInt("MinecraftDataVersion") : Configs.Generic.DATAFIXER_DEFAULT_SCHEMA.getIntegerValue();
+            final int version = nbt.getInt("Version", -1);
+            final int minecraftDataVersion = nbt.contains("MinecraftDataVersion") ? nbt.getInt("MinecraftDataVersion", Configs.Generic.DATAFIXER_DEFAULT_SCHEMA.getIntegerValue()) : Configs.Generic.DATAFIXER_DEFAULT_SCHEMA.getIntegerValue();
 
             if (version >= 1 && version <= SCHEMATIC_VERSION)
             {
-                this.metadata.readFromNBT(nbt.getCompound("Metadata"));
+                if (minecraftDataVersion - this.MINECRAFT_DATA_VERSION > 100)
+                {
+                    InfoUtils.showGuiOrInGameMessage(MessageType.WARNING, "litematica.error.schematic_load.newer_minecraft_version", minecraftDataVersion, this.MINECRAFT_DATA_VERSION);
+                }
+
+                this.metadata.readFromNBT(nbt.getCompoundOrEmpty("Metadata"));
                 this.metadata.setSchematicVersion(version);
                 this.metadata.setMinecraftDataVersion(minecraftDataVersion);
                 this.metadata.setFileType(FileType.LITEMATICA_SCHEMATIC);
-                this.readSubRegionsFromNBT(nbt.getCompound("Regions"), version, minecraftDataVersion);
+                this.readSubRegionsFromNBT(nbt.getCompoundOrEmpty("Regions"), version, minecraftDataVersion);
 
                 return true;
             }
@@ -1279,9 +1503,9 @@ public class LitematicaSchematic
         {
             if (tag.get(regionName).getType() == Constants.NBT.TAG_COMPOUND)
             {
-                NbtCompound regionTag = tag.getCompound(regionName);
-                BlockPos regionPos = NbtUtils.readBlockPos(regionTag.getCompound("Position"));
-                BlockPos regionSize = NbtUtils.readBlockPos(regionTag.getCompound("Size"));
+                NbtCompound regionTag = tag.getCompoundOrEmpty(regionName);
+                BlockPos regionPos = NbtUtils.readBlockPos(regionTag.getCompoundOrEmpty("Position"));
+                BlockPos regionSize = NbtUtils.readBlockPos(regionTag.getCompoundOrEmpty("Size"));
                 Map<BlockPos, NbtCompound> tiles = null;
 
                 if (regionPos != null && regionSize != null)
@@ -1291,30 +1515,30 @@ public class LitematicaSchematic
 
                     if (version >= 2)
                     {
-                        tiles = this.readTileEntitiesFromNBT(regionTag.getList("TileEntities", Constants.NBT.TAG_COMPOUND));
+                        tiles = this.readTileEntitiesFromNBT(regionTag.getListOrEmpty("TileEntities"));
                         tiles = this.convertTileEntities_to_1_20_5(tiles, minecraftDataVersion);
                         this.tileEntities.put(regionName, tiles);
 
-                        NbtList entities = regionTag.getList("Entities", Constants.NBT.TAG_COMPOUND);
+                        NbtList entities = regionTag.getListOrEmpty("Entities");
                         entities = this.convertEntities_to_1_20_5(entities, minecraftDataVersion);
                         this.entities.put(regionName, this.readEntitiesFromNBT(entities));
                     }
                     else if (version == 1)
                     {
-                        tiles = this.readTileEntitiesFromNBT_v1(regionTag.getList("TileEntities", Constants.NBT.TAG_COMPOUND));
+                        tiles = this.readTileEntitiesFromNBT_v1(regionTag.getListOrEmpty("TileEntities"));
                         this.tileEntities.put(regionName, tiles);
-                        this.entities.put(regionName, this.readEntitiesFromNBT_v1(regionTag.getList("Entities", Constants.NBT.TAG_COMPOUND)));
+                        this.entities.put(regionName, this.readEntitiesFromNBT_v1(regionTag.getListOrEmpty("Entities")));
                     }
 
                     if (version >= 3)
                     {
-                        NbtList list = regionTag.getList("PendingBlockTicks", Constants.NBT.TAG_COMPOUND);
+                        NbtList list = regionTag.getListOrEmpty("PendingBlockTicks");
                         this.pendingBlockTicks.put(regionName, this.readPendingTicksFromNBT(list, Registries.BLOCK, "Block", Blocks.AIR));
                     }
 
                     if (version >= 5)
                     {
-                        NbtList list = regionTag.getList("PendingFluidTicks", Constants.NBT.TAG_COMPOUND);
+                        NbtList list = regionTag.getListOrEmpty("PendingFluidTicks");
                         this.pendingFluidTicks.put(regionName, this.readPendingTicksFromNBT(list, Registries.FLUID, "Fluid", Fluids.EMPTY));
                     }
 
@@ -1323,7 +1547,7 @@ public class LitematicaSchematic
                     // There are no convenience methods in NBTTagCompound yet in 1.12, so we'll have to do it the ugly way...
                     if (nbtBase != null && nbtBase.getType() == Constants.NBT.TAG_LONG_ARRAY)
                     {
-                        NbtList palette = regionTag.getList("BlockStatePalette", Constants.NBT.TAG_COMPOUND);
+                        NbtList palette = regionTag.getListOrEmpty("BlockStatePalette");
                         long[] blockStateArr = ((NbtLongArray) nbtBase).getLongArray();
 
                         BlockPos posEndRel = PositionUtils.getRelativeEndPositionFromAreaSize(regionSize).add(regionPos);
@@ -1356,13 +1580,13 @@ public class LitematicaSchematic
     @Nullable
     private static Vec3i readSizeFromTagImpl(NbtCompound tag)
     {
-        if (tag.contains("size", Constants.NBT.TAG_LIST))
+        if (tag.contains("size"))
         {
-            NbtList tagList = tag.getList("size", Constants.NBT.TAG_INT);
+            NbtList tagList = tag.getListOrEmpty("size");
 
             if (tagList.size() == 3)
             {
-                return new Vec3i(tagList.getInt(0), tagList.getInt(1), tagList.getInt(2));
+                return new Vec3i(tagList.getInt(0, 0), tagList.getInt(1, 0), tagList.getInt(2, 0));
             }
         }
 
@@ -1372,13 +1596,13 @@ public class LitematicaSchematic
     @Nullable
     public static BlockPos readBlockPosFromNbtList(NbtCompound tag, String tagName)
     {
-        if (tag.contains(tagName, Constants.NBT.TAG_LIST))
+        if (tag.contains(tagName))
         {
-            NbtList tagList = tag.getList(tagName, Constants.NBT.TAG_INT);
+            NbtList tagList = tag.getListOrEmpty(tagName);
 
             if (tagList.size() == 3)
             {
-                return new BlockPos(tagList.getInt(0), tagList.getInt(1), tagList.getInt(2));
+                return new BlockPos(tagList.getInt(0, 0), tagList.getInt(1, 0), tagList.getInt(2, 0));
             }
         }
 
@@ -1394,7 +1618,7 @@ public class LitematicaSchematic
 
         for (int id = 0; id < size; ++id)
         {
-            NbtCompound tag = tagList.getCompound(id);
+            NbtCompound tag = tagList.getCompoundOrEmpty(id);
             BlockState state = NbtHelper.toBlockState(lookup, tag);
             list.add(state);
         }
@@ -1405,12 +1629,12 @@ public class LitematicaSchematic
     public static boolean isValidSpongeSchematic(NbtCompound tag)
     {
         // v2 Sponge Schematic
-        if (tag.contains("Width", Constants.NBT.TAG_ANY_NUMERIC) &&
-            tag.contains("Height", Constants.NBT.TAG_ANY_NUMERIC) &&
-            tag.contains("Length", Constants.NBT.TAG_ANY_NUMERIC) &&
-            tag.contains("Version", Constants.NBT.TAG_INT) &&
-            tag.contains("Palette", Constants.NBT.TAG_COMPOUND) &&
-            tag.contains("BlockData", Constants.NBT.TAG_BYTE_ARRAY))
+        if (tag.contains("Width") &&
+            tag.contains("Height") &&
+            tag.contains("Length") &&
+            tag.contains("Version") &&
+            tag.contains("Palette") &&
+            tag.contains("BlockData"))
         {
             return isSizeValid(readSizeFromTagSponge(tag));
         }
@@ -1421,15 +1645,15 @@ public class LitematicaSchematic
     public static boolean isValidSpongeSchematicv3(NbtCompound tag)
     {
         // v3 Sponge Schematic
-        if (tag.contains("Schematic", Constants.NBT.TAG_COMPOUND))
+        if (tag.contains("Schematic"))
         {
-            NbtCompound nbtV3 = tag.getCompound("Schematic");
+            NbtCompound nbtV3 = tag.getCompoundOrEmpty("Schematic");
 
-            if (nbtV3.contains("Width", Constants.NBT.TAG_ANY_NUMERIC) &&
-                nbtV3.contains("Height", Constants.NBT.TAG_ANY_NUMERIC) &&
-                nbtV3.contains("Length", Constants.NBT.TAG_ANY_NUMERIC) &&
-                nbtV3.contains("Version", Constants.NBT.TAG_INT) &&
-                nbtV3.getInt("Version") >= 3 &&
+            if (nbtV3.contains("Width") &&
+                nbtV3.contains("Height") &&
+                nbtV3.contains("Length") &&
+                nbtV3.contains("Version") &&
+                nbtV3.getInt("Version", -1) >= 3 &&
                 nbtV3.contains("Blocks") &&
                 nbtV3.contains("DataVersion"))
             {
@@ -1442,7 +1666,7 @@ public class LitematicaSchematic
 
     public static Vec3i readSizeFromTagSponge(NbtCompound tag)
     {
-        return new Vec3i(tag.getInt("Width"), tag.getInt("Height"), tag.getInt("Length"));
+        return new Vec3i(tag.getInt("Width", 0), tag.getInt("Height", 0), tag.getInt("Length", 0));
     }
 
     protected boolean readSpongePaletteFromTag(NbtCompound tag, ILitematicaBlockStatePalette palette)
@@ -1458,7 +1682,7 @@ public class LitematicaSchematic
 
         for (String key : tag.getKeys())
         {
-            int id = tag.getInt(key);
+            int id = tag.getInt(key, 0);
             Optional<BlockState> stateOptional = BlockUtils.getBlockStateFromString(key);
             BlockState state;
 
@@ -1476,7 +1700,7 @@ public class LitematicaSchematic
             {
                 String msg = "Invalid ID in the Sponge schematic palette: '" + id + "'";
                 InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, msg);
-                Litematica.logger.error(msg);
+                Litematica.LOGGER.error(msg);
                 return false;
             }
 
@@ -1484,6 +1708,43 @@ public class LitematicaSchematic
         }
 
         return palette.setMapping(list);
+    }
+
+    protected boolean readSpongeBlocksFromTagMetadataOnly(NbtCompound tag, String schematicName, Vec3i size, int minecraftDataVersion, int spongeVersion)
+    {
+        NbtCompound blocksTag = new NbtCompound();
+        byte[] blockData;
+
+        if (spongeVersion >= 3 && tag.contains("Blocks"))
+        {
+            blocksTag = tag.getCompoundOrEmpty("Blocks");
+
+            if (blocksTag.contains("Palette") &&
+                blocksTag.contains("Data"))
+            {
+                blockData = blocksTag.getByteArray("Data").orElse(new byte[0]);
+                this.totalBlocksReadFromWorld = blockData.length;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else
+        {
+            if (tag.contains("Palette") &&
+                tag.contains("BlockData"))
+            {
+                blockData = tag.getByteArray("BlockData").orElse(new byte[0]);
+                this.totalBlocksReadFromWorld = blockData.length;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     protected boolean readSpongeBlocksFromTag(NbtCompound tag, String schematicName, Vec3i size, int minecraftDataVersion, int spongeVersion)
@@ -1495,14 +1756,13 @@ public class LitematicaSchematic
 
         if (spongeVersion >= 3 && tag.contains("Blocks"))
         {
-            blocksTag = tag.getCompound("Blocks");
+            blocksTag = tag.getCompoundOrEmpty("Blocks");
 
-            if (blocksTag.contains("Palette", Constants.NBT.TAG_COMPOUND) &&
-                blocksTag.contains("Data", Constants.NBT.TAG_BYTE_ARRAY) &&
-                blocksTag.contains("BlockEntities", Constants.NBT.TAG_LIST))
+            if (blocksTag.contains("Palette") &&
+                blocksTag.contains("Data"))
             {
-                paletteTag = blocksTag.getCompound("Palette");
-                blockData = blocksTag.getByteArray("Data");
+                paletteTag = blocksTag.getCompoundOrEmpty("Palette");
+                blockData = blocksTag.getByteArray("Data").orElse(new byte[0]);
                 paletteSize = paletteTag.getKeys().size();
             }
             else
@@ -1512,11 +1772,11 @@ public class LitematicaSchematic
         }
         else
         {
-            if (tag.contains("Palette", Constants.NBT.TAG_COMPOUND) &&
-                tag.contains("BlockData", Constants.NBT.TAG_BYTE_ARRAY))
+            if (tag.contains("Palette") &&
+                tag.contains("BlockData"))
             {
-                paletteTag = tag.getCompound("Palette");
-                blockData = tag.getByteArray("BlockData");
+                paletteTag = tag.getCompoundOrEmpty("Palette");
+                blockData = tag.getByteArray("BlockData").orElse(new byte[0]);
                 paletteSize = paletteTag.getKeys().size();
             }
             else
@@ -1531,7 +1791,7 @@ public class LitematicaSchematic
         {
             String msg = "Failed to read blocks from Sponge schematic";
             InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, msg);
-            Litematica.logger.error(msg);
+            Litematica.LOGGER.error(msg);
             return false;
         }
 
@@ -1564,18 +1824,24 @@ public class LitematicaSchematic
     {
         Map<BlockPos, NbtCompound> blockEntities = new HashMap<>();
         String tagName = spongeVersion == 1 ? "TileEntities" : "BlockEntities";
-        NbtList tagList = tag.getList(tagName, Constants.NBT.TAG_COMPOUND);
+        
+        if (tag.contains(tagName) == false)
+        {
+            return blockEntities;
+        }
+        
+        NbtList tagList = tag.getListOrEmpty(tagName);
 
         final int size = tagList.size();
 
         for (int i = 0; i < size; ++i)
         {
-            NbtCompound beTag = tagList.getCompound(i);
+            NbtCompound beTag = tagList.getCompoundOrEmpty(i);
             BlockPos pos = NbtUtils.readBlockPosFromArrayTag(beTag, "Pos");
 
             if (pos != null && beTag.isEmpty() == false)
             {
-                beTag.putString("id", beTag.getString("Id"));
+                beTag.putString("id", beTag.getString("Id", ""));
 
                 // Remove the Sponge tags from the data that is kept in memory
                 beTag.remove("Id");
@@ -1588,7 +1854,7 @@ public class LitematicaSchematic
 
                 if (spongeVersion >= 3)
                 {
-                    NbtCompound beData = beTag.getCompound("Data");
+                    NbtCompound beData = beTag.getCompoundOrEmpty("Data");
                     blockEntities.put(pos, beData);
                 }
                 else
@@ -1604,28 +1870,29 @@ public class LitematicaSchematic
     protected List<EntityInfo> readSpongeEntitiesFromTag(NbtCompound tag, Vec3i offset, int spongeVersion)
     {
         List<EntityInfo> entities = new ArrayList<>();
-        NbtList tagList = tag.getList("Entities", Constants.NBT.TAG_COMPOUND);
+        NbtList tagList = tag.getListOrEmpty("Entities");
         final int size = tagList.size();
 
         for (int i = 0; i < size; ++i)
         {
-            NbtCompound entityEntry = tagList.getCompound(i);
-            Vec3d pos = NbtUtils.readVec3dFromListTag(entityEntry);
+            NbtCompound entityEntry = tagList.getCompoundOrEmpty(i);
+//            Vec3d pos = NbtUtils.readVec3dFromListTag(entityEntry);
+            Vec3d pos = NbtUtils.getVec3dCodec(entityEntry, "Pos");
 
             if (pos != null && entityEntry.isEmpty() == false)
             {
-                entityEntry.putString("id", entityEntry.getString("Id"));
+                entityEntry.putString("id", entityEntry.getString("Id", ""));
 
                 // Remove the Sponge tags from the data that is kept in memory
                 entityEntry.remove("Id");
 
                 if (spongeVersion >= 3)
                 {
-                    NbtCompound entityData = entityEntry.getCompound("Data");
+                    NbtCompound entityData = entityEntry.getCompoundOrEmpty("Data");
 
-                    if (entityData.contains("id", Constants.NBT.TAG_STRING) == false)
+                    if (entityData.contains("id") == false)
                     {
-                        entityData.putString("id", entityEntry.getString("id"));
+                        entityData.putString("id", entityEntry.getString("id", ""));
                     }
                     entities.add(new EntityInfo(pos, entityData));
                 }
@@ -1640,12 +1907,12 @@ public class LitematicaSchematic
         return entities;
     }
 
-    public boolean readFromSpongeSchematic(String name, NbtCompound tag)
+    public boolean readFromSpongeSchematicMetadataOnly(String name, NbtCompound tag)
     {
         if (isValidSpongeSchematicv3(tag))
         {
             // Probably not the "best" solution, but it works
-            NbtCompound spongeTag = tag.getCompound("Schematic");
+            NbtCompound spongeTag = tag.getCompoundOrEmpty("Schematic");
             tag.remove("Schematic");
             tag.copyFrom(spongeTag);
         }
@@ -1654,8 +1921,62 @@ public class LitematicaSchematic
             return false;
         }
 
-        final int spongeVersion = tag.contains("Version") ? tag.getInt("Version") : -1;
-        final int minecraftDataVersion = tag.contains("DataVersion") ? tag.getInt("DataVersion") : Configs.Generic.DATAFIXER_DEFAULT_SCHEMA.getIntegerValue();
+        final int spongeVersion = tag.contains("Version") ? tag.getInt("Version", -1) : -1;
+        final int minecraftDataVersion = tag.contains("DataVersion") ? tag.getInt("DataVersion", Configs.Generic.DATAFIXER_DEFAULT_SCHEMA.getIntegerValue()) : Configs.Generic.DATAFIXER_DEFAULT_SCHEMA.getIntegerValue();
+        Vec3i size = readSizeFromTagSponge(tag);
+
+        if (this.readSpongeBlocksFromTagMetadataOnly(tag, name, size, minecraftDataVersion, spongeVersion) == false)
+        {
+            return false;
+        }
+
+        if (tag.contains("Metadata"))
+        {
+            NbtCompound metadata = tag.getCompoundOrEmpty("Metadata");
+
+            this.metadata.setName(metadata.contains("Name") ? metadata.getString("Name", "?") : name);
+            this.metadata.setAuthor(metadata.contains("Author") ? metadata.getString("Author", "?") : "unknown");
+            this.metadata.setTimeCreated(metadata.contains("Date") ? metadata.getLong("Date", System.currentTimeMillis()) : System.currentTimeMillis());
+        }
+        else
+        {
+            this.metadata.setAuthor("unknown");
+            this.metadata.setName(name);
+            this.metadata.setTimeCreated(System.currentTimeMillis());
+        }
+        if (tag.contains("author"))
+        {
+            this.metadata.setAuthor(tag.getString("author", "?"));
+        }
+
+        this.metadata.setRegionCount(1);
+        this.metadata.setTotalVolume(size.getX() * size.getY() * size.getZ());
+        this.metadata.setEnclosingSize(size);
+        this.metadata.setTimeModified(this.metadata.getTimeCreated());
+        this.metadata.setTotalBlocks(this.totalBlocksReadFromWorld);
+        this.metadata.setSchematicVersion(spongeVersion);
+        this.metadata.setMinecraftDataVersion(minecraftDataVersion);
+        this.metadata.setFileType(FileType.SPONGE_SCHEMATIC);
+
+        return true;
+    }
+
+    public boolean readFromSpongeSchematic(String name, NbtCompound tag)
+    {
+        if (isValidSpongeSchematicv3(tag))
+        {
+            // Probably not the "best" solution, but it works
+            NbtCompound spongeTag = tag.getCompoundOrEmpty("Schematic");
+            tag.remove("Schematic");
+            tag.copyFrom(spongeTag);
+        }
+        else if (isValidSpongeSchematic(tag) == false)
+        {
+            return false;
+        }
+
+        final int spongeVersion = tag.contains("Version") ? tag.getInt("Version", -1) : -1;
+        final int minecraftDataVersion = tag.contains("DataVersion") ? tag.getInt("DataVersion", Configs.Generic.DATAFIXER_DEFAULT_SCHEMA.getIntegerValue()) : Configs.Generic.DATAFIXER_DEFAULT_SCHEMA.getIntegerValue();
         Vec3i size = readSizeFromTagSponge(tag);
 
         // Can't really use the Data Fixer for the Block State Palette in this format,
@@ -1683,13 +2004,13 @@ public class LitematicaSchematic
         entities = this.convertSpongeEntities_to_1_20_5(entities, minecraftDataVersion);
         this.entities.put(name, entities);
 
-        if (tag.contains("Metadata", Constants.NBT.TAG_COMPOUND))
+        if (tag.contains("Metadata"))
         {
-            NbtCompound metadata = tag.getCompound("Metadata");
+            NbtCompound metadata = tag.getCompoundOrEmpty("Metadata");
 
-            this.metadata.setName(metadata.contains("Name", Constants.NBT.TAG_STRING) ? metadata.getString("Name") : name);
-            this.metadata.setAuthor(metadata.contains("Author", Constants.NBT.TAG_STRING) ? metadata.getString("Author") : "unknown");
-            this.metadata.setTimeCreated(metadata.contains("Date", Constants.NBT.TAG_LONG) ? metadata.getLong("Date") : System.currentTimeMillis());
+            this.metadata.setName(metadata.contains("Name") ? metadata.getString("Name", "?") : name);
+            this.metadata.setAuthor(metadata.contains("Author") ? metadata.getString("Author", "?") : "unknown");
+            this.metadata.setTimeCreated(metadata.contains("Date") ? metadata.getLong("Date", System.currentTimeMillis()) : System.currentTimeMillis());
         }
         else
         {
@@ -1697,9 +2018,9 @@ public class LitematicaSchematic
             this.metadata.setName(name);
             this.metadata.setTimeCreated(System.currentTimeMillis());
         }
-        if (tag.contains("author", Constants.NBT.TAG_STRING))
+        if (tag.contains("author"))
         {
-            this.metadata.setAuthor(tag.getString("author"));
+            this.metadata.setAuthor(tag.getString("author", "?"));
         }
 
         this.subRegionPositions.put(name, BlockPos.ORIGIN);
@@ -1716,16 +2037,49 @@ public class LitematicaSchematic
         return true;
     }
 
+    public boolean readFromVanillaStructureMetadataOnly(String name, NbtCompound tag)
+    {
+        Vec3i size = readSizeFromTagImpl(tag);
+
+        if (tag.contains("palette") &&
+            tag.contains("blocks") &&
+            isSizeValid(size))
+        {
+            int minecraftDataVersion = tag.contains("DataVersion") ? tag.getInt("DataVersion", Configs.Generic.DATAFIXER_DEFAULT_SCHEMA.getIntegerValue()) : Configs.Generic.DATAFIXER_DEFAULT_SCHEMA.getIntegerValue();
+            if (tag.contains("author"))
+            {
+                this.getMetadata().setAuthor(tag.getString("author", "?"));
+            }
+
+            this.metadata.setName(name);
+            this.metadata.setRegionCount(1);
+            this.metadata.setTotalVolume(size.getX() * size.getY() * size.getZ());
+            this.metadata.setEnclosingSize(size);
+            this.metadata.setTimeCreated(System.currentTimeMillis());
+            this.metadata.setTimeModified(this.metadata.getTimeCreated());
+            this.metadata.setSchematicVersion(0);
+            this.metadata.setMinecraftDataVersion(minecraftDataVersion);
+            this.metadata.setFileType(FileType.VANILLA_STRUCTURE);
+
+            NbtList blockList = tag.getListOrEmpty("blocks");
+            this.metadata.setTotalBlocks(blockList.size());
+
+            return true;
+        }
+
+        return false;
+    }
+
     public boolean readFromVanillaStructure(String name, NbtCompound tag)
     {
         Vec3i size = readSizeFromTagImpl(tag);
 
-        if (tag.contains("palette", Constants.NBT.TAG_LIST) &&
-            tag.contains("blocks", Constants.NBT.TAG_LIST) &&
+        if (tag.contains("palette") &&
+            tag.contains("blocks") &&
             isSizeValid(size))
         {
-            NbtList paletteTag = tag.getList("palette", Constants.NBT.TAG_COMPOUND);
-            int minecraftDataVersion = tag.contains("DataVersion") ? tag.getInt("DataVersion") : Configs.Generic.DATAFIXER_DEFAULT_SCHEMA.getIntegerValue();
+            NbtList paletteTag = tag.getListOrEmpty("palette");
+            int minecraftDataVersion = tag.contains("DataVersion") ? tag.getInt("DataVersion", Configs.Generic.DATAFIXER_DEFAULT_SCHEMA.getIntegerValue()) : Configs.Generic.DATAFIXER_DEFAULT_SCHEMA.getIntegerValue();
 
             Map<BlockPos, NbtCompound> tileMap = new HashMap<>();
             this.tileEntities.put(name, tileMap);
@@ -1738,15 +2092,15 @@ public class LitematicaSchematic
             Schema effective = DataFixerMode.getEffectiveSchema(minecraftDataVersion);
             if (minecraftDataVersion < LitematicaSchematic.MINECRAFT_DATA_VERSION && effective != null)
             {
-                Litematica.logger.info("VanillaStructure: executing Vanilla DataFixer for Block State Palette DataVersion {} -> {}", minecraftDataVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION);
+                Litematica.LOGGER.info("VanillaStructure: executing Vanilla DataFixer for Block State Palette DataVersion {} -> {}", minecraftDataVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION);
             }
             else if (effective == null)
             {
-                Litematica.logger.warn("readFromVanillaStructure(): Effective Schema has been bypassed.  Not applying Vanilla Data Fixer for Block State Palette DataVersion {}", minecraftDataVersion);
+                Litematica.LOGGER.warn("readFromVanillaStructure(): Effective Schema has been bypassed.  Not applying Vanilla Data Fixer for Block State Palette DataVersion {}", minecraftDataVersion);
             }
             for (int id = 0; id < paletteSize; ++id)
             {
-                NbtCompound t = paletteTag.getCompound(id);
+                NbtCompound t = paletteTag.getCompoundOrEmpty(id);
                 if (minecraftDataVersion < LitematicaSchematic.MINECRAFT_DATA_VERSION && effective != null)
                 {
                     t = SchematicConversionMaps.updateBlockStates(t, minecraftDataVersion);
@@ -1791,9 +2145,9 @@ public class LitematicaSchematic
             palette.setMapping(list);
             this.blockContainers.put(name, container);
 
-            if (tag.contains("author", Constants.NBT.TAG_STRING))
+            if (tag.contains("author"))
             {
-                this.getMetadata().setAuthor(tag.getString("author"));
+                this.getMetadata().setAuthor(tag.getString("author", "?"));
             }
 
             this.subRegionPositions.put(name, BlockPos.ORIGIN);
@@ -1808,13 +2162,13 @@ public class LitematicaSchematic
             this.metadata.setMinecraftDataVersion(minecraftDataVersion);
             this.metadata.setFileType(FileType.VANILLA_STRUCTURE);
 
-            NbtList blockList = tag.getList("blocks", Constants.NBT.TAG_COMPOUND);
+            NbtList blockList = tag.getListOrEmpty("blocks");
             final int count = blockList.size();
             int totalBlocks = 0;
 
             for (int i = 0; i < count; ++i)
             {
-                NbtCompound blockTag = blockList.getCompound(i);
+                NbtCompound blockTag = blockList.getCompoundOrEmpty(i);
                 BlockPos pos = readBlockPosFromNbtList(blockTag, "pos");
 
                 if (pos == null)
@@ -1823,7 +2177,7 @@ public class LitematicaSchematic
                     return false;
                 }
 
-                int id = blockTag.getInt("state");
+                int id = blockTag.getInt("state", 0);
                 BlockState state;
 
                 // Air was inserted as ID 0, so the other IDs need to shift
@@ -1863,9 +2217,9 @@ public class LitematicaSchematic
 
                 container.set(pos.getX(), pos.getY(), pos.getZ(), state);
 
-                if (blockTag.contains("nbt", Constants.NBT.TAG_COMPOUND))
+                if (blockTag.contains("nbt"))
                 {
-                    tileMap.put(pos, blockTag.getCompound("nbt"));
+                    tileMap.put(pos, blockTag.getCompoundOrEmpty("nbt"));
                 }
             }
 
@@ -1881,30 +2235,30 @@ public class LitematicaSchematic
     protected List<EntityInfo> readEntitiesFromVanillaStructure(NbtCompound tag, int minecraftDataVersion)
     {
         List<EntityInfo> entities = new ArrayList<>();
-        NbtList tagList = tag.getList("entities", Constants.NBT.TAG_COMPOUND);
+        NbtList tagList = tag.getListOrEmpty("entities");
         final int size = tagList.size();
         Schema effective = DataFixerMode.getEffectiveSchema(minecraftDataVersion);
 
         if (minecraftDataVersion < LitematicaSchematic.MINECRAFT_DATA_VERSION && effective != null)
         {
-            Litematica.logger.info("VanillaStructure: executing Vanilla DataFixer for Entities DataVersion {} -> {}", minecraftDataVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION);
+            Litematica.LOGGER.info("VanillaStructure: executing Vanilla DataFixer for Entities DataVersion {} -> {}", minecraftDataVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION);
         }
         else if (effective == null)
         {
-            Litematica.logger.warn("readEntitiesFromVanillaStructure(): Effective Schema has been bypassed.  Not applying Vanilla Data Fixer for Entities DataVersion {}", minecraftDataVersion);
+            Litematica.LOGGER.warn("readEntitiesFromVanillaStructure(): Effective Schema has been bypassed.  Not applying Vanilla Data Fixer for Entities DataVersion {}", minecraftDataVersion);
         }
         for (int i = 0; i < size; ++i)
         {
-            NbtCompound entityData = tagList.getCompound(i);
+            NbtCompound entityData = tagList.getCompoundOrEmpty(i);
             if (minecraftDataVersion < LitematicaSchematic.MINECRAFT_DATA_VERSION && effective != null)
             {
                 entityData = SchematicConversionMaps.updateEntity(entityData, minecraftDataVersion);
             }
             Vec3d pos = readVec3dFromNbtList(entityData, "pos");
 
-            if (pos != null && entityData.contains("nbt", Constants.NBT.TAG_COMPOUND))
+            if (pos != null && entityData.contains("nbt"))
             {
-                entities.add(new EntityInfo(pos, entityData.getCompound("nbt")));
+                entities.add(new EntityInfo(pos, entityData.getCompoundOrEmpty("nbt")));
             }
         }
 
@@ -1914,13 +2268,13 @@ public class LitematicaSchematic
     @Nullable
     public static Vec3d readVec3dFromNbtList(@Nullable NbtCompound tag, String tagName)
     {
-        if (tag != null && tag.contains(tagName, Constants.NBT.TAG_LIST))
+        if (tag != null && tag.contains(tagName))
         {
-            NbtList tagList = tag.getList(tagName, Constants.NBT.TAG_DOUBLE);
+            NbtList tagList = tag.getListOrEmpty(tagName);
 
-            if (tagList.getHeldType() == Constants.NBT.TAG_DOUBLE && tagList.size() == 3)
+            if (tagList.getType() == Constants.NBT.TAG_DOUBLE && tagList.size() == 3)
             {
-                return new Vec3d(tagList.getDouble(0), tagList.getDouble(1), tagList.getDouble(2));
+                return new Vec3d(tagList.getDouble(0, 0d), tagList.getDouble(1, 0d), tagList.getDouble(2, 0d));
             }
         }
 
@@ -1946,7 +2300,7 @@ public class LitematicaSchematic
 
         for (int i = 0; i < size; ++i)
         {
-            NbtCompound tag = palette.getCompound(i);
+            NbtCompound tag = palette.getCompoundOrEmpty(i);
             BlockState state = NbtHelper.toBlockState(lookup, tag);
 
             if (i > 0 || state != LitematicaBlockStateContainer.AIR_BLOCK_STATE)
@@ -1969,7 +2323,7 @@ public class LitematicaSchematic
 
             for (int i = 0; i < count; ++i)
             {
-                newPalette.add(SchematicConversionMaps.get_1_13_2_StateTagFor_1_12_Tag(oldPalette.getCompound(i)));
+                newPalette.add(SchematicConversionMaps.get_1_13_2_StateTagFor_1_12_Tag(oldPalette.getCompoundOrEmpty(i)));
             }
 
             return newPalette;
@@ -1990,17 +2344,17 @@ public class LitematicaSchematic
 
             if (effective == null)
             {
-                Litematica.logger.warn("LitematicaSchematic: Effective Schema has been bypassed.  Not applying Vanilla Data Fixer for Block State Palette DataVersion {}", minecraftDataVersion);
+                Litematica.LOGGER.warn("LitematicaSchematic: Effective Schema has been bypassed.  Not applying Vanilla Data Fixer for Block State Palette DataVersion {}", minecraftDataVersion);
                 return oldPalette;
             }
 
             NbtList newPalette = new NbtList();
             final int count = oldPalette.size();
-            Litematica.logger.info("LitematicaSchematic: executing Vanilla DataFixer for Block State Palette DataVersion {} -> {}", minecraftDataVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION);
+            Litematica.LOGGER.info("LitematicaSchematic: executing Vanilla DataFixer for Block State Palette DataVersion {} -> {}", minecraftDataVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION);
 
             for (int i = 0; i < count; ++i)
             {
-                newPalette.add(SchematicConversionMaps.updateBlockStates(oldPalette.getCompound(i), minecraftDataVersion));
+                newPalette.add(SchematicConversionMaps.updateBlockStates(oldPalette.getCompoundOrEmpty(i), minecraftDataVersion));
             }
 
             return newPalette;
@@ -2021,13 +2375,13 @@ public class LitematicaSchematic
 
             if (effective == null)
             {
-                Litematica.logger.warn("LitematicaSchematic: Effective Schema has been bypassed.  Not applying Vanilla Data Fixer for Tile Entities DataVersion {}", minecraftDataVersion);
+                Litematica.LOGGER.warn("LitematicaSchematic: Effective Schema has been bypassed.  Not applying Vanilla Data Fixer for Tile Entities DataVersion {}", minecraftDataVersion);
                 return oldTE;
             }
 
             Map<BlockPos, NbtCompound> newTE = new HashMap<>();
 
-            Litematica.logger.info("LitematicaSchematic: executing Vanilla DataFixer for Tile Entities DataVersion {} -> {}", minecraftDataVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION);
+            Litematica.LOGGER.info("LitematicaSchematic: executing Vanilla DataFixer for Tile Entities DataVersion {} -> {}", minecraftDataVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION);
 
             for (BlockPos key : oldTE.keySet())
             {
@@ -2052,18 +2406,18 @@ public class LitematicaSchematic
 
             if (effective == null)
             {
-                Litematica.logger.warn("LitematicaSchematic: Effective Schema has been bypassed.  Not applying Vanilla Data Fixer for Entities DataVersion {}", minecraftDataVersion);
+                Litematica.LOGGER.warn("LitematicaSchematic: Effective Schema has been bypassed.  Not applying Vanilla Data Fixer for Entities DataVersion {}", minecraftDataVersion);
                 return oldEntitiesList;
             }
 
             NbtList newEntitiesList = new NbtList();
             final int size = oldEntitiesList.size();
 
-            Litematica.logger.info("LitematicaSchematic: executing Vanilla DataFixer for Entities DataVersion {} -> {}", minecraftDataVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION);
+            Litematica.LOGGER.info("LitematicaSchematic: executing Vanilla DataFixer for Entities DataVersion {} -> {}", minecraftDataVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION);
 
             for (int i = 0; i < size; i++)
             {
-                newEntitiesList.add(SchematicConversionMaps.updateEntity(oldEntitiesList.getCompound(i), minecraftDataVersion));
+                newEntitiesList.add(SchematicConversionMaps.updateEntity(oldEntitiesList.getCompoundOrEmpty(i), minecraftDataVersion));
             }
 
             return newEntitiesList;
@@ -2085,13 +2439,13 @@ public class LitematicaSchematic
 
             if (effective == null)
             {
-                Litematica.logger.warn("SpongeSchematic: Effective Schema has been bypassed.  Not applying Vanilla Data Fixer for Entities DataVersion {}", minecraftDataVersion);
+                Litematica.LOGGER.warn("SpongeSchematic: Effective Schema has been bypassed.  Not applying Vanilla Data Fixer for Entities DataVersion {}", minecraftDataVersion);
                 return oldEntitiesList;
             }
 
             List<EntityInfo> newEntitiesList = new ArrayList<>();
 
-            Litematica.logger.info("SpongeSchematic: executing Vanilla DataFixer for Entities DataVersion {} -> {}", minecraftDataVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION);
+            Litematica.LOGGER.info("SpongeSchematic: executing Vanilla DataFixer for Entities DataVersion {} -> {}", minecraftDataVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION);
 
             for (EntityInfo oldEntityInfo : oldEntitiesList)
             {
@@ -2108,7 +2462,7 @@ public class LitematicaSchematic
     {
         Map<BlockPos, NbtCompound> newTE = new HashMap<>();
 
-        Litematica.logger.info("LitematicaSchematic: Downgrade Tile Entities from DataVersion {} -> {}", minecraftDataVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION_1_20_4);
+        Litematica.LOGGER.info("LitematicaSchematic: Downgrade Tile Entities from DataVersion {} -> {}", minecraftDataVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION_1_20_4);
 
         for (BlockPos key : oldTE.keySet())
         {
@@ -2123,11 +2477,11 @@ public class LitematicaSchematic
         NbtList newEntitiesList = new NbtList();
         final int size = oldEntitiesList.size();
 
-        Litematica.logger.info("LitematicaSchematic: Downgrade Entities from DataVersion {} -> {}", minecraftDataVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION_1_20_4);
+        Litematica.LOGGER.info("LitematicaSchematic: Downgrade Entities from DataVersion {} -> {}", minecraftDataVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION_1_20_4);
 
         for (int i = 0; i < size; i++)
         {
-            newEntitiesList.add(SchematicDowngradeConverter.downgradeEntity_to_1_20_4(oldEntitiesList.getCompound(i), minecraftDataVersion, MinecraftClient.getInstance().world.getRegistryManager()));
+            newEntitiesList.add(SchematicDowngradeConverter.downgradeEntity_to_1_20_4(SchematicConversionMaps.fixEntityTypesFrom1_21_2(oldEntitiesList.getCompoundOrEmpty(i)), minecraftDataVersion, MinecraftClient.getInstance().world.getRegistryManager()));
         }
 
         return newEntitiesList;
@@ -2140,8 +2494,11 @@ public class LitematicaSchematic
 
         for (int i = 0; i < size; ++i)
         {
-            NbtCompound entityData = tagList.getCompound(i);
-            Vec3d posVec = NbtUtils.readEntityPositionFromTag(entityData);
+            NbtCompound entityData = tagList.getCompoundOrEmpty(i);
+//            Vec3d posVec = NbtUtils.readEntityPositionFromTag(entityData);
+            Vec3d posVec = NbtUtils.getVec3dCodec(entityData, "Pos");
+
+//            Litematica.LOGGER.error("readEntitiesFromNBT: posVec [{}], NBT [{}]", posVec.toString(), entityData.toString());
 
             if (posVec != null && entityData.isEmpty() == false)
             {
@@ -2159,7 +2516,7 @@ public class LitematicaSchematic
 
         for (int i = 0; i < size; ++i)
         {
-            NbtCompound tag = tagList.getCompound(i);
+            NbtCompound tag = tagList.getCompoundOrEmpty(i);
             BlockPos pos = NbtUtils.readBlockPos(tag);
 
             if (pos != null && tag.isEmpty() == false)
@@ -2179,16 +2536,16 @@ public class LitematicaSchematic
 
         for (int i = 0; i < size; ++i)
         {
-            NbtCompound tag = tagList.getCompound(i);
+            NbtCompound tag = tagList.getCompoundOrEmpty(i);
 
-            if (tag.contains("Time", Constants.NBT.TAG_ANY_NUMERIC)) // XXX these were accidentally saved as longs in version 3
+            if (tag.contains("Time")) // XXX these were accidentally saved as longs in version 3
             {
                 T target = null;
 
                 // Don't crash on invalid ResourceLocation in 1.13+
                 try
                 {
-                    Optional<RegistryEntry.Reference<T>> opt = registry.getEntry(Identifier.tryParse(tag.getString(tagName)));
+                    Optional<RegistryEntry.Reference<T>> opt = registry.getEntry(Identifier.tryParse(tag.getString(tagName, "")));
 
                     //target = registry.get(Identifier.tryParse(tag.getString(tagName)));
                     //if (target == null || target == emptyValue)
@@ -2215,11 +2572,11 @@ public class LitematicaSchematic
 
                 if (target != null)
                 {
-                    BlockPos pos = new BlockPos(tag.getInt("x"), tag.getInt("y"), tag.getInt("z"));
-                    TickPriority priority = TickPriority.byIndex(tag.getInt("Priority"));
+                    BlockPos pos = new BlockPos(tag.getInt("x", 0), tag.getInt("y", 0), tag.getInt("z", 0));
+                    TickPriority priority = TickPriority.byIndex(tag.getInt("Priority", 0));
                     // Note: the time is a relative delay at this point
-                    int scheduledTime = tag.getInt("Time");
-                    long subTick = tag.getLong("SubTick");
+                    int scheduledTime = tag.getInt("Time", 0);
+                    long subTick = tag.getLong("SubTick", 0L);
                     tickMap.put(pos, new OrderedTick<>(target, pos, scheduledTime, priority, subTick));
                 }
             }
@@ -2235,14 +2592,16 @@ public class LitematicaSchematic
 
         for (int i = 0; i < size; ++i)
         {
-            NbtCompound tag = tagList.getCompound(i);
+            NbtCompound tag = tagList.getCompoundOrEmpty(i);
             Vec3d posVec = NbtUtils.readVec3d(tag);
-            NbtCompound entityData = tag.getCompound("EntityData");
+//            Vec3d posVec = NbtUtils.getVec3dCodec(tag, "Pos");
+            NbtCompound entityData = tag.getCompoundOrEmpty("EntityData");
 
             if (posVec != null && entityData.isEmpty() == false)
             {
                 // Update the correct position to the TileEntity NBT, where it is stored in version 2
-                NbtUtils.writeEntityPositionToTag(posVec, entityData);
+//                NbtUtils.writeEntityPositionToTag(posVec, entityData);
+                NbtUtils.putVec3dCodec(entityData, posVec, "Pos");
                 entityList.add(new EntityInfo(posVec, entityData));
             }
         }
@@ -2257,8 +2616,8 @@ public class LitematicaSchematic
 
         for (int i = 0; i < size; ++i)
         {
-            NbtCompound tag = tagList.getCompound(i);
-            NbtCompound tileNbt = tag.getCompound("TileNBT");
+            NbtCompound tag = tagList.getCompoundOrEmpty(i);
+            NbtCompound tileNbt = tag.getCompoundOrEmpty("TileNBT");
 
             // Note: This within-schematic relative position is not inside the tile tag!
             BlockPos pos = NbtUtils.readBlockPos(tag);
@@ -2274,12 +2633,12 @@ public class LitematicaSchematic
         return tileMap;
     }
 
-    public boolean writeToFile(File dir, String fileNameIn, boolean override)
+    public boolean writeToFile(Path dir, String fileNameIn, boolean override)
     {
         return this.writeToFile(dir, fileNameIn, override, false);
     }
 
-    public boolean writeToFile(File dir, String fileNameIn, boolean override, boolean downgrade)
+    public boolean writeToFile(Path dir, String fileNameIn, boolean override, boolean downgrade)
     {
         String fileName = fileNameIn;
 
@@ -2288,40 +2647,47 @@ public class LitematicaSchematic
             fileName = fileName + FILE_EXTENSION;
         }
 
-        File fileSchematic = new File(dir, fileName);
+        Path fileSchematic = dir.resolve(fileName);
 
         try
         {
-            if (dir.exists() == false && dir.mkdirs() == false)
+            if (!Files.exists(dir))
             {
-                InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, "litematica.error.schematic_write_to_file_failed.directory_creation_failed", dir.getAbsolutePath());
+                FileUtils.createDirectoriesIfMissing(dir);
+            }
+
+            if (!Files.isDirectory(dir))
+            {
+                InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, "litematica.error.schematic_write_to_file_failed.directory_creation_failed", dir.toAbsolutePath());
                 return false;
             }
 
-            if (override == false && fileSchematic.exists())
+            if (override == false && Files.exists(fileSchematic))
             {
-                InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, "litematica.error.schematic_write_to_file_failed.exists", fileSchematic.getAbsolutePath());
+                InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, "litematica.error.schematic_write_to_file_failed.exists", fileSchematic.toAbsolutePath());
                 return false;
             }
 
-            FileOutputStream os = new FileOutputStream(fileSchematic);
+            //FileOutputStream os = new FileOutputStream(fileSchematic);
             if (downgrade)
             {
-                NbtIo.writeCompressed(this.writeToNBT_v6(), os);
+                //NbtIo.writeCompressed(this.writeToNBT_v6(), os);
+                NbtUtils.writeCompressed(this.writeToNBT_v6(), fileSchematic);
             }
             else
             {
-                NbtIo.writeCompressed(this.writeToNBT(), os);
+                //NbtIo.writeCompressed(this.writeToNBT(), os);
+                NbtUtils.writeCompressed(this.writeToNBT(), fileSchematic);
             }
-            os.close();
+            //os.close();
 
             return true;
         }
         catch (Exception e)
         {
-            InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, "litematica.error.schematic_write_to_file_failed.exception", fileSchematic.getAbsolutePath());
-            Litematica.logger.error(StringUtils.translate("litematica.error.schematic_write_to_file_failed.exception", fileSchematic.getAbsolutePath()), e);
-            Litematica.logger.error(e.getMessage());
+            InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, "litematica.error.schematic_write_to_file_failed.exception", fileSchematic.toAbsolutePath());
+            Litematica.LOGGER.error(StringUtils.translate("litematica.error.schematic_write_to_file_failed.exception", fileSchematic.toAbsolutePath()), e);
+            Litematica.LOGGER.error(e.getMessage());
         }
 
         return false;
@@ -2342,30 +2708,32 @@ public class LitematicaSchematic
             {
                 if (schematicType == FileType.SPONGE_SCHEMATIC)
                 {
-                    String name = FileUtils.getNameWithoutExtension(this.schematicFile.getName()) + " (Converted Sponge)";
+                    String name = FileUtils.getNameWithoutExtension(this.schematicFile.getFileName().toString()) + " (Converted Sponge)";
                     return this.readFromSpongeSchematic(name, nbt);
                 }
-                if (schematicType == FileType.VANILLA_STRUCTURE)
+                else if (schematicType == FileType.VANILLA_STRUCTURE)
                 {
-                    String name = FileUtils.getNameWithoutExtension(this.schematicFile.getName()) + " (Converted Structure)";
+                    String name = FileUtils.getNameWithoutExtension(this.schematicFile.getFileName().toString()) + " (Converted Structure)";
                     return this.readFromVanillaStructure(name, nbt);
                 }
                 else if (schematicType == FileType.LITEMATICA_SCHEMATIC)
                 {
                     return this.readFromNBT(nbt);
                 }
+
+                InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, "litematica.error.schematic_read_from_file_failed.cant_read", this.schematicFile.toAbsolutePath());
             }
         }
         catch (Exception e)
         {
-            InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, "litematica.error.schematic_read_from_file_failed.exception", this.schematicFile.getAbsolutePath());
-            Litematica.logger.error(e);
+            InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, "litematica.error.schematic_read_from_file_failed.exception", this.schematicFile.toAbsolutePath());
+            Litematica.LOGGER.error(e);
         }
 
         return false;
     }
 
-    public static NbtCompound readNbtFromFile(File file)
+    public static NbtCompound readNbtFromFile(Path file)
     {
         if (file == null)
         {
@@ -2373,46 +2741,44 @@ public class LitematicaSchematic
             return null;
         }
 
-        if (file.exists() == false || file.canRead() == false)
+        if (Files.exists(file) == false || Files.isReadable(file) == false)
         {
-            InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, "litematica.error.schematic_read_from_file_failed.cant_read", file.getAbsolutePath());
+            InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, "litematica.error.schematic_read_from_file_failed.cant_read", file.toAbsolutePath());
             return null;
         }
 
-        return NbtUtils.readNbtFromFile(file);
+        return NbtUtils.readNbtFromFileAsPath(file);
     }
 
-    public static NbtCompound readNbtFromPath(Path path)
-    {
-        if (path == null)
-        {
-            InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, "litematica.error.schematic_read_from_file_failed.no_file");
-            return null;
-        }
-
-        if (Files.exists(path) == false || Files.isReadable(path) == false)
-        {
-            InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, "litematica.error.schematic_read_from_file_failed.cant_read", path.toString());
-            return null;
-        }
-
-        return NbtUtils.readNbtFromFile(path);
-    }
-
-    public static File fileFromDirAndName(File dir, String fileName, FileType schematicType)
+    public static Path fileFromDirAndName(Path dir, String fileName, FileType schematicType)
     {
         if (fileName.endsWith(FILE_EXTENSION) == false && schematicType == FileType.LITEMATICA_SCHEMATIC)
         {
             fileName = fileName + FILE_EXTENSION;
         }
 
-        return new File(dir, fileName);
+        return dir.resolve(fileName);
+    }
+
+    public static void updateMetadataWithFileTime(Path file, SchematicMetadata metadata)
+    {
+        try
+        {
+            BasicFileAttributes attr = Files.readAttributes(file, BasicFileAttributes.class);
+
+            metadata.setTimeCreated(attr.creationTime().toMillis());
+            metadata.setTimeModified(attr.lastModifiedTime().toMillis());
+        }
+        catch (Exception err)
+        {
+            Litematica.LOGGER.error("getFileCreatedTime(): Exception reading file '{}'; {}", file.getFileName().toString(), err.getLocalizedMessage());
+        }
     }
 
     @Nullable
-    public static SchematicMetadata readMetadataFromFile(File dir, String fileName)
+    public static SchematicMetadata readMetadataFromFile(Path dir, String fileName)
     {
-        File file = new File(dir, fileName);
+        Path file = dir.resolve(fileName);
         FileType type = FileType.fromFile(file);
 
         if (type == FileType.INVALID)
@@ -2436,13 +2802,13 @@ public class LitematicaSchematic
                 {
                     SchematicMetadata metadata = new SchematicMetadata();
 
-                    if (nbt.contains("Version", Constants.NBT.TAG_INT))
+                    if (nbt.contains("Version"))
                     {
-                        final int version = nbt.getInt("Version");
+                        final int version = nbt.getInt("Version", -1);
 
                         if (version >= 1 && version <= SCHEMATIC_VERSION)
                         {
-                            metadata.readFromNBT(nbt.getCompound("Metadata"));
+                            metadata.readFromNBT(nbt.getCompoundOrEmpty("Metadata"));
                             metadata.setFileType(type);
                             return metadata;
                         }
@@ -2452,18 +2818,33 @@ public class LitematicaSchematic
                 {
                     LitematicaSchematic schem = new LitematicaSchematic(file, type);
 
-                    if (schem.readFromSpongeSchematic(fileName, nbt))
+                    if (schem.readFromSpongeSchematicMetadataOnly(fileName, nbt))
                     {
-                        return schem.getMetadata();
+                        SchematicMetadata meta = schem.getMetadata();
+                        updateMetadataWithFileTime(file, meta);
+                        return meta;
                     }
                 }
                 case VANILLA_STRUCTURE ->
                 {
                     LitematicaSchematic schem = new LitematicaSchematic(file, type);
 
-                    if (schem.readFromVanillaStructure(fileName, nbt))
+                    if (schem.readFromVanillaStructureMetadataOnly(fileName, nbt))
                     {
-                        return schem.getMetadata();
+                        SchematicMetadata meta = schem.getMetadata();
+                        updateMetadataWithFileTime(file, meta);
+                        return meta;
+                    }
+                }
+                case SCHEMATICA_SCHEMATIC ->
+                {
+                    SchematicaSchematic schem = new SchematicaSchematic();
+
+                    if (schem.readBlocksFromNBTMetadataOnly(file, nbt))
+                    {
+                        SchematicMetadata meta = schem.getMetadata();
+                        updateMetadataWithFileTime(file, meta);
+                        return meta;
                     }
                 }
             }
@@ -2473,9 +2854,9 @@ public class LitematicaSchematic
     }
 
     @Nullable
-    public static Pair<SchematicSchema, SchematicMetadata> readMetadataAndVersionFromFile(File dir, String fileName)
+    public static Pair<SchematicSchema, SchematicMetadata> readMetadataAndVersionFromFile(Path dir, String fileName)
     {
-        File file = new File(dir, fileName);
+        Path file = dir.resolve(fileName);
         FileType type = FileType.fromFile(file);
 
         if (type == FileType.INVALID)
@@ -2501,14 +2882,14 @@ public class LitematicaSchematic
                 {
                     SchematicMetadata metadata = new SchematicMetadata();
 
-                    if (nbt.contains("Version", Constants.NBT.TAG_INT))
+                    if (nbt.contains("Version"))
                     {
-                        final int version = nbt.getInt("Version");
-                        final int dataVersion = nbt.contains("MinecraftDataVersion") ? nbt.getInt("MinecraftDataVersion") : -1;
+                        final int version = nbt.getInt("Version", -1);
+                        final int dataVersion = nbt.contains("MinecraftDataVersion") ? nbt.getInt("MinecraftDataVersion", -1) : -1;
 
                         if (version >= 1 && version <= SCHEMATIC_VERSION)
                         {
-                            metadata.readFromNBT(nbt.getCompound("Metadata"));
+                            metadata.readFromNBT(nbt.getCompoundOrEmpty("Metadata"));
                             metadata.setFileType(type);
                             return Pair.of(new SchematicSchema(version, dataVersion), metadata);
                         }
@@ -2517,33 +2898,49 @@ public class LitematicaSchematic
                 case SPONGE_SCHEMATIC ->
                 {
                     LitematicaSchematic schem = new LitematicaSchematic(file, type);
-                    DataFixerMode dataFixer = (DataFixerMode) Configs.Generic.DATAFIXER_MODE.getOptionListValue();
-                    Configs.Generic.DATAFIXER_MODE.setOptionListValue(DataFixerMode.NEVER);
+//                    DataFixerMode dataFixer = (DataFixerMode) Configs.Generic.DATAFIXER_MODE.getOptionListValue();
+//                    Configs.Generic.DATAFIXER_MODE.setOptionListValue(DataFixerMode.NEVER);
 
-                    if (schem.readFromSpongeSchematic(fileName, nbt))
+                    if (schem.readFromSpongeSchematicMetadataOnly(fileName, nbt))
                     {
-                        Configs.Generic.DATAFIXER_MODE.setOptionListValue(dataFixer);
-                        return Pair.of(schem.getMetadata().getSchematicSchema(), schem.getMetadata());
+//                        Configs.Generic.DATAFIXER_MODE.setOptionListValue(dataFixer);
+                        SchematicMetadata meta = schem.getMetadata();
+                        updateMetadataWithFileTime(file, meta);
+                        return Pair.of(meta.getSchematicSchema(), meta);
                     }
-                    else
-                    {
-                        Configs.Generic.DATAFIXER_MODE.setOptionListValue(dataFixer);
-                    }
+//                    else
+//                    {
+//                        Configs.Generic.DATAFIXER_MODE.setOptionListValue(dataFixer);
+//                    }
                 }
                 case VANILLA_STRUCTURE ->
                 {
                     LitematicaSchematic schem = new LitematicaSchematic(file, type);
-                    DataFixerMode dataFixer = (DataFixerMode) Configs.Generic.DATAFIXER_MODE.getOptionListValue();
-                    Configs.Generic.DATAFIXER_MODE.setOptionListValue(DataFixerMode.NEVER);
+//                    DataFixerMode dataFixer = (DataFixerMode) Configs.Generic.DATAFIXER_MODE.getOptionListValue();
+//                    Configs.Generic.DATAFIXER_MODE.setOptionListValue(DataFixerMode.NEVER);
 
-                    if (schem.readFromVanillaStructure(fileName, nbt))
+                    if (schem.readFromVanillaStructureMetadataOnly(fileName, nbt))
                     {
-                        Configs.Generic.DATAFIXER_MODE.setOptionListValue(dataFixer);
-                        return Pair.of(schem.getMetadata().getSchematicSchema(), schem.getMetadata());
+//                        Configs.Generic.DATAFIXER_MODE.setOptionListValue(dataFixer);
+                        SchematicMetadata meta = schem.getMetadata();
+                        updateMetadataWithFileTime(file, meta);
+                        return Pair.of(meta.getSchematicSchema(), meta);
                     }
-                    else
+//                    else
+//                    {
+//                        Configs.Generic.DATAFIXER_MODE.setOptionListValue(dataFixer);
+//                    }
+                }
+                case SCHEMATICA_SCHEMATIC ->
+                {
+                    SchematicaSchematic schem = new SchematicaSchematic();
+
+                    if (schem.readBlocksFromNBTMetadataOnly(file, nbt))
                     {
-                        Configs.Generic.DATAFIXER_MODE.setOptionListValue(dataFixer);
+//                        Configs.Generic.DATAFIXER_MODE.setOptionListValue(dataFixer);
+                        SchematicMetadata meta = schem.getMetadata();
+                        updateMetadataWithFileTime(file, meta);
+                        return Pair.of(meta.getSchematicSchema(), meta);
                     }
                 }
             }
@@ -2553,9 +2950,9 @@ public class LitematicaSchematic
     }
 
     @Nullable
-    public static SchematicSchema readDataVersionFromFile(File dir, String fileName)
+    public static SchematicSchema readDataVersionFromFile(Path dir, String fileName)
     {
-        File file = new File(dir, fileName);
+        Path file = dir.resolve(fileName);
         FileType type = FileType.fromFile(file);
 
         if (type == FileType.INVALID)
@@ -2577,10 +2974,10 @@ public class LitematicaSchematic
             {
                 case LITEMATICA_SCHEMATIC ->
                 {
-                    if (nbt.contains("Version", Constants.NBT.TAG_INT))
+                    if (nbt.contains("Version"))
                     {
-                        final int version = nbt.getInt("Version");
-                        final int dataVersion = nbt.contains("MinecraftDataVersion") ? nbt.getInt("MinecraftDataVersion") : Configs.Generic.DATAFIXER_DEFAULT_SCHEMA.getIntegerValue();
+                        final int version = nbt.getInt("Version", -1);
+                        final int dataVersion = nbt.contains("MinecraftDataVersion") ? nbt.getInt("MinecraftDataVersion", Configs.Generic.DATAFIXER_DEFAULT_SCHEMA.getIntegerValue()) : Configs.Generic.DATAFIXER_DEFAULT_SCHEMA.getIntegerValue();
 
                         if (version >= 1)
                         {
@@ -2594,21 +2991,21 @@ public class LitematicaSchematic
 
                     if (isValidSpongeSchematicv3(nbt))
                     {
-                        spongeTag.copyFrom(nbt.getCompound("Schematic"));
+                        spongeTag.copyFrom(nbt.getCompoundOrEmpty("Schematic"));
                     }
                     else if (isValidSpongeSchematic(nbt))
                     {
                         spongeTag.copyFrom(nbt);
                     }
 
-                    final int spongeVersion = spongeTag.contains("Version") ? spongeTag.getInt("Version") : -1;
-                    final int minecraftDataVersion = spongeTag.contains("DataVersion") ? spongeTag.getInt("DataVersion") : Configs.Generic.DATAFIXER_DEFAULT_SCHEMA.getIntegerValue();
+                    final int spongeVersion = spongeTag.contains("Version") ? spongeTag.getInt("Version", -1) : -1;
+                    final int minecraftDataVersion = spongeTag.contains("DataVersion") ? spongeTag.getInt("DataVersion", Configs.Generic.DATAFIXER_DEFAULT_SCHEMA.getIntegerValue()) : Configs.Generic.DATAFIXER_DEFAULT_SCHEMA.getIntegerValue();
 
                     return new SchematicSchema(spongeVersion, minecraftDataVersion);
                 }
                 case VANILLA_STRUCTURE ->
                 {
-                    int minecraftDataVersion = nbt.contains("DataVersion") ? nbt.getInt("DataVersion") : Configs.Generic.DATAFIXER_DEFAULT_SCHEMA.getIntegerValue();
+                    int minecraftDataVersion = nbt.contains("DataVersion") ? nbt.getInt("DataVersion", Configs.Generic.DATAFIXER_DEFAULT_SCHEMA.getIntegerValue()) : Configs.Generic.DATAFIXER_DEFAULT_SCHEMA.getIntegerValue();
 
                     return new SchematicSchema(0, minecraftDataVersion);
                 }
@@ -2619,15 +3016,15 @@ public class LitematicaSchematic
     }
 
     @Nullable
-    public static LitematicaSchematic createFromFile(File dir, String fileName)
+    public static LitematicaSchematic createFromFile(Path dir, String fileName)
     {
         return createFromFile(dir, fileName, FileType.LITEMATICA_SCHEMATIC);
     }
 
     @Nullable
-    public static LitematicaSchematic createFromFile(File dir, String fileName, FileType schematicType)
+    public static LitematicaSchematic createFromFile(Path dir, String fileName, FileType schematicType)
     {
-        File file = fileFromDirAndName(dir, fileName, schematicType);
+        Path file = fileFromDirAndName(dir, fileName, schematicType);
         LitematicaSchematic schematic = new LitematicaSchematic(file, schematicType);
 
         return schematic.readFromFile(schematicType) ? schematic : null;
@@ -2642,16 +3039,16 @@ public class LitematicaSchematic
         {
             this.posVec = posVec;
 
-            if (nbt.contains("SleepingX", Constants.NBT.TAG_INT)) { nbt.putInt("SleepingX", MathHelper.floor(posVec.x)); }
-            if (nbt.contains("SleepingY", Constants.NBT.TAG_INT)) { nbt.putInt("SleepingY", MathHelper.floor(posVec.y)); }
-            if (nbt.contains("SleepingZ", Constants.NBT.TAG_INT)) { nbt.putInt("SleepingZ", MathHelper.floor(posVec.z)); }
+            if (nbt.contains("SleepingX")) { nbt.putInt("SleepingX", MathHelper.floor(posVec.x)); }
+            if (nbt.contains("SleepingY")) { nbt.putInt("SleepingY", MathHelper.floor(posVec.y)); }
+            if (nbt.contains("SleepingZ")) { nbt.putInt("SleepingZ", MathHelper.floor(posVec.z)); }
 
             this.nbt = nbt;
         }
 
         public net.minecraft.util.math.Vec3d toVanilla()
         {
-            return this.posVec.toVanilla();
+            return this.posVec;
         }
     }
 
@@ -2678,5 +3075,85 @@ public class LitematicaSchematic
             this.ignoreEntities = ignoreEntities;
             this.fromSchematicWorld = fromSchematicWorld;
         }
+    }
+
+    /**
+     * FOR DEBUGGING PURPOSES ONLY
+     *
+     * @return ()
+     */
+    @Override
+    public String toString()
+    {
+        NbtCompound nbt = new NbtCompound();
+        NbtCompound list = new NbtCompound();
+
+        if (this.schematicFile != null)
+        {
+            nbt.putString("FileName", this.schematicFile.toAbsolutePath().toString());
+        }
+        if (this.schematicType != null)
+        {
+            nbt.putString("FileType", this.schematicType.name());
+        }
+
+        nbt.putInt("TotalBlocksRead", this.totalBlocksReadFromWorld);
+
+        if (this.blockContainers != null)
+        {
+            for (String key : this.blockContainers.keySet())
+            {
+                NbtCompound sub = new NbtCompound();
+
+                if (this.blockContainers.get(key) != null)
+                {
+                    sub.put("BlockStateContainerSize", Vec3i.CODEC, this.blockContainers.get(key).getSize());
+                }
+                else
+                {
+                    sub.put("BlockStateContainerSize", Vec3i.CODEC, Vec3i.ZERO);
+                }
+                if (this.subRegionPositions.get(key) != null)
+                {
+                    sub.put("SubRegionPositions", BlockPos.CODEC, this.subRegionPositions.get(key));
+                }
+                else
+                {
+                    sub.put("SubRegionPositions", BlockPos.CODEC, BlockPos.ORIGIN);
+                }
+                if (this.subRegionSizes.get(key) != null)
+                {
+                    sub.put("SubRegionSizes", BlockPos.CODEC, this.subRegionSizes.get(key));
+                }
+                else
+                {
+                    sub.put("SubRegionSizes", BlockPos.CODEC, BlockPos.ORIGIN);
+                }
+
+                if (this.tileEntities.get(key) != null)
+                {
+                    sub.putInt("TileEntityCount", this.tileEntities.get(key).size());
+                }
+                if (this.entities.get(key) != null)
+                {
+                    sub.putInt("EntityCount", this.entities.get(key).size());
+                }
+                if (this.pendingBlockTicks.get(key) != null)
+                {
+                    sub.putInt("PendingBlockTicks", this.pendingBlockTicks.get(key).size());
+                }
+                if (this.pendingFluidTicks.get(key) != null)
+                {
+                    sub.putInt("PendingFluidTicks", this.pendingFluidTicks.get(key).size());
+                }
+
+                list.put(key, NbtCompound.CODEC, sub);
+            }
+        }
+
+        nbt.put("Regions", NbtCompound.CODEC, list);
+        nbt.put("Metadata", NbtCompound.CODEC, this.metadata.writeToNbtExtra());
+
+        return "LitematicaSchematic[" + nbt.toString() + "]";
     }
 }

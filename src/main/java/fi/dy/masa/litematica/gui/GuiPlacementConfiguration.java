@@ -1,14 +1,12 @@
 package fi.dy.masa.litematica.gui;
 
 import javax.annotation.Nullable;
-import fi.dy.masa.litematica.data.DataManager;
-import fi.dy.masa.litematica.gui.GuiMainMenu.ButtonListenerChangeMenu;
-import fi.dy.masa.litematica.gui.widgets.WidgetListPlacementSubRegions;
-import fi.dy.masa.litematica.gui.widgets.WidgetPlacementSubRegion;
-import fi.dy.masa.litematica.materials.MaterialListBase;
-import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
-import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement;
-import fi.dy.masa.litematica.util.PositionUtils;
+
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.util.BlockMirror;
+import net.minecraft.util.BlockRotation;
+import net.minecraft.util.math.BlockPos;
+
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.GuiListBase;
 import fi.dy.masa.malilib.gui.GuiTextFieldGeneric;
@@ -22,12 +20,16 @@ import fi.dy.masa.malilib.gui.interfaces.ISelectionListener;
 import fi.dy.masa.malilib.gui.interfaces.ITextFieldListener;
 import fi.dy.masa.malilib.gui.widgets.WidgetCheckBox;
 import fi.dy.masa.malilib.util.GuiUtils;
-import fi.dy.masa.malilib.util.PositionUtils.CoordinateType;
 import fi.dy.masa.malilib.util.StringUtils;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.util.BlockMirror;
-import net.minecraft.util.BlockRotation;
-import net.minecraft.util.math.BlockPos;
+import fi.dy.masa.malilib.util.position.PositionUtils.CoordinateType;
+import fi.dy.masa.litematica.data.DataManager;
+import fi.dy.masa.litematica.gui.GuiMainMenu.ButtonListenerChangeMenu;
+import fi.dy.masa.litematica.gui.widgets.WidgetListPlacementSubRegions;
+import fi.dy.masa.litematica.gui.widgets.WidgetPlacementSubRegion;
+import fi.dy.masa.litematica.materials.MaterialListBase;
+import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
+import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement;
+import fi.dy.masa.litematica.util.PositionUtils;
 
 public class GuiPlacementConfiguration  extends GuiListBase<SubRegionPlacement, WidgetPlacementSubRegion, WidgetListPlacementSubRegions>
                                         implements ISelectionListener<SubRegionPlacement>
@@ -46,13 +48,13 @@ public class GuiPlacementConfiguration  extends GuiListBase<SubRegionPlacement, 
     @Override
     protected int getBrowserWidth()
     {
-        return this.width - 150;
+        return this.getScreenWidth() - 150;
     }
 
     @Override
     protected int getBrowserHeight()
     {
-        return this.height - 84;
+        return this.getScreenHeight() - 84;
     }
 
     @Override
@@ -66,8 +68,8 @@ public class GuiPlacementConfiguration  extends GuiListBase<SubRegionPlacement, 
         int y = 22;
 
         this.textFieldRename = new GuiTextFieldGeneric(x, y + 2, width, 16, this.textRenderer);
-        this.textFieldRename.setMaxLength(256);
-        this.textFieldRename.setText(this.placement.getName());
+        this.textFieldRename.setMaxLengthWrapper(256);
+        this.textFieldRename.setTextWrapper(this.placement.getName());
         this.addTextField(this.textFieldRename, null);
         this.createButton(x + width + 4, y, -1, ButtonListener.Type.RENAME_PLACEMENT);
 
@@ -79,7 +81,7 @@ public class GuiPlacementConfiguration  extends GuiListBase<SubRegionPlacement, 
         this.createButton(x, y + 22, -1, ButtonListener.Type.TOGGLE_ALL_REGIONS_ON);
 
         width = 120;
-        x = this.width - width - 10;
+        x = this.getScreenWidth() - width - 10;
 
         this.createButtonOnOff(x, y, width - 22, this.placement.isEnabled(), ButtonListener.Type.TOGGLE_ENABLED);
         this.createButton(x + width - 20, y, 20, ButtonListener.Type.TOGGLE_RENDERING);
@@ -128,7 +130,7 @@ public class GuiPlacementConfiguration  extends GuiListBase<SubRegionPlacement, 
         if (GuiUtils.getScaledWindowHeight() < 328)
         {
             x = 10;
-            y = this.height - 22;
+            y = this.getScreenHeight() - 22;
 
             x += this.createButton(x, y, -1, ButtonListener.Type.OPEN_MATERIAL_LIST_GUI) + 1;
             x += this.createButton(x, y, -1, ButtonListener.Type.OPEN_VERIFIER_GUI) + 1;
@@ -151,7 +153,7 @@ public class GuiPlacementConfiguration  extends GuiListBase<SubRegionPlacement, 
             type = ButtonListenerChangeMenu.ButtonType.SCHEMATIC_PLACEMENTS;
             label = StringUtils.translate(type.getLabelKey());
             int buttonWidth = this.getStringWidth(label) + 10;
-            x = this.width - buttonWidth - 9;
+            x = this.getScreenWidth() - buttonWidth - 9;
             ButtonGeneric button = new ButtonGeneric(x, y, buttonWidth, 20, label);
             this.addButton(button, new ButtonListenerChangeMenu(type, this.getParent()));
         }
@@ -176,7 +178,7 @@ public class GuiPlacementConfiguration  extends GuiListBase<SubRegionPlacement, 
         }
 
         GuiTextFieldInteger textField = new GuiTextFieldInteger(x + offset, y + 2, width, 14, this.textRenderer);
-        textField.setText(text);
+        textField.setTextWrapper(text);
         TextFieldListener listener = new TextFieldListener(type, this.placement, this);
         this.addTextField(textField, listener);
 
@@ -352,7 +354,7 @@ public class GuiPlacementConfiguration  extends GuiListBase<SubRegionPlacement, 
             switch (this.type)
             {
                 case RENAME_PLACEMENT:
-                    this.placement.setName(this.parent.textFieldRename.getText());
+                    this.placement.setName(this.parent.textFieldRename.getTextWrapper());
                     break;
 
                 case ROTATE:
@@ -515,7 +517,7 @@ public class GuiPlacementConfiguration  extends GuiListBase<SubRegionPlacement, 
         {
             try
             {
-                int value = Integer.parseInt(textField.getText());
+                int value = Integer.parseInt(textField.getTextWrapper());
                 BlockPos posOld = this.placement.getOrigin();
                 this.parent.setNextMessageType(MessageType.ERROR);
 

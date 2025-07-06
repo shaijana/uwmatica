@@ -1,17 +1,33 @@
 package fi.dy.masa.litematica.selection;
 
+import com.google.common.collect.ImmutableList;
+
+import com.mojang.serialization.Codec;
+import net.minecraft.util.StringIdentifiable;
+
+import fi.dy.masa.malilib.config.IConfigOptionListEntry;
 import fi.dy.masa.malilib.util.StringUtils;
 
-public enum SelectionMode
+public enum SelectionMode implements IConfigOptionListEntry, StringIdentifiable
 {
-    NORMAL  ("litematica.gui.label.area_selection.mode.normal"),
-    SIMPLE  ("litematica.gui.label.area_selection.mode.simple");
+    NORMAL  ("normal", "litematica.gui.label.area_selection.mode.normal"),
+    SIMPLE  ("simple", "litematica.gui.label.area_selection.mode.simple");
 
+    public static final StringIdentifiable.EnumCodec<SelectionMode> CODEC = StringIdentifiable.createCodec(SelectionMode::values);
+    public static final ImmutableList<SelectionMode> VALUES = ImmutableList.copyOf(values());
+
+    private final String configString;
     private final String translationKey;
 
-    private SelectionMode(String translationKey)
+    SelectionMode(String configName, String translationKey)
     {
+        this.configString = configName;
         this.translationKey = translationKey;
+    }
+
+    public Codec<SelectionMode> codec()
+    {
+        return CODEC;
     }
 
     public String getTranslationKey()
@@ -19,12 +35,19 @@ public enum SelectionMode
         return this.translationKey;
     }
 
+    @Override
+    public String getStringValue()
+    {
+        return this.configString;
+    }
+
     public String getDisplayName()
     {
         return StringUtils.translate(this.translationKey);
     }
 
-    public SelectionMode cycle(boolean forward)
+    @Override
+    public IConfigOptionListEntry cycle(boolean forward)
     {
         int id = this.ordinal();
 
@@ -46,7 +69,13 @@ public enum SelectionMode
         return values()[id % values().length];
     }
 
-    public static SelectionMode fromString(String name)
+    @Override
+    public SelectionMode fromString(String name)
+    {
+        return fromStringStatic(name);
+    }
+
+    public static SelectionMode fromStringStatic(String name)
     {
         for (SelectionMode mode : SelectionMode.values())
         {
@@ -57,5 +86,11 @@ public enum SelectionMode
         }
 
         return SelectionMode.NORMAL;
+    }
+
+    @Override
+    public String asString()
+    {
+        return this.configString;
     }
 }

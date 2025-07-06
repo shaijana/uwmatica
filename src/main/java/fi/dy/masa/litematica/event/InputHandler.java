@@ -41,12 +41,18 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
         {
             manager.addKeybindToMap(hotkey.getKeybind());
         }
+
+        for (IHotkey hotkey : AllowedFunctionsHandler.ALLOWED_CONFIG_HOTKEYS) //Shaijana
+        {
+            manager.addKeybindToMap(hotkey.getKeybind());
+        }
     }
 
     @Override
     public void addHotkeys(IKeybindManager manager)
     {
-        manager.addHotkeysForCategory(Reference.MOD_NAME, "litematica.hotkeys.category.generic_hotkeys", AllowedFunctionsHandler.ALLOWED_HOTKEYS); //Shaijana
+        manager.addHotkeysForCategory(Reference.MOD_NAME, Reference.MOD_ID+ ".hotkeys.category.generic_hotkeys", AllowedFunctionsHandler.ALLOWED_HOTKEYS); //Shaijana
+        manager.addHotkeysForCategory(Reference.MOD_NAME, Reference.MOD_ID+ ".hotkeys.category.config_generic_hotkeys", AllowedFunctionsHandler.ALLOWED_CONFIG_HOTKEYS); //Shaijana
     }
 
     @Override

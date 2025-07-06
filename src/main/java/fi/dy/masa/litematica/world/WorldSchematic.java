@@ -1,8 +1,6 @@
 package fi.dy.masa.litematica.world;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.function.Predicate;
 import javax.annotation.Nonnull;
 import com.google.common.collect.ImmutableList;
@@ -24,7 +22,6 @@ import net.minecraft.particle.ParticleEffect;
 import net.minecraft.recipe.BrewingRecipeRegistry;
 import net.minecraft.recipe.RecipeManager;
 import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.registry.RegistryEntryLookup;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
@@ -35,14 +32,13 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.TypeFilter;
 import net.minecraft.util.math.*;
-import net.minecraft.world.LightType;
 import net.minecraft.world.MutableWorldProperties;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.WorldChunk;
+import net.minecraft.world.chunk.light.LightingProvider;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.dimension.DimensionTypes;
 import net.minecraft.world.entity.EntityLookup;
@@ -69,6 +65,8 @@ public class WorldSchematic extends World
     private final TickManager tickManager;
     private final RegistryEntry<DimensionType> dimensionType;
     private DimensionEffects dimensionEffects = new DimensionEffects.Overworld();
+    private final HashMap<UUID, ChunkPos> entityMap;
+    private final SchematicEntityLookup<Entity> entityLookup;
 
     public WorldSchematic(MutableWorldProperties properties,
                           @Nonnull DynamicRegistryManager registryManager,
@@ -78,13 +76,16 @@ public class WorldSchematic extends World
         super(properties, REGISTRY_KEY, !registryManager.equals(DynamicRegistryManager.EMPTY) ? registryManager : SchematicWorldHandler.INSTANCE.getRegistryManager(), dimension, true, false, 0L, 0);
 
         this.mc = MinecraftClient.getInstance();
+
         if (this.mc == null || this.mc.world == null)
         {
             throw new RuntimeException("WorldSchematic invoked when MinecraftClient.getInstance() or mc.world is null");
         }
+
         this.worldRenderer = worldRenderer;
         this.chunkManagerSchematic = new ChunkManagerSchematic(this);
         this.dimensionType = dimension;
+
         if (!registryManager.equals(DynamicRegistryManager.EMPTY))
         {
             this.setDimension(registryManager);
@@ -93,31 +94,39 @@ public class WorldSchematic extends World
         {
             this.setDimension(this.mc.world.getRegistryManager());
         }
+
         this.tickManager = new TickManager();
+        this.entityCount = 0;
+        this.entityMap = new HashMap<>();
+        this.entityLookup = new SchematicEntityLookup<>();
+    }
+
+    @Override
+    public String toString()
+    {
+        return "SchematicWorld["+REGISTRY_KEY.getValue().toString()+"]";
     }
 
     private void setDimension(DynamicRegistryManager registryManager)
     {
-        RegistryEntryLookup<DimensionType> entryLookup = registryManager.getOrThrow(RegistryKeys.DIMENSION_TYPE);
-        RegistryEntry<DimensionType> nether = entryLookup.getOrThrow(DimensionTypes.THE_NETHER);
-        RegistryEntry<DimensionType> end = entryLookup.getOrThrow(DimensionTypes.THE_END);
-
-        if (this.dimensionType.equals(nether))
-        {
-            //this.biome = this.getWastes(registryManager);
-            this.biome = WorldUtils.getWastes(registryManager);
-        }
-        else if (this.dimensionType.equals(end))
-        {
-            //this.biome = this.getTheEnd(registryManager);
-            this.biome = WorldUtils.getTheEnd(registryManager);
-        }
-        else
-        {
-            //this.biome = this.getPlains(registryManager);
-            this.biome = WorldUtils.getPlains(registryManager);
-        }
-
+        registryManager.getOptional(RegistryKeys.DIMENSION_TYPE).ifPresent(entryLookup -> {
+            RegistryEntry<DimensionType> nether = entryLookup.getOptional(DimensionTypes.THE_NETHER).orElse(null);
+            RegistryEntry<DimensionType> end = entryLookup.getOptional(DimensionTypes.THE_END).orElse(null);
+    
+            if (nether != null && this.dimensionType.equals(nether))
+            {
+                this.biome = WorldUtils.getWastes(registryManager);
+            }
+            else if (end != null && this.dimensionType.equals(end))
+            {
+                this.biome = WorldUtils.getTheEnd(registryManager);
+            }
+            else
+            {
+                this.biome = WorldUtils.getPlains(registryManager);
+            }
+        });
+    
         this.dimensionEffects = DimensionEffects.byDimensionType(this.dimensionType.value());
     }
 
@@ -143,15 +152,6 @@ public class WorldSchematic extends World
     public MapState getMapState(MapIdComponent id) { return null; }
 
     @Override
-    public void putMapState(MapIdComponent id, MapState state) { }
-
-    @Override
-    public MapIdComponent increaseAndGetMapId()
-    {
-        return null;
-    }
-
-    @Override
     public QueryableTickScheduler<Block> getBlockTickScheduler()
     {
         return EmptyTickSchedulers.getClientTickScheduler();
@@ -165,7 +165,13 @@ public class WorldSchematic extends World
 
     public int getRegularEntityCount()
     {
-        return this.entityCount;
+//        return this.entityCount;
+        return this.entityLookup.size();
+    }
+
+    public String getEntityDebug()
+    {
+        return String.format("eL: %d, eM: %d, cE: %d", this.entityLookup.size(), this.entityMap.size(), this.entityCount);
     }
 
     @Override
@@ -195,6 +201,11 @@ public class WorldSchematic extends World
     @Override
     public int getSeaLevel()
     {
+        if (this.mc != null && this.mc.world != null)
+        {
+            return this.mc.world.getSeaLevel();
+        }
+
         return 0;
     }
 
@@ -207,7 +218,7 @@ public class WorldSchematic extends World
         }
         else
         {
-            return this.getChunk(pos.getX() >> 4, pos.getZ() >> 4).setBlockState(pos, newState, false) != null;
+            return this.getChunk(pos.getX() >> 4, pos.getZ() >> 4).setBlockState(pos, newState, 3) != null;
         }
     }
 
@@ -218,14 +229,19 @@ public class WorldSchematic extends World
         int chunkZ = MathHelper.floor(entity.getZ() / 16.0D);
 
         if (!this.chunkManagerSchematic.isChunkLoaded(chunkX, chunkZ))
+        {
             return false;
-        entity.setId(this.nextEntityId++);
-        ChunkSchematic chunk = this.chunkManagerSchematic.getChunk(chunkX, chunkZ);
-        if(chunk == null)
-            return false;
-        chunk.addEntity(entity);
-        ++this.entityCount;
-        return true;
+        }
+        else
+        {
+            entity.setId(this.nextEntityId++);
+            // TODO --> MOVE TO SchematicEntityLookup
+            this.chunkManagerSchematic.getChunk(chunkX, chunkZ).addEntity(entity);
+            ++this.entityCount;
+            this.entityMap.put(entity.getUuid(), new ChunkPos(chunkX, chunkZ));
+            this.entityLookup.put(entity);
+            return true;
+        }
     }
 
     public void unloadedEntities(int count)
@@ -233,12 +249,54 @@ public class WorldSchematic extends World
         this.entityCount -= count;
     }
 
+    protected void unloadEntitiesByChunk(int chunkX, int chunkZ)
+    {
+        List<UUID> list = new ArrayList<>();
+
+        this.entityMap.forEach(
+                (u, cp) ->
+                {
+                    if (cp.x == chunkX && cp.z == chunkZ)
+                    {
+                        list.add(u);
+                    }
+                });
+
+        list.forEach(
+                (uuid) ->
+                {
+                    synchronized (this.entityMap)
+                    {
+                        this.entityMap.remove(uuid);
+                    }
+
+                    this.entityLookup.remove(uuid);
+                });
+    }
+
     @Nullable
     @Override
     public Entity getEntityById(int id)
     {
-        // This shouldn't be used for anything in the mod, so just return null here
-        return null;
+        return this.entityLookup.get(id);
+    }
+
+    protected void closeEntityLookup() throws Exception
+    {
+        this.entityLookup.close();
+    }
+
+    public void clearEntities()
+    {
+        try
+        {
+            this.closeEntityLookup();
+        }
+        catch (Exception ignored) { }
+
+        this.entityMap.clear();
+        this.entityCount = 0;
+        this.nextEntityId = 0;
     }
 
     @Override
@@ -274,8 +332,7 @@ public class WorldSchematic extends World
     @Override
     protected EntityLookup<Entity> getEntityLookup()
     {
-        // This is not used in the mod
-        return null;
+        return this.entityLookup;
     }
 
     @Override
@@ -284,6 +341,7 @@ public class WorldSchematic extends World
         final List<Entity> entities = new ArrayList<>();
         List<ChunkSchematic> chunks = this.getChunksWithinBox(box);
 
+        // TODO --> MOVE TO SchematicEntityLookup
         for (ChunkSchematic chunk : chunks)
         {
             chunk.getEntityList().forEach((e) -> {
@@ -301,6 +359,7 @@ public class WorldSchematic extends World
     {
         ArrayList<T> list = new ArrayList<>();
 
+        // TODO --> MOVE TO SchematicEntityLookup
         for (Entity e : this.getOtherEntities(null, box, e -> true))
         {
             T t = arg.downcast(e);
@@ -346,6 +405,18 @@ public class WorldSchematic extends World
         {
             this.scheduleChunkRenders(pos.getX() >> 4, pos.getZ() >> 4);
         }
+    }
+
+    @Override
+    public void playSound(@Nullable Entity source, double x, double y, double z, RegistryEntry<SoundEvent> sound, SoundCategory category, float volume, float pitch, long seed)
+    {
+        // NO-OP
+    }
+
+    @Override
+    public void playSoundFromEntity(@Nullable Entity source, Entity entity, RegistryEntry<SoundEvent> sound, SoundCategory category, float volume, float pitch, long seed)
+    {
+        // NO-OP
     }
 
     public void scheduleChunkRenders(int chunkX, int chunkZ)
@@ -457,6 +528,15 @@ public class WorldSchematic extends World
     }
 
     @Override
+    public LightingProvider getLightingProvider()
+    {
+        // Returns the Fake Lighting Provider, if configured to do so
+        return this.getChunkManager().getLightingProvider();
+    }
+
+    // todo --> moved to Fake Lighting Provider
+    /*
+    @Override
     public int getLightLevel(LightType type, BlockPos pos)
     {
         //return Configs.Visuals.RENDER_FAKE_LIGHTING_LEVEL != null ? Configs.Visuals.RENDER_FAKE_LIGHTING_LEVEL.getIntegerValue() : 15;
@@ -469,6 +549,7 @@ public class WorldSchematic extends World
         //return Configs.Visuals.RENDER_FAKE_LIGHTING_LEVEL != null ? Configs.Visuals.RENDER_FAKE_LIGHTING_LEVEL.getIntegerValue() : 15;
         return 15;
     }
+     */
 
     @Override
     public void updateListeners(BlockPos blockPos_1, BlockState blockState_1, BlockState blockState_2, int flags)
@@ -489,79 +570,19 @@ public class WorldSchematic extends World
     }
     
     @Override
-    public void syncWorldEvent(@Nullable PlayerEntity entity, int id, BlockPos pos, int data)
-    {
-        // NO-OP
-    }
-
-    @Override
     public void emitGameEvent(RegistryEntry<GameEvent> event, Vec3d emitterPos, GameEvent.Emitter emitter)
     {
         // NO-OP
     }
 
     @Override
-    public void playSound(@Nullable PlayerEntity except, double x, double y, double z, SoundEvent sound, SoundCategory category, float volume, float pitch, long seed)
-    {
-        // NO-OP
-    }
-
-    @Override
-    public void playSoundFromEntity(@javax.annotation.Nullable PlayerEntity except, Entity entity, RegistryEntry<SoundEvent> sound, SoundCategory category, float volume, float pitch, long seed)
-    {
-        // NO-OP
-    }
-
-    @Override
-    public void addParticle(ParticleEffect particleParameters_1, double double_1, double double_2, double double_3, double double_4, double double_5, double double_6)
-    {
-        // NO-OP
-    }
-
-    @Override
-    public void addImportantParticle(ParticleEffect particleParameters_1, double double_1, double double_2, double double_3, double double_4,   double double_5, double double_6)
-    {
-        // NO-OP
-    }
-
-    @Override
-    public void addImportantParticle(ParticleEffect particleParameters_1, boolean boolean_1, double double_1, double double_2, double double_3,     double double_4, double double_5, double double_6)
+    public void syncWorldEvent(@Nullable Entity entity, int eventId, BlockPos pos, int data)
     {
         // NO-OP
     }
 
     @Override
     public void createExplosion(@Nullable Entity entity, @Nullable DamageSource damageSource, @Nullable ExplosionBehavior behavior, double x, double y, double z, float power, boolean createFire, ExplosionSourceType explosionSourceType, ParticleEffect smallParticle, ParticleEffect largeParticle, RegistryEntry<SoundEvent> soundEvent)
-    {
-        // NO-OP
-    }
-
-    @Override
-    public void playSound(double x, double y, double z, SoundEvent soundIn, SoundCategory category, float volume, float pitch, boolean distanceDelay)
-    {
-        // NO-OP
-    }
-
-    @Override
-    public void playSound(PlayerEntity player, BlockPos pos, SoundEvent soundIn, SoundCategory category, float volume, float pitch)
-    {
-        // NO-OP
-    }
-
-    @Override
-    public void playSound(@javax.annotation.Nullable PlayerEntity except, double x, double y, double z, RegistryEntry<SoundEvent> sound, SoundCategory category, float volume, float pitch, long seed)
-    {
-        // NO-OP
-    }
-
-    @Override
-    public void playSound(PlayerEntity player, double x, double y, double z, SoundEvent soundIn, SoundCategory category, float volume, float pitch)
-    {
-        // NO-OP
-    }
-
-    @Override
-    public void playSoundFromEntity(@Nullable PlayerEntity player, Entity entity, SoundEvent sound, SoundCategory category, float volume, float pitch)
     {
         // NO-OP
     }
@@ -615,28 +636,10 @@ public class WorldSchematic extends World
         }
     }
 
-    private RegistryEntry<Biome> getPlains(DynamicRegistryManager registryManager)
-    {
-        RegistryEntryLookup<Biome> biomeLookup = registryManager.getOrThrow(RegistryKeys.BIOME);
-        return biomeLookup.getOrThrow(BiomeKeys.PLAINS);
-    }
-
-    private RegistryEntry<Biome> getWastes(DynamicRegistryManager registryManager)
-    {
-        RegistryEntryLookup<Biome> biomeLookup = registryManager.getOrThrow(RegistryKeys.BIOME);
-        return biomeLookup.getOrThrow(BiomeKeys.NETHER_WASTES);
-    }
-
-    private RegistryEntry<Biome> getTheEnd(DynamicRegistryManager registryManager)
-    {
-        RegistryEntryLookup<Biome> biomeLookup = registryManager.getOrThrow(RegistryKeys.BIOME);
-        return biomeLookup.getOrThrow(BiomeKeys.THE_END);
-    }
-
     @Override
     public String asString()
     {
-        return "Chunks[SCH] W: " + this.getChunkManager().getDebugString() + " E: " + this.getRegularEntityCount();
+        return "Chunks[SCH] W: "+this.getChunkManager().getDebugString()+" E: "+this.getRegularEntityCount()+" (eL: "+this.entityLookup.size()+"/"+ this.entityMap.size()+")";
     }
 
     @Override

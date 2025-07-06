@@ -1,22 +1,11 @@
 package fi.dy.masa.litematica.gui;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
-import fi.dy.masa.litematica.Reference;
-import fi.dy.masa.litematica.data.DataManager;
-import fi.dy.masa.litematica.gui.GuiMainMenu.ButtonListenerChangeMenu;
-import fi.dy.masa.litematica.gui.widgets.WidgetListMaterialList;
-import fi.dy.masa.litematica.gui.widgets.WidgetMaterialListEntry;
-import fi.dy.masa.litematica.materials.MaterialCache;
-import fi.dy.masa.litematica.materials.MaterialListAreaAnalyzer;
-import fi.dy.masa.litematica.materials.MaterialListBase;
-import fi.dy.masa.litematica.materials.MaterialListEntry;
-import fi.dy.masa.litematica.materials.MaterialListHudRenderer;
-import fi.dy.masa.litematica.materials.MaterialListSorter;
-import fi.dy.masa.litematica.materials.MaterialListUtils;
-import fi.dy.masa.litematica.render.infohud.InfoHud;
-import fi.dy.masa.litematica.util.BlockInfoListType;
+
+import net.minecraft.client.MinecraftClient;
+
 import fi.dy.masa.malilib.data.DataDump;
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.GuiListBase;
@@ -32,6 +21,16 @@ import fi.dy.masa.malilib.interfaces.ICompletionListener;
 import fi.dy.masa.malilib.util.FileUtils;
 import fi.dy.masa.malilib.util.GuiUtils;
 import fi.dy.masa.malilib.util.StringUtils;
+import fi.dy.masa.litematica.Reference;
+import fi.dy.masa.litematica.data.DataManager;
+import fi.dy.masa.litematica.gui.GuiMainMenu.ButtonListenerChangeMenu;
+import fi.dy.masa.litematica.gui.widgets.WidgetListMaterialList;
+import fi.dy.masa.litematica.gui.widgets.WidgetMaterialListEntry;
+import fi.dy.masa.litematica.materials.*;
+import fi.dy.masa.litematica.materials.json.MaterialListJson;
+import fi.dy.masa.litematica.materials.json.MaterialListJsonCache;
+import fi.dy.masa.litematica.render.infohud.InfoHud;
+import fi.dy.masa.litematica.util.BlockInfoListType;
 
 public class GuiMaterialList extends GuiListBase<MaterialListEntry, WidgetMaterialListEntry, WidgetListMaterialList>
                              implements ICompletionListener
@@ -60,13 +59,13 @@ public class GuiMaterialList extends GuiListBase<MaterialListEntry, WidgetMateri
     @Override
     protected int getBrowserWidth()
     {
-        return this.width - 20;
+        return this.getScreenWidth() - 20;
     }
 
     @Override
     protected int getBrowserHeight()
     {
-        return this.height - 80;
+        return this.getScreenHeight() - 80;
     }
 
     @Override
@@ -74,7 +73,7 @@ public class GuiMaterialList extends GuiListBase<MaterialListEntry, WidgetMateri
     {
         super.initGui();
 
-        boolean isNarrow = this.width < this.getElementTotalWidth();
+        boolean isNarrow = this.getScreenWidth() < this.getElementTotalWidth();
 
         int x = 12;
         int y = 24;
@@ -84,14 +83,14 @@ public class GuiMaterialList extends GuiListBase<MaterialListEntry, WidgetMateri
 
         String str = StringUtils.translate("litematica.gui.label.material_list.multiplier");
         int w = this.getStringWidth(str);
-        this.addLabel(this.width - w - 56, y + 5, w, 12, 0xFFFFFFFF, str);
+        this.addLabel(this.getScreenWidth() - w - 56, y + 5, w, 12, 0xFFFFFFFF, str);
 
-        GuiTextFieldInteger tf = new GuiTextFieldInteger(this.width - 52, y + 2, 40, 16, this.textRenderer);
-        tf.setText(String.valueOf(this.materialList.getMultiplier()));
+        GuiTextFieldInteger tf = new GuiTextFieldInteger(this.getScreenWidth() - 52, y + 2, 40, 16, this.textRenderer);
+        tf.setTextWrapper(String.valueOf(this.materialList.getMultiplier()));
         MultiplierListener listener = new MultiplierListener(this.materialList, this);
         this.addTextField(tf, listener);
 
-        this.addWidget(new WidgetInfoIcon(this.width - 23, 10, Icons.INFO_11, "litematica.info.material_list"));
+        this.addWidget(new WidgetInfoIcon(this.getScreenWidth() - 23, 10, Icons.INFO_11, "litematica.info.material_list"));
 
         int gap = 1;
         x += this.createButton(x, y, -1, ButtonListener.Type.REFRESH_LIST) + gap;
@@ -107,19 +106,23 @@ public class GuiMaterialList extends GuiListBase<MaterialListEntry, WidgetMateri
         if (isNarrow)
         {
             x = 12;
-            y = this.height - 22;
+            y = this.getScreenHeight() - 22;
         }
 
         x += this.createButton(x, y, -1, ButtonListener.Type.CLEAR_IGNORED) + gap;
         x += this.createButton(x, y, -1, ButtonListener.Type.CLEAR_CACHE) + gap;
         x += this.createButton(x, y, -1, ButtonListener.Type.WRITE_TO_FILE) + gap;
+        if (Reference.EXPERIMENTAL)
+        {
+            x += this.createButton(x, y, -1, ButtonListener.Type.WRITE_TO_JSON) + gap;
+        }
         y += 22;
 
-        y = this.height - 36;
+        y = this.getScreenHeight() - 36;
         ButtonListenerChangeMenu.ButtonType type = ButtonListenerChangeMenu.ButtonType.MAIN_MENU;
         label = StringUtils.translate(type.getLabelKey());
         buttonWidth = this.getStringWidth(label) + 20;
-        x = this.width - buttonWidth - 10;
+        x = this.getScreenWidth() - buttonWidth - 10;
         button = new ButtonGeneric(x, y, buttonWidth, 20, label);
         this.addButton(button, new ButtonListenerChangeMenu(type, this.getParent()));
 
@@ -150,7 +153,12 @@ public class GuiMaterialList extends GuiListBase<MaterialListEntry, WidgetMateri
 
             str = strt + " / " + StringUtils.translate("litematica.gui.label.material_list.progress", strp);
             w = this.getStringWidth(str);
-            this.addLabel(12, this.height - 36, w, 12, 0xFFFFFFFF, str);
+            this.addLabel(12, this.getScreenHeight() - 36, w, 12, 0xFFFFFFFF, str);
+        }
+
+        if (this.mc.player == null)
+        {
+            this.addMessage(MessageType.WARNING, 3000, "litematica.message.warn.material_list.no_player_inv");
         }
     }
 
@@ -178,6 +186,10 @@ public class GuiMaterialList extends GuiListBase<MaterialListEntry, WidgetMateri
         {
             button.setHoverStrings("litematica.gui.button.hover.material_list.write_hold_shift_for_csv");
         }
+        else if (type == ButtonListener.Type.WRITE_TO_JSON && Reference.EXPERIMENTAL)
+        {
+            button.setHoverStrings("litematica.gui.button.hover.material_list.json_hold_shift_for_missing_only");
+        }
 
         this.addButton(button, listener);
 
@@ -193,6 +205,10 @@ public class GuiMaterialList extends GuiListBase<MaterialListEntry, WidgetMateri
         width += this.getStringWidth(ButtonListener.Type.CLEAR_IGNORED.getDisplayName());
         width += this.getStringWidth(ButtonListener.Type.CLEAR_CACHE.getDisplayName());
         width += this.getStringWidth(ButtonListener.Type.WRITE_TO_FILE.getDisplayName());
+        if (Reference.EXPERIMENTAL)
+        {
+            width += this.getStringWidth(ButtonListener.Type.WRITE_TO_JSON.getDisplayName());
+        }
         width += (new ButtonOnOff(0, 0, -1, false, ButtonListener.Type.HIDE_AVAILABLE.getTranslationKey(), false)).getWidth();
         width += (new ButtonOnOff(0, 0, -1, false, ButtonListener.Type.TOGGLE_INFO_HUD.getTranslationKey(), false)).getWidth();
         width += this.getStringWidth(StringUtils.translate("litematica.gui.label.material_list.multiplier"));
@@ -289,17 +305,64 @@ public class GuiMaterialList extends GuiListBase<MaterialListEntry, WidgetMateri
                     break;
 
                 case WRITE_TO_FILE:
-                    File dir = new File(FileUtils.getConfigDirectory(), Reference.MOD_ID);
+                    Path dir = FileUtils.getConfigDirectoryAsPath().resolve(Reference.MOD_ID);
                     boolean csv = GuiBase.isShiftDown();
                     String ext = csv ? ".csv" : ".txt";
-                    File file = DataDump.dumpDataToFile(dir, "material_list", ext, this.getMaterialListDump(materialList, csv).getLines());
+                    Path file = DataDump.dumpDataToFile(dir, "material_list", ext, this.getMaterialListDump(materialList, csv).getLines());
 
                     if (file != null)
                     {
                         String key = "litematica.message.material_list_written_to_file";
-                        this.parent.addMessage(MessageType.SUCCESS, key, file.getName());
-                        StringUtils.sendOpenFileChatMessage(this.parent.mc.player, key, file);
+                        this.parent.addMessage(MessageType.SUCCESS, key, file.getFileName().toString());
+                        StringUtils.sendOpenFileChatMessage(this.parent.mc.player, key, file.toFile());
                     }
+                    break;
+
+                case WRITE_TO_JSON:
+                    if (!Reference.EXPERIMENTAL) break;
+                    MinecraftClient mc = MinecraftClient.getInstance();
+                    Path jsonDir = FileUtils.getConfigDirectoryAsPath().resolve(Reference.MOD_ID);
+                    boolean missingOnly = GuiBase.isShiftDown();
+                    String fileName = "raw_materials_detailed" + (missingOnly ? "_missing_only" : "");
+                    MaterialListJson jsonWriter = new MaterialListJson();
+                    Path jsonFile = jsonDir.resolve(fileName+".json");
+                    MaterialListJsonCache cache = new MaterialListJsonCache();
+
+                    if (!this.getMaterialListForJson(materialList, jsonWriter, cache, missingOnly))
+                    {
+                        String key = "litematica.message.error.json_material_list_copy_failure";
+                        this.parent.addMessage(MessageType.ERROR, key, jsonFile.getFileName().toString());
+                        break;
+                    }
+
+                    if (!jsonWriter.writeJson(jsonFile, mc))
+                    {
+//                        String key = "litematica.message.material_list_written_to_json_file";
+//                        this.parent.addMessage(MessageType.SUCCESS, key, jsonFile.getFileName().toString());
+//                    }
+//                    else
+//                    {
+                        String key = "litematica.message.error.json_material_list_failure";
+                        this.parent.addMessage(MessageType.ERROR, key, jsonFile.getFileName().toString());
+                        break;
+                    }
+
+                    fileName = "raw_materials_list" + (missingOnly ? "_missing_only" : "");
+                    jsonFile = jsonDir.resolve(fileName+".json");
+
+                    if (jsonWriter.writeCacheJson(cache, jsonFile, mc))
+                    {
+                        String key = "litematica.message.material_list_written_to_json_file";
+                        this.parent.addMessage(MessageType.SUCCESS, key, jsonFile.getFileName().toString());
+                        StringUtils.sendOpenFileChatMessage(this.parent.mc.player, key, jsonFile.toFile());
+                    }
+                    else
+                    {
+                        String key = "litematica.message.error.json_material_list_failure";
+                        this.parent.addMessage(MessageType.ERROR, key, jsonFile.getFileName().toString());
+                    }
+                    cache.clear();
+                    jsonWriter.clear();
                     break;
             }
 
@@ -335,6 +398,19 @@ public class GuiMaterialList extends GuiListBase<MaterialListEntry, WidgetMateri
             return dump;
         }
 
+        private boolean getMaterialListForJson(MaterialListBase materialList, MaterialListJson jsonWriter, MaterialListJsonCache cache, boolean missingOnly)
+        {
+            if (!Reference.EXPERIMENTAL) return false;
+            if (missingOnly)
+            {
+                return jsonWriter.readMaterialListMissingOnly(materialList, cache);
+            }
+            else
+            {
+                return jsonWriter.readMaterialListAll(materialList, cache);
+            }
+        }
+
         public enum Type
         {
             REFRESH_LIST        ("litematica.gui.button.material_list.refresh_list"),
@@ -343,11 +419,13 @@ public class GuiMaterialList extends GuiListBase<MaterialListEntry, WidgetMateri
             TOGGLE_INFO_HUD     ("litematica.gui.button.material_list.toggle_info_hud"),
             CLEAR_IGNORED       ("litematica.gui.button.material_list.clear_ignored"),
             CLEAR_CACHE         ("litematica.gui.button.material_list.clear_cache"),
-            WRITE_TO_FILE       ("litematica.gui.button.material_list.write_to_file");
+            WRITE_TO_FILE       ("litematica.gui.button.material_list.write_to_file"),
+            WRITE_TO_JSON       ("litematica.gui.button.material_list.write_to_json"),
+            ;
 
             private final String translationKey;
 
-            private Type(String translationKey)
+            Type(String translationKey)
             {
                 this.translationKey = translationKey;
             }
@@ -380,7 +458,7 @@ public class GuiMaterialList extends GuiListBase<MaterialListEntry, WidgetMateri
         {
             try
             {
-                int multiplier = Integer.parseInt(textField.getText());
+                int multiplier = Integer.parseInt(textField.getTextWrapper());
 
                 if (multiplier != this.materialList.getMultiplier())
                 {

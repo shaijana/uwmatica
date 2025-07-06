@@ -3,25 +3,45 @@ package fi.dy.masa.litematica.render.schematic;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
+
+import net.minecraft.client.render.BlockRenderLayer;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.util.BufferAllocator;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 @Environment(EnvType.CLIENT)
 public class BufferAllocatorCache implements AutoCloseable
 {
-    protected static final List<RenderLayer> LAYERS = ChunkRenderLayers.LAYERS;
+    protected static final List<BlockRenderLayer> BLOCK_LAYERS = ChunkRenderLayers.BLOCK_RENDER_LAYERS;
+    protected static final List<RenderLayer> RENDER_LAYERS = ChunkRenderLayers.RENDER_LAYERS;
     protected static final List<OverlayRenderType> TYPES = ChunkRenderLayers.TYPES;
     protected static final int EXPECTED_TOTAL_SIZE;
+    private final ConcurrentHashMap<BlockRenderLayer, BufferAllocator> blockCache = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<RenderLayer, BufferAllocator> layerCache = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<OverlayRenderType, BufferAllocator> overlayCache = new ConcurrentHashMap<>();
+    private boolean clear;
 
-    protected BufferAllocatorCache() { }
+    protected BufferAllocatorCache()
+    {
+        this.clear = true;
+    }
 
     protected void allocateCache()
     {
-        for (RenderLayer layer : LAYERS)
+        for (BlockRenderLayer layer : BLOCK_LAYERS)
+        {
+            if (this.blockCache.containsKey(layer))
+            {
+                this.blockCache.get(layer).close();
+            }
+
+            synchronized (this.blockCache)
+            {
+                this.blockCache.put(layer, new BufferAllocator(layer.getBufferSize()));
+            }
+        }
+        for (RenderLayer layer : RENDER_LAYERS)
         {
             if (this.layerCache.containsKey(layer))
             {
@@ -45,6 +65,13 @@ public class BufferAllocatorCache implements AutoCloseable
                 this.overlayCache.put(type, new BufferAllocator(type.getExpectedBufferSize()));
             }
         }
+
+        this.clear = true;
+    }
+
+    protected boolean hasBufferByBlockLayer(BlockRenderLayer layer)
+    {
+        return this.blockCache.containsKey(layer);
     }
 
     protected boolean hasBufferByLayer(RenderLayer layer)
@@ -57,8 +84,20 @@ public class BufferAllocatorCache implements AutoCloseable
         return this.overlayCache.containsKey(type);
     }
 
+    protected BufferAllocator getBufferByBlockLayer(BlockRenderLayer layer)
+    {
+        this.clear = false;
+
+        synchronized (this.blockCache)
+        {
+            return this.blockCache.computeIfAbsent(layer, l -> new BufferAllocator(l.getBufferSize()));
+        }
+    }
+
     protected BufferAllocator getBufferByLayer(RenderLayer layer)
     {
+        this.clear = false;
+
         synchronized (this.layerCache)
         {
             return this.layerCache.computeIfAbsent(layer, l -> new BufferAllocator(l.getExpectedBufferSize()));
@@ -67,10 +106,24 @@ public class BufferAllocatorCache implements AutoCloseable
 
     protected BufferAllocator getBufferByOverlay(OverlayRenderType type)
     {
+        this.clear = false;
+
         synchronized (this.overlayCache)
         {
             return this.overlayCache.computeIfAbsent(type, t -> new BufferAllocator(t.getExpectedBufferSize()));
         }
+    }
+
+    protected void closeByBlockLayer(BlockRenderLayer layer)
+    {
+        try
+        {
+            synchronized (this.blockCache)
+            {
+                this.blockCache.remove(layer).close();
+            }
+        }
+        catch (Exception ignored) { }
     }
 
     protected void closeByLayer(RenderLayer layer)
@@ -97,33 +150,46 @@ public class BufferAllocatorCache implements AutoCloseable
         catch (Exception ignored) { }
     }
 
+    protected boolean isClear() { return this.clear; }
+
     protected void resetAll()
     {
         try
         {
+            this.blockCache.values().forEach(BufferAllocator::reset);
             this.layerCache.values().forEach(BufferAllocator::reset);
             this.overlayCache.values().forEach(BufferAllocator::reset);
         }
         catch (Exception ignored) { }
+
+        this.clear = true;
     }
 
     protected void clearAll()
     {
         try
         {
+            this.blockCache.values().forEach(BufferAllocator::clear);
             this.layerCache.values().forEach(BufferAllocator::clear);
             this.overlayCache.values().forEach(BufferAllocator::clear);
         }
         catch (Exception ignored) { }
+
+        this.clear = true;
     }
 
     protected void closeAll()
     {
         ArrayList<BufferAllocator> allocators;
 
+        synchronized (this.blockCache)
+        {
+            allocators = new ArrayList<>(this.blockCache.values());
+            this.blockCache.clear();
+        }
         synchronized (this.layerCache)
         {
-            allocators = new ArrayList<>(this.layerCache.values());
+            allocators.addAll(this.layerCache.values());
             this.layerCache.clear();
         }
         synchronized (this.overlayCache)
@@ -133,6 +199,7 @@ public class BufferAllocatorCache implements AutoCloseable
         }
 
         allocators.forEach(BufferAllocator::close);
+        this.clear = true;
     }
 
     @Override
@@ -143,6 +210,6 @@ public class BufferAllocatorCache implements AutoCloseable
 
     static
     {
-        EXPECTED_TOTAL_SIZE = LAYERS.stream().mapToInt(RenderLayer::getExpectedBufferSize).sum() + TYPES.stream().mapToInt(OverlayRenderType::getExpectedBufferSize).sum();
+        EXPECTED_TOTAL_SIZE = BLOCK_LAYERS.stream().mapToInt(BlockRenderLayer::getBufferSize).sum() + RENDER_LAYERS.stream().mapToInt(RenderLayer::getExpectedBufferSize).sum() + TYPES.stream().mapToInt(OverlayRenderType::getExpectedBufferSize).sum();
     }
 }

@@ -1,5 +1,6 @@
 package fi.dy.masa.litematica.world;
 
+import java.util.Iterator;
 import java.util.function.BooleanSupplier;
 import javax.annotation.Nullable;
 import net.minecraft.util.math.ChunkPos;
@@ -10,18 +11,22 @@ import net.minecraft.world.chunk.light.LightingProvider;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 
+import fi.dy.masa.litematica.config.Configs;
+
 public class ChunkManagerSchematic extends ChunkManager
 {
     private final WorldSchematic world;
     private final Long2ObjectMap<ChunkSchematic> loadedChunks = new Long2ObjectOpenHashMap<>(8192);
     private final ChunkSchematic blankChunk;
     private final LightingProvider lightingProvider;
+    private final FakeLightingProvider fakeLightingProvider;
 
     public ChunkManagerSchematic(WorldSchematic world)
     {
         this.world = world;
         this.blankChunk = new ChunkSchematic(world, new ChunkPos(0, 0));
         this.lightingProvider = new LightingProvider(this, true, world.getDimension().hasSkyLight());
+        this.fakeLightingProvider = new FakeLightingProvider(this);
     }
 
     @Override
@@ -86,12 +91,19 @@ public class ChunkManagerSchematic extends ChunkManager
         if (chunk != null)
         {
             this.world.unloadedEntities(chunk.getEntityCount());
+            this.world.unloadEntitiesByChunk(chunkX, chunkZ);
+            chunk.clearEntities();
         }
     }
 
     @Override
     public LightingProvider getLightingProvider()
     {
+        if (Configs.Visuals.ENABLE_SCHEMATIC_FAKE_LIGHTING.getBooleanValue())
+        {
+            return this.fakeLightingProvider;
+        }
+
         return this.lightingProvider;
     }
 
@@ -99,5 +111,19 @@ public class ChunkManagerSchematic extends ChunkManager
     public void tick(BooleanSupplier shouldKeepTicking, boolean tickChunks)
     {
         // NO-OP
+    }
+
+    public int getTileEntityCount()
+    {
+        int count = 0;
+
+        Iterator<ChunkSchematic> iter = this.loadedChunks.values().stream().iterator();
+
+        while (iter.hasNext())
+        {
+            count += iter.next().getTileEntityCount();
+        }
+
+        return count;
     }
 }
