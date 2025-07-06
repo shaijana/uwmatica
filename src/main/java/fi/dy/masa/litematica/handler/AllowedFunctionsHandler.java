@@ -5,6 +5,7 @@ import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.config.Hotkeys;
 import fi.dy.masa.malilib.config.IConfigBase;
 import fi.dy.masa.malilib.config.options.ConfigHotkey;
+import fi.dy.masa.malilib.hotkeys.IHotkey;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 
@@ -25,6 +26,7 @@ public class AllowedFunctionsHandler {
 			Configs.Generic.EXECUTE_REQUIRE_TOOL,
 			Configs.Generic.FIX_CHEST_MIRROR,
 			Configs.Generic.FIX_RAIL_ROTATION,
+			Configs.Generic.FIX_STAIRS_MIRROR,
 			Configs.Generic.GENERATE_LOWERCASE_NAMES,
 			Configs.Generic.ITEM_USE_PACKET_CHECK_BYPASS,
 			Configs.Generic.LAYER_MODE_DYNAMIC,
@@ -37,33 +39,43 @@ public class AllowedFunctionsHandler {
 			Configs.Generic.TOOL_ITEM_ENABLED
 	);
 
+	public static final List<IHotkey> ALLOWED_CONFIG_HOTKEYS = ImmutableList.of(
+			Configs.Generic.ENTITY_DATA_SYNC
+	);
+
 	public final static ImmutableList<IConfigBase> ALLOWED_VISUALS_CONFIGS = ImmutableList.of(
 			Configs.Visuals.ENABLE_RENDERING,
 			Configs.Visuals.ENABLE_SCHEMATIC_RENDERING,
 			Configs.Visuals.ENABLE_SCHEMATIC_BLOCKS,
 			Configs.Visuals.ENABLE_SCHEMATIC_FLUIDS,
+			Configs.Visuals.ENABLE_SCHEMATIC_FAKE_LIGHTING,
 			Configs.Visuals.ENABLE_SCHEMATIC_OVERLAY,
 			Configs.Visuals.IGNORE_EXISTING_FLUIDS,
+			Configs.Visuals.IGNORE_EXISTING_BLOCKS,
+			Configs.Visuals.IGNORABLE_EXISTING_BLOCKS,
 			Configs.Visuals.OVERLAY_REDUCED_INNER_SIDES,
 			Configs.Visuals.RENDER_BLOCKS_AS_TRANSLUCENT,
+			Configs.Visuals.RENDER_ENABLE_TRANSLUCENT_RESORTING,
 			Configs.Visuals.RENDER_COLLIDING_SCHEMATIC_BLOCKS,
 			Configs.Visuals.RENDER_ERROR_MARKER_CONNECTIONS,
 			Configs.Visuals.RENDER_ERROR_MARKER_SIDES,
+			Configs.Visuals.RENDER_FAKE_LIGHTING_LEVEL,
 			Configs.Visuals.RENDER_PLACEMENT_BOX_SIDES,
 			Configs.Visuals.RENDER_PLACEMENT_ENCLOSING_BOX,
 			Configs.Visuals.RENDER_PLACEMENT_ENCLOSING_BOX_SIDES,
+			Configs.Visuals.RENDER_SCHEMATIC_ENTITIES,
+			Configs.Visuals.RENDER_SCHEMATIC_TILE_ENTITIES,
 			Configs.Visuals.RENDER_TRANSLUCENT_INNER_SIDES,
 			Configs.Visuals.SCHEMATIC_OVERLAY_ENABLE_OUTLINES,
-			Configs.Visuals.SCHEMATIC_OVERLAY_ENABLE_RESORTING,
 			Configs.Visuals.SCHEMATIC_OVERLAY_ENABLE_SIDES,
 			Configs.Visuals.SCHEMATIC_OVERLAY_MODEL_OUTLINE,
 			Configs.Visuals.SCHEMATIC_OVERLAY_MODEL_SIDES,
 			Configs.Visuals.SCHEMATIC_OVERLAY_RENDER_THROUGH,
+			Configs.Visuals.SCHEMATIC_OVERLAY_TYPE_DIFF_BLOCK,
 			Configs.Visuals.SCHEMATIC_OVERLAY_TYPE_EXTRA,
 			Configs.Visuals.SCHEMATIC_OVERLAY_TYPE_MISSING,
 			Configs.Visuals.SCHEMATIC_OVERLAY_TYPE_WRONG_BLOCK,
 			Configs.Visuals.SCHEMATIC_OVERLAY_TYPE_WRONG_STATE,
-			Configs.Visuals.SCHEMATIC_VERIFIER_BLOCK_MODELS,
 
 			Configs.Visuals.GHOST_BLOCK_ALPHA,
 			Configs.Visuals.PLACEMENT_BOX_SIDE_ALPHA,
@@ -73,6 +85,7 @@ public class AllowedFunctionsHandler {
 
 	public final static ImmutableList<IConfigBase> ALLOWED_COLORS_CONFIGS = ImmutableList.of(
 			Configs.Colors.MATERIAL_LIST_HUD_ITEM_COUNTS,
+			Configs.Colors.SCHEMATIC_OVERLAY_COLOR_DIFF_BLOCK,
 			Configs.Colors.SCHEMATIC_OVERLAY_COLOR_EXTRA,
 			Configs.Colors.SCHEMATIC_OVERLAY_COLOR_MISSING,
 			Configs.Colors.SCHEMATIC_OVERLAY_COLOR_WRONG_BLOCK,
