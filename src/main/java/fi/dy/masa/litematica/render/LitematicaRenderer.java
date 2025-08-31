@@ -2,16 +2,15 @@ package fi.dy.masa.litematica.render;
 
 import javax.annotation.Nullable;
 
-import fi.dy.masa.litematica.compat.sodium.SodiumCompat;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.BlockRenderLayerGroup;
-import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.Frustum;
-import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.*;
+import net.minecraft.client.render.command.OrderedRenderCommandQueue;
+import net.minecraft.client.render.command.OrderedRenderCommandQueueImpl;
+import net.minecraft.client.render.entity.EntityRenderStates;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.profiler.Profiler;
@@ -404,22 +403,32 @@ public class LitematicaRenderer
         }
     }
 
-    public void piecewiseRenderEntities(MatrixStack matrices, VertexConsumerProvider.Immediate immediate, float partialTicks, Profiler profiler)
+    public void piecewisePrepareEntities(Camera camera, Frustum frustum, RenderTickCounter tickCounter, Profiler profiler)
     {
         if (this.renderPiecewiseEntities)
         {
-            profiler.push(Reference.MOD_ID+"_entities");
-            this.getWorldRenderer().renderEntities(this.getCamera(), this.frustum, matrices, immediate, partialTicks, profiler);
+            profiler.push(Reference.MOD_ID+"_prepare_entities");
+            this.getWorldRenderer().prepareEntities(this.getCamera(), this.frustum, tickCounter, profiler);
             profiler.pop();
         }
     }
 
-    public void piecewiseRenderBlockEntities(MatrixStack matrices, VertexConsumerProvider.Immediate immediate, VertexConsumerProvider.Immediate immediate2, float partialTicks, Profiler profiler)
+	public void piecewiseRenderEntities(MatrixStack matrices, EntityRenderStates renderStates, OrderedRenderCommandQueue queue, Profiler profiler)
+	{
+		if (this.renderPiecewiseEntities)
+		{
+			profiler.push(Reference.MOD_ID+"_render_entities");
+			this.getWorldRenderer().renderEntities(this.getCamera(), this.frustum, matrices, renderStates, queue, profiler);
+			profiler.pop();
+		}
+	}
+
+	public void piecewisePrepareBlockEntities(MatrixStack matrices, OrderedRenderCommandQueueImpl queue, float partialTicks, Profiler profiler)
     {
         if (this.renderPiecewiseTileEntities)
         {
             profiler.push(Reference.MOD_ID+"_block_entities");
-            this.getWorldRenderer().renderBlockEntities(this.getCamera(), this.frustum, matrices, immediate, immediate2, partialTicks, profiler);
+            this.getWorldRenderer().prepareBlockEntities(this.getCamera(), this.frustum, matrices, queue, partialTicks, profiler);
             profiler.pop();
         }
     }
@@ -434,6 +443,7 @@ public class LitematicaRenderer
         }
 
         this.getWorldRenderer().clearBlockBatchDraw();
+		this.getWorldRenderer().clearEntityRenderStates();
         this.cleanup();
     }
 

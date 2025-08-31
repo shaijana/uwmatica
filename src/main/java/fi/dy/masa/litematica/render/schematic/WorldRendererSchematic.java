@@ -20,8 +20,12 @@ import net.minecraft.client.gl.DynamicUniforms;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.block.BlockRenderManager;
-import net.minecraft.client.render.block.entity.BlockEntityRenderDispatcher;
-import net.minecraft.client.render.entity.EntityRenderDispatcher;
+import net.minecraft.client.render.block.entity.BlockEntityRenderManager;
+import net.minecraft.client.render.command.OrderedRenderCommandQueue;
+import net.minecraft.client.render.command.OrderedRenderCommandQueueImpl;
+import net.minecraft.client.render.entity.EntityRenderManager;
+import net.minecraft.client.render.entity.EntityRenderStates;
+import net.minecraft.client.render.entity.state.EntityRenderState;
 import net.minecraft.client.render.fog.FogRenderer;
 import net.minecraft.client.render.model.BakedQuad;
 import net.minecraft.client.render.model.BlockModelPart;
@@ -58,8 +62,8 @@ import fi.dy.masa.litematica.world.WorldSchematic;
 public class WorldRendererSchematic
 {
     private final MinecraftClient mc;
-    private final EntityRenderDispatcher entityRenderDispatcher;
-    private final BlockEntityRenderDispatcher blockEntityRenderDispatcher;
+    private final EntityRenderManager entityRenderManager;
+    private final BlockEntityRenderManager blockEntityRenderManager;
     private final BlockRenderManager blockRenderManager;
     private final BlockModelRendererSchematic blockModelRenderer;
     private final Set<BlockEntity> blockEntities = new HashSet<>();
@@ -71,6 +75,7 @@ public class WorldRendererSchematic
     private FogRenderer fogRenderer;
     private ChunkRenderBatchDraw batchDraw;
     private GpuBufferSlice vanillaFogBuffer;
+	private EntityRenderStates entityRenderStates;
     private Profiler profiler;
     private double lastCameraChunkUpdateX = Double.MIN_VALUE;
     private double lastCameraChunkUpdateY = Double.MIN_VALUE;
@@ -103,11 +108,12 @@ public class WorldRendererSchematic
 //        this.bufferBuilders = mc.getBufferBuilders();
         this.renderChunkFactory = ChunkRendererSchematicVbo::new;
         this.blockRenderManager = MinecraftClient.getInstance().getBlockRenderManager();
-        this.entityRenderDispatcher = mc.getEntityRenderDispatcher();
-        this.blockEntityRenderDispatcher = mc.getBlockEntityRenderDispatcher();
+        this.entityRenderManager = mc.getEntityRenderDispatcher();
+        this.blockEntityRenderManager = mc.getBlockEntityRenderDispatcher();
         this.blockModelRenderer = new BlockModelRendererSchematic(mc.getBlockColors());
         this.blockModelRenderer.setBakedManager(mc.getBakedModelManager());
         this.fogRenderer = ((IMixinGameRenderer) mc.gameRenderer).litematica_getFogRenderer();
+		this.entityRenderStates = new EntityRenderStates();
         this.profiler = null;
         this.vanillaFogBuffer = null;
         this.batchDraw = null;
@@ -171,14 +177,14 @@ public class WorldRendererSchematic
         return this.profiler;
     }
 
-    protected EntityRenderDispatcher getEntityRenderer()
+    protected EntityRenderManager getEntityRenderer()
     {
-        return this.entityRenderDispatcher;
+        return this.entityRenderManager;
     }
 
-    protected BlockEntityRenderDispatcher getBlockEntityRenderer()
+    protected BlockEntityRenderManager getBlockEntityRenderer()
     {
-        return this.blockEntityRenderDispatcher;
+        return this.blockEntityRenderManager;
     }
 
     protected GpuBufferSlice getEmptyFogBuffer()
@@ -225,6 +231,7 @@ public class WorldRendererSchematic
             this.profiler = null;
 
             this.clearBlockBatchDraw();
+			this.clearEntityRenderStates();
 
             if (this.vanillaFogBuffer != null)
             {
@@ -266,6 +273,7 @@ public class WorldRendererSchematic
 
             this.stopChunkUpdates(profiler);
             this.clearBlockBatchDraw();
+			this.clearEntityRenderStates();
 
             synchronized (this.blockEntities)
             {
@@ -290,6 +298,7 @@ public class WorldRendererSchematic
         this.renderDispatcher.stopChunkUpdates(profiler);
         this.profiler = null;
         this.clearBlockBatchDraw();
+		this.clearEntityRenderStates();
         this.vanillaFogBuffer = null;
     }
 
@@ -442,6 +451,7 @@ public class WorldRendererSchematic
 
         this.chunksToUpdate.addAll(set);
         this.clearBlockBatchDraw();
+		this.clearEntityRenderStates();
 
         //profiler.pop();
         profiler.pop();     // setup_terrain
@@ -677,6 +687,11 @@ public class WorldRendererSchematic
         this.shouldDraw = false;
     }
 
+	public void clearEntityRenderStates()
+	{
+		this.entityRenderStates.clear();
+	}
+
     public void scheduleTranslucentSorting(Vec3d cameraPos, Profiler profiler)
     {
         double x = cameraPos.getX();
@@ -895,7 +910,7 @@ public class WorldRendererSchematic
 
             if (useOffset)
             {
-                RenderSystem.setModelOffset(offset[0], offset[1], offset[2]);
+//                RenderSystem.setModelOffset(offset[0], offset[1], offset[2]);
                 modelOffset.set(offset);
             }
 
@@ -973,10 +988,10 @@ public class WorldRendererSchematic
 
 //            Litematica.LOGGER.warn("WorldRendererSchematic#drawInternal() [{}] --> END", buffers.getName());
 
-            if (useOffset)
-            {
-                RenderSystem.resetModelOffset();
-            }
+//            if (useOffset)
+//            {
+//                RenderSystem.resetModelOffset();
+//            }
         }
     }
 
@@ -1045,7 +1060,7 @@ public class WorldRendererSchematic
         return parts;
     }
 
-    public void renderEntities(Camera camera, Frustum frustum, MatrixStack matrices, VertexConsumerProvider.Immediate immediate, float partialTicks, Profiler profiler)
+    public void prepareEntities(Camera camera, Frustum frustum, RenderTickCounter tickCounter, Profiler profiler)
     {
         this.profiler = profiler;
 
@@ -1061,7 +1076,7 @@ public class WorldRendererSchematic
             double cameraY = camera.getPos().y;
             double cameraZ = camera.getPos().z;
 
-            this.entityRenderDispatcher.configure(this.world, camera, this.mc.targetedEntity);
+            this.entityRenderManager.configure(camera, this.mc.targetedEntity);
 
             this.countEntitiesTotal = 0;
             this.countEntitiesRendered = 0;
@@ -1069,23 +1084,9 @@ public class WorldRendererSchematic
 
             this.countEntitiesTotal = this.world.getRegularEntityCount();
 
-            profiler.swap("regular");
-            //List<Entity> entitiesMultipass = Lists.<Entity>newArrayList();
-
-            // TODO --> Convert Matrix4f back to to MatrixStack?
-            //  Causes strange entity behavior (translations not applied)
-            //  if this is missing ( Including the push() and pop() ... ?)
-            //  Doing this restores the expected behavior of Entity Rendering in the Schematic World
-
-//            MatrixStack matrixStack = new MatrixStack();
-//            matrixStack.push();
-//            matrixStack.multiplyPositionMatrix(posMatrix);
-//            matrixStack.pop();
-
-//            VertexConsumerProvider.Immediate entityVertexConsumers = this.bufferBuilders.getEntityVertexConsumers();
             LayerRange layerRange = DataManager.getRenderLayerRange();
 
-            profiler.swap("regular_iterate");
+            profiler.swap("entities_iterate");
             this.profiler = profiler;
             for (ChunkRendererSchematicVbo chunkRenderer : this.renderInfos)
             {
@@ -1110,20 +1111,21 @@ public class WorldRendererSchematic
                         continue;
                     }
 
-                    boolean shouldRender = this.entityRenderDispatcher.shouldRender(entityTmp, frustum, cameraX, cameraY, cameraZ);
+                    boolean shouldRender = this.entityRenderManager.shouldRender(entityTmp, frustum, cameraX, cameraY, cameraZ);
 
                     if (shouldRender)
                     {
-                        double lerpX = MathHelper.lerp(partialTicks, entityTmp.lastRenderX, entityTmp.getX());
-                        double lerpY = MathHelper.lerp(partialTicks, entityTmp.lastRenderY, entityTmp.getY());
-                        double lerpZ = MathHelper.lerp(partialTicks, entityTmp.lastRenderZ, entityTmp.getZ());
-
-                        double x = lerpX - cameraX;
-                        double y = lerpY - cameraY;
-                        double z = lerpZ - cameraZ;
+						float tickProgress = tickCounter.getTickProgress(false);
+//                        double lerpX = MathHelper.lerp(tickProgress, entityTmp.lastRenderX, entityTmp.getX());
+//                        double lerpY = MathHelper.lerp(tickProgress, entityTmp.lastRenderY, entityTmp.getY());
+//                        double lerpZ = MathHelper.lerp(tickProgress, entityTmp.lastRenderZ, entityTmp.getZ());
+//
+//                        double x = lerpX - cameraX;
+//                        double y = lerpY - cameraY;
+//                        double z = lerpZ - cameraZ;
 
 //                        Litematica.LOGGER.warn("[WorldRenderer] Chunk: [{}], EntityPos [{}] // Adj. Pos: X [{}], Y [{}], Z [{}]", pos.toShortString(), entityTmp.getBlockPos().toShortString(), x, y, z);
-                        matrices.push();
+//                        matrices.push();
 
                         // Check for Salmon / Cod 'inWater' fix
                         // Because the entities might be following the ClientWorld State
@@ -1141,9 +1143,13 @@ public class WorldRendererSchematic
                             }
                         }
 
-                        this.entityRenderDispatcher.render(entityTmp, x, y, z, partialTicks, matrices, immediate, this.entityRenderDispatcher.getLight(entityTmp, partialTicks));
+						EntityRenderState state = this.entityRenderManager.getAndUpdateRenderState(entityTmp, tickProgress);
+//						entityRenderStates.states.add(state);
+						this.entityRenderStates.states.add(state);
+
+//                        this.entityRenderManager.render(entityTmp, x, y, z, partialTicks, matrices, immediate, this.entityRenderManager.getLight(entityTmp, partialTicks));
                         ++this.countEntitiesRendered;
-                        matrices.pop();
+//                        matrices.pop();
                     }
 //                    else
 //                    {
@@ -1154,17 +1160,33 @@ public class WorldRendererSchematic
         }
     }
 
-    public void renderBlockEntities(Camera camera, Frustum frustum, MatrixStack matrices, VertexConsumerProvider.Immediate immediate, VertexConsumerProvider.Immediate immediate2, float partialTicks, Profiler profiler)
+	public void renderEntities(Camera camera, Frustum frustum, MatrixStack matrices, EntityRenderStates renderStates, OrderedRenderCommandQueue queue, Profiler profiler)
+	{
+		Vec3d pos = camera.getPos();
+		double cameraX = pos.getX();
+		double cameraY = pos.getY();
+		double cameraZ = pos.getZ();
+
+		profiler.push("render_entities");
+
+		for (EntityRenderState state : this.entityRenderStates.states)
+		{
+			this.entityRenderManager.render(state, state.x - cameraX, state.y - cameraY, state.z - cameraZ, matrices, queue);
+		}
+
+		profiler.pop();
+	}
+
+	public void prepareBlockEntities(Camera camera, Frustum frustum, MatrixStack matrices, OrderedRenderCommandQueueImpl queue, float partialTicks, Profiler profiler)
     {
         this.profiler = profiler;
-
         profiler.push("block_entities_prepare");
 
         double cameraX = camera.getPos().x;
         double cameraY = camera.getPos().y;
         double cameraZ = camera.getPos().z;
 
-        this.blockEntityRenderDispatcher.configure(this.world, camera, this.mc.crosshairTarget);
+        this.blockEntityRenderManager.configure(this.world, camera, this.mc.crosshairTarget);
 
 //        MatrixStack matrixStack = new MatrixStack();
 //        matrixStack.push();
@@ -1203,7 +1225,8 @@ public class WorldRendererSchematic
                         {
                             matrices.push();
                             matrices.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
-                            this.blockEntityRenderDispatcher.render(te, partialTicks, matrices, immediate2);
+                            this.blockEntityRenderManager.render(te, partialTicks, matrices, null, queue);
+							// Ignore crumbling, because there is no point in the Schem World.
                             matrices.pop();
                         }
                         catch (Exception err)
@@ -1215,7 +1238,7 @@ public class WorldRendererSchematic
             }
         }
 
-        immediate2.drawCurrentLayer();
+//        immediate2.drawCurrentLayer();
 
         profiler.swap("render_be_no_cull");
         synchronized (this.blockEntities)
@@ -1233,7 +1256,7 @@ public class WorldRendererSchematic
                 {
                     matrices.push();
                     matrices.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
-                    this.blockEntityRenderDispatcher.render(te, partialTicks, matrices, immediate);
+                    this.blockEntityRenderManager.render(te, partialTicks, matrices, null, queue);
                     matrices.pop();
                 }
                 catch (Exception err)
@@ -1243,7 +1266,7 @@ public class WorldRendererSchematic
             }
         }
 
-        immediate.drawCurrentLayer();
+//        immediate.drawCurrentLayer();
         profiler.pop();
     }
 

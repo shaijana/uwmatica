@@ -18,6 +18,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.item.FuelRegistry;
 import net.minecraft.item.map.MapState;
+import net.minecraft.particle.BlockParticleEffect;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.recipe.BrewingRecipeRegistry;
 import net.minecraft.recipe.RecipeManager;
@@ -31,6 +32,7 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.TypeFilter;
+import net.minecraft.util.collection.Pool;
 import net.minecraft.util.math.*;
 import net.minecraft.world.MutableWorldProperties;
 import net.minecraft.world.World;
@@ -419,7 +421,13 @@ public class WorldSchematic extends World
         // NO-OP
     }
 
-    public void scheduleChunkRenders(int chunkX, int chunkZ)
+	@Override
+	public void createExplosion(@Nullable Entity entity, @Nullable DamageSource damageSource, @Nullable ExplosionBehavior behavior, double x, double y, double z, float power, boolean createFire, ExplosionSourceType explosionSourceType, ParticleEffect smallParticle, ParticleEffect largeParticle, Pool<BlockParticleEffect> blockParticles, RegistryEntry<SoundEvent> soundEvent)
+	{
+		// NO-OP
+	}
+
+	public void scheduleChunkRenders(int chunkX, int chunkZ)
     {
         if (this.worldRenderer != null)
         {
@@ -577,12 +585,6 @@ public class WorldSchematic extends World
 
     @Override
     public void syncWorldEvent(@Nullable Entity entity, int eventId, BlockPos pos, int data)
-    {
-        // NO-OP
-    }
-
-    @Override
-    public void createExplosion(@Nullable Entity entity, @Nullable DamageSource damageSource, @Nullable ExplosionBehavior behavior, double x, double y, double z, float power, boolean createFire, ExplosionSourceType explosionSourceType, ParticleEffect smallParticle, ParticleEffect largeParticle, RegistryEntry<SoundEvent> soundEvent)
     {
         // NO-OP
     }

@@ -18,7 +18,6 @@ import net.minecraft.client.render.model.BlockModelPart;
 import net.minecraft.client.render.model.BlockStateModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.fluid.FluidState;
-import net.minecraft.item.ItemDisplayContext;
 import net.minecraft.util.crash.CrashException;
 import net.minecraft.util.crash.CrashReport;
 import net.minecraft.util.crash.CrashReportSection;
@@ -462,7 +461,7 @@ public class BlockModelRendererSchematic
         {
             CrashReport crashReport = CrashReport.create(var9, "Tesselating liquid in world");
             CrashReportSection crashReportSection = crashReport.addElement("Block being tesselated");
-            CrashReportSection.addBlockInfo(crashReportSection, world, pos, null);
+            CrashReportSection.addBlockInfo(crashReportSection, world, pos, stateIn);
             throw new CrashException(crashReport);
         }
     }
@@ -489,8 +488,8 @@ public class BlockModelRendererSchematic
         float blue = (float) (i & 0xFF) / 255.0f;
 
         this.renderBlockEntity(consumer.getBuffer(RenderLayers.getEntityBlockLayer(stateIn)), matrixStack, bakedModel, red, green, blue, light, overlay);
-        this.bakedManager.getBlockEntityModelsSupplier().get()
-                    .render(stateIn.getBlock(), ItemDisplayContext.NONE, matrixStack, consumer, light, overlay);
+//        this.bakedManager.getBlockEntityModelsSupplier().get()
+//                    .render(stateIn.getBlock(), ItemDisplayContext.NONE, matrixStack, consumer, light, overlay);
 
         return true;
     }

@@ -29,7 +29,7 @@ public class TaskPasteSchematicPerChunkDirect extends TaskPasteSchematicPerChunk
     {
         return super.canExecute() &&
                this.mc.isIntegratedServerRunning() &&
-               this.world != null && this.world.isClient == false;
+               this.world != null && this.world.isClient() == false;
     }
 
     @Override

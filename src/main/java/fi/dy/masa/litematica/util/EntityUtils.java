@@ -171,7 +171,7 @@ public class EntityUtils
 
         if (mc.player == null || !entityDebugRandom) return Pair.of("", "");
 
-        String name = mc.player.getGameProfile().getName().toLowerCase();
+        String name = mc.player.getGameProfile().name().toLowerCase();
 
         switch (name)
         {
@@ -295,7 +295,7 @@ public class EntityUtils
 
                     if (passenger != null)
                     {
-                        passenger.startRiding(entity, true);
+                        passenger.startRiding(entity, true, false);
                     }
                 }
             }

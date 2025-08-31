@@ -17,6 +17,8 @@ import net.minecraft.command.argument.BlockArgumentParser;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.NbtComponent;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.TypedEntityData;
 import net.minecraft.entity.decoration.ItemFrameEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
@@ -335,18 +337,23 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
             Identifier itemId = Registries.ITEM.getId(stack.getItem());
             int facingId = itemFrame.getHorizontalFacing().getIndex();
             String nbtStr = String.format(" {Facing:%db,Item:{id:\"%s\",Count:1b}}", facingId, itemId);
-            NbtComponent entityComp = stack.get(DataComponentTypes.ENTITY_DATA);
+            TypedEntityData<EntityType<?>> entityData = stack.get(DataComponentTypes.ENTITY_DATA);
 
-            if (entityComp != null && entityComp.isEmpty() == false)
+            if (entityData != null)
             {
-                String itemNbt = entityComp.toString();
-                String tmp = String.format(" {Facing:%db,Item:{id:\"%s\",Count:1b,tag:%s}}",
-                                           facingId, itemId, itemNbt);
+				NbtCompound entityComp = entityData.copyNbtWithoutId();
 
-                if (originalCommand.length() + tmp.length() < 255)
-                {
-                    nbtStr = tmp;
-                }
+				if (entityComp.isEmpty())
+				{
+					String itemNbt = entityComp.toString();
+					String tmp = String.format(" {Facing:%db,Item:{id:\"%s\",Count:1b,tag:%s}}",
+											   facingId, itemId, itemNbt);
+
+					if (originalCommand.length() + tmp.length() < 255)
+					{
+						nbtStr = tmp;
+					}
+				}
             }
 
             return originalCommand + nbtStr;

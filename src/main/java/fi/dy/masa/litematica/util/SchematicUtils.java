@@ -317,7 +317,7 @@ public class SchematicUtils
                 if (stack.getItem() instanceof BlockItem)
                 {
                     // Smuggle in a reference to the Schematic world to the use context
-                    World worldClient = mc.player.getWorld();
+                    World worldClient = mc.player.getEntityWorld();
                     ((IMixinEntity) mc.player).litematica_setWorld(worldSchematic);
 
                     BlockHitResult hit = new BlockHitResult(trace.getPos(), side, pos.offset(side), false);

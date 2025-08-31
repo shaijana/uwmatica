@@ -163,14 +163,14 @@ public abstract class GuiSchematicSaveBase extends GuiSchematicBrowserBase imple
     }
 
     @Override
-    public boolean onMouseClicked(int mouseX, int mouseY, int mouseButton)
+    public boolean onMouseClicked(int mouseX, int mouseY, int mouseButton, boolean doubleClick)
     {
-        if (this.textField.mouseClickedWrapper(mouseX, mouseY, mouseButton))
+        if (this.textField.mouseClickedWrapper(mouseX, mouseY, mouseButton, doubleClick))
         {
             return true;
         }
 
-        return super.onMouseClicked(mouseX, mouseY, mouseButton);
+        return super.onMouseClicked(mouseX, mouseY, mouseButton, doubleClick);
     }
 
     @Override

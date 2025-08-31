@@ -1,4 +1,4 @@
-package fi.dy.masa.litematica.mixin.item;
+package fi.dy.masa.litematica.mixin.easyplace;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -15,9 +15,9 @@ import fi.dy.masa.litematica.util.PlacementHandler;
 import fi.dy.masa.litematica.util.PlacementHandler.UseContext;
 
 @Mixin(value = BlockItem.class, priority = 980)
-public abstract class MixinBlockItem extends Item
+public abstract class MixinBlockItem_easyPlace extends Item
 {
-    private MixinBlockItem(Item.Settings builder)
+    private MixinBlockItem_easyPlace(Item.Settings builder)
     {
         super(builder);
     }
