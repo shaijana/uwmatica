@@ -2,7 +2,6 @@ package fi.dy.masa.litematica.mixin.hud;
 
 import java.util.Collection;
 import java.util.List;
-import org.apache.commons.lang3.tuple.Pair;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.hud.DebugHud;
@@ -14,13 +13,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-import fi.dy.masa.malilib.gui.GuiBase;
-import fi.dy.masa.litematica.data.DataManager;
-import fi.dy.masa.litematica.render.LitematicaRenderer;
-import fi.dy.masa.litematica.render.schematic.WorldRendererSchematic;
-import fi.dy.masa.litematica.util.EntityUtils;
-import fi.dy.masa.litematica.world.SchematicWorldHandler;
-import fi.dy.masa.litematica.world.WorldSchematic;
+import fi.dy.masa.litematica.render.LitematicaDebugHud;
 
 @Mixin(DebugHud.class)
 public abstract class MixinDebugHud
@@ -47,15 +40,10 @@ public abstract class MixinDebugHud
 		// Always display only when F3 is open.
 		if (this.client.debugHudEntryList.isF3Enabled())
 		{
-			WorldSchematic world = SchematicWorldHandler.getSchematicWorld();
+			List<String> list = LitematicaDebugHud.getDebugLines();
 
-			if (world != null)
+			if (!list.isEmpty())
 			{
-				Pair<String, String> pair = EntityUtils.getEntityDebug();
-				String pre = GuiBase.TXT_GOLD;
-				String rst = GuiBase.TXT_RST;
-
-				WorldRendererSchematic renderer = LitematicaRenderer.getInstance().getWorldRenderer();
 				int size = text.size();
 
 				if (size > 3)
@@ -68,26 +56,13 @@ public abstract class MixinDebugHud
 					// Insert mode, but do not go beyond '0'
 				}
 
-				text.add(size++, String.format("%s[Litematica]%s %s",
-									   pre, rst, renderer.getDebugInfoRenders()));
-
-				String str = String.format("E: %d TE: %d C: %d, CT: %d, CV: %d",
-										   world.getRegularEntityCount(),
-//                                       world.getEntityDebug(),
-										   world.getChunkProvider().getTileEntityCount(),
-										   world.getChunkProvider().getLoadedChunkCount(),
-										   DataManager.getSchematicPlacementManager().getTouchedChunksCount(),
-										   DataManager.getSchematicPlacementManager().getLastVisibleChunksCount()
-				);
-
-				text.add(size++, String.format("%s[Litematica]%s %s %s", pre, rst, renderer.getDebugInfoEntities(), str));
-
-				if (!pair.getLeft().isEmpty())
+				for (String entry : list)
 				{
-					text.add(size, String.format("%s[%s]%s %s", pre, pair.getLeft(), rst, pair.getRight()));
+					text.add(size++, entry);
 				}
 			}
 		}
+
 		return text;
 	}
 }
