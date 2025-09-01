@@ -52,6 +52,7 @@ import fi.dy.masa.litematica.mixin.block.IMixinWallMountedBlock;
 import fi.dy.masa.litematica.schematic.LitematicaSchematic;
 import fi.dy.masa.litematica.schematic.SchematicMetadata;
 import fi.dy.masa.litematica.schematic.SchematicaSchematic;
+import fi.dy.masa.litematica.schematic.pickblock.SchematicPickBlockEventHandler;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacementManager;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacementManager.PlacementPart;
@@ -578,6 +579,11 @@ public class WorldUtils
     {
         BlockPos pos;
 
+		if (SchematicPickBlockEventHandler.getInstance().onSchematicPickBlockStart(closest))
+		{
+			return true;
+		}
+
         if (closest)
         {
             pos = RayTraceUtils.getSchematicWorldTraceIfClosest(mc.world, mc.player, getValidBlockRange(mc));
@@ -590,12 +596,46 @@ public class WorldUtils
         if (pos != null)
         {
             World world = SchematicWorldHandler.getSchematicWorld();
-            BlockState state = world.getBlockState(pos);
-            ItemStack stack = MaterialCache.getInstance().getRequiredBuildItemForState(state, world, pos);
 
-            InventoryUtils.schematicWorldPickBlock(stack, pos, world, mc);
+			if (world != null)
+			{
+				BlockState state = world.getBlockState(pos);
 
-            return true;
+				if (SchematicPickBlockEventHandler.getInstance().onSchematicPickBlockPreGather(world, pos, state))
+				{
+					return true;
+				}
+
+				ItemStack stack;
+
+				if (SchematicPickBlockEventHandler.getInstance().hasPickStack())
+				{
+					stack = SchematicPickBlockEventHandler.getInstance().getPickStack();
+				}
+				else
+				{
+					stack = MaterialCache.getInstance().getRequiredBuildItemForState(state, world, pos);
+				}
+
+				if (SchematicPickBlockEventHandler.getInstance().onSchematicPickBlockPrePick(world, pos, state, stack))
+				{
+					return true;
+				}
+
+				if (SchematicPickBlockEventHandler.getInstance().hasSlotHandler())
+				{
+					if (SchematicPickBlockEventHandler.getInstance().executePickBlockHandler(world, pos, stack))
+					{
+						SchematicPickBlockEventHandler.getInstance().onSchematicPickBlockSuccess();
+						return true;
+					}
+				}
+
+				InventoryUtils.schematicWorldPickBlock(stack, pos, world, mc);
+				SchematicPickBlockEventHandler.getInstance().onSchematicPickBlockSuccess();
+
+				return true;
+			}
         }
 
         return false;
