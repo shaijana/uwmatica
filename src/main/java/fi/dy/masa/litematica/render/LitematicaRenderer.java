@@ -423,17 +423,28 @@ public class LitematicaRenderer
 		}
 	}
 
-	public void piecewisePrepareBlockEntities(MatrixStack matrices, OrderedRenderCommandQueueImpl queue, float partialTicks, Profiler profiler)
+	public void piecewisePrepareBlockEntities(Camera camera, Frustum frustum, float tickProgress, Profiler profiler)
     {
         if (this.renderPiecewiseTileEntities)
         {
-            profiler.push(Reference.MOD_ID+"_block_entities");
-            this.getWorldRenderer().prepareBlockEntities(this.getCamera(), this.frustum, matrices, queue, partialTicks, profiler);
+            profiler.push(Reference.MOD_ID+"_prepare_block_entities");
+			MatrixStack matrices = new MatrixStack();
+            this.getWorldRenderer().prepareBlockEntities(this.getCamera(), this.frustum, matrices, tickProgress, profiler);
             profiler.pop();
         }
     }
 
-    public void piecewiseRenderOverlay(Matrix4f posMatrix, Matrix4f projMatrix, Profiler profiler)
+	public void piecewiseRenderBlockEntities(MatrixStack matrices, Camera camera, EntityRenderStates renderStates, OrderedRenderCommandQueueImpl queue, Profiler profiler)
+	{
+		if (this.renderPiecewiseTileEntities)
+		{
+			profiler.push(Reference.MOD_ID+"_block_entities");
+			this.getWorldRenderer().renderBlockEntities(this.getCamera(), this.frustum, matrices, renderStates, queue, profiler);
+			profiler.pop();
+		}
+	}
+
+	public void piecewiseRenderOverlay(Matrix4f posMatrix, Matrix4f projMatrix, Profiler profiler)
     {
         if (this.renderPiecewiseSchematic)
         {

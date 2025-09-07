@@ -37,6 +37,7 @@ import net.minecraft.util.math.*;
 import net.minecraft.world.MutableWorldProperties;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
+import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.WorldChunk;
@@ -661,4 +662,10 @@ public class WorldSchematic extends World
     {
         // NO-OP
     }
+
+	@Override
+	public WorldBorder getWorldBorder()
+	{
+		return WorldBorder.Properties.DEFAULT.toWorldBorder();
+	}
 }

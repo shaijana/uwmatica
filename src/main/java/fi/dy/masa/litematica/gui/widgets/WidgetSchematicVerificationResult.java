@@ -10,6 +10,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
@@ -168,9 +169,9 @@ public class WidgetSchematicVerificationResult extends WidgetListEntrySortable<B
     }
 
     @Override
-    protected boolean onMouseClickedImpl(int mouseX, int mouseY, int mouseButton, boolean doubleClick)
+    protected boolean onMouseClickedImpl(Click click, boolean doubleClick)
     {
-        if (super.onMouseClickedImpl(mouseX, mouseY, mouseButton, doubleClick))
+        if (super.onMouseClickedImpl(click, doubleClick))
         {
             return true;
         }
@@ -180,7 +181,7 @@ public class WidgetSchematicVerificationResult extends WidgetListEntrySortable<B
             return false;
         }
 
-        int column = this.getMouseOverColumn(mouseX, mouseY);
+        int column = this.getMouseOverColumn((int) click.x(), (int) click.y());
 
         switch (column)
         {
@@ -204,9 +205,9 @@ public class WidgetSchematicVerificationResult extends WidgetListEntrySortable<B
     }
 
     @Override
-    public boolean canSelectAt(int mouseX, int mouseY, int mouseButton)
+    public boolean canSelectAt(Click click)
     {
-        return (this.buttonIgnore == null || mouseX < this.buttonIgnore.getX()) && super.canSelectAt(mouseX, mouseY, mouseButton);
+        return (this.buttonIgnore == null || click.x() < this.buttonIgnore.getX()) && super.canSelectAt(click);
     }
 
     protected boolean shouldRenderAsSelected()

@@ -1,6 +1,8 @@
 package fi.dy.masa.litematica.event;
 
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.Click;
+import net.minecraft.client.input.KeyInput;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -55,21 +57,21 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
     }
 
     @Override
-    public boolean onKeyInput(int keyCode, int scanCode, int modifiers, boolean eventKeyState)
+    public boolean onKeyInput(KeyInput input, boolean eventKeyState)
     {
         if (eventKeyState)
         {
             MinecraftClient mc = MinecraftClient.getInstance();
 
-            if (mc.options.useKey.matchesKey(keyCode, scanCode))
+            if (mc.options.useKey.matchesKey(input))
             {
                 return this.handleUseKey(mc);
             }
-            else if (mc.options.attackKey.matchesKey(keyCode, scanCode))
+            else if (mc.options.attackKey.matchesKey(input))
             {
                 return this.handleAttackKey(mc);
             }
-            else if (mc.options.screenshotKey.matchesKey(keyCode, scanCode) && GuiSchematicManager.hasPendingPreviewTask())
+            else if (mc.options.screenshotKey.matchesKey(input) && GuiSchematicManager.hasPendingPreviewTask())
             {
                 return GuiSchematicManager.setPreviewImage();
             }
@@ -79,18 +81,18 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
     }
 
     @Override
-    public boolean onMouseClick(int mouseX, int mouseY, int eventButton, boolean eventButtonState)
+    public boolean onMouseClick(Click click, boolean eventButtonState)
     {
         MinecraftClient mc = MinecraftClient.getInstance();
 
         // Tool enabled, and not in a GUI
         if (GuiUtils.getCurrentScreen() == null && mc.world != null && mc.player != null && eventButtonState)
         {
-            if (mc.options.useKey.matchesMouse(eventButton))
+            if (mc.options.useKey.matchesMouse(click))
             {
                 return this.handleUseKey(mc);
             }
-            else if (mc.options.attackKey.matchesMouse(eventButton))
+            else if (mc.options.attackKey.matchesMouse(click))
             {
                 return this.handleAttackKey(mc);
             }
@@ -100,7 +102,7 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
     }
 
     @Override
-    public boolean onMouseScroll(int mouseX, int mouseY, double dWheel)
+    public boolean onMouseScroll(double mouseX, double mouseY, double dWheel)
     {
         //Litematica.debugLog("Mouse scroll: x: {}, y; {}, wheel: {}", mouseX, mouseY, dWheel);
         MinecraftClient mc = MinecraftClient.getInstance();

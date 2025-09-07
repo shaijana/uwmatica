@@ -20,6 +20,7 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.block.entity.BlockEntityRenderer;
+import net.minecraft.client.render.block.entity.state.BlockEntityRenderState;
 import net.minecraft.client.render.model.BlockModelPart;
 import net.minecraft.client.util.BufferAllocator;
 import net.minecraft.client.util.math.MatrixStack;
@@ -39,7 +40,6 @@ import fi.dy.masa.malilib.util.EntityUtils;
 import fi.dy.masa.malilib.util.IntBoundingBox;
 import fi.dy.masa.malilib.util.LayerRange;
 import fi.dy.masa.malilib.util.data.Color4f;
-import fi.dy.masa.malilib.util.game.BlockUtils;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
@@ -1009,19 +1009,19 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
                 // Wrong block
                 else if (stateSchematic.getBlock() != stateClient.getBlock())
                 {
-                    if (Configs.Generic.ENABLE_DIFFERENT_BLOCKS.getBooleanValue() &&
-                        BlockUtils.isInSameGroup(stateSchematic, stateClient))
-                    {
-                        if (BlockUtils.matchPropertiesOnly(stateSchematic, stateClient))
-                        {
-                            // Different block of a common BlockTags Group, and same state
-                            return OverlayType.DIFF_BLOCK;
-                        }
-                        else
-                        {
-                            return OverlayType.WRONG_STATE;
-                        }
-                    }
+//                    if (Configs.Generic.ENABLE_DIFFERENT_BLOCKS.getBooleanValue() &&
+//						BlockUtils.isInSameGroup(stateSchematic, stateClient))
+//                    {
+//                        if (BlockUtils.matchPropertiesOnly(stateSchematic, stateClient))
+//                        {
+//                            // Different block of a common BlockTags Group, and same state
+//                            return OverlayType.DIFF_BLOCK;
+//                        }
+//                        else
+//                        {
+//                            return OverlayType.WRONG_STATE;
+//                        }
+//                    }
 
                     return OverlayType.WRONG_BLOCK;
                 }
@@ -1065,26 +1065,25 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
                     overlayColor = Configs.Colors.SCHEMATIC_OVERLAY_COLOR_WRONG_STATE.getColor();
                 }
                 break;
-            case DIFF_BLOCK:
-                if (Configs.Visuals.SCHEMATIC_OVERLAY_TYPE_DIFF_BLOCK.getBooleanValue())
-                {
-                    overlayColor = Configs.Colors.SCHEMATIC_OVERLAY_COLOR_DIFF_BLOCK.getColor();
-                }
-                break;
+//            case DIFF_BLOCK:
+//                if (Configs.Visuals.SCHEMATIC_OVERLAY_TYPE_DIFF_BLOCK.getBooleanValue())
+//                {
+//                    overlayColor = Configs.Colors.SCHEMATIC_OVERLAY_COLOR_DIFF_BLOCK.getColor();
+//                }
+//                break;
             default:
         }
 
         return overlayColor;
     }
 
-//    private void addBlockEntity(BlockPos pos, ChunkRenderDataSchematic chunkRenderData, Set<BlockEntity> blockEntities)
     private <T extends BlockEntity> void addBlockEntity(BlockPos pos, ChunkRenderDataSchematic chunkRenderData)
     {
         BlockEntity te = this.schematicWorldView.getBlockEntity(pos, WorldChunk.CreationType.CHECK);
 
         if (te != null)
         {
-            BlockEntityRenderer<BlockEntity> tesr = this.worldRenderer.getBlockEntityRenderer().get(te);
+            BlockEntityRenderer<BlockEntity, BlockEntityRenderState> tesr = this.worldRenderer.getBlockEntityRenderer().get(te);
 
             if (tesr != null)
             {
@@ -1093,7 +1092,6 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
                 // noCullingTE
                 if (tesr.rendersOutsideBoundingBox())
                 {
-//                    blockEntities.add(te);
                     chunkRenderData.addNoCullBlockEntity(te);
                 }
             }

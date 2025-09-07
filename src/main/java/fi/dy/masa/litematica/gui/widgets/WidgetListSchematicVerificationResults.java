@@ -10,16 +10,15 @@ import net.minecraft.block.BlockState;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.item.ItemStack;
 
-import fi.dy.masa.litematica.config.Configs;
+import fi.dy.masa.malilib.gui.widgets.WidgetListBase;
+import fi.dy.masa.malilib.util.ItemType;
+import fi.dy.masa.malilib.util.StringUtils;
 import fi.dy.masa.litematica.gui.GuiSchematicVerifier;
 import fi.dy.masa.litematica.gui.GuiSchematicVerifier.BlockMismatchEntry;
 import fi.dy.masa.litematica.schematic.verifier.SchematicVerifier.BlockMismatch;
 import fi.dy.masa.litematica.schematic.verifier.SchematicVerifier.MismatchType;
 import fi.dy.masa.litematica.schematic.verifier.VerifierResultSorter;
 import fi.dy.masa.litematica.util.ItemUtils;
-import fi.dy.masa.malilib.gui.widgets.WidgetListBase;
-import fi.dy.masa.malilib.util.ItemType;
-import fi.dy.masa.malilib.util.StringUtils;
 
 public class WidgetListSchematicVerificationResults extends WidgetListBase<BlockMismatchEntry, WidgetSchematicVerificationResult>
 {
@@ -90,10 +89,10 @@ public class WidgetListSchematicVerificationResults extends WidgetListBase<Block
         if (type == MismatchType.ALL)
         {
             this.addEntriesForType(MismatchType.WRONG_BLOCK);
-            if (Configs.Generic.ENABLE_DIFFERENT_BLOCKS.getBooleanValue())
-            {
-                this.addEntriesForType(MismatchType.DIFF_BLOCK);
-            }
+//            if (Configs.Generic.ENABLE_DIFFERENT_BLOCKS.getBooleanValue())
+//            {
+//                this.addEntriesForType(MismatchType.DIFF_BLOCK);
+//            }
             this.addEntriesForType(MismatchType.WRONG_STATE);
             this.addEntriesForType(MismatchType.EXTRA);
             this.addEntriesForType(MismatchType.MISSING);

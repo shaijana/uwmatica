@@ -132,6 +132,7 @@ public abstract class MixinWorldRenderer
         this.profiler = profiler;
         LitematicaRenderer.getInstance().capturePreMainValues(fog, profiler);
 		LitematicaRenderer.getInstance().piecewisePrepareEntities(camera, this.frustum, tickCounter, this.profiler);
+		LitematicaRenderer.getInstance().piecewisePrepareBlockEntities(camera, this.frustum, tickCounter.getTickProgress(false), this.profiler);
     }
 
     @Inject(method = "renderBlockLayers", at = @At("TAIL"))
@@ -217,8 +218,9 @@ public abstract class MixinWorldRenderer
 		LitematicaRenderer.getInstance().piecewiseRenderEntities(matrices, renderStates, queue, this.profiler);
 	}
 
-    @Inject(method = "renderBlockEntities", at = @At(value = "RETURN"))
-    private void litematica_onPostRenderBlockEntities(MatrixStack matrices, Camera camera, float f, CallbackInfo ci)
+	// FIXME -- Done too soon, before the chunks are built.
+	@Inject(method = "fillBlockEntityRenderStates", at = @At(value = "RETURN"))
+    private void litematica_onPostPrepareBlockEntities(Camera camera, float tickProgress, EntityRenderStates renderStates, CallbackInfo ci)
     {
         if (this.profiler == null)
         {
@@ -230,7 +232,23 @@ public abstract class MixinWorldRenderer
             this.profiler.startTick();
         }
 
-        LitematicaRenderer.getInstance().piecewisePrepareBlockEntities(matrices, this.entityRenderCommandQueue, f, this.profiler);
+        LitematicaRenderer.getInstance().piecewisePrepareBlockEntities(camera, this.frustum, tickProgress, this.profiler);
+    }
+
+    @Inject(method = "renderBlockEntities", at = @At(value = "RETURN"))
+    private void litematica_onPostRenderBlockEntities(MatrixStack matrices, Camera camera, EntityRenderStates renderStates, OrderedRenderCommandQueueImpl queue, CallbackInfo ci)
+    {
+        if (this.profiler == null)
+        {
+            this.profiler = Profilers.get();
+        }
+
+        if (this.profiler instanceof ProfilerSystem ps && !((IMixinProfilerSystem) ps).litematica_isStarted())
+        {
+            this.profiler.startTick();
+        }
+
+        LitematicaRenderer.getInstance().piecewiseRenderBlockEntities(matrices, camera, renderStates, this.entityRenderCommandQueue, this.profiler);
     }
 
 //    @Inject(method = "renderTargetBlockOutline(Lnet/minecraft/client/render/Camera;Lnet/minecraft/client/render/VertexConsumerProvider$Immediate;Lnet/minecraft/client/util/math/MatrixStack;Z)V",

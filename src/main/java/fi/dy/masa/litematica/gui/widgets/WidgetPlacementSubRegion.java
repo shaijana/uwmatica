@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import com.google.common.collect.ImmutableList;
 
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
@@ -73,9 +74,9 @@ public class WidgetPlacementSubRegion extends WidgetListEntryBase<SubRegionPlace
     }
 
     @Override
-    public boolean canSelectAt(int mouseX, int mouseY, int mouseButton)
+    public boolean canSelectAt(Click click)
     {
-        return mouseX < this.buttonsStartX && super.canSelectAt(mouseX, mouseY, mouseButton);
+        return click.x() < this.buttonsStartX && super.canSelectAt(click);
     }
 
     @Override

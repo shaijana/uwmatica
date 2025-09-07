@@ -10,6 +10,9 @@ import net.minecraft.item.Items;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.entry.RegistryEntry;
 
+import fi.dy.masa.malilib.data.CachedBlockTags;
+import fi.dy.masa.malilib.data.CachedItemTags;
+
 /**
  * Caches Block/Item Tags as if they are real Vanilla Block/Item tags.
  */

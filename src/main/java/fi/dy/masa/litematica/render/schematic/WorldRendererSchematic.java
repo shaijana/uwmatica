@@ -21,8 +21,8 @@ import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.block.BlockRenderManager;
 import net.minecraft.client.render.block.entity.BlockEntityRenderManager;
+import net.minecraft.client.render.block.entity.state.BlockEntityRenderState;
 import net.minecraft.client.render.command.OrderedRenderCommandQueue;
-import net.minecraft.client.render.command.OrderedRenderCommandQueueImpl;
 import net.minecraft.client.render.entity.EntityRenderManager;
 import net.minecraft.client.render.entity.EntityRenderStates;
 import net.minecraft.client.render.entity.state.EntityRenderState;
@@ -1145,7 +1145,7 @@ public class WorldRendererSchematic
 
 						EntityRenderState state = this.entityRenderManager.getAndUpdateRenderState(entityTmp, tickProgress);
 //						entityRenderStates.states.add(state);
-						this.entityRenderStates.states.add(state);
+						this.entityRenderStates.entityStates.add(state);
 
 //                        this.entityRenderManager.render(entityTmp, x, y, z, partialTicks, matrices, immediate, this.entityRenderManager.getLight(entityTmp, partialTicks));
                         ++this.countEntitiesRendered;
@@ -1169,7 +1169,7 @@ public class WorldRendererSchematic
 
 		profiler.push("render_entities");
 
-		for (EntityRenderState state : this.entityRenderStates.states)
+		for (EntityRenderState state : this.entityRenderStates.entityStates)
 		{
 			this.entityRenderManager.render(state, state.x - cameraX, state.y - cameraY, state.z - cameraZ, matrices, queue);
 		}
@@ -1177,7 +1177,7 @@ public class WorldRendererSchematic
 		profiler.pop();
 	}
 
-	public void prepareBlockEntities(Camera camera, Frustum frustum, MatrixStack matrices, OrderedRenderCommandQueueImpl queue, float partialTicks, Profiler profiler)
+	public void prepareBlockEntities(Camera camera, Frustum frustum, MatrixStack matrices, float tickProgress, Profiler profiler)
     {
         this.profiler = profiler;
         profiler.push("block_entities_prepare");
@@ -1187,16 +1187,9 @@ public class WorldRendererSchematic
         double cameraZ = camera.getPos().z;
 
         this.blockEntityRenderManager.configure(this.world, camera, this.mc.crosshairTarget);
-
-//        MatrixStack matrixStack = new MatrixStack();
-//        matrixStack.push();
-//        matrixStack.multiplyPositionMatrix(posMatrix);
-//        matrixStack.pop();
-
-//        VertexConsumerProvider.Immediate immediate = this.bufferBuilders.getEntityVertexConsumers();
         LayerRange layerRange = DataManager.getRenderLayerRange();
 
-        profiler.swap("block_entities");
+		profiler.swap("block_entities");
         this.profiler = profiler;
 
         profiler.swap("render_be");
@@ -1225,7 +1218,8 @@ public class WorldRendererSchematic
                         {
                             matrices.push();
                             matrices.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
-                            this.blockEntityRenderManager.render(te, partialTicks, matrices, null, queue);
+                            BlockEntityRenderState state = this.blockEntityRenderManager.getRenderState(te, tickProgress, null);
+							this.entityRenderStates.blockEntityRenderStates.add(state);
 							// Ignore crumbling, because there is no point in the Schem World.
                             matrices.pop();
                         }
@@ -1237,8 +1231,6 @@ public class WorldRendererSchematic
                 }
             }
         }
-
-//        immediate2.drawCurrentLayer();
 
         profiler.swap("render_be_no_cull");
         synchronized (this.blockEntities)
@@ -1256,7 +1248,8 @@ public class WorldRendererSchematic
                 {
                     matrices.push();
                     matrices.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
-                    this.blockEntityRenderManager.render(te, partialTicks, matrices, null, queue);
+					BlockEntityRenderState state = this.blockEntityRenderManager.getRenderState(te, tickProgress, null);
+					this.entityRenderStates.blockEntityRenderStates.add(state);
                     matrices.pop();
                 }
                 catch (Exception err)
@@ -1266,9 +1259,29 @@ public class WorldRendererSchematic
             }
         }
 
-//        immediate.drawCurrentLayer();
         profiler.pop();
     }
+
+	public void renderBlockEntities(Camera camera, Frustum frustum, MatrixStack matrices, EntityRenderStates renderStates, OrderedRenderCommandQueue queue, Profiler profiler)
+	{
+		Vec3d cameraPos = camera.getPos();
+		double cameraX = cameraPos.getX();
+		double cameraY = cameraPos.getY();
+		double cameraZ = cameraPos.getZ();
+
+		profiler.push("render_block_entities");
+
+		for (BlockEntityRenderState state : this.entityRenderStates.blockEntityRenderStates)
+		{
+			BlockPos pos = state.pos;
+			matrices.push();
+			matrices.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
+			this.blockEntityRenderManager.render(state, matrices, queue);
+			matrices.pop();
+		}
+
+		profiler.pop();
+	}
 
     /*
     private boolean isOutlineActive(Entity entityIn, Entity viewer, Camera camera)

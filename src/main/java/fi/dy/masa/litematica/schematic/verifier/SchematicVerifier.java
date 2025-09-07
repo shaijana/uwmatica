@@ -27,7 +27,6 @@ import fi.dy.masa.malilib.util.IntBoundingBox;
 import fi.dy.masa.malilib.util.LayerRange;
 import fi.dy.masa.malilib.util.StringUtils;
 import fi.dy.masa.malilib.util.data.Color4f;
-import fi.dy.masa.malilib.util.game.BlockUtils;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.render.infohud.IInfoHudRenderer;
@@ -36,11 +35,7 @@ import fi.dy.masa.litematica.render.infohud.RenderPhase;
 import fi.dy.masa.litematica.scheduler.TaskScheduler;
 import fi.dy.masa.litematica.scheduler.tasks.TaskBase;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
-import fi.dy.masa.litematica.util.BlockInfoListType;
-import fi.dy.masa.litematica.util.ItemUtils;
-import fi.dy.masa.litematica.util.PositionUtils;
-import fi.dy.masa.litematica.util.IgnoreBlockRegistry;
-import fi.dy.masa.litematica.util.WorldUtils;
+import fi.dy.masa.litematica.util.*;
 import fi.dy.masa.litematica.world.WorldSchematic;
 
 public class SchematicVerifier extends TaskBase implements IInfoHudRenderer
@@ -724,25 +719,26 @@ public class SchematicVerifier extends TaskBase implements IInfoHudRenderer
                     {
                         if (stateSchematic.getBlock() != stateClient.getBlock())
                         {
-                            if (Configs.Generic.ENABLE_DIFFERENT_BLOCKS.getBooleanValue() &&
-                                BlockUtils.isInSameGroup(stateSchematic, stateClient))
-                            {
-                                if (BlockUtils.matchPropertiesOnly(stateSchematic, stateClient))
-                                {
-                                    mismatch = new BlockMismatch(MismatchType.DIFF_BLOCK, stateSchematic, stateClient, 1);
-                                    this.diffBlocksPositions.put(Pair.of(stateSchematic, stateClient), pos);
-                                }
-                                else
-                                {
-                                    mismatch = new BlockMismatch(MismatchType.WRONG_STATE, stateSchematic, stateClient, 1);
-                                    this.wrongStatesPositions.put(Pair.of(stateSchematic, stateClient), pos);
-                                }
-                            }
-                            else
-                            {
+							// FIXME TODO
+//                            if (Configs.Generic.ENABLE_DIFFERENT_BLOCKS.getBooleanValue() &&
+//                                BlockUtils.isInSameGroup(stateSchematic, stateClient))
+//                            {
+//                                if (BlockUtils.matchPropertiesOnly(stateSchematic, stateClient))
+//                                {
+//                                    mismatch = new BlockMismatch(MismatchType.DIFF_BLOCK, stateSchematic, stateClient, 1);
+//                                    this.diffBlocksPositions.put(Pair.of(stateSchematic, stateClient), pos);
+//                                }
+//                                else
+//                                {
+//                                    mismatch = new BlockMismatch(MismatchType.WRONG_STATE, stateSchematic, stateClient, 1);
+//                                    this.wrongStatesPositions.put(Pair.of(stateSchematic, stateClient), pos);
+//                                }
+//                            }
+//                            else
+//                            {
                                 mismatch = new BlockMismatch(MismatchType.WRONG_BLOCK, stateSchematic, stateClient, 1);
                                 this.wrongBlocksPositions.put(Pair.of(stateSchematic, stateClient), pos);
-                            }
+//                            }
                         }
                         else
                         {
