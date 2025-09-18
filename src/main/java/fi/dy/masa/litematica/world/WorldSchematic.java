@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.function.Predicate;
 import javax.annotation.Nonnull;
 import com.google.common.collect.ImmutableList;
+import net.minecraft.world.WorldProperties;
 import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.block.Block;
@@ -61,15 +62,16 @@ public class WorldSchematic extends World
 
     protected final MinecraftClient mc;
     protected final ChunkManagerSchematic chunkManagerSchematic;
-    protected RegistryEntry<Biome> biome;
     @Nullable protected final WorldRendererSchematic worldRenderer;
-    protected int nextEntityId;
-    protected int entityCount;
     private final TickManager tickManager;
     private final RegistryEntry<DimensionType> dimensionType;
-    private DimensionEffects dimensionEffects = new DimensionEffects.Overworld();
     private final HashMap<UUID, ChunkPos> entityMap;
     private final SchematicEntityLookup<Entity> entityLookup;
+    protected RegistryEntry<Biome> biome;
+    private DimensionEffects dimensionEffects = new DimensionEffects.Overworld();
+    private WorldProperties.class_12064 properties;
+    protected int nextEntityId;
+    protected int entityCount;
 
     public WorldSchematic(MutableWorldProperties properties,
                           @Nonnull DynamicRegistryManager registryManager,
@@ -102,6 +104,7 @@ public class WorldSchematic extends World
         this.entityCount = 0;
         this.entityMap = new HashMap<>();
         this.entityLookup = new SchematicEntityLookup<>();
+        this.properties = WorldProperties.class_12064.field_63048;
     }
 
     @Override
@@ -168,7 +171,6 @@ public class WorldSchematic extends World
 
     public int getRegularEntityCount()
     {
-//        return this.entityCount;
         return this.entityLookup.size();
     }
 
@@ -543,23 +545,6 @@ public class WorldSchematic extends World
         return this.getChunkManager().getLightingProvider();
     }
 
-    // todo --> moved to Fake Lighting Provider
-    /*
-    @Override
-    public int getLightLevel(LightType type, BlockPos pos)
-    {
-        //return Configs.Visuals.RENDER_FAKE_LIGHTING_LEVEL != null ? Configs.Visuals.RENDER_FAKE_LIGHTING_LEVEL.getIntegerValue() : 15;
-        return 15;
-    }
-
-    @Override
-    public int getBaseLightLevel(BlockPos pos, int defaultValue)
-    {
-        //return Configs.Visuals.RENDER_FAKE_LIGHTING_LEVEL != null ? Configs.Visuals.RENDER_FAKE_LIGHTING_LEVEL.getIntegerValue() : 15;
-        return 15;
-    }
-     */
-
     @Override
     public void updateListeners(BlockPos blockPos_1, BlockState blockState_1, BlockState blockState_2, int flags)
     {
@@ -623,7 +608,14 @@ public class WorldSchematic extends World
     @Override
     public FuelRegistry getFuelRegistry()
     {
-        return null;
+        if (this.mc != null && this.mc.world != null)
+        {
+            return this.mc.world.getFuelRegistry();
+        }
+        else
+        {
+            return null;
+        }
     }
 
     @Override
@@ -643,6 +635,18 @@ public class WorldSchematic extends World
     public String asString()
     {
         return "Chunks[SCH] W: "+this.getChunkManager().getDebugString()+" E: "+this.getRegularEntityCount()+" (eL: "+this.entityLookup.size()+"/"+ this.entityMap.size()+")";
+    }
+
+    @Override
+    public void setSpawnPos(WorldProperties.class_12064 arg)
+    {
+        this.properties = new WorldProperties.class_12064(arg.globalPos(), arg.pitch(), arg.yaw());
+    }
+
+    @Override
+    public WorldProperties.class_12064 method_74854()
+    {
+        return this.properties;
     }
 
     @Override

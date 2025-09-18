@@ -1,30 +1,41 @@
 package fi.dy.masa.litematica.data;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.item.Item;
+import fi.dy.masa.litematica.Reference;
+import fi.dy.masa.malilib.data.CachedItemTags;
+import fi.dy.masa.malilib.data.CachedTagKey;
 import net.minecraft.item.Items;
 import net.minecraft.registry.Registries;
-import net.minecraft.registry.entry.RegistryEntry;
 
-import fi.dy.masa.malilib.data.CachedBlockTags;
-import fi.dy.masa.malilib.data.CachedItemTags;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Caches Block/Item Tags as if they are real Vanilla Block/Item tags.
  */
 public class CachedTagManager
 {
-	public static final String GLASS_ITEMS_KEY = "glass_items";
-	public static final String GLASS_PANE_ITEMS_KEY = "glass_pane_items";
-	public static final String CONCRETE_POWDER_ITEMS_KEY = "concrete_powder_items";
-	public static final String CONCRETE_ITEMS_KEY = "concrete_items";
-	public static final String GLAZED_TERRACOTTA_ITEMS_KEY = "glazed_terracotta_items";
-	public static final String PACKED_BLOCK_ITEMS_KEY = "packed_block_items";
-    public static final String UNPACKED_BLOCK_ITEMS_KEY = "unpacked_block_items";
+	public static final CachedTagKey GLASS_ITEMS_KEY                = new CachedTagKey(Reference.MOD_ID, "glass_items");
+	public static final CachedTagKey GLASS_PANE_ITEMS_KEY           = new CachedTagKey(Reference.MOD_ID, "glass_pane_items");
+	public static final CachedTagKey CONCRETE_POWDER_ITEMS_KEY      = new CachedTagKey(Reference.MOD_ID, "concrete_powder_items");
+	public static final CachedTagKey CONCRETE_ITEMS_KEY             = new CachedTagKey(Reference.MOD_ID, "concrete_items");
+	public static final CachedTagKey GLAZED_TERRACOTTA_ITEMS_KEY    = new CachedTagKey(Reference.MOD_ID, "glazed_terracotta_items");
+	public static final CachedTagKey PACKED_BLOCK_ITEMS_KEY         = new CachedTagKey(Reference.MOD_ID, "packed_block_items");
+    public static final CachedTagKey UNPACKED_BLOCK_ITEMS_KEY       = new CachedTagKey(Reference.MOD_ID, "unpacked_block_items");
+
+    public List<CachedTagKey> getKeys()
+    {
+        List<CachedTagKey> list = new ArrayList<>();
+
+        list.add(GLASS_ITEMS_KEY);
+        list.add(GLASS_PANE_ITEMS_KEY);
+        list.add(CONCRETE_POWDER_ITEMS_KEY);
+        list.add(CONCRETE_ITEMS_KEY);
+        list.add(GLAZED_TERRACOTTA_ITEMS_KEY);
+        list.add(PACKED_BLOCK_ITEMS_KEY);
+        list.add(UNPACKED_BLOCK_ITEMS_KEY);
+
+        return list;
+    }
 
     public static void startCache()
     {
@@ -229,60 +240,5 @@ public class CachedTagManager
 		CachedItemTags.getInstance().clearEntry(GLAZED_TERRACOTTA_ITEMS_KEY);
 		CachedItemTags.getInstance().clearEntry(PACKED_BLOCK_ITEMS_KEY);
 		CachedItemTags.getInstance().clearEntry(UNPACKED_BLOCK_ITEMS_KEY);
-    }
-
-    /**
-     * Match Cached Block Tags
-     * @param key (Tag List Key)
-     * @param block (Block Entry)
-     * @return ()
-     */
-    public static boolean matchBlockTag(String key, RegistryEntry<Block> block)
-    {
-        return CachedBlockTags.getInstance().match(key, block);
-    }
-
-    /**
-     * Match Cached Block Tags
-     * @param key (Tag List Key)
-     * @param block (Block)
-     * @return ()
-     */
-    public static boolean matchBlockTag(String key, Block block)
-    {
-        return CachedBlockTags.getInstance().match(key, block);
-    }
-
-    /**
-     * Match Cached Block Tags
-     * @param key (Tag List Key)
-     * @param state (Block State)
-     * @return ()
-     */
-    public static boolean matchBlockTag(String key, BlockState state)
-    {
-        return CachedBlockTags.getInstance().match(key, state);
-    }
-
-    /**
-     * Match Cached Block Tags
-     * @param key (Tag List Key)
-     * @param item (Item Entry)
-     * @return ()
-     */
-    public static boolean matchItemTag(String key, RegistryEntry<Item> item)
-    {
-        return CachedItemTags.getInstance().match(key, item);
-    }
-
-    /**
-     * Match Cached Block Tags
-     * @param key (Tag List Key)
-     * @param item (Item)
-     * @return ()
-     */
-    public static boolean matchItemTag(String key, Item item)
-    {
-        return CachedItemTags.getInstance().match(key, item);
     }
 }

@@ -1,6 +1,8 @@
 package fi.dy.masa.litematica.mixin.render;
 
 import com.llamalad7.mixinextras.sugar.Local;
+import net.minecraft.client.render.state.WorldRenderState;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 import org.joml.Vector4f;
@@ -11,7 +13,6 @@ import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.command.OrderedRenderCommandQueue;
 import net.minecraft.client.render.command.OrderedRenderCommandQueueImpl;
-import net.minecraft.client.render.entity.EntityRenderStates;
 import net.minecraft.client.util.Handle;
 import net.minecraft.client.util.ObjectAllocator;
 import net.minecraft.client.util.math.MatrixStack;
@@ -36,9 +37,9 @@ public abstract class MixinWorldRenderer
 {
     @Shadow private net.minecraft.client.world.ClientWorld world;
     @Shadow @Final private MinecraftClient client;
-    @Shadow private Frustum frustum;
 	@Shadow @Final private OrderedRenderCommandQueueImpl entityRenderCommandQueue;
-	@Unique private Profiler profiler;
+    @Shadow private @Nullable Frustum capturedFrustum;
+    @Unique private Profiler profiler;
 
     @Inject(method = "reload()V", at = @At("RETURN"))
     private void litematica_onLoadRenderers(CallbackInfo ci)
@@ -60,22 +61,21 @@ public abstract class MixinWorldRenderer
         }
     }
 
-//    @Inject(method = "setupTerrain", at = @At("TAIL"))
-//    private void litematica_onPostSetupTerrain(
-//            Camera camera, Frustum frustum, boolean hasForcedFrustum, boolean spectator, CallbackInfo ci)
-//    {
-//        if (this.profiler == null)
-//        {
-//            this.profiler = Profilers.get();
-//        }
-//        if (this.profiler instanceof ProfilerSystem ps && !((IMixinProfilerSystem) ps).litematica_isStarted())
-//        {
-//            this.profiler.startTick();
-//        }
-//
-//        LitematicaRenderer.getInstance().piecewisePrepareAndUpdate(frustum, this.profiler);
-//        LitematicaRenderer.getInstance().scheduleTranslucentSorting(camera.getCameraPos(), this.profiler);
-//    }
+    @Inject(method = "method_74752", at = @At("TAIL"))
+    private void litematica_onPostSetupTerrain(
+            Camera camera, Frustum frustum, boolean bl, CallbackInfo ci)
+    {
+        if (this.profiler == null)
+        {
+            this.profiler = Profilers.get();
+        }
+        if (this.profiler instanceof ProfilerSystem ps && !((IMixinProfilerSystem) ps).litematica_isStarted())
+        {
+            this.profiler.startTick();
+        }
+
+        LitematicaRenderer.getInstance().piecewisePrepareAndUpdate(frustum, this.profiler);
+    }
 
     @Inject(method = "updateChunks",
             at = @At(value = "INVOKE",
@@ -93,12 +93,7 @@ public abstract class MixinWorldRenderer
             this.profiler.startTick();
         }
 
-        LitematicaRenderer.getInstance().piecewisePrepareAndUpdate(this.frustum, this.profiler);
-
-//        if (SodiumCompat.hasSodium())
-//        {
-            LitematicaRenderer.getInstance().scheduleTranslucentSorting(camera.getPos(), this.profiler);
-//        }
+        LitematicaRenderer.getInstance().scheduleTranslucentSorting(camera.getPos(), this.profiler);
     }
 
 //    @Inject(method = "translucencySort", at = @At("TAIL"))
@@ -122,17 +117,18 @@ public abstract class MixinWorldRenderer
 
     @Inject(method = "render",
             at = @At(value = "INVOKE",
-                    target = "Lnet/minecraft/client/render/WorldRenderer;renderMain(Lnet/minecraft/client/render/FrameGraphBuilder;Lnet/minecraft/client/render/Frustum;Lnet/minecraft/client/render/Camera;Lorg/joml/Matrix4f;Lcom/mojang/blaze3d/buffers/GpuBufferSlice;ZLnet/minecraft/client/render/entity/EntityRenderStates;Lnet/minecraft/client/render/RenderTickCounter;Lnet/minecraft/util/profiler/Profiler;)V",
+                    target = "Lnet/minecraft/client/render/WorldRenderer;renderMain(Lnet/minecraft/client/render/FrameGraphBuilder;Lnet/minecraft/client/render/Frustum;Lorg/joml/Matrix4f;Lcom/mojang/blaze3d/buffers/GpuBufferSlice;ZLnet/minecraft/client/render/state/WorldRenderState;Lnet/minecraft/client/render/RenderTickCounter;Lnet/minecraft/util/profiler/Profiler;)V",
                     shift = At.Shift.BEFORE))
-    private void litematica_onPreRenderMain(ObjectAllocator allocator, RenderTickCounter tickCounter, boolean renderBlockOutline,
-                                            Camera camera, Matrix4f positionMatrix, Matrix4f projectionMatrix,
-                                            GpuBufferSlice fog, Vector4f fogColor, boolean shouldRenderSky, CallbackInfo ci,
-                                            @Local Profiler profiler)
+    private void litematica_onPreRenderMain(ObjectAllocator allocator, RenderTickCounter tickCounter,
+                                            boolean renderBlockOutline, Camera camera, Matrix4f matrix4f,
+                                            Matrix4f projectionMatrix, Matrix4f matrix4f2,
+                                            GpuBufferSlice gpuBufferSlice, Vector4f vector4f, boolean bl,
+                                            CallbackInfo ci, @Local Profiler profiler)
     {
         this.profiler = profiler;
-        LitematicaRenderer.getInstance().capturePreMainValues(fog, profiler);
-		LitematicaRenderer.getInstance().piecewisePrepareEntities(camera, this.frustum, tickCounter, this.profiler);
-		LitematicaRenderer.getInstance().piecewisePrepareBlockEntities(camera, this.frustum, tickCounter.getTickProgress(false), this.profiler);
+        LitematicaRenderer.getInstance().capturePreMainValues(camera, gpuBufferSlice, profiler);
+//		LitematicaRenderer.getInstance().piecewisePrepareEntities(camera, this.capturedFrustum, tickCounter, this.profiler);
+//		LitematicaRenderer.getInstance().piecewisePrepareBlockEntities(camera, this.capturedFrustum, tickCounter.getTickProgress(false), this.profiler);
     }
 
     @Inject(method = "renderBlockLayers", at = @At("TAIL"))
@@ -148,62 +144,68 @@ public abstract class MixinWorldRenderer
         }
 
         LitematicaRenderer.getInstance().piecewisePrepareBlockLayers(matrix4fc, d, e, f, this.profiler);
-
-//        // Fix Sodium Compat
-//        if (SodiumCompat.hasSodium())
-//        {
-//            LitematicaRenderer.getInstance().piecewiseDrawBlockLayerGroup(BlockRenderLayerGroup.OPAQUE);
-//            SodiumCompat.startBlockOutlineEnabled();
-//        }
     }
 
 	// BYTECODE Lamba Mixin for Section Group rendering
-	@Inject(method = "method_62214(Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lnet/minecraft/client/render/RenderTickCounter;Lnet/minecraft/client/render/Camera;Lnet/minecraft/util/profiler/Profiler;Lorg/joml/Matrix4f;Lnet/minecraft/client/util/Handle;Lnet/minecraft/client/util/Handle;Lnet/minecraft/client/render/entity/EntityRenderStates;ZLnet/minecraft/client/render/Frustum;Lnet/minecraft/client/util/Handle;Lnet/minecraft/client/util/Handle;)V",
+	@Inject(method = "method_62214(Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lnet/minecraft/client/render/state/WorldRenderState;Lnet/minecraft/util/profiler/Profiler;Lorg/joml/Matrix4f;Lnet/minecraft/client/util/Handle;Lnet/minecraft/client/util/Handle;ZLnet/minecraft/client/render/Frustum;Lnet/minecraft/client/util/Handle;Lnet/minecraft/client/util/Handle;)V",
 			at = @At(value = "INVOKE",
 					 target = "net/minecraft/client/render/SectionRenderState.renderSection (Lnet/minecraft/client/render/BlockRenderLayerGroup;)V",
 					 ordinal = 0))
-		private void litematica_renderMainSection_Opaque(GpuBufferSlice gpuBufferSlice, RenderTickCounter renderTickCounter, Camera camera, Profiler profiler, Matrix4f matrix4f, Handle<Framebuffer> handle, Handle<Framebuffer> handle2, EntityRenderStates entityRenderStates, boolean bl, Frustum frustum, Handle<Framebuffer> handle3, Handle<Framebuffer> handle4, CallbackInfo ci)
+		private void litematica_renderMainSection_Opaque(GpuBufferSlice gpuBufferSlice,
+                                                         WorldRenderState worldRenderState, Profiler profiler,
+                                                         Matrix4f matrix4f, Handle<Framebuffer> handle, Handle<Framebuffer> handle2, boolean bl,
+                                                         Frustum frustum, Handle<Framebuffer> handle3, Handle<Framebuffer> handle4,
+                                                         CallbackInfo ci)
 	{
 		LitematicaRenderer.getInstance().piecewiseDrawBlockLayerGroup(BlockRenderLayerGroup.OPAQUE);
 	}
 
-	@Inject(method = "method_62214(Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lnet/minecraft/client/render/RenderTickCounter;Lnet/minecraft/client/render/Camera;Lnet/minecraft/util/profiler/Profiler;Lorg/joml/Matrix4f;Lnet/minecraft/client/util/Handle;Lnet/minecraft/client/util/Handle;Lnet/minecraft/client/render/entity/EntityRenderStates;ZLnet/minecraft/client/render/Frustum;Lnet/minecraft/client/util/Handle;Lnet/minecraft/client/util/Handle;)V",
+	@Inject(method = "method_62214(Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lnet/minecraft/client/render/state/WorldRenderState;Lnet/minecraft/util/profiler/Profiler;Lorg/joml/Matrix4f;Lnet/minecraft/client/util/Handle;Lnet/minecraft/client/util/Handle;ZLnet/minecraft/client/render/Frustum;Lnet/minecraft/client/util/Handle;Lnet/minecraft/client/util/Handle;)V",
 			at = @At(value = "INVOKE",
 					 target = "net/minecraft/client/render/SectionRenderState.renderSection (Lnet/minecraft/client/render/BlockRenderLayerGroup;)V",
 					 ordinal = 1))
-	private void litematica_renderMainSection_Translucent(GpuBufferSlice gpuBufferSlice, RenderTickCounter renderTickCounter, Camera camera, Profiler profiler, Matrix4f matrix4f, Handle<Framebuffer> handle, Handle<Framebuffer> handle2, EntityRenderStates entityRenderStates, boolean bl, Frustum frustum, Handle<Framebuffer> handle3, Handle<Framebuffer> handle4, CallbackInfo ci)
+	private void litematica_renderMainSection_Translucent(GpuBufferSlice gpuBufferSlice,
+                                                          WorldRenderState worldRenderState, Profiler profiler,
+                                                          Matrix4f matrix4f, Handle<Framebuffer> handle, Handle<Framebuffer> handle2, boolean bl,
+                                                          Frustum frustum, Handle<Framebuffer> handle3, Handle<Framebuffer> handle4,
+                                                          CallbackInfo ci)
 	{
 		LitematicaRenderer.getInstance().piecewiseDrawBlockLayerGroup(BlockRenderLayerGroup.TRANSLUCENT);
 	}
 
-	@Inject(method = "method_62214(Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lnet/minecraft/client/render/RenderTickCounter;Lnet/minecraft/client/render/Camera;Lnet/minecraft/util/profiler/Profiler;Lorg/joml/Matrix4f;Lnet/minecraft/client/util/Handle;Lnet/minecraft/client/util/Handle;Lnet/minecraft/client/render/entity/EntityRenderStates;ZLnet/minecraft/client/render/Frustum;Lnet/minecraft/client/util/Handle;Lnet/minecraft/client/util/Handle;)V",
+	@Inject(method = "method_62214(Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lnet/minecraft/client/render/state/WorldRenderState;Lnet/minecraft/util/profiler/Profiler;Lorg/joml/Matrix4f;Lnet/minecraft/client/util/Handle;Lnet/minecraft/client/util/Handle;ZLnet/minecraft/client/render/Frustum;Lnet/minecraft/client/util/Handle;Lnet/minecraft/client/util/Handle;)V",
 			at = @At(value = "INVOKE",
 					 target = "net/minecraft/client/render/SectionRenderState.renderSection (Lnet/minecraft/client/render/BlockRenderLayerGroup;)V",
 					 ordinal = 2))
-	private void litematica_renderMainSection_Tripwire(GpuBufferSlice gpuBufferSlice, RenderTickCounter renderTickCounter, Camera camera, Profiler profiler, Matrix4f matrix4f, Handle<Framebuffer> handle, Handle<Framebuffer> handle2, EntityRenderStates entityRenderStates, boolean bl, Frustum frustum, Handle<Framebuffer> handle3, Handle<Framebuffer> handle4, CallbackInfo ci)
+	private void litematica_renderMainSection_Tripwire(GpuBufferSlice gpuBufferSlice, WorldRenderState worldRenderState,
+                                                       Profiler profiler, Matrix4f matrix4f, Handle<Framebuffer> handle,
+                                                       Handle<Framebuffer> handle2, boolean bl, Frustum frustum, Handle<Framebuffer> handle3,
+                                                       Handle<Framebuffer> handle4, CallbackInfo ci)
 	{
 		LitematicaRenderer.getInstance().piecewiseDrawBlockLayerGroup(BlockRenderLayerGroup.TRIPWIRE);
 	}
 
 	// FIXME -- Done too soon, before the chunks are built.
-//	@Inject(method = "fillEntityRenderStates", at = @At(value = "RETURN"))
-//    private void litematica_onPostPrepareEntities(Camera camera, Frustum frustum, RenderTickCounter tickCounter, EntityRenderStates entityRenderStates, CallbackInfo ci)
-//    {
-//        if (this.profiler == null)
-//        {
-//            this.profiler = Profilers.get();
-//        }
-//
-//        if (this.profiler instanceof ProfilerSystem ps && !((IMixinProfilerSystem) ps).litematica_isStarted())
-//        {
-//            this.profiler.startTick();
-//        }
-//
-//        LitematicaRenderer.getInstance().piecewisePrepareEntities(camera, frustum, tickCounter, entityRenderStates, this.profiler);
-//    }
+	@Inject(method = "fillEntityRenderStates", at = @At(value = "RETURN"))
+    private void litematica_onPostPrepareEntities(Camera camera, Frustum frustum, RenderTickCounter tickCounter,
+                                                  WorldRenderState entityRenderStates, CallbackInfo ci)
+    {
+        if (this.profiler == null)
+        {
+            this.profiler = Profilers.get();
+        }
+
+        if (this.profiler instanceof ProfilerSystem ps && !((IMixinProfilerSystem) ps).litematica_isStarted())
+        {
+            this.profiler.startTick();
+        }
+
+        LitematicaRenderer.getInstance().piecewisePrepareEntities(camera, frustum, entityRenderStates, tickCounter, this.profiler);
+    }
 
 	@Inject(method = "pushEntityRenders", at = @At("RETURN"))
-	private void litematica_onPostRenderEntities(MatrixStack matrices, Camera camera, EntityRenderStates renderStates, OrderedRenderCommandQueue queue, CallbackInfo ci)
+	private void litematica_onPostRenderEntities(MatrixStack matrices, WorldRenderState worldRenderState,
+                                                 OrderedRenderCommandQueue orderedRenderCommandQueue, CallbackInfo ci)
 	{
 		if (this.profiler == null)
 		{
@@ -215,12 +217,13 @@ public abstract class MixinWorldRenderer
 			this.profiler.startTick();
 		}
 
-		LitematicaRenderer.getInstance().piecewiseRenderEntities(matrices, renderStates, queue, this.profiler);
+		LitematicaRenderer.getInstance().piecewiseRenderEntities(matrices, worldRenderState, orderedRenderCommandQueue, this.profiler);
 	}
 
 	// FIXME -- Done too soon, before the chunks are built.
 	@Inject(method = "fillBlockEntityRenderStates", at = @At(value = "RETURN"))
-    private void litematica_onPostPrepareBlockEntities(Camera camera, float tickProgress, EntityRenderStates renderStates, CallbackInfo ci)
+    private void litematica_onPostPrepareBlockEntities(Camera camera, float tickProgress, WorldRenderState renderStates,
+                                                       CallbackInfo ci)
     {
         if (this.profiler == null)
         {
@@ -232,11 +235,13 @@ public abstract class MixinWorldRenderer
             this.profiler.startTick();
         }
 
-        LitematicaRenderer.getInstance().piecewisePrepareBlockEntities(camera, this.frustum, tickProgress, this.profiler);
+        LitematicaRenderer.getInstance().piecewisePrepareBlockEntities(camera, this.capturedFrustum, renderStates, tickProgress, this.profiler);
     }
 
     @Inject(method = "renderBlockEntities", at = @At(value = "RETURN"))
-    private void litematica_onPostRenderBlockEntities(MatrixStack matrices, Camera camera, EntityRenderStates renderStates, OrderedRenderCommandQueueImpl queue, CallbackInfo ci)
+    private void litematica_onPostRenderBlockEntities(MatrixStack matrices, WorldRenderState worldRenderState,
+                                                      OrderedRenderCommandQueueImpl orderedRenderCommandQueueImpl,
+                                                      CallbackInfo ci)
     {
         if (this.profiler == null)
         {
@@ -248,20 +253,6 @@ public abstract class MixinWorldRenderer
             this.profiler.startTick();
         }
 
-        LitematicaRenderer.getInstance().piecewiseRenderBlockEntities(matrices, camera, renderStates, this.entityRenderCommandQueue, this.profiler);
+        LitematicaRenderer.getInstance().piecewiseRenderBlockEntities(matrices, worldRenderState, this.entityRenderCommandQueue, this.profiler);
     }
-
-//    @Inject(method = "renderTargetBlockOutline(Lnet/minecraft/client/render/Camera;Lnet/minecraft/client/render/VertexConsumerProvider$Immediate;Lnet/minecraft/client/util/math/MatrixStack;Z)V",
-//            at = @At("HEAD"))
-//    private void litematica_onRenderTargetOutline(Camera camera, VertexConsumerProvider.Immediate vertexConsumers,
-//                                                  MatrixStack matrices, boolean translucent, CallbackInfo ci)
-//    {
-//        // Fix Sodium Compat
-//        if (SodiumCompat.hasSodium() && translucent)
-//        {
-//            LitematicaRenderer.getInstance().piecewiseDrawBlockLayerGroup(BlockRenderLayerGroup.TRANSLUCENT);
-//            LitematicaRenderer.getInstance().piecewiseDrawBlockLayerGroup(BlockRenderLayerGroup.TRIPWIRE);
-//            SodiumCompat.endBlockOutlineEnabled();
-//        }
-//    }
 }

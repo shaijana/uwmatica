@@ -8,6 +8,7 @@ import java.util.stream.Stream;
 import com.google.common.collect.Iterables;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import fi.dy.masa.malilib.data.CachedTagUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
@@ -128,7 +129,7 @@ public class MaterialListJsonCache
         RegistryEntry<Item> baseItem = currentItem.rawItem();
         if (baseItem == null || mc.world == null) return List.of(currentItem);
 
-        if (CachedTagManager.matchItemTag(CachedTagManager.UNPACKED_BLOCK_ITEMS_KEY, baseItem))
+        if (CachedTagUtils.matchItemTag(CachedTagManager.UNPACKED_BLOCK_ITEMS_KEY, baseItem))
         {
             final int total = currentItem.total();
             Triple<RegistryEntry<Item>, Float, Integer> pair = MaterialListJsonOverrides.INSTANCE.matchPackingOverride(baseItem, total);
