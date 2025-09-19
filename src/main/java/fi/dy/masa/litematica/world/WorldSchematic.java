@@ -69,7 +69,7 @@ public class WorldSchematic extends World
     private final SchematicEntityLookup<Entity> entityLookup;
     protected RegistryEntry<Biome> biome;
     private DimensionEffects dimensionEffects = new DimensionEffects.Overworld();
-    private WorldProperties.class_12064 properties;
+    private WorldProperties.SpawnPoint properties;
     protected int nextEntityId;
     protected int entityCount;
 
@@ -104,7 +104,7 @@ public class WorldSchematic extends World
         this.entityCount = 0;
         this.entityMap = new HashMap<>();
         this.entityLookup = new SchematicEntityLookup<>();
-        this.properties = WorldProperties.class_12064.field_63048;
+        this.properties = WorldProperties.SpawnPoint.DEFAULT;
     }
 
     @Override
@@ -638,13 +638,13 @@ public class WorldSchematic extends World
     }
 
     @Override
-    public void setSpawnPos(WorldProperties.class_12064 arg)
+    public void setSpawnPoint(WorldProperties.SpawnPoint arg)
     {
-        this.properties = new WorldProperties.class_12064(arg.globalPos(), arg.pitch(), arg.yaw());
+        this.properties = new WorldProperties.SpawnPoint(arg.globalPos(), arg.pitch(), arg.yaw());
     }
 
     @Override
-    public WorldProperties.class_12064 method_74854()
+    public WorldProperties.SpawnPoint getSpawnPoint()
     {
         return this.properties;
     }
