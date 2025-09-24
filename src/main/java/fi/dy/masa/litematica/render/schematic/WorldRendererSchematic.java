@@ -1065,7 +1065,7 @@ public class WorldRendererSchematic
                         }
 
 						EntityRenderState state = this.entityRenderManager.getAndUpdateRenderState(entityTmp, tickProgress);
-						this.worldRenderState.entityStates.add(state);
+						this.worldRenderState.entityRenderStates.add(state);
 
                         ++this.countEntitiesRendered;
                     }
@@ -1088,7 +1088,7 @@ public class WorldRendererSchematic
 
 		profiler.push("render_entities");
 
-		for (EntityRenderState state : this.worldRenderState.entityStates)
+		for (EntityRenderState state : this.worldRenderState.entityRenderStates)
 		{
 			this.entityRenderManager.render(state, renderStates.cameraRenderState, state.x - cameraX, state.y - cameraY, state.z - cameraZ, matrices, queue);
 		}

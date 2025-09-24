@@ -720,25 +720,25 @@ public class SchematicVerifier extends TaskBase implements IInfoHudRenderer
                         if (stateSchematic.getBlock() != stateClient.getBlock())
                         {
 							// FIXME TODO
-//                            if (Configs.Generic.ENABLE_DIFFERENT_BLOCKS.getBooleanValue() &&
-//                                BlockUtils.isInSameGroup(stateSchematic, stateClient))
-//                            {
-//                                if (BlockUtils.matchPropertiesOnly(stateSchematic, stateClient))
-//                                {
-//                                    mismatch = new BlockMismatch(MismatchType.DIFF_BLOCK, stateSchematic, stateClient, 1);
-//                                    this.diffBlocksPositions.put(Pair.of(stateSchematic, stateClient), pos);
-//                                }
-//                                else
-//                                {
-//                                    mismatch = new BlockMismatch(MismatchType.WRONG_STATE, stateSchematic, stateClient, 1);
-//                                    this.wrongStatesPositions.put(Pair.of(stateSchematic, stateClient), pos);
-//                                }
-//                            }
-//                            else
-//                            {
+                            if (Configs.Generic.ENABLE_DIFFERENT_BLOCKS.getBooleanValue() &&
+                                fi.dy.masa.malilib.util.game.BlockUtils.isInSameGroup(stateSchematic, stateClient))
+                            {
+                                if (fi.dy.masa.malilib.util.game.BlockUtils.matchPropertiesOnly(stateSchematic, stateClient))
+                                {
+                                    mismatch = new BlockMismatch(MismatchType.DIFF_BLOCK, stateSchematic, stateClient, 1);
+                                    this.diffBlocksPositions.put(Pair.of(stateSchematic, stateClient), pos);
+                                }
+                                else
+                                {
+                                    mismatch = new BlockMismatch(MismatchType.WRONG_STATE, stateSchematic, stateClient, 1);
+                                    this.wrongStatesPositions.put(Pair.of(stateSchematic, stateClient), pos);
+                                }
+                            }
+                            else
+                            {
                                 mismatch = new BlockMismatch(MismatchType.WRONG_BLOCK, stateSchematic, stateClient, 1);
                                 this.wrongBlocksPositions.put(Pair.of(stateSchematic, stateClient), pos);
-//                            }
+                            }
                         }
                         else
                         {
@@ -782,7 +782,7 @@ public class SchematicVerifier extends TaskBase implements IInfoHudRenderer
             int maxEntries = Configs.InfoOverlays.VERIFIER_ERROR_HILIGHT_MAX_POSITIONS.getIntegerValue();
 
             // This needs to happen first
-            BlockPos centerPos = BlockPos.ofFloored(this.mc.player.getPos());
+            BlockPos centerPos = BlockPos.ofFloored(this.mc.player.getEntityPos());
             this.updateClosestPositions(centerPos, maxEntries);
             this.combineClosestPositions(centerPos, maxEntries);
 

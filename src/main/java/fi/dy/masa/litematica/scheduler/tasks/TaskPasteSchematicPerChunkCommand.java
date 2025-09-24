@@ -15,7 +15,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.command.argument.BlockArgumentParser;
 import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.NbtComponent;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.TypedEntityData;
@@ -41,7 +40,6 @@ import fi.dy.masa.malilib.util.IntBoundingBox;
 import fi.dy.masa.malilib.util.LayerRange;
 import fi.dy.masa.malilib.util.game.BlockUtils;
 import fi.dy.masa.malilib.util.position.PositionUtils;
-import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.mixin.block.IMixinAbstractBlock;
@@ -175,7 +173,9 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
     protected void processBlocksInCurrentBoxUsingSetBlockOnly()
     {
         ChunkPos chunkPos = this.currentChunkPos;
+        if (chunkPos == null || this.positionIterator == null || this.mc.world == null) return;
         ChunkSchematic schematicChunk = this.schematicWorld.getChunkProvider().getChunk(chunkPos.x, chunkPos.z);
+        if (schematicChunk == null || this.currentBox == null) return;
         Chunk clientChunk = this.mc.world.getChunk(chunkPos.x, chunkPos.z);
         boolean ignoreLimit = Configs.Generic.PASTE_IGNORE_CMD_LIMIT.getBooleanValue();
 
@@ -205,6 +205,7 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
     protected void processBlocksInCurrentBoxUsingFill()
     {
         ChunkPos chunkPos = this.currentChunkPos;
+        if (chunkPos == null || this.currentBox == null || this.mc.world == null) return;
         final int baseX = chunkPos.x << 4;
         final int baseZ = chunkPos.z << 4;
         ChunkSchematic schematicChunk = this.schematicWorld.getChunkProvider().getChunk(chunkPos.x, chunkPos.z);
@@ -235,6 +236,7 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
 
     protected void processEntitiesInCurrentBox()
     {
+        if (this.entityIterator == null || this.currentBox == null || this.mc.world == null) return;
         while (this.entityIterator.hasNext() && this.queuedCommands.size() < this.maxCommandsPerTick)
         {
             this.summonEntity(this.entityIterator.next());
@@ -561,8 +563,9 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
     protected BlockPos placeNbtPickedBlock(BlockPos pos, BlockState state, BlockEntity be,
                                            @Nonnull World schematicWorld, @Nonnull ClientWorld clientWorld)
     {
+        if (this.mc.player == null || this.mc.interactionManager == null) return null;
         double reach = this.mc.player.getBlockInteractionRange();
-        BlockPos placementPos = this.findEmptyNearbyPosition(clientWorld, this.mc.player.getPos(), 4, reach);
+        BlockPos placementPos = this.findEmptyNearbyPosition(clientWorld, this.mc.player.getEntityPos(), 4, reach);
 
         if (placementPos != null && preparePickedStack(pos, state, be, schematicWorld, this.mc, clientWorld.getRegistryManager()))
         {

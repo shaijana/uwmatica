@@ -3,6 +3,8 @@ package fi.dy.masa.litematica.gui.widgets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import fi.dy.masa.litematica.config.Configs;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 
@@ -89,10 +91,10 @@ public class WidgetListSchematicVerificationResults extends WidgetListBase<Block
         if (type == MismatchType.ALL)
         {
             this.addEntriesForType(MismatchType.WRONG_BLOCK);
-//            if (Configs.Generic.ENABLE_DIFFERENT_BLOCKS.getBooleanValue())
-//            {
-//                this.addEntriesForType(MismatchType.DIFF_BLOCK);
-//            }
+            if (Configs.Generic.ENABLE_DIFFERENT_BLOCKS.getBooleanValue())
+            {
+                this.addEntriesForType(MismatchType.DIFF_BLOCK);
+            }
             this.addEntriesForType(MismatchType.WRONG_STATE);
             this.addEntriesForType(MismatchType.EXTRA);
             this.addEntriesForType(MismatchType.MISSING);

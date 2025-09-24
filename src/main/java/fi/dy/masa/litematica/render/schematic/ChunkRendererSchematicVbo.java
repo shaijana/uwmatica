@@ -6,6 +6,7 @@ import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import com.google.common.collect.Sets;
+import fi.dy.masa.malilib.util.game.BlockUtils;
 import org.apache.logging.log4j.Logger;
 
 import com.mojang.blaze3d.buffers.GpuBuffer;
@@ -1009,19 +1010,19 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
                 // Wrong block
                 else if (stateSchematic.getBlock() != stateClient.getBlock())
                 {
-//                    if (Configs.Generic.ENABLE_DIFFERENT_BLOCKS.getBooleanValue() &&
-//						BlockUtils.isInSameGroup(stateSchematic, stateClient))
-//                    {
-//                        if (BlockUtils.matchPropertiesOnly(stateSchematic, stateClient))
-//                        {
-//                            // Different block of a common BlockTags Group, and same state
-//                            return OverlayType.DIFF_BLOCK;
-//                        }
-//                        else
-//                        {
-//                            return OverlayType.WRONG_STATE;
-//                        }
-//                    }
+                    if (Configs.Generic.ENABLE_DIFFERENT_BLOCKS.getBooleanValue() &&
+                        BlockUtils.isInSameGroup(stateSchematic, stateClient))
+                    {
+                        if (BlockUtils.matchPropertiesOnly(stateSchematic, stateClient))
+                        {
+                            // Different block of a common BlockTags Group, and same state
+                            return OverlayType.DIFF_BLOCK;
+                        }
+                        else
+                        {
+                            return OverlayType.WRONG_STATE;
+                        }
+                    }
 
                     return OverlayType.WRONG_BLOCK;
                 }
@@ -1580,7 +1581,7 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
     }
 
     private void resortRenderOverlay(OverlayRenderType type, float x, float y, float z, @Nonnull ChunkRenderDataSchematic chunkRenderData, @Nonnull BufferAllocatorCache allocators)
-            throws InterruptedException
+//            throws InterruptedException
     {
         //LOGGER.warn("[VBO] resortRenderOverlay() overlay type [{}]", type.name());
 

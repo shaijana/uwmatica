@@ -370,7 +370,7 @@ public class SelectionManager
 
         if (selection != null && mc.player != null)
         {
-            BlockPos pos = BlockPos.ofFloored(mc.player.getPos());
+            BlockPos pos = BlockPos.ofFloored(mc.player.getEntityPos());
 
             if (selection.createNewSubRegionBox(pos, selection.getName()) != null)
             {
@@ -400,7 +400,7 @@ public class SelectionManager
                 return false;
             }
 
-            BlockPos pos = BlockPos.ofFloored(mc.player.getPos());
+            BlockPos pos = BlockPos.ofFloored(mc.player.getEntityPos());
 
             if (selection.createNewSubRegionBox(pos, name) != null)
             {

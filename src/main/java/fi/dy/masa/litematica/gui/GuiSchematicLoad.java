@@ -128,6 +128,7 @@ public class GuiSchematicLoad extends GuiSchematicBrowserBase
         @Override
         public void actionPerformedWithButton(ButtonBase button, int mouseButton)
         {
+            if (this.gui.getListWidget() == null) return;
             DirectoryEntry entry = this.gui.getListWidget().getLastSelectedEntry();
 
             if (entry == null)
@@ -180,9 +181,9 @@ public class GuiSchematicLoad extends GuiSchematicBrowserBase
                     SchematicHolder.getInstance().addSchematic(schematic, true);
                     this.gui.addMessage(MessageType.SUCCESS, "litematica.info.schematic_load.schematic_loaded", file.getFileName());
 
-                    if (DataManager.getCreatePlacementOnLoad())
+                    if (DataManager.getCreatePlacementOnLoad() && this.gui.mc.player != null)
                     {
-                        BlockPos pos = BlockPos.ofFloored(this.gui.mc.player.getPos());
+                        BlockPos pos = BlockPos.ofFloored(this.gui.mc.player.getEntityPos());
                         String name = schematic.getMetadata().getName();
                         boolean enabled = GuiBase.isShiftDown() == false;
 
@@ -241,6 +242,7 @@ public class GuiSchematicLoad extends GuiSchematicBrowserBase
         @Override
         public void onSelectionChange(WidgetCheckBox entry)
         {
+            if (entry == null) return;
             DataManager.setCreatePlacementOnLoad(entry.isChecked());
         }
     }

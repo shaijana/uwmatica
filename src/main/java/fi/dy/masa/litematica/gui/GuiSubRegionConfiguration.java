@@ -235,6 +235,7 @@ public class GuiSubRegionConfiguration extends GuiBase
         @Override
         public void actionPerformedWithButton(ButtonBase button, int mouseButton)
         {
+            if (this.parent.mc.player == null) return;
             int amount = mouseButton == 1 ? -1 : 1;
             if (GuiBase.isShiftDown()) { amount *= 8; }
             if (GuiBase.isAltDown()) { amount *= 4; }
@@ -269,7 +270,7 @@ public class GuiSubRegionConfiguration extends GuiBase
                 }
 
                 case MOVE_TO_PLAYER:
-                    this.schematicPlacement.moveSubRegionTo(this.subRegionName, BlockPos.ofFloored(this.parent.mc.player.getPos()), this.parent);
+                    this.schematicPlacement.moveSubRegionTo(this.subRegionName, BlockPos.ofFloored(this.parent.mc.player.getEntityPos()), this.parent);
                     break;
 
                 case NUDGE_COORD_X:
@@ -325,12 +326,12 @@ public class GuiSubRegionConfiguration extends GuiBase
             private final String translationKey;
             @Nullable private final String hoverText;
 
-            private Type(String translationKey)
+            Type(String translationKey)
             {
                 this(translationKey, null);
             }
 
-            private Type(String translationKey, @Nullable String hoverText)
+            Type(String translationKey, @Nullable String hoverText)
             {
                 this.translationKey = translationKey;
                 this.hoverText = hoverText;
@@ -387,9 +388,7 @@ public class GuiSubRegionConfiguration extends GuiBase
                 this.schematicPlacement.moveSubRegionTo(this.placement.getName(), pos, this.parent);
                 this.parent.updateElements();
             }
-            catch (NumberFormatException e)
-            {
-            }
+            catch (NumberFormatException ignored) { }
 
             return false;
         }
@@ -409,6 +408,7 @@ public class GuiSubRegionConfiguration extends GuiBase
         @Override
         public void onSelectionChange(WidgetCheckBox entry)
         {
+            if (entry == null) return;
             this.placement.setCoordinateLocked(this.type, entry.isChecked());
         }
     }

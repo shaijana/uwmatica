@@ -93,10 +93,10 @@ public class GuiSchematicVerifier   extends GuiListBase<BlockMismatchEntry, Widg
         x += this.createButton(x, y, -1, ButtonListener.Type.SET_RESULT_MODE_MISSING) + 4;
         x += this.createButton(x, y, -1, ButtonListener.Type.SET_RESULT_MODE_CORRECT) + 4;
 
-//        if (Configs.Generic.ENABLE_DIFFERENT_BLOCKS.getBooleanValue())
-//        {
-//            x += this.createButton(x, y, -1, ButtonListener.Type.SET_RESULT_MODE_DIFF_BLOCKS) + 4;
-//        }
+        if (Configs.Generic.ENABLE_DIFFERENT_BLOCKS.getBooleanValue())
+        {
+            x += this.createButton(x, y, -1, ButtonListener.Type.SET_RESULT_MODE_DIFF_BLOCKS) + 4;
+        }
 
         y = this.getScreenHeight() - 36;
 
@@ -116,10 +116,10 @@ public class GuiSchematicVerifier   extends GuiListBase<BlockMismatchEntry, Widg
             Integer t = this.verifier.getSchematicTotalBlocks();
             String str = StringUtils.translate("litematica.gui.label.schematic_verifier.status.done_errors.no_diff", wb, ws, m, e);
 
-//            if (Configs.Generic.ENABLE_DIFFERENT_BLOCKS.getBooleanValue())
-//            {
-//                str = StringUtils.translate("litematica.gui.label.schematic_verifier.status.done_errors", wb, ws, m, e, d);
-//            }
+            if (Configs.Generic.ENABLE_DIFFERENT_BLOCKS.getBooleanValue())
+            {
+                str = StringUtils.translate("litematica.gui.label.schematic_verifier.status.done_errors", wb, ws, m, e, d);
+            }
 
             this.addLabel(12, y, 100, 12, 0xFFF0F0F0, str);
             str = StringUtils.translate("litematica.gui.label.schematic_verifier.status.done_correct_total", c, t);
@@ -143,14 +143,14 @@ public class GuiSchematicVerifier   extends GuiListBase<BlockMismatchEntry, Widg
         switch (type)
         {
             case SET_RESULT_MODE_ALL:
-//                if (Configs.Generic.ENABLE_DIFFERENT_BLOCKS.getBooleanValue())
-//                {
-//                    label = MismatchType.ALL.getDisplayname();
-//                }
-//                else
-//                {
+                if (Configs.Generic.ENABLE_DIFFERENT_BLOCKS.getBooleanValue())
+                {
+                    label = MismatchType.ALL.getDisplayname();
+                }
+                else
+                {
                     label = StringUtils.translate("litematica.gui.label.schematic_verifier_display_type.all_not_ignored");
-//                }
+                }
                 enabled = resultMode != MismatchType.ALL;
                 break;
 
@@ -285,7 +285,7 @@ public class GuiSchematicVerifier   extends GuiListBase<BlockMismatchEntry, Widg
                 this.verifier.toggleMismatchCategorySelected(entry.mismatchType);
             }
             // A specific mismatch pair - show only those state pairs
-            else if (entry.type == BlockMismatchEntry.Type.DATA)
+            else if (entry.type == BlockMismatchEntry.Type.DATA && entry.blockMismatch != null)
             {
                 this.verifier.toggleMismatchEntrySelected(entry.blockMismatch);
             }
@@ -324,7 +324,7 @@ public class GuiSchematicVerifier   extends GuiListBase<BlockMismatchEntry, Widg
         @Nullable
         public final String header2;
 
-        public BlockMismatchEntry(MismatchType mismatchType, String title)
+        public BlockMismatchEntry(@Nullable MismatchType mismatchType, @Nullable String title)
         {
             this.type = Type.CATEGORY_TITLE;
             this.mismatchType = mismatchType;
@@ -333,7 +333,7 @@ public class GuiSchematicVerifier   extends GuiListBase<BlockMismatchEntry, Widg
             this.header2 = null;
         }
 
-        public BlockMismatchEntry(String header1, String header2)
+        public BlockMismatchEntry(@Nullable String header1, @Nullable String header2)
         {
             this.type = Type.HEADER;
             this.mismatchType = null;
@@ -342,7 +342,7 @@ public class GuiSchematicVerifier   extends GuiListBase<BlockMismatchEntry, Widg
             this.header2 = header2;
         }
 
-        public BlockMismatchEntry(MismatchType mismatchType, BlockMismatch blockMismatch)
+        public BlockMismatchEntry(@Nullable MismatchType mismatchType, @Nullable BlockMismatch blockMismatch)
         {
             this.type = Type.DATA;
             this.mismatchType = mismatchType;

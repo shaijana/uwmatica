@@ -345,6 +345,7 @@ public class GuiPlacementConfiguration  extends GuiListBase<SubRegionPlacement, 
         public void actionPerformedWithButton(ButtonBase button, int mouseButton)
         {
             MinecraftClient mc = MinecraftClient.getInstance();
+            if (mc.player == null) return;
             int amount = mouseButton == 1 ? -1 : 1;
             if (GuiBase.isShiftDown()) { amount *= 8; }
             if (GuiBase.isAltDown()) { amount *= 4; }
@@ -375,7 +376,7 @@ public class GuiPlacementConfiguration  extends GuiListBase<SubRegionPlacement, 
 
                 case MOVE_TO_PLAYER:
                 {
-                    BlockPos pos = BlockPos.ofFloored(mc.player.getPos());
+                    BlockPos pos = BlockPos.ofFloored(mc.player.getEntityPos());
                     this.placement.setOrigin(pos, this.parent);
                     break;
                 }
@@ -470,12 +471,12 @@ public class GuiPlacementConfiguration  extends GuiListBase<SubRegionPlacement, 
             private final String translationKey;
             @Nullable private final String hoverText;
 
-            private Type(String translationKey)
+            Type(String translationKey)
             {
                 this(translationKey, null);
             }
 
-            private Type(String translationKey, @Nullable String hoverText)
+            Type(String translationKey, @Nullable String hoverText)
             {
                 this.translationKey = translationKey;
                 this.hoverText = hoverText;
@@ -530,9 +531,7 @@ public class GuiPlacementConfiguration  extends GuiListBase<SubRegionPlacement, 
 
                 this.parent.updateElements();
             }
-            catch (NumberFormatException e)
-            {
-            }
+            catch (NumberFormatException ignored) { }
 
             return false;
         }
@@ -552,6 +551,7 @@ public class GuiPlacementConfiguration  extends GuiListBase<SubRegionPlacement, 
         @Override
         public void onSelectionChange(WidgetCheckBox entry)
         {
+            if (entry == null) return;
             this.placement.setCoordinateLocked(this.type, entry.isChecked());
         }
     }
