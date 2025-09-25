@@ -49,24 +49,25 @@ public class MixinClientPlayerInteractionManager_easyPlace
         }
     }
 
-    @Inject(method = "interactBlockInternal",
-			at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/client/network/ClientPlayerEntity;getMainHandStack()Lnet/minecraft/item/ItemStack;",
-            shift = At.Shift.BEFORE), cancellable = true)
-    private void onInteractBlockInternal(ClientPlayerEntity player, Hand hand, BlockHitResult hitResult, CallbackInfoReturnable<ActionResult> cir)
-    {
-        if (Configs.Generic.EASY_PLACE_MODE.getBooleanValue() &&
-            Configs.Generic.EASY_PLACE_POST_REWRITE.getBooleanValue())
-        {
-            // Prevent recursion, since the Easy Place mode can call this code again
-            if (EasyPlaceUtils.isHandling() == false)
-            {
-                if (EasyPlaceUtils.shouldDoEasyPlaceActions() &&
-                    EasyPlaceUtils.handleEasyPlaceWithMessage())
-                {
-                    cir.setReturnValue(ActionResult.FAIL);
-                }
-            }
-        }
-    }
+	// FIXME --> This causes double-placements
+//    @Inject(method = "interactBlockInternal",
+//			at = @At(value = "INVOKE",
+//            target = "Lnet/minecraft/client/network/ClientPlayerEntity;getMainHandStack()Lnet/minecraft/item/ItemStack;",
+//            shift = At.Shift.BEFORE), cancellable = true)
+//    private void onInteractBlockInternal(ClientPlayerEntity player, Hand hand, BlockHitResult hitResult, CallbackInfoReturnable<ActionResult> cir)
+//    {
+//        if (Configs.Generic.EASY_PLACE_MODE.getBooleanValue() &&
+//            Configs.Generic.EASY_PLACE_POST_REWRITE.getBooleanValue())
+//        {
+//            // Prevent recursion, since the Easy Place mode can call this code again
+//            if (EasyPlaceUtils.isHandling() == false)
+//            {
+//                if (EasyPlaceUtils.shouldDoEasyPlaceActions() &&
+//                    EasyPlaceUtils.handleEasyPlaceWithMessage())
+//                {
+//                    cir.setReturnValue(ActionResult.FAIL);
+//                }
+//            }
+//        }
+//    }
 }
