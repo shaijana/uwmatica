@@ -67,8 +67,8 @@ import fi.dy.masa.litematica.world.WorldSchematic;
 
 public class WorldUtils
 {
-    private static final List<PositionCache> EASY_PLACE_POSITIONS = new ArrayList<>();
-    private static long easyPlaceLastPickBlockTime = System.nanoTime();
+//    private static final List<PositionCache> EASY_PLACE_POSITIONS = new ArrayList<>();
+//    private static long easyPlaceLastPickBlockTime = System.nanoTime();
 
     public static double getValidBlockRange(MinecraftClient mc)
     {
@@ -671,8 +671,8 @@ public class WorldUtils
         if (mc.player != null && DataManager.getToolMode() != ToolMode.REBUILD &&
             Configs.Generic.EASY_PLACE_MODE.getBooleanValue() &&
             Configs.Generic.EASY_PLACE_HOLD_ENABLED.getBooleanValue() &&
-            Hotkeys.EASY_PLACE_ACTIVATION.getKeybind().isKeybindHeld())
-            //&& Configs.Generic.EASY_PLACE_POST_REWRITE.getBooleanValue() == false)
+            Hotkeys.EASY_PLACE_ACTIVATION.getKeybind().isKeybindHeld()
+            && Configs.Generic.EASY_PLACE_POST_REWRITE.getBooleanValue() == false)
         {
             WorldUtils.doEasyPlaceAction(mc);
         }
@@ -681,7 +681,7 @@ public class WorldUtils
     public static boolean handleEasyPlace(MinecraftClient mc)
     {
         if (Configs.Generic.EASY_PLACE_MODE.getBooleanValue() &&
-            //Configs.Generic.EASY_PLACE_POST_REWRITE.getBooleanValue() == false &&
+            Configs.Generic.EASY_PLACE_POST_REWRITE.getBooleanValue() == false &&
             DataManager.getToolMode() != ToolMode.REBUILD)
         {
             ActionResult result = doEasyPlaceAction(mc);
@@ -744,13 +744,13 @@ public class WorldUtils
             ItemStack stack = MaterialCache.getInstance().getRequiredBuildItemForState(stateSchematic);
 
             // Already placed to that position, possible server sync delay
-            if (easyPlaceIsPositionCached(pos))
+            if (EasyPlaceUtils.easyPlaceIsPositionCached(pos))
             {
                 return ActionResult.FAIL;
             }
 
             // Ignore action if too fast
-            if (easyPlaceIsTooFast())
+            if (EasyPlaceUtils.easyPlaceIsTooFast())
             {
                 return ActionResult.FAIL;
             }
@@ -844,7 +844,7 @@ public class WorldUtils
                 }
 
                 // Mark that this position has been handled (use the non-offset position that is checked above)
-                cacheEasyPlacePosition(pos);
+                EasyPlaceUtils.cacheEasyPlacePosition(pos);
 
                 BlockHitResult hitResult = new BlockHitResult(hitPos, side, pos, false);
 
@@ -1051,7 +1051,7 @@ public class WorldUtils
         return y;
     }
 
-    private static Vec3d applyBlockSlabProtocol(BlockPos pos, BlockState state, Vec3d hitVecIn)
+    public static Vec3d applyBlockSlabProtocol(BlockPos pos, BlockState state, Vec3d hitVecIn)
     {
         double newY = applySlabOrStairHitVecY(hitVecIn.y, pos, state);
         return newY != hitVecIn.y ? new Vec3d(hitVecIn.x, newY, hitVecIn.z) : hitVecIn;
@@ -1144,7 +1144,7 @@ public class WorldUtils
         return hitVecIn;
     }
 
-    private static Direction applyPlacementFacing(BlockState stateSchematic, Direction side, BlockState stateClient)
+    public static Direction applyPlacementFacing(BlockState stateSchematic, Direction side, BlockState stateClient)
     {
         Block blockSchematic = stateSchematic.getBlock();
         Block blockClient = stateClient.getBlock();
@@ -1498,7 +1498,8 @@ public class WorldUtils
         return true;
     }
 
-    public static boolean easyPlaceIsPositionCached(BlockPos pos)
+	/*
+    private static boolean easyPlaceIsPositionCached(BlockPos pos)
     {
         long currentTime = System.nanoTime();
         boolean cached = false;
@@ -1528,7 +1529,7 @@ public class WorldUtils
         return cached;
     }
 
-    private static void cacheEasyPlacePosition(BlockPos pos)
+	private static void cacheEasyPlacePosition(BlockPos pos)
     {
         EASY_PLACE_POSITIONS.add(new PositionCache(pos, System.nanoTime(), 2000000000));
     }
@@ -1566,4 +1567,5 @@ public class WorldUtils
     {
         easyPlaceLastPickBlockTime = System.nanoTime();
     }
+	 */
 }

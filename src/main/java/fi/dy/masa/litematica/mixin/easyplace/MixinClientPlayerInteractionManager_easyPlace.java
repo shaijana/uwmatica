@@ -1,7 +1,17 @@
 package fi.dy.masa.litematica.mixin.easyplace;
 
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.Hand;
+import net.minecraft.util.hit.BlockHitResult;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import fi.dy.masa.litematica.config.Configs;
+import fi.dy.masa.litematica.util.EasyPlaceUtils;
 
 /**
  * Post Re-Write code
@@ -9,7 +19,6 @@ import org.spongepowered.asm.mixin.Mixin;
 @Mixin(value = ClientPlayerInteractionManager.class)
 public class MixinClientPlayerInteractionManager_easyPlace
 {
-    /*
     @Inject(method = "interactBlock", at = @At("HEAD"), cancellable = true)
     private void onInteractBlock(ClientPlayerEntity player, Hand hand, BlockHitResult hitResult, CallbackInfoReturnable<ActionResult> cir)
     {
@@ -41,7 +50,7 @@ public class MixinClientPlayerInteractionManager_easyPlace
     }
 
     @Inject(method = "interactBlockInternal",
-            at = @At(value = "INVOKE",
+			at = @At(value = "INVOKE",
             target = "Lnet/minecraft/client/network/ClientPlayerEntity;getMainHandStack()Lnet/minecraft/item/ItemStack;",
             shift = At.Shift.BEFORE), cancellable = true)
     private void onInteractBlockInternal(ClientPlayerEntity player, Hand hand, BlockHitResult hitResult, CallbackInfoReturnable<ActionResult> cir)
@@ -60,5 +69,4 @@ public class MixinClientPlayerInteractionManager_easyPlace
             }
         }
     }
-     */
 }

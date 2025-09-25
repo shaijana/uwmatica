@@ -15,7 +15,9 @@ import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.ItemUsageContext;
 import net.minecraft.state.property.EnumProperty;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -28,18 +30,22 @@ import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
 
 import fi.dy.masa.malilib.gui.GuiBase;
+import fi.dy.masa.malilib.gui.Message;
 import fi.dy.masa.malilib.registry.Registry;
 import fi.dy.masa.malilib.util.InfoUtils;
 import fi.dy.masa.malilib.util.IntBoundingBox;
 import fi.dy.masa.malilib.util.LayerRange;
 import fi.dy.masa.malilib.util.game.BlockUtils;
 import fi.dy.masa.malilib.util.game.PlacementUtils;
+import fi.dy.masa.malilib.util.game.wrap.GameWrap;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.config.Configs;
+import fi.dy.masa.litematica.config.Hotkeys;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.materials.MaterialCache;
 import fi.dy.masa.litematica.mixin.input.IMixinKeyBinding;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacementManager;
+import fi.dy.masa.litematica.tool.ToolMode;
 import fi.dy.masa.litematica.world.SchematicWorldHandler;
 
 /**
@@ -54,8 +60,9 @@ public class EasyPlaceUtils
     private static boolean isHandling;
     private static boolean isFirstClickEasyPlace;
     private static boolean isFirstClickPlacementRestriction;
+	private static long easyPlaceLastPickBlockTime = System.nanoTime();
 
-    public static boolean isHandling()
+	public static boolean isHandling()
     {
         return isHandling;
     }
@@ -106,27 +113,28 @@ public class EasyPlaceUtils
 
     public static boolean shouldDoEasyPlaceActions()
     {
-        /*
-        return Configs.Generic.EASY_PLACE_MODE.getBooleanValue() &&
-               Configs.Generic.EASY_PLACE_POST_REWRITE.getBooleanValue() &&
-               DataManager.getToolMode() != ToolMode.REBUILD &&
-               Hotkeys.EASY_PLACE_ACTIVATION.getKeybind().isKeybindHeld();
-         */
-
-        return false;
+        return  GameWrap.getClientPlayer() != null &&
+				DataManager.getToolMode() != ToolMode.REBUILD &&
+				Configs.Generic.EASY_PLACE_MODE.getBooleanValue() &&
+				Configs.Generic.EASY_PLACE_POST_REWRITE.getBooleanValue() &&
+				Hotkeys.EASY_PLACE_ACTIVATION.getKeybind().isKeybindHeld();
+//        return false;
     }
 
     public static void easyPlaceOnUseTick()
     {
-        InputUtil.Key useKey = ((IMixinKeyBinding) MinecraftClient.getInstance().options.useKey).litematica_getBoundKey();
+//        InputUtil.Key useKey = ((IMixinKeyBinding) MinecraftClient.getInstance().options.useKey).litematica_getBoundKey();
 
         if (isHandling == false &&
             Configs.Generic.EASY_PLACE_HOLD_ENABLED.getBooleanValue() &&
-            shouldDoEasyPlaceActions() &&
-            //Keys.isKeyDown(GameWrap.getOptions().keyBindUseItem.getKeyCode()))
-            CompatUtils.isKeyHeld(useKey))
+            shouldDoEasyPlaceActions()
+//				&&
+//            Keys.isKeyDown(GameWrap.getOptions().keyBindUseItem.getKeyCode()))
+//            CompatUtils.isKeyHeld(useKey))
+//			MinecraftClient.getInstance().options.useKey.isPressed()
+		)
         {
-            GuiBase.isAltDown();
+//            GuiBase.isAltDown();
             isHandling = true;
             handleEasyPlace();
             isHandling = false;
@@ -150,8 +158,8 @@ public class EasyPlaceUtils
             //MessageOutput output = Configs.InfoOverlays.EASY_PLACE_WARNINGS.getValue();
             //MessageDispatcher.warning(1500).type(output).translate("litematica.message.easy_place_fail");
 
-            // Lame hack-around due to missing MessageOutput / Dispatcher
-            InfoUtils.printActionbarMessage("litematica.message.easy_place_fail");
+//            InfoUtils.printActionbarMessage("litematica.message.easy_place_fail");
+			InfoUtils.showInGameMessage(Message.MessageType.WARNING, "litematica.message.easy_place_fail");
         }
 
         isFirstClickEasyPlace = false;
@@ -285,8 +293,8 @@ public class EasyPlaceUtils
         }
 
         BlockPos targetBlockPos = targetPosition.getBlockPos();
-        //boolean requireAdjacent = Configs.Generic.EASY_PLACE_CLICK_ADJACENT.getBooleanValue();
-        boolean requireAdjacent = false;
+        boolean requireAdjacent = Configs.Generic.EASY_PLACE_CLICK_ADJACENT.getBooleanValue();
+//        boolean requireAdjacent = false;
 
         return requireAdjacent ? getAdjacentClickPosition(targetBlockPos) : targetPosition;
     }
@@ -332,8 +340,8 @@ public class EasyPlaceUtils
     private static BlockHitResult getClickPositionForSlabHalf(BlockHitResult targetPosition, BlockState stateSchematic, boolean isTop, World worldClient)
     {
         BlockPos targetBlockPos = targetPosition.getBlockPos();
-        //boolean requireAdjacent = Configs.Generic.EASY_PLACE_CLICK_ADJACENT.getBooleanValue();
-        boolean requireAdjacent = false;
+        boolean requireAdjacent = Configs.Generic.EASY_PLACE_CLICK_ADJACENT.getBooleanValue();
+//        boolean requireAdjacent = false;
 
         // Can click on air blocks, check if the slab can be placed by clicking on the target position itself,
         // or if it's a fluid block, then the block above or below, depending on the half
@@ -450,7 +458,12 @@ public class EasyPlaceUtils
         }
 
         BlockHitResult clickPosition = getClickPosition(targetPosition, stateSchematic, stateClient);
-        Hand hand = PickBlockUtils.doPickBlockForStack(requiredStack);
+		// TODO -- POST-REWRITE CODE (Broken?)
+//        Hand hand = PickBlockUtils.doPickBlockForStack(requiredStack);
+
+		// *** ADDED Easy Place Code from Pre-Rewrite ***
+		InventoryUtils.schematicWorldPickBlock(requiredStack, targetBlockPos, world, mc);
+		Hand hand = EntityUtils.getUsedHandForItem(mc.player, requiredStack);
 
         // Didn't find a valid or safe click position, or was unable to pick block
         if (clickPosition == null || hand == null)
@@ -458,30 +471,114 @@ public class EasyPlaceUtils
             return ActionResult.FAIL;
         }
 
-        boolean isSlab = stateSchematic.getBlock() instanceof SlabBlock;
+		// *** ADDED Easy Place Code from Pre-Rewrite ***
+		// Already placed to that position, possible server sync delay
+		if (EasyPlaceUtils.easyPlaceIsPositionCached(targetBlockPos))
+		{
+			return ActionResult.FAIL;
+		}
+
+		// *** ADDED Easy Place Code from Pre-Rewrite ***
+		// Ignore action if too fast
+		if (EasyPlaceUtils.easyPlaceIsTooFast())
+		{
+			return ActionResult.FAIL;
+		}
+
+		boolean isSlab = stateSchematic.getBlock() instanceof SlabBlock;
         boolean usingAdjacentClickPosition = clickPosition.getBlockPos().equals(targetBlockPos) == false;
         BlockPos clickPos = clickPosition.getBlockPos();
         Vec3d hitPos = clickPosition.getPos();
         Direction side = clickPosition.getSide();
+		Direction sideOrig = targetPosition.getSide();
 
-        if (usingAdjacentClickPosition == false && isSlab == false)
-        {
-            side = applyPlacementFacing(stateSchematic, side, stateClient);
+		// TODO -- POST-REWRITE CODE (No rotations?)
+		// *** ADDED Easy Place Code from Pre-Rewrite for rotations ***
+		EasyPlaceProtocol protocol = PlacementHandler.getEffectiveProtocolVersion();
+		double traceMaxRange = Configs.Generic.EASY_PLACE_VANILLA_REACH.getBooleanValue() ? 4.5 : 6;
+		HitResult traceVanilla = RayTraceUtils.getRayTraceFromEntity(mc.world, mc.player, false, traceMaxRange);
 
-            // Fluid _blocks_ are not replaceable... >_>
-            if (stateClient.canPlaceAt(world, targetBlockPos) == false &&
-                stateClient.isLiquid())
-            {
-                clickPos = clickPos.offset(side, -1);
-            }
-        }
+		if (protocol == EasyPlaceProtocol.NONE || protocol == EasyPlaceProtocol.SLAB_ONLY)
+		{
+			// If there is a block in the world right behind the targeted schematic block, then use
+			// that block as the click position
+			if (traceVanilla != null && traceVanilla.getType() == HitResult.Type.BLOCK)
+			{
+				BlockHitResult hitResult = (BlockHitResult) traceVanilla;
+				BlockPos posVanilla = hitResult.getBlockPos();
+				Direction sideVanilla = hitResult.getSide();
+				BlockState stateVanilla = mc.world.getBlockState(posVanilla);
+				Vec3d hit = traceVanilla.getPos();
+				ItemPlacementContext ctx = new ItemPlacementContext(new ItemUsageContext(mc.player, hand, hitResult));
 
-        if (isSlab == false)
-        {
-            hitPos = applyCarpetProtocolHitVec(clickPos, stateSchematic, hitPos);
-        }
+				if (stateVanilla.canReplace(ctx) == false)
+				{
+					posVanilla = posVanilla.offset(sideVanilla);
 
-        //System.out.printf("targetPos: %s, clickPos: %s side: %s, hit: %s\n", targetBlockPos, clickPos, side, hitPos);
+					if (targetBlockPos.equals(posVanilla))
+					{
+						hitPos = hit;
+						sideOrig = sideVanilla;
+					}
+				}
+			}
+		}
+
+		// TODO -- POST-REWRITE CODE (No rotations?)
+		if (usingAdjacentClickPosition == false && isSlab == false)
+		{
+			side = WorldUtils.applyPlacementFacing(stateSchematic, side, stateClient);
+
+			// Fluid _blocks_ are not replaceable... >_>
+			if (stateClient.canPlaceAt(world, targetBlockPos) == false &&
+				stateClient.isLiquid())
+			{
+				clickPos = clickPos.offset(side, -1);
+			}
+		}
+
+		// TODO -- POST-REWRITE CODE (No rotations?)
+		// *** ADDED Easy Place Code from Pre-Rewrite for rotations ***
+		// Support for special cases
+		WorldUtils.PlacementProtocolData placementData = WorldUtils.applyPlacementProtocolAll(targetBlockPos, stateSchematic, hitPos);
+		BlockPos pos = targetBlockPos;
+
+		if (placementData.mustFail)
+		{
+			return ActionResult.FAIL; //disallowed cases (e.g. trying to place torch with no support block)
+		}
+
+		if (placementData.handled)
+		{
+			pos = placementData.pos;
+			side = placementData.side;
+			hitPos = placementData.hitVec;
+		}
+
+		// TODO -- POST-REWRITE CODE (No rotations?)
+//        if (isSlab == false)
+//        {
+//            hitPos = applyCarpetProtocolHitVec(clickPos, stateSchematic, hitPos);
+//        }
+
+		// TODO --> Move V3 / V2 / Slab handling to EasyPlaceUtils.
+		if (protocol == EasyPlaceProtocol.V3)
+		{
+			hitPos = WorldUtils.applyPlacementProtocolV3(pos, stateSchematic, hitPos);
+		}
+		else if (protocol == EasyPlaceProtocol.V2 && isSlab == false)
+		{
+			// Carpet Accurate Block Placement protocol support, plus slab support
+			hitPos = WorldUtils.applyCarpetProtocolHitVec(pos, stateSchematic, hitPos);
+		}
+		else if (protocol == EasyPlaceProtocol.SLAB_ONLY)
+		{
+			// Slab support only
+			hitPos = WorldUtils.applyBlockSlabProtocol(pos, stateSchematic, hitPos);
+		}
+
+		// TODO -- POST-REWRITE CODE (No rotations?)
+		//System.out.printf("targetPos: %s, clickPos: %s side: %s, hit: %s\n", targetBlockPos, clickPos, side, hitPos);
         stateClient = world.getBlockState(clickPos);
         boolean needsSneak = hasUseAction(stateClient.getBlock());
         boolean didFakeSneak = needsSneak && EntityUtils.setFakedSneakingState(true);
@@ -490,12 +587,15 @@ public class EasyPlaceUtils
         BlockHitResult hitResult = new BlockHitResult(hitPos, side, clickPos, false);
 
         //if (GameWrap.getInteractionManager().processRightClickBlock(player, world, clickPos, side.getVanillaDirection(), hitPos.toVanilla(), hand) == EnumActionResult.SUCCESS)
-        if (mc.interactionManager.interactBlock(mc.player, hand, hitResult) == ActionResult.PASS)
+		ActionResult result = mc.interactionManager.interactBlock(mc.player, hand, hitResult);
+
+        if (result == ActionResult.PASS)
         {
             // Mark that this position has been handled (use the non-offset position that is checked above)
-            cacheEasyPlacePosition(targetBlockPos);
+			cacheEasyPlacePosition(pos);
 
-            if (Configs.Generic.EASY_PLACE_SWING_HAND.getBooleanValue())
+            if (ActionResult.SUCCESS.swingSource().equals(ActionResult.SwingSource.CLIENT) &&
+				Configs.Generic.EASY_PLACE_SWING_HAND.getBooleanValue())
             {
                 player.swingHand(hand);
             }
@@ -504,16 +604,24 @@ public class EasyPlaceUtils
 
             if (isSlab && stateSchematic.get(SlabBlock.TYPE).equals(SlabType.DOUBLE))
             {
-                stateClient = world.getBlockState(targetBlockPos);
+                stateClient = world.getBlockState(pos);
 
                 if (stateClient.getBlock() instanceof SlabBlock && stateClient.get(SlabBlock.TYPE).equals(SlabType.DOUBLE) == false)
                 {
-                    side = stateClient.get(SlabBlock.TYPE) == SlabType.TOP ? Direction.DOWN : Direction.UP;
-                    hitPos = new Vec3d(targetBlockPos.getX(), targetBlockPos.getY() + 0.5, targetBlockPos.getZ());
-                    //System.out.printf("slab - pos: %s side: %s, hit: %s\n", pos, side, hitPos);
-                    hitResult = new BlockHitResult(hitPos, side, targetBlockPos, false);
-                    //GameWrap.getInteractionManager().processRightClickBlock(player, world, targetBlockPos, side.getVanillaDirection(), hitPos.toVanilla(), hand);
-                    mc.interactionManager.interactBlock(mc.player, hand, hitResult);
+					// TODO -- POST-REWRITE CODE (No rotations?)
+//                    side = stateClient.get(SlabBlock.TYPE) == SlabType.TOP ? Direction.DOWN : Direction.UP;
+//                    hitPos = new Vec3d(targetBlockPos.getX(), targetBlockPos.getY() + 0.5, targetBlockPos.getZ());
+//                    //System.out.printf("slab - pos: %s side: %s, hit: %s\n", pos, side, hitPos);
+//                    hitResult = new BlockHitResult(hitPos, side, targetBlockPos, false);
+//                    //GameWrap.getInteractionManager().processRightClickBlock(player, world, targetBlockPos, side.getVanillaDirection(), hitPos.toVanilla(), hand);
+//                    mc.interactionManager.interactBlock(mc.player, hand, hitResult);
+
+					if (stateClient.getBlock() instanceof SlabBlock && stateClient.get(SlabBlock.TYPE) != SlabType.DOUBLE)
+					{
+						side = applyPlacementFacing(stateSchematic, sideOrig, stateClient);
+						hitResult = new BlockHitResult(hitPos, side, pos, false);
+						mc.interactionManager.interactBlock(mc.player, hand, hitResult);
+					}
                 }
             }
         }
@@ -623,7 +731,8 @@ public class EasyPlaceUtils
             //MessageOutput output = Configs.InfoOverlays.EASY_PLACE_WARNINGS.getValue();
             //MessageDispatcher.warning(1000).type(output).translate("litematica.message.placement_restriction_fail");
 
-            InfoUtils.printActionbarMessage("litematica.message.placement_restriction_fail");
+//            InfoUtils.printActionbarMessage("litematica.message.placement_restriction_fail");
+			InfoUtils.showInGameMessage(Message.MessageType.WARNING, "litematica.message.placement_restriction_fail");
         }
 
         isFirstClickPlacementRestriction = false;
@@ -741,7 +850,7 @@ public class EasyPlaceUtils
         return false;
     }
 
-    private static boolean easyPlaceIsPositionCached(BlockPos pos)
+    protected static boolean easyPlaceIsPositionCached(BlockPos pos)
     {
         long currentTime = System.nanoTime();
         boolean cached = false;
@@ -771,7 +880,7 @@ public class EasyPlaceUtils
         return cached;
     }
 
-    private static void cacheEasyPlacePosition(BlockPos pos)
+	protected static void cacheEasyPlacePosition(BlockPos pos)
     {
         EASY_PLACE_POSITIONS.add(new PositionCache(pos, System.nanoTime(), 2000000000));
     }
@@ -799,4 +908,14 @@ public class EasyPlaceUtils
             return currentTime - this.time > this.timeout;
         }
     }
+
+	protected static boolean easyPlaceIsTooFast()
+	{
+		return System.nanoTime() - easyPlaceLastPickBlockTime < 1000000L * Configs.Generic.EASY_PLACE_SWAP_INTERVAL.getIntegerValue();
+	}
+
+	protected static void setEasyPlaceLastPickBlockTime()
+	{
+		easyPlaceLastPickBlockTime = System.nanoTime();
+	}
 }

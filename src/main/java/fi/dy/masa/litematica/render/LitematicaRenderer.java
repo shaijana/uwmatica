@@ -118,8 +118,8 @@ public class LitematicaRenderer
 
     public void piecewisePrepareAndUpdate(Frustum frustum, Profiler profiler)
     {
-        boolean render = Configs.Generic.BETTER_RENDER_ORDER.getBooleanValue() &&
-                         Configs.Visuals.ENABLE_RENDERING.getBooleanValue() &&
+		// Configs.Generic.BETTER_RENDER_ORDER.getBooleanValue() &&
+        boolean render = Configs.Visuals.ENABLE_RENDERING.getBooleanValue() &&
                          this.mc.getCameraEntity() != null;
         this.renderPiecewiseSchematic = false;
         this.renderPiecewiseBlocks = false;

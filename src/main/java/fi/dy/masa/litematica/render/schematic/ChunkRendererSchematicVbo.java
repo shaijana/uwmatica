@@ -1066,12 +1066,12 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
                     overlayColor = Configs.Colors.SCHEMATIC_OVERLAY_COLOR_WRONG_STATE.getColor();
                 }
                 break;
-//            case DIFF_BLOCK:
-//                if (Configs.Visuals.SCHEMATIC_OVERLAY_TYPE_DIFF_BLOCK.getBooleanValue())
-//                {
-//                    overlayColor = Configs.Colors.SCHEMATIC_OVERLAY_COLOR_DIFF_BLOCK.getColor();
-//                }
-//                break;
+            case DIFF_BLOCK:
+                if (Configs.Visuals.SCHEMATIC_OVERLAY_TYPE_DIFF_BLOCK.getBooleanValue())
+                {
+                    overlayColor = Configs.Colors.SCHEMATIC_OVERLAY_COLOR_DIFF_BLOCK.getColor();
+                }
+                break;
             default:
         }
 

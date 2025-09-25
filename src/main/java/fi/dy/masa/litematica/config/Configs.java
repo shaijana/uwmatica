@@ -46,7 +46,7 @@ public class Configs implements IConfigHandler
         public static final ConfigString        CUSTOM_SCHEMATIC_BASE_DIRECTORY         = new ConfigString( "customSchematicBaseDirectory", DataManager.getDefaultBaseSchematicDirectory().toAbsolutePath().toString()).apply(GENERIC_KEY);
 
         public static final ConfigBoolean       AREAS_PER_WORLD             = new ConfigBoolean("areaSelectionsPerWorld", true).apply(GENERIC_KEY);
-        public static final ConfigBoolean       BETTER_RENDER_ORDER         = new ConfigBoolean("betterRenderOrder", true).apply(GENERIC_KEY);
+//        public static final ConfigBoolean       BETTER_RENDER_ORDER         = new ConfigBoolean("betterRenderOrder", true).apply(GENERIC_KEY);
         public static final ConfigBoolean       CHANGE_SELECTED_CORNER      = new ConfigBoolean("changeSelectedCornerOnMove", true).apply(GENERIC_KEY);
         public static final ConfigBoolean       CLONE_AT_ORIGINAL_POS       = new ConfigBoolean("cloneAtOriginalPosition", false).apply(GENERIC_KEY);
         public static final ConfigBoolean       COMMAND_DISABLE_FEEDBACK    = new ConfigBoolean("commandDisableFeedback", true).apply(GENERIC_KEY);
@@ -62,11 +62,11 @@ public class Configs implements IConfigHandler
         public static final ConfigBoolean       DEBUG_LOGGING               = new ConfigBoolean("debugLogging", false).apply(GENERIC_KEY);
         public static final ConfigOptionList    DATAFIXER_MODE              = new ConfigOptionList("datafixerMode", DataFixerMode.ALWAYS).apply(GENERIC_KEY);
         public static final ConfigInteger       DATAFIXER_DEFAULT_SCHEMA    = new ConfigInteger("datafixerDefaultSchema", 1139, 99, 2724, true).apply(GENERIC_KEY);
-        //public static final ConfigBoolean       EASY_PLACE_CLICK_ADJACENT   = new ConfigBoolean("easyPlaceClickAdjacent", false).apply(GENERIC_KEY);
+        public static final ConfigBoolean       EASY_PLACE_CLICK_ADJACENT   = new ConfigBoolean("easyPlaceClickAdjacent", false).apply(GENERIC_KEY);
         public static final ConfigBoolean       EASY_PLACE_FIRST            = new ConfigBoolean("easyPlaceFirst", true).apply(GENERIC_KEY);
         public static final ConfigBoolean       EASY_PLACE_HOLD_ENABLED     = new ConfigBoolean("easyPlaceHoldEnabled", true).apply(GENERIC_KEY);
         public static final ConfigBoolean       EASY_PLACE_MODE             = new ConfigBoolean("easyPlaceMode", false).apply(GENERIC_KEY);
-        //public static final ConfigBoolean       EASY_PLACE_POST_REWRITE     = new ConfigBoolean("easyPlacePostRewrite", false).apply(GENERIC_KEY);
+        public static final ConfigBoolean       EASY_PLACE_POST_REWRITE     = new ConfigBoolean("easyPlacePostRewrite", false).apply(GENERIC_KEY);
         public static final ConfigBoolean       EASY_PLACE_SP_HANDLING      = new ConfigBoolean("easyPlaceSinglePlayerHandling", true).apply(GENERIC_KEY);
         public static final ConfigBoolean       EASY_PLACE_SP_VALIDATION    = new ConfigBoolean("easyPlaceSinglePlayerValidation", true).apply(GENERIC_KEY);
         public static final ConfigInteger       EASY_PLACE_SWAP_INTERVAL    = new ConfigInteger("easyPlaceSwapInterval", 0, 0, 10000).apply(GENERIC_KEY);
@@ -102,11 +102,10 @@ public class Configs implements IConfigHandler
         public static final ConfigBoolean       PICK_BLOCK_AVOID_DAMAGEABLE = new ConfigBoolean("pickBlockAvoidDamageable", true).apply(GENERIC_KEY);
         public static final ConfigBoolean       PICK_BLOCK_AVOID_TOOLS      = new ConfigBoolean("pickBlockAvoidTools", false).apply(GENERIC_KEY);
         public static final ConfigBoolean       PICK_BLOCK_ENABLED          = new ConfigBoolean("pickBlockEnabled", true).apply(GENERIC_KEY);
-        //public static final ConfigBoolean       PICK_BLOCK_IGNORE_NBT       = new ConfigBoolean("pickBlockIgnoreNbt", false).apply(GENERIC_KEY);
+//        public static final ConfigBoolean       PICK_BLOCK_IGNORE_NBT       = new ConfigBoolean("pickBlockIgnoreNbt", false).apply(GENERIC_KEY);
         public static final ConfigBoolean       PICK_BLOCK_SHULKERS         = new ConfigBoolean("pickBlockShulkers", false).apply(GENERIC_KEY);
         public static final ConfigString        PICK_BLOCKABLE_SLOTS        = new ConfigString( "pickBlockableSlots", "1,2,3,4,5").apply(GENERIC_KEY);
         public static final ConfigBoolean       PLACEMENT_RESTRICTION       = new ConfigBoolean("placementRestriction", false).apply(GENERIC_KEY);
-//        public static final ConfigBoolean       RECIPE_BOOK_SP_SHADOW_UNLOCK= new ConfigBoolean("recipeBookSinglePlayerShadowUnlock", true).apply(GENERIC_KEY);
         public static final ConfigBoolean       RENDER_MATERIALS_IN_GUI     = new ConfigBoolean("renderMaterialListInGuis", true).apply(GENERIC_KEY);
         public static final ConfigBoolean       RENDER_THREAD_NO_TIMEOUT    = new ConfigBoolean("renderThreadNoTimeout", true).apply(GENERIC_KEY);
         public static final ConfigInteger       SERVER_NBT_REQUEST_RATE     = new ConfigInteger("serverNbtRequestRate", 2).apply(GENERIC_KEY);
@@ -118,7 +117,7 @@ public class Configs implements IConfigHandler
 
         public static final ImmutableList<IConfigBase> OPTIONS = ImmutableList.of(
                 AREAS_PER_WORLD,
-                //BETTER_RENDER_ORDER,
+//				BETTER_RENDER_ORDER,
                 CHANGE_SELECTED_CORNER,
                 CLONE_AT_ORIGINAL_POS,
                 COMMAND_DISABLE_FEEDBACK,
@@ -128,11 +127,11 @@ public class Configs implements IConfigHandler
                 DEBUG_LOGGING,
                 DATAFIXER_MODE,
                 DATAFIXER_DEFAULT_SCHEMA,
-                //EASY_PLACE_CLICK_ADJACENT,
+                EASY_PLACE_CLICK_ADJACENT,
                 EASY_PLACE_FIRST,
                 EASY_PLACE_HOLD_ENABLED,
                 EASY_PLACE_MODE,
-                //EASY_PLACE_POST_REWRITE,
+                EASY_PLACE_POST_REWRITE,
                 EASY_PLACE_SP_HANDLING,
                 EASY_PLACE_SP_VALIDATION,
                 EASY_PLACE_PROTOCOL,
@@ -169,12 +168,11 @@ public class Configs implements IConfigHandler
                 PICK_BLOCK_AVOID_DAMAGEABLE,
                 PICK_BLOCK_AVOID_TOOLS,
                 PICK_BLOCK_ENABLED,
-                //PICK_BLOCK_IGNORE_NBT,
+//                PICK_BLOCK_IGNORE_NBT,
                 PICK_BLOCK_SHULKERS,
                 PLACEMENT_REPLACE_BEHAVIOR,
                 PLACEMENT_RESTRICTION,
                 PLACEMENT_RESTRICTION_WARN,
-//                RECIPE_BOOK_SP_SHADOW_UNLOCK,
                 RENDER_MATERIALS_IN_GUI,
                 RENDER_THREAD_NO_TIMEOUT,
                 SERVER_NBT_REQUEST_RATE,
@@ -246,7 +244,7 @@ public class Configs implements IConfigHandler
         public static final ConfigDouble        SCHEMATIC_OVERLAY_OUTLINE_WIDTH     = new ConfigDouble( "schematicOverlayOutlineWidth",  1.0, 0, 64).apply(VISUALS_KEY);
         public static final ConfigDouble        SCHEMATIC_OVERLAY_OUTLINE_WIDTH_THROUGH = new ConfigDouble("schematicOverlayOutlineWidthThrough",  3.0, 0, 64).apply(VISUALS_KEY);
         public static final ConfigBoolean       SCHEMATIC_OVERLAY_RENDER_THROUGH    = new ConfigBoolean("schematicOverlayRenderThroughBlocks", false).apply(VISUALS_KEY);
-//        public static final ConfigBoolean       SCHEMATIC_OVERLAY_TYPE_DIFF_BLOCK   = new ConfigBoolean("schematicOverlayTypeDiffBlock",   true).apply(VISUALS_KEY);
+        public static final ConfigBoolean       SCHEMATIC_OVERLAY_TYPE_DIFF_BLOCK   = new ConfigBoolean("schematicOverlayTypeDiffBlock",   true).apply(VISUALS_KEY);
         public static final ConfigBoolean       SCHEMATIC_OVERLAY_TYPE_EXTRA        = new ConfigBoolean("schematicOverlayTypeExtra",       true).apply(VISUALS_KEY);
         public static final ConfigBoolean       SCHEMATIC_OVERLAY_TYPE_MISSING      = new ConfigBoolean("schematicOverlayTypeMissing",     true).apply(VISUALS_KEY);
         public static final ConfigBoolean       SCHEMATIC_OVERLAY_TYPE_WRONG_BLOCK  = new ConfigBoolean("schematicOverlayTypeWrongBlock",  true).apply(VISUALS_KEY);
@@ -288,7 +286,7 @@ public class Configs implements IConfigHandler
                 SCHEMATIC_OVERLAY_MODEL_OUTLINE,
                 SCHEMATIC_OVERLAY_MODEL_SIDES,
                 SCHEMATIC_OVERLAY_RENDER_THROUGH,
-//                SCHEMATIC_OVERLAY_TYPE_DIFF_BLOCK,
+                SCHEMATIC_OVERLAY_TYPE_DIFF_BLOCK,
                 SCHEMATIC_OVERLAY_TYPE_EXTRA,
                 SCHEMATIC_OVERLAY_TYPE_MISSING,
                 SCHEMATIC_OVERLAY_TYPE_WRONG_BLOCK,

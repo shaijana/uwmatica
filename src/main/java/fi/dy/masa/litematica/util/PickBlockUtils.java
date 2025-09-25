@@ -27,6 +27,7 @@ import fi.dy.masa.litematica.world.SchematicWorldHandler;
 @ApiStatus.Experimental
 public class PickBlockUtils
 {
+	// FIXME DO NOT USE
     @Nullable
     public static Hand doPickBlockForStack(ItemStack stack)
     {
@@ -36,7 +37,7 @@ public class PickBlockUtils
         {
             return null;
         }
-        //boolean ignoreNbt = Configs.Generic.PICK_BLOCK_IGNORE_NBT.getBooleanValue();
+//        boolean ignoreNbt = Configs.Generic.PICK_BLOCK_IGNORE_NBT.getBooleanValue();
         boolean ignoreNbt = false;
         Hand hand = EntityUtils.getUsedHandForItem(player, stack, ignoreNbt);
 
@@ -45,8 +46,9 @@ public class PickBlockUtils
             //switchItemToHand(stack, ignoreNbt);
             //hand = EntityWrap.getUsedHandForItem(player, stack, ignoreNbt);
 
-            fi.dy.masa.malilib.util.InventoryUtils.swapItemToMainHand(stack, mc);
-            hand = Hand.MAIN_HAND;
+//            fi.dy.masa.malilib.util.InventoryUtils.swapItemToMainHand(stack, mc);
+//            hand = Hand.MAIN_HAND;
+			return null;
         }
 
         if (hand != null)
@@ -57,7 +59,8 @@ public class PickBlockUtils
         return hand;
     }
 
-    @Nullable
+    // FIXME DO NOT USE
+	@Nullable
     public static Hand pickBlockLast()
     {
         MinecraftClient mc = MinecraftClient.getInstance();
@@ -85,6 +88,7 @@ public class PickBlockUtils
         return null;
     }
 
+	// FIXME DO NOT USE
     @Nullable
     private static Hand doPickBlockForPosition(BlockPos pos)
     {
@@ -103,7 +107,7 @@ public class PickBlockUtils
         }
         BlockState state = world.getBlockState(pos);
         ItemStack stack = MaterialCache.getInstance().getRequiredBuildItemForState(state, world, pos);
-        //boolean ignoreNbt = Configs.Generic.PICK_BLOCK_IGNORE_NBT.getBooleanValue();
+//        boolean ignoreNbt = Configs.Generic.PICK_BLOCK_IGNORE_NBT.getBooleanValue();
         boolean ignoreNbt = false;
 
         if (stack.isEmpty() == false)

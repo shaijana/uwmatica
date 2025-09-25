@@ -41,8 +41,7 @@ public class PlacementHandler
             Properties.INVERTED,
             Properties.OPEN,
             //Properties.PERSISTENT,
-            //Properties.POWERED,
-            //Properties.LOCKED,
+
             // EnumProperty:
             // ATTACHMENT - Bells
             // AXIS - Pillar
@@ -71,6 +70,7 @@ public class PlacementHandler
             Properties.STRAIGHT_RAIL_SHAPE,
             Properties.SLAB_TYPE,
             Properties.STAIR_SHAPE,
+
             // IntProperty:
             // BITES - Cake
             // DELAY - Repeater

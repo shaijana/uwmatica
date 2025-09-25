@@ -302,16 +302,14 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
 
             if (Configs.Generic.PLACEMENT_RESTRICTION.getBooleanValue())
             {
-                /*
                 if (Configs.Generic.EASY_PLACE_POST_REWRITE.getBooleanValue())
                 {
                     return EasyPlaceUtils.handlePlacementRestriction();
                 }
                 else
                 {
-                 */
                     return WorldUtils.handlePlacementRestriction(mc);
-                //}
+                }
             }
         }
 

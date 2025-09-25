@@ -2,6 +2,12 @@ package fi.dy.masa.litematica.mixin.easyplace;
 
 import net.minecraft.client.MinecraftClient;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import fi.dy.masa.litematica.config.Configs;
+import fi.dy.masa.litematica.util.EasyPlaceUtils;
 
 /**
  * Post Re-Write code
@@ -9,7 +15,6 @@ import org.spongepowered.asm.mixin.Mixin;
 @Mixin(value = MinecraftClient.class)
 public abstract class MixinMinecraftClient_easyPlace
 {
-    /*
     @Inject(method = "handleInputEvents",
             at = @At(value = "INVOKE",
             target = "Lnet/minecraft/client/MinecraftClient;doItemUse()V"))
@@ -34,5 +39,4 @@ public abstract class MixinMinecraftClient_easyPlace
             }
         }
     }
-     */
 }
