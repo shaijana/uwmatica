@@ -264,12 +264,12 @@ public class KeyCallbacks
 
             if (key == Hotkeys.EASY_PLACE_ACTIVATION.getKeybind())
             {
-                if (Configs.Generic.EASY_PLACE_POST_REWRITE.getBooleanValue())
+                if (Configs.Generic.EASY_PLACE_POST_REWRITE.getBooleanValue() == false)
                 {
-                    return EasyPlaceUtils.handleEasyPlaceWithMessage();
-                }
-                else
-                {
+//                    return EasyPlaceUtils.handleEasyPlaceWithMessage();
+//                }
+//                else
+//                {
                     return WorldUtils.handleEasyPlace(this.mc);
                 }
             }
@@ -716,6 +716,7 @@ public class KeyCallbacks
                     }
                 }
             }
+			// Requested to be added by Earthcomputer; from Litemoretica
 			else if (key == Hotkeys.SCHEMATIC_EDIT_REPLACE_SELECTION.getKeybind())
 			{
 				AreaSelection selection = DataManager.getSelectionManager().getCurrentSelection();

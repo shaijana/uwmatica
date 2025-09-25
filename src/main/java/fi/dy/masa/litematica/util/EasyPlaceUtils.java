@@ -116,9 +116,8 @@ public class EasyPlaceUtils
         return  GameWrap.getClientPlayer() != null &&
 				DataManager.getToolMode() != ToolMode.REBUILD &&
 				Configs.Generic.EASY_PLACE_MODE.getBooleanValue() &&
-				Configs.Generic.EASY_PLACE_POST_REWRITE.getBooleanValue() &&
-				Hotkeys.EASY_PLACE_ACTIVATION.getKeybind().isKeybindHeld();
-//        return false;
+				Configs.Generic.EASY_PLACE_HOLD_ENABLED.getBooleanValue() &&
+				Configs.Generic.EASY_PLACE_POST_REWRITE.getBooleanValue();
     }
 
     public static void easyPlaceOnUseTick()
@@ -126,12 +125,12 @@ public class EasyPlaceUtils
 //        InputUtil.Key useKey = ((IMixinKeyBinding) MinecraftClient.getInstance().options.useKey).litematica_getBoundKey();
 
         if (isHandling == false &&
-            Configs.Generic.EASY_PLACE_HOLD_ENABLED.getBooleanValue() &&
             shouldDoEasyPlaceActions()
-//				&&
+				&&
 //            Keys.isKeyDown(GameWrap.getOptions().keyBindUseItem.getKeyCode()))
 //            CompatUtils.isKeyHeld(useKey))
 //			MinecraftClient.getInstance().options.useKey.isPressed()
+			Hotkeys.EASY_PLACE_ACTIVATION.getKeybind().isKeybindHeld()
 		)
         {
 //            GuiBase.isAltDown();
@@ -143,28 +142,28 @@ public class EasyPlaceUtils
 
     public static boolean handleEasyPlaceWithMessage()
     {
-        if (isHandling)
+        if (isHandling() || !shouldDoEasyPlaceActions())
         {
             return false;
         }
 
-        isHandling = true;
-        ActionResult result = handleEasyPlace();
-        isHandling = false;
+		isHandling = true;
+		ActionResult result = handleEasyPlace();
+		isHandling = false;
 
-        // Only print the warning message once per right click
-        if (isFirstClickEasyPlace && result == ActionResult.FAIL)
-        {
-            //MessageOutput output = Configs.InfoOverlays.EASY_PLACE_WARNINGS.getValue();
-            //MessageDispatcher.warning(1500).type(output).translate("litematica.message.easy_place_fail");
+		// Only print the warning message once per right click
+		if (isFirstClickEasyPlace && result == ActionResult.FAIL)
+		{
+			//MessageOutput output = Configs.InfoOverlays.EASY_PLACE_WARNINGS.getValue();
+			//MessageDispatcher.warning(1500).type(output).translate("litematica.message.easy_place_fail");
 
 //            InfoUtils.printActionbarMessage("litematica.message.easy_place_fail");
 			InfoUtils.showInGameMessage(Message.MessageType.WARNING, "litematica.message.easy_place_fail");
-        }
+		}
 
-        isFirstClickEasyPlace = false;
+		isFirstClickEasyPlace = false;
 
-        return result != ActionResult.PASS;
+		return result != ActionResult.PASS;
     }
 
     public static void onRightClickTail()

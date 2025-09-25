@@ -1087,7 +1087,8 @@ public class SchematicUtils
     }
 
 	/**
-	 * Copied from Litemoretica by Earthcomputer; by request.
+	 * Requested to be added by Earthcomputer from Litemoretica.
+	 * @param currentSelection
 	 * @param mcWorld
 	 * @return
 	 */
