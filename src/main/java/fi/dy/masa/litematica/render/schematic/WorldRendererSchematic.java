@@ -1006,24 +1006,27 @@ public class WorldRendererSchematic
             double cameraZ = camera.getPos().z;
 
             this.entityRenderManager.configure(camera, this.mc.targetedEntity);
-
             this.countEntitiesTotal = 0;
             this.countEntitiesRendered = 0;
             this.countEntitiesHidden = 0;
-
             this.countEntitiesTotal = this.world.getRegularEntityCount();
 
             LayerRange layerRange = DataManager.getRenderLayerRange();
 
             profiler.swap("entities_iterate");
             this.profiler = profiler;
+            this.worldRenderState.entityRenderStates.clear();
+
             for (ChunkRendererSchematicVbo chunkRenderer : this.renderInfos)
             {
                 BlockPos pos = chunkRenderer.getOrigin();
                 ChunkSchematic chunk = this.world.getChunk(pos.getX() >> 4, pos.getZ() >> 4);
-                List<Entity> list = chunk.getEntityList();
+//                List<Entity> list = chunk.getEntityList();
+                Box bb = chunk.getBoundingBox();
+                List<Entity> list = this.world.getOtherEntities(null, bb);
 
 //                Litematica.LOGGER.error("[WorldRenderer] Chunk: [{}], EntityList [{}]", pos.toShortString(), list.size());
+                Litematica.LOGGER.warn("[WorldRenderer] Chunk: [{}], BB: [{}] // TestList: [{}]", pos.toShortString(), bb.toString(), list.size());
 
                 for (Entity entityTmp : list)
                 {
@@ -1081,6 +1084,11 @@ public class WorldRendererSchematic
 	public void renderEntities(Camera camera, Frustum frustum, MatrixStack matrices, WorldRenderState renderStates, OrderedRenderCommandQueue queue, Profiler profiler)
 	{
         // Litematica.LOGGER.warn("renderEntities()");
+        if (this.worldRenderState.entityRenderStates.isEmpty())
+        {
+            return;
+        }
+
 		Vec3d pos = camera.getPos();
 		double cameraX = pos.getX();
 		double cameraY = pos.getY();
@@ -1090,7 +1098,10 @@ public class WorldRendererSchematic
 
 		for (EntityRenderState state : this.worldRenderState.entityRenderStates)
 		{
-			this.entityRenderManager.render(state, renderStates.cameraRenderState, state.x - cameraX, state.y - cameraY, state.z - cameraZ, matrices, queue);
+            if (state != null)      // This should never be NULL
+            {
+                this.entityRenderManager.render(state, renderStates.cameraRenderState, state.x - cameraX, state.y - cameraY, state.z - cameraZ, matrices, queue);
+            }
 		}
 
 		profiler.pop();
@@ -1111,6 +1122,7 @@ public class WorldRendererSchematic
 
 		profiler.swap("block_entities");
         this.profiler = profiler;
+        this.worldRenderState.blockEntityRenderStates.clear();
 
         profiler.swap("render_be");
         for (ChunkRendererSchematicVbo chunkRenderer : this.renderInfos)
@@ -1185,6 +1197,11 @@ public class WorldRendererSchematic
 	public void renderBlockEntities(Camera camera, Frustum frustum, MatrixStack matrices, WorldRenderState renderStates, OrderedRenderCommandQueue queue, Profiler profiler)
 	{
         // Litematica.LOGGER.warn("renderBlockEntities()");
+        if (this.worldRenderState.blockEntityRenderStates.isEmpty())
+        {
+            return;
+        }
+
 		Vec3d cameraPos = camera.getPos();
 		double cameraX = cameraPos.getX();
 		double cameraY = cameraPos.getY();
@@ -1194,11 +1211,14 @@ public class WorldRendererSchematic
 
 		for (BlockEntityRenderState state : this.worldRenderState.blockEntityRenderStates)
 		{
-			BlockPos pos = state.pos;
-			matrices.push();
-			matrices.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
-			this.blockEntityRenderManager.render(state, matrices, queue, renderStates.cameraRenderState);
-			matrices.pop();
+            if (state != null)      // This should never be NULL
+            {
+                BlockPos pos = state.pos;
+                matrices.push();
+                matrices.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
+                this.blockEntityRenderManager.render(state, matrices, queue, renderStates.cameraRenderState);
+                matrices.pop();
+            }
 		}
 
 		profiler.pop();

@@ -343,20 +343,28 @@ public class WorldSchematic extends World
     @Override
     public List<Entity> getOtherEntities(@Nullable final Entity except, final Box box, Predicate<? super Entity> predicate)
     {
-        final List<Entity> entities = new ArrayList<>();
-        List<ChunkSchematic> chunks = this.getChunksWithinBox(box);
+        final List<Entity> list = new ArrayList<>();
+//        List<ChunkSchematic> chunks = this.getChunksWithinBox(box);
 
         // TODO --> MOVE TO SchematicEntityLookup
-        for (ChunkSchematic chunk : chunks)
-        {
-            chunk.getEntityList().forEach((e) -> {
-                if (e != except && box.intersects(e.getBoundingBox()) && predicate.test(e)) {
-                    entities.add(e);
-                }
-            });
-        }
+//        for (ChunkSchematic chunk : chunks)
+//        {
+//            chunk.getEntityList().forEach((e) -> {
+//                if (e != except && box.intersects(e.getBoundingBox()) && predicate.test(e)) {
+//                    entities.add(e);
+//                }
+//            });
+//        }
 
-        return entities;
+        this.entityLookup.forEachIntersects(box, e ->
+        {
+            if (e != except && predicate.test(e))
+            {
+                list.add(e);
+            }
+        });
+
+        return list;
     }
 
     @Override
