@@ -49,7 +49,7 @@ public class MixinClientPlayerInteractionManager_easyPlace
         }
     }
 
-	// FIXME --> This causes double-placements
+	// This causes double-placements
 //    @Inject(method = "interactBlockInternal",
 //			at = @At(value = "INVOKE",
 //            target = "Lnet/minecraft/client/network/ClientPlayerEntity;getMainHandStack()Lnet/minecraft/item/ItemStack;",
