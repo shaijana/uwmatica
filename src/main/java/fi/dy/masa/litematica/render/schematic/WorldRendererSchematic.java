@@ -1021,12 +1021,12 @@ public class WorldRendererSchematic
             {
                 BlockPos pos = chunkRenderer.getOrigin();
                 ChunkSchematic chunk = this.world.getChunk(pos.getX() >> 4, pos.getZ() >> 4);
-//                List<Entity> list = chunk.getEntityList();
-                Box bb = chunk.getBoundingBox();
-                List<Entity> list = this.world.getOtherEntities(null, bb);
+                List<Entity> list = chunk.getEntityList();
+//                Box bb = chunk.getBoundingBox();
+//                List<Entity> list = this.world.getOtherEntities(null, bb);
 
 //                Litematica.LOGGER.error("[WorldRenderer] Chunk: [{}], EntityList [{}]", pos.toShortString(), list.size());
-                Litematica.LOGGER.warn("[WorldRenderer] Chunk: [{}], BB: [{}] // TestList: [{}]", pos.toShortString(), bb.toString(), list.size());
+//                Litematica.LOGGER.warn("[WorldRenderer] Chunk: [{}], BB: [{}] // TestList: [{}]", pos.toShortString(), bb.toString(), list.size());
 
                 for (Entity entityTmp : list)
                 {
