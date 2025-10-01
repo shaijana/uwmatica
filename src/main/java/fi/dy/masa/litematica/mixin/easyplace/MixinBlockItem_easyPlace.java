@@ -33,12 +33,14 @@ public abstract class MixinBlockItem_easyPlace extends Item
             Configs.Generic.EASY_PLACE_SP_HANDLING.getBooleanValue())
         {
             BlockState stateOrig = this.getBlock().getPlacementState(ctx);
-            final boolean validated = !Configs.Generic.EASY_PLACE_SP_VALIDATION.getBooleanValue() || this.canPlace(ctx, stateOrig);
 
-            if (stateOrig != null && validated)
+            if (stateOrig != null)
             {
-                UseContext context = UseContext.from(ctx, ctx.getHand());
-                cir.setReturnValue(PlacementHandler.applyPlacementProtocolToPlacementState(stateOrig, context));
+				if (!Configs.Generic.EASY_PLACE_SP_VALIDATION.getBooleanValue() || this.canPlace(ctx, stateOrig))
+				{
+					UseContext context = UseContext.from(ctx, ctx.getHand());
+					cir.setReturnValue(PlacementHandler.applyPlacementProtocolToPlacementState(stateOrig, context));
+				}
             }
         }
     }

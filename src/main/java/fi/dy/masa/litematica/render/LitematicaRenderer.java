@@ -116,6 +116,11 @@ public class LitematicaRenderer
         }
     }
 
+	public void updateCameraState(Camera camera, float tickProgress)
+	{
+		this.getWorldRenderer().updateCameraState(camera, tickProgress);
+	}
+
     public void piecewisePrepareAndUpdate(Frustum frustum, Profiler profiler)
     {
 		// Configs.Generic.BETTER_RENDER_ORDER.getBooleanValue() &&

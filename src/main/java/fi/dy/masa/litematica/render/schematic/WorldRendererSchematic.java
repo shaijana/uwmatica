@@ -69,7 +69,7 @@ public class WorldRendererSchematic
     private final BlockModelRendererSchematic blockModelRenderer;
     private final Set<BlockEntity> blockEntities = new HashSet<>();
     private final List<ChunkRendererSchematicVbo> renderInfos = new ArrayList<>(1024);
-    private final WorldRenderState worldRenderState;
+    private final SchematicRenderState schematicRenderState;
 //    private final BufferBuilderStorage bufferBuilders;
     private Set<ChunkRendererSchematicVbo> chunksToUpdate = new LinkedHashSet<>();
     private WorldSchematic world;
@@ -114,7 +114,7 @@ public class WorldRendererSchematic
         this.blockModelRenderer = new BlockModelRendererSchematic(mc.getBlockColors());
         this.blockModelRenderer.setBakedManager(mc.getBakedModelManager());
         this.fogRenderer = ((IMixinGameRenderer) mc.gameRenderer).litematica_getFogRenderer();
-		this.worldRenderState = new WorldRenderState();
+		this.schematicRenderState = new SchematicRenderState();
         this.profiler = null;
         this.vanillaFogBuffer = null;
         this.batchDraw = null;
@@ -674,7 +674,16 @@ public class WorldRendererSchematic
 
 	public void clearWorldRenderStates()
 	{
-		this.worldRenderState.clear();
+		this.schematicRenderState.clear();
+	}
+
+	public void updateCameraState(Camera camera, float tickProgress)
+	{
+		this.schematicRenderState.cameraState.initialized = camera.isReady();
+		this.schematicRenderState.cameraState.pos = camera.getPos();
+		this.schematicRenderState.cameraState.blockPos = camera.getBlockPos();
+		this.schematicRenderState.cameraState.entityPos = camera.getFocusedEntity().getLeashPos(tickProgress);
+		this.schematicRenderState.cameraState.orientation = new Quaternionf(camera.getRotation());
 	}
 
     public void scheduleTranslucentSorting(Vec3d cameraPos, Profiler profiler)
@@ -1015,7 +1024,7 @@ public class WorldRendererSchematic
 
             profiler.swap("entities_iterate");
             this.profiler = profiler;
-            this.worldRenderState.entityRenderStates.clear();
+            this.schematicRenderState.entityStates.clear();
 
             for (ChunkRendererSchematicVbo chunkRenderer : this.renderInfos)
             {
@@ -1068,7 +1077,7 @@ public class WorldRendererSchematic
                         }
 
 						EntityRenderState state = this.entityRenderManager.getAndUpdateRenderState(entityTmp, tickProgress);
-						this.worldRenderState.entityRenderStates.add(state);
+						this.schematicRenderState.entityStates.add(state);
 
                         ++this.countEntitiesRendered;
                     }
@@ -1084,7 +1093,7 @@ public class WorldRendererSchematic
 	public void renderEntities(Camera camera, Frustum frustum, MatrixStack matrices, WorldRenderState renderStates, OrderedRenderCommandQueue queue, Profiler profiler)
 	{
         // Litematica.LOGGER.warn("renderEntities()");
-        if (this.worldRenderState.entityRenderStates.isEmpty())
+        if (this.schematicRenderState.entityStates.isEmpty())
         {
             return;
         }
@@ -1096,11 +1105,11 @@ public class WorldRendererSchematic
 
 		profiler.push("render_entities");
 
-		for (EntityRenderState state : this.worldRenderState.entityRenderStates)
+		for (EntityRenderState state : this.schematicRenderState.entityStates)
 		{
             if (state != null)      // This should never be NULL
             {
-                this.entityRenderManager.render(state, renderStates.cameraRenderState, state.x - cameraX, state.y - cameraY, state.z - cameraZ, matrices, queue);
+                this.entityRenderManager.render(state, this.schematicRenderState.cameraState, state.x - cameraX, state.y - cameraY, state.z - cameraZ, matrices, queue);
             }
 		}
 
@@ -1122,7 +1131,7 @@ public class WorldRendererSchematic
 
 		profiler.swap("block_entities");
         this.profiler = profiler;
-        this.worldRenderState.blockEntityRenderStates.clear();
+        this.schematicRenderState.tileEntityStates.clear();
 
         profiler.swap("render_be");
         for (ChunkRendererSchematicVbo chunkRenderer : this.renderInfos)
@@ -1151,7 +1160,7 @@ public class WorldRendererSchematic
                             matrices.push();
                             matrices.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
                             BlockEntityRenderState state = this.blockEntityRenderManager.getRenderState(te, tickProgress, null);
-							this.worldRenderState.blockEntityRenderStates.add(state);
+							this.schematicRenderState.tileEntityStates.add(state);
 							// Ignore crumbling, because there is no point in the Schem World.
                             matrices.pop();
                         }
@@ -1181,7 +1190,7 @@ public class WorldRendererSchematic
                     matrices.push();
                     matrices.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
 					BlockEntityRenderState state = this.blockEntityRenderManager.getRenderState(te, tickProgress, null);
-					this.worldRenderState.blockEntityRenderStates.add(state);
+					this.schematicRenderState.tileEntityStates.add(state);
                     matrices.pop();
                 }
                 catch (Exception err)
@@ -1197,7 +1206,7 @@ public class WorldRendererSchematic
 	public void renderBlockEntities(Camera camera, Frustum frustum, MatrixStack matrices, WorldRenderState renderStates, OrderedRenderCommandQueue queue, Profiler profiler)
 	{
         // Litematica.LOGGER.warn("renderBlockEntities()");
-        if (this.worldRenderState.blockEntityRenderStates.isEmpty())
+        if (this.schematicRenderState.tileEntityStates.isEmpty())
         {
             return;
         }
@@ -1209,14 +1218,14 @@ public class WorldRendererSchematic
 
 		profiler.push("render_block_entities");
 
-		for (BlockEntityRenderState state : this.worldRenderState.blockEntityRenderStates)
+		for (BlockEntityRenderState state : this.schematicRenderState.tileEntityStates)
 		{
             if (state != null)      // This should never be NULL
             {
                 BlockPos pos = state.pos;
                 matrices.push();
                 matrices.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
-                this.blockEntityRenderManager.render(state, matrices, queue, renderStates.cameraRenderState);
+                this.blockEntityRenderManager.render(state, matrices, queue, this.schematicRenderState.cameraState);
                 matrices.pop();
             }
 		}
