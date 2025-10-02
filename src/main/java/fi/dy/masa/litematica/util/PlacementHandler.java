@@ -70,6 +70,7 @@ public class PlacementHandler
             Properties.STRAIGHT_RAIL_SHAPE,
             Properties.SLAB_TYPE,
             Properties.STAIR_SHAPE,
+			Properties.COPPER_GOLEM_POSE,
 
             // IntProperty:
             // BITES - Cake
