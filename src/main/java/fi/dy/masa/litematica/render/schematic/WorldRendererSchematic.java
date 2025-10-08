@@ -3,8 +3,6 @@ package fi.dy.masa.litematica.render.schematic;
 import java.lang.Math;
 import java.util.*;
 import javax.annotation.Nullable;
-
-import net.minecraft.client.render.state.WorldRenderState;
 import org.joml.*;
 
 import com.mojang.blaze3d.buffers.GpuBuffer;
@@ -31,6 +29,7 @@ import net.minecraft.client.render.fog.FogRenderer;
 import net.minecraft.client.render.model.BakedQuad;
 import net.minecraft.client.render.model.BlockModelPart;
 import net.minecraft.client.render.model.BlockStateModel;
+import net.minecraft.client.render.state.WorldRenderState;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.passive.*;
@@ -70,7 +69,7 @@ public class WorldRendererSchematic
     private final Set<BlockEntity> blockEntities = new HashSet<>();
     private final List<ChunkRendererSchematicVbo> renderInfos = new ArrayList<>(1024);
     private final SchematicRenderState schematicRenderState;
-//    private final BufferBuilderStorage bufferBuilders;
+//	private final HashMap<Block, Block> fallbackBlocks;
     private Set<ChunkRendererSchematicVbo> chunksToUpdate = new LinkedHashSet<>();
     private WorldSchematic world;
     private ChunkRenderDispatcherSchematic chunkRendererDispatcher;
@@ -115,10 +114,12 @@ public class WorldRendererSchematic
         this.blockModelRenderer.setBakedManager(mc.getBakedModelManager());
         this.fogRenderer = ((IMixinGameRenderer) mc.gameRenderer).litematica_getFogRenderer();
 		this.schematicRenderState = new SchematicRenderState();
+//		this.fallbackBlocks = new HashMap<>();
         this.profiler = null;
         this.vanillaFogBuffer = null;
         this.batchDraw = null;
         this.shouldDraw = false;
+//		this.buildFallbackBlocks();
     }
 
     public void markNeedsUpdate()
@@ -187,6 +188,39 @@ public class WorldRendererSchematic
     {
         return this.blockEntityRenderManager;
     }
+
+//	private void buildFallbackBlocks()
+//	{
+//		this.fallbackBlocks.put(Blocks.BLACK_STAINED_GLASS, FallbackBlocks.BLACK_GLASS);
+//		this.fallbackBlocks.put(Blocks.BLUE_STAINED_GLASS, FallbackBlocks.BLUE_GLASS);
+//		this.fallbackBlocks.put(Blocks.BROWN_STAINED_GLASS, FallbackBlocks.BROWN_GLASS);
+//		this.fallbackBlocks.put(Blocks.CYAN_STAINED_GLASS, FallbackBlocks.CYAN_GLASS);
+//		this.fallbackBlocks.put(Blocks.GLASS, FallbackBlocks.GLASS);
+//		this.fallbackBlocks.put(Blocks.GRAY_STAINED_GLASS, FallbackBlocks.GRAY_GLASS);
+//		this.fallbackBlocks.put(Blocks.GREEN_STAINED_GLASS, FallbackBlocks.GREEN_GLASS);
+//		this.fallbackBlocks.put(Blocks.LIME_STAINED_GLASS, FallbackBlocks.LIME_GLASS);
+//		this.fallbackBlocks.put(Blocks.LIGHT_BLUE_STAINED_GLASS, FallbackBlocks.LT_BLUE_GLASS);
+//		this.fallbackBlocks.put(Blocks.LIGHT_GRAY_STAINED_GLASS, FallbackBlocks.LT_GRAY_GLASS);
+//		this.fallbackBlocks.put(Blocks.MAGENTA_STAINED_GLASS, FallbackBlocks.MAGENTA_GLASS);
+//		this.fallbackBlocks.put(Blocks.ORANGE_STAINED_GLASS, FallbackBlocks.ORANGE_GLASS);
+//		this.fallbackBlocks.put(Blocks.PINK_STAINED_GLASS, FallbackBlocks.PINK_GLASS);
+//		this.fallbackBlocks.put(Blocks.PURPLE_STAINED_GLASS, FallbackBlocks.PURPLE_GLASS);
+//		this.fallbackBlocks.put(Blocks.RED_STAINED_GLASS, FallbackBlocks.RED_GLASS);
+//		this.fallbackBlocks.put(Blocks.TINTED_GLASS, FallbackBlocks.TINTED_GLASS);
+//		this.fallbackBlocks.put(Blocks.WHITE_STAINED_GLASS, FallbackBlocks.WHITE_GLASS);
+//		this.fallbackBlocks.put(Blocks.YELLOW_STAINED_GLASS, FallbackBlocks.YELLOW_GLASS);
+//	}
+//
+//	private BlockState getFallbackState(Block vanilla)
+//	{
+//		if (this.fallbackBlocks.containsKey(vanilla))
+//		{
+//			Litematica.LOGGER.warn("getFallbackState: Invalid Block State for block [{}]; Found a fallback state.", vanilla.getName().getString());
+//			return this.fallbackBlocks.get(vanilla).getDefaultState();
+//		}
+//
+//		return vanilla.getDefaultState();
+//	}
 
     protected GpuBufferSlice getEmptyFogBuffer()
     {
@@ -993,6 +1027,11 @@ public class WorldRendererSchematic
             parts = this.getModelForState(state.getBlock().getDefaultState()).getParts(rand);
             Litematica.LOGGER.warn("getModelParts: Invalid Block State for block at [{}] with state [{}]; Resetting to default.", pos.toShortString(), state.toString());
         }
+
+//		if (parts.isEmpty())
+//		{
+//			parts = this.getModelForState(this.getFallbackState(state.getBlock())).getParts(rand);
+//		}
 
         return parts;
     }

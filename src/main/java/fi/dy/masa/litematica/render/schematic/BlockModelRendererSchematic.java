@@ -75,7 +75,9 @@ public class BlockModelRendererSchematic
                                BlockPos posIn, MatrixStack matrixStack,
                                VertexConsumer vertexConsumer, long rand)
     {
-        boolean ao = MinecraftClient.isAmbientOcclusionEnabled() && stateIn.getLuminance() == 0 && modelParts.getFirst().useAmbientOcclusion();
+        boolean ao = MinecraftClient.isAmbientOcclusionEnabled() &&
+		        stateIn.getLuminance() == 0 &&
+		        (!modelParts.isEmpty() && modelParts.getFirst().useAmbientOcclusion());
 
         Vec3d offset = stateIn.getModelOffset(posIn);
         matrixStack.translate((float) offset.x, (float) offset.y, (float) offset.z);
@@ -85,12 +87,12 @@ public class BlockModelRendererSchematic
         {
             if (ao)
             {
-                //System.out.printf("renderModelSmooth(): pos [%s] / state [%s]\n", posIn.toShortString(), stateIn);
+//                System.out.printf("renderModelSmooth(): pos [%s] / state [%s] / parts? [%d]\n", posIn.toShortString(), stateIn, modelParts.size());
                 return this.renderModelSmooth(worldIn, modelParts, stateIn, posIn, matrixStack, vertexConsumer, this.random, rand, overlay);
             }
             else
             {
-                //System.out.printf("renderModelFlat(): pos [%s] / state [%s]\n", posIn.toShortString(), stateIn);
+//                System.out.printf("renderModelFlat(): pos [%s] / state [%s] / parts? [%d]\n", posIn.toShortString(), stateIn, modelParts.size());
                 return this.renderModelFlat(worldIn, modelParts, stateIn, posIn, matrixStack, vertexConsumer, this.random, rand, overlay);
             }
         }
