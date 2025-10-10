@@ -39,6 +39,7 @@
         "network.MixinClientPlayNetworkHandler",
         "render.IMixinGameRenderer",
         "render.MixinBufferBuilder",
+        "render.MixinEntityRenderManager",
         "render.MixinGameRenderer",
         "render.MixinWorldRenderer",
         "screen.IMixinHandledScreen",

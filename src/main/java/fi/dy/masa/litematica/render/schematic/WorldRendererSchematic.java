@@ -32,6 +32,7 @@ import net.minecraft.client.render.model.BlockStateModel;
 import net.minecraft.client.render.state.WorldRenderState;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.PlayerLikeEntity;
 import net.minecraft.entity.passive.*;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.FluidState;
@@ -56,6 +57,7 @@ import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.mixin.entity.IMixinEntity;
 import fi.dy.masa.litematica.mixin.render.IMixinGameRenderer;
 import fi.dy.masa.litematica.util.IEntityInvoker;
+import fi.dy.masa.litematica.util.IEntityRendererInvoker;
 import fi.dy.masa.litematica.world.ChunkSchematic;
 import fi.dy.masa.litematica.world.WorldSchematic;
 
@@ -1091,12 +1093,28 @@ public class WorldRendererSchematic
                         continue;
                     }
 
+	                float tickProgress = tickCounter.getTickProgress(false);
+
+					if (entityTmp instanceof PlayerLikeEntity ple)
+					{
+						ple.tick();
+
+						EntityRenderState state = ((IEntityRendererInvoker) this.entityRenderManager).litematica_getRenderStateNullSafe(entityTmp, tickProgress);
+
+						if (state != null)
+						{
+							this.schematicRenderState.entityStates.add(state);
+							++this.countEntitiesRendered;
+						}
+
+						// Guess we can't render Player Models in the Schem world.
+						continue;
+					}
+
                     boolean shouldRender = this.entityRenderManager.shouldRender(entityTmp, frustum, cameraX, cameraY, cameraZ);
 
                     if (shouldRender)
                     {
-						float tickProgress = tickCounter.getTickProgress(false);
-
 //                        Litematica.LOGGER.warn("[WorldRenderer] Chunk: [{}], EntityPos [{}] // Adj. Pos: X [{}], Y [{}], Z [{}]", pos.toShortString(), entityTmp.getBlockPos().toShortString(), x, y, z);
 
                         // Check for Salmon / Cod 'inWater' fix

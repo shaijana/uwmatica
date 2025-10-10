@@ -485,11 +485,20 @@ public class SchematicConversionMaps
         }
     }
 
-    /**
+	/**
      * These are the Vanilla Data Fixer's for the 1.20.x -> 1.20.5 changes
      */
     public static NbtCompound updateBlockStates(NbtCompound oldBlockState, int oldVersion)
     {
+		String oldName = oldBlockState.getString("Name", "");
+		String blockName = updateBlockName(oldName, oldVersion);
+
+		if (!oldName.equalsIgnoreCase(blockName))
+		{
+			oldBlockState.putString("Name", blockName);
+			Litematica.LOGGER.error("updateBlockName: [{}] -> [{}]", oldName, blockName);
+		}
+
         try
         {
             return (NbtCompound) MinecraftClient.getInstance().getDataFixer().update(TypeReferences.BLOCK_STATE, new Dynamic<>(NbtOps.INSTANCE, oldBlockState), oldVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION).getValue();
