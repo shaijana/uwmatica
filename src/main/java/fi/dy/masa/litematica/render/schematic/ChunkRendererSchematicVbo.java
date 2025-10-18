@@ -60,7 +60,7 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
     // UNTHREADED CODE
     protected final ReentrantLock chunkRenderLock;
     protected final ReentrantLock chunkRenderDataLock;
-    protected final Set<BlockEntity> setBlockEntities = new HashSet<>();
+    protected final Set<BlockEntity> setBlockEntities;
     protected Profiler profiler;
     //
     //protected final AtomicReference<Set<BlockEntity>> setBlockEntities = new AtomicReference<>(new HashSet<>());
@@ -69,8 +69,8 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
 
 //    protected final Map<RenderLayer, GpuBuffer> vertexBufferBlocks;
 //    protected final Map<OverlayRenderType, GpuBuffer> vertexBufferOverlay;
-    protected final List<IntBoundingBox> boxes = new ArrayList<>();
-    protected final EnumSet<OverlayRenderType> existingOverlays = EnumSet.noneOf(OverlayRenderType.class);
+    protected final List<IntBoundingBox> boxes;
+    protected final EnumSet<OverlayRenderType> existingOverlays;
 
     private net.minecraft.util.math.Box boundingBox;
     protected Color4f overlayColor;
@@ -100,9 +100,12 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
         this.worldRenderer = worldRenderer;
         this.chunkRenderData = ChunkRenderDataSchematic.EMPTY;
         this.chunkRenderLock = new ReentrantLock();
+		this.setBlockEntities = new HashSet<>();
         this.chunkRenderDataLock = new ReentrantLock();
         this.position = new BlockPos.Mutable();
         this.chunkRelativePos = new BlockPos.Mutable();
+		this.boxes = new ArrayList<>();
+		this.existingOverlays = EnumSet.noneOf(OverlayRenderType.class);
         this.builderCache = new BufferBuilderCache();
         this.gpuBufferCache = new GpuBufferCache();
     }
@@ -111,6 +114,11 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
     {
         return this.hasOverlay;
     }
+
+	public boolean isEmpty()
+	{
+		return this.boxes.isEmpty();
+	}
 
     protected Profiler getProfiler()
     {
@@ -317,6 +325,11 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
             {
                 return;
             }
+
+			if (task.getChunkRenderData() != null)
+			{
+				task.getChunkRenderData().clearAll();
+			}
 
             task.setChunkRenderData(data);
         }

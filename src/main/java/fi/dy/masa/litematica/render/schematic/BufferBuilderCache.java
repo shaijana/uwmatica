@@ -11,11 +11,16 @@ import net.minecraft.client.render.RenderLayer;
 
 public class BufferBuilderCache implements AutoCloseable
 {
-    private final ConcurrentHashMap<BlockRenderLayer, BufferBuilder> blockBufferBuilders = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<RenderLayer, BufferBuilder> layerBufferBuilders = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<OverlayRenderType, BufferBuilder> overlayBufferBuilders = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<BlockRenderLayer, BufferBuilder> blockBufferBuilders;
+    private final ConcurrentHashMap<RenderLayer, BufferBuilder> layerBufferBuilders;
+    private final ConcurrentHashMap<OverlayRenderType, BufferBuilder> overlayBufferBuilders;
 
-    protected BufferBuilderCache() { }
+    protected BufferBuilderCache()
+    {
+		this.blockBufferBuilders = new ConcurrentHashMap<>();
+		this.layerBufferBuilders = new ConcurrentHashMap<>();
+		this.overlayBufferBuilders = new ConcurrentHashMap<>();
+    }
 
     protected boolean hasBufferByBlockLayer(BlockRenderLayer layer)
     {

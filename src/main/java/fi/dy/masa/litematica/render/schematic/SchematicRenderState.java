@@ -9,9 +9,16 @@ import net.minecraft.client.render.state.CameraRenderState;
 
 public class SchematicRenderState
 {
-	protected CameraRenderState cameraState = new CameraRenderState();
-	protected List<EntityRenderState> entityStates = new ArrayList<>();
-	protected List<BlockEntityRenderState> tileEntityStates = new ArrayList<>();
+	protected CameraRenderState cameraState;
+	protected final List<EntityRenderState> entityStates;
+	protected final List<BlockEntityRenderState> tileEntityStates;
+
+	protected SchematicRenderState()
+	{
+		this.cameraState = new CameraRenderState();
+		this.entityStates = new ArrayList<>();
+		this.tileEntityStates = new ArrayList<>();
+	}
 
 	protected void clear()
 	{
