@@ -56,7 +56,7 @@ public class WorldLoadListener implements IWorldLoadListener
             EntitiesDataStorage.getInstance().onWorldJoin();
             CachedTagManager.startCache();
 
-			// TODO -- Experimental
+//			// TODO -- Experimental
 //			if (mc.debugHudEntryList.getVisibility(LitematicaDebugHud.LITEMATICA_DEBUG) != DebugHudEntryVisibility.IN_F3)
 //			{
 //				mc.debugHudEntryList.setEntryVisibility(LitematicaDebugHud.LITEMATICA_DEBUG, DebugHudEntryVisibility.IN_F3);
