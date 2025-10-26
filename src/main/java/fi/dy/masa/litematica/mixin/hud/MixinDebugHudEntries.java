@@ -18,26 +18,27 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import fi.dy.masa.litematica.render.LitematicaDebugHud;
 
-@Mixin(value = DebugHudEntries.class, priority = 1005)
+@Deprecated
+//@Mixin(value = DebugHudEntries.class)
 public abstract class MixinDebugHudEntries
 {
-	@Shadow @Final private static Map<Identifier, DebugHudEntry> ENTRIES;
-	@Mutable @Shadow @Final public static Map<DebugProfileType, Map<Identifier, DebugHudEntryVisibility>> PROFILES;
-
-	@Inject(method = "<clinit>", at = @At("TAIL"))
-	private static void litematica_registerDebugLines(CallbackInfo ci)
-	{
-		Map<Identifier, DebugHudEntryVisibility> defMap = PROFILES.get(DebugProfileType.DEFAULT);
-		Map<Identifier, DebugHudEntryVisibility> perfMap = PROFILES.get(DebugProfileType.PERFORMANCE);
-		ImmutableMap.Builder<Identifier, DebugHudEntryVisibility> builder = new ImmutableMap.Builder<>();
-
-		builder.putAll(defMap);
-		builder.put(LitematicaDebugHud.LITEMATICA_DEBUG, DebugHudEntryVisibility.IN_F3);
-		ENTRIES.put(LitematicaDebugHud.LITEMATICA_DEBUG, new LitematicaDebugHud());
-
-		PROFILES = ImmutableMap.of(
-					DebugProfileType.DEFAULT, builder.build(),
-					DebugProfileType.PERFORMANCE, perfMap
-				);
-	}
+//	@Shadow @Final private static Map<Identifier, DebugHudEntry> ENTRIES;
+//	@Mutable @Shadow @Final public static Map<DebugProfileType, Map<Identifier, DebugHudEntryVisibility>> PROFILES;
+//
+//	@Inject(method = "<clinit>", at = @At("TAIL"))
+//	private static void litematica_registerDebugLines(CallbackInfo ci)
+//	{
+//		Map<Identifier, DebugHudEntryVisibility> defMap = PROFILES.get(DebugProfileType.DEFAULT);
+//		Map<Identifier, DebugHudEntryVisibility> perfMap = PROFILES.get(DebugProfileType.PERFORMANCE);
+//		ImmutableMap.Builder<Identifier, DebugHudEntryVisibility> builder = new ImmutableMap.Builder<>();
+//
+//		builder.putAll(defMap);
+//		builder.put(LitematicaDebugHud.LITEMATICA_DEBUG, DebugHudEntryVisibility.IN_F3);
+//		ENTRIES.put(LitematicaDebugHud.LITEMATICA_DEBUG, new LitematicaDebugHud());
+//
+//		PROFILES = ImmutableMap.of(
+//					DebugProfileType.DEFAULT, builder.build(),
+//					DebugProfileType.PERFORMANCE, perfMap
+//				);
+//	}
 }

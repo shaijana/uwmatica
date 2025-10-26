@@ -15,28 +15,29 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import fi.dy.masa.litematica.render.LitematicaDebugHud;
 
-@Mixin(DebugHudProfile.class)
+@Deprecated
+//@Mixin(DebugHudProfile.class)
 public abstract class MixinDebugHudProfile
 {
-	@Shadow @Final private List<Identifier> visibleEntries;
-	@Shadow public abstract boolean isF3Enabled();
-
-	@Shadow
-	private Map<Identifier, DebugHudEntryVisibility> visibilityMap;
-
-	@Inject(method = "updateVisibleEntries", at = @At("TAIL"))
-	private void litematica_insertVisiblePosition(CallbackInfo ci)
-	{
-		if (!this.visibilityMap.containsKey(LitematicaDebugHud.LITEMATICA_DEBUG))
-		{
-//			Litematica.LOGGER.info("DebugHudProfile: Insert Missing Entry into visibilityMap.");
-			this.visibilityMap.put(LitematicaDebugHud.LITEMATICA_DEBUG, DebugHudEntryVisibility.IN_F3);
-		}
-
-		if (this.isF3Enabled())
-		{
-			this.visibleEntries.remove(LitematicaDebugHud.LITEMATICA_DEBUG);
-			this.visibleEntries.addFirst(LitematicaDebugHud.LITEMATICA_DEBUG);
-		}
-	}
+//	@Shadow @Final private List<Identifier> visibleEntries;
+//	@Shadow public abstract boolean isF3Enabled();
+//
+//	@Shadow
+//	private Map<Identifier, DebugHudEntryVisibility> visibilityMap;
+//
+//	@Inject(method = "updateVisibleEntries", at = @At("TAIL"))
+//	private void litematica_insertVisiblePosition(CallbackInfo ci)
+//	{
+//		if (!this.visibilityMap.containsKey(LitematicaDebugHud.LITEMATICA_DEBUG))
+//		{
+////			Litematica.LOGGER.info("DebugHudProfile: Insert Missing Entry into visibilityMap.");
+//			this.visibilityMap.put(LitematicaDebugHud.LITEMATICA_DEBUG, DebugHudEntryVisibility.IN_F3);
+//		}
+//
+//		if (this.isF3Enabled())
+//		{
+//			this.visibleEntries.remove(LitematicaDebugHud.LITEMATICA_DEBUG);
+//			this.visibleEntries.addFirst(LitematicaDebugHud.LITEMATICA_DEBUG);
+//		}
+//	}
 }
