@@ -28,7 +28,7 @@ import fi.dy.masa.litematica.util.FileType;
 
 public class GuiAreaSelectionManager extends GuiListBase<DirectoryEntry, WidgetDirectoryEntry, WidgetAreaSelectionBrowser> implements ISelectionListener<DirectoryEntry>
 {
-    private SelectionManager selectionManager;
+    private final SelectionManager selectionManager;
 
     public GuiAreaSelectionManager()
     {
@@ -66,7 +66,8 @@ public class GuiAreaSelectionManager extends GuiListBase<DirectoryEntry, WidgetD
     protected void reCreateGuiElements()
     {
         this.clearButtons();
-        this.clearWidgets();
+//        this.clearWidgets();
+	    this.clearChildren();
 
         int x = this.getScreenWidth() - 13;
         int y = 24;
