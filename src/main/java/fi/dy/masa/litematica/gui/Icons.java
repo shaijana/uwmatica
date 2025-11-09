@@ -2,10 +2,8 @@ package fi.dy.masa.litematica.gui;
 
 import java.nio.file.Path;
 import javax.annotation.Nullable;
-
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.util.Identifier;
-
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.resources.ResourceLocation;
 import fi.dy.masa.malilib.gui.interfaces.IFileBrowserIconProvider;
 import fi.dy.masa.malilib.gui.interfaces.IGuiIcon;
 import fi.dy.masa.malilib.render.RenderUtils;
@@ -40,7 +38,7 @@ public enum Icons implements IGuiIcon, IFileBrowserIconProvider
     ARROW_UP                (209,   0, 15, 15),
     ARROW_DOWN              (209,  15, 15, 15);
 
-    public static final Identifier TEXTURE = Identifier.of(Reference.MOD_ID, "textures/gui/gui_widgets.png");
+    public static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(Reference.MOD_ID, "textures/gui/gui_widgets.png");
 
     private final int u;
     private final int v;
@@ -80,13 +78,13 @@ public enum Icons implements IGuiIcon, IFileBrowserIconProvider
     }
 
     @Override
-    public void renderAt(DrawContext drawContext, int x, int y, float zLevel, boolean enabled, boolean selected)
+    public void renderAt(GuiGraphics drawContext, int x, int y, float zLevel, boolean enabled, boolean selected)
     {
         RenderUtils.drawTexturedRect(drawContext, this.getTexture(), x, y, this.u, this.v, this.w, this.h, zLevel);
     }
 
     @Override
-    public Identifier getTexture()
+    public ResourceLocation getTexture()
     {
         return TEXTURE;
     }

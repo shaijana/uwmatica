@@ -3,9 +3,7 @@ package fi.dy.masa.litematica.gui;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import javax.annotation.Nullable;
-
-import net.minecraft.client.MinecraftClient;
-
+import net.minecraft.client.Minecraft;
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.gui.button.ButtonBase;
@@ -82,7 +80,7 @@ public class GuiSchematicSave extends GuiSchematicSaveBase implements ICompletio
     @Override
     public void onTaskCompleted()
     {
-        if (this.mc.isOnThread())
+        if (this.mc.isSameThread())
         {
             this.refreshList();
         }
@@ -191,12 +189,12 @@ public class GuiSchematicSave extends GuiSchematicSaveBase implements ICompletio
     public static class InMemorySchematicCreator implements IStringConsumer
     {
         private final AreaSelection area;
-        private final MinecraftClient mc;
+        private final Minecraft mc;
 
         public InMemorySchematicCreator(AreaSelection area)
         {
             this.area = area;
-            this.mc = MinecraftClient.getInstance();
+            this.mc = Minecraft.getInstance();
         }
 
         @Override

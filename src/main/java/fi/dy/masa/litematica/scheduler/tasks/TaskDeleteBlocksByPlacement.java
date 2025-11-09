@@ -3,18 +3,16 @@ package fi.dy.masa.litematica.scheduler.tasks;
 import java.util.Collection;
 import java.util.Set;
 import java.util.function.Consumer;
+import net.minecraft.commands.arguments.blocks.BlockStateParser;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.Container;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import com.google.common.collect.ImmutableList;
-
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.command.argument.BlockArgumentParser;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.profiler.Profiler;
-import net.minecraft.world.World;
-
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.render.infohud.InfoHud;
@@ -28,7 +26,7 @@ import fi.dy.masa.malilib.util.LayerRange;
 
 public class TaskDeleteBlocksByPlacement extends TaskProcessChunkMultiPhase
 {
-    protected static final BlockState AIR = Blocks.AIR.getDefaultState();
+    protected static final BlockState AIR = Blocks.AIR.defaultBlockState();
 
     protected final ImmutableList<SchematicPlacement> placements;
     protected final LayerRange layerRange;
@@ -47,7 +45,7 @@ public class TaskDeleteBlocksByPlacement extends TaskProcessChunkMultiPhase
         this.mode = mode;
         this.layerRange = layerRange;
         this.setBlockCommand = Configs.Generic.COMMAND_NAME_SETBLOCK.getStringValue();
-        this.blockString = BlockArgumentParser.stringifyBlockState(Blocks.AIR.getDefaultState());
+        this.blockString = BlockStateParser.serialize(Blocks.AIR.defaultBlockState());
         this.processBoxBlocksTask = this::sendQueuedCommands;
     }
 
@@ -113,7 +111,7 @@ public class TaskDeleteBlocksByPlacement extends TaskProcessChunkMultiPhase
     }
 
     @Override
-    public boolean execute(Profiler profiler)
+    public boolean execute(ProfilerFiller profiler)
     {
         return this.executeMultiPhase(profiler);
     }
@@ -157,7 +155,7 @@ public class TaskDeleteBlocksByPlacement extends TaskProcessChunkMultiPhase
     protected void removeBlocksInBox(IntBoundingBox box, PlacementDeletionMode mode, Consumer<BlockPos> removeFunc)
     {
         BlockCheck check = this.getCheckFor(mode);
-        BlockPos.Mutable posMutable = new BlockPos.Mutable();
+        BlockPos.MutableBlockPos posMutable = new BlockPos.MutableBlockPos();
 
         for (int y = box.maxY; y >= box.minY; --y)
         {
@@ -183,13 +181,13 @@ public class TaskDeleteBlocksByPlacement extends TaskProcessChunkMultiPhase
     {
         BlockEntity te = this.world.getBlockEntity(pos);
 
-        if (te instanceof Inventory)
+        if (te instanceof Container)
         {
-            ((Inventory) te).clear();
-            this.world.setBlockState(pos, Blocks.BARRIER.getDefaultState(), 0x32);
+            ((Container) te).clearContent();
+            this.world.setBlock(pos, Blocks.BARRIER.defaultBlockState(), 0x32);
         }
 
-        this.world.setBlockState(pos, Blocks.AIR.getDefaultState(), 0x32);
+        this.world.setBlock(pos, Blocks.AIR.defaultBlockState(), 0x32);
     }
 
     protected void removeEntitiesByCommand(IntBoundingBox box)
@@ -221,37 +219,33 @@ public class TaskDeleteBlocksByPlacement extends TaskProcessChunkMultiPhase
 
     protected BlockCheck getCheckFor(PlacementDeletionMode mode)
     {
-        switch (mode)
-        {
-            case MATCHING_BLOCK:
-                return (pos, sw, w) -> {
-                    BlockState stateSchematic = sw.getBlockState(pos);
-                    return stateSchematic != AIR && stateSchematic == w.getBlockState(pos);
-                };
-            case NON_MATCHING_BLOCK:
-                return (pos, sw, w) -> {
-                    BlockState stateSchematic = sw.getBlockState(pos);
-                    return stateSchematic != AIR && stateSchematic != w.getBlockState(pos);
-                };
-            case ANY_SCHEMATIC_BLOCK:
-                return (pos, sw, w) -> sw.getBlockState(pos) != Blocks.AIR.getDefaultState();
-            case NO_SCHEMATIC_BLOCK:
-                return (pos, sw, w) -> sw.getBlockState(pos) == Blocks.AIR.getDefaultState();
-            default:
-        }
-
-        return (pos, sw, w) -> true;
+	    return switch (mode)
+	    {
+		    case MATCHING_BLOCK -> (pos, sw, w) ->
+		    {
+			    BlockState stateSchematic = sw.getBlockState(pos);
+			    return stateSchematic != AIR && stateSchematic == w.getBlockState(pos);
+		    };
+		    case NON_MATCHING_BLOCK -> (pos, sw, w) ->
+		    {
+			    BlockState stateSchematic = sw.getBlockState(pos);
+			    return stateSchematic != AIR && stateSchematic != w.getBlockState(pos);
+		    };
+		    case ANY_SCHEMATIC_BLOCK -> (pos, sw, w) -> sw.getBlockState(pos) != Blocks.AIR.defaultBlockState();
+		    case NO_SCHEMATIC_BLOCK -> (pos, sw, w) -> sw.getBlockState(pos) == Blocks.AIR.defaultBlockState();
+		    default -> (pos, sw, w) -> true;
+	    };
     }
 
     protected interface BlockCheck
     {
-        boolean shouldDelete(BlockPos pos, World schematicWorld, World world);
+        boolean shouldDelete(BlockPos pos, Level schematicWorld, Level world);
     }
 
     @Override
     protected boolean canProcessChunk(ChunkPos pos)
     {
-        if (this.schematicWorld.getChunkProvider().isChunkLoaded(pos.x, pos.z) == false)
+        if (this.schematicWorld.getChunkProvider().hasChunk(pos.x, pos.z) == false)
         {
             return false;
         }

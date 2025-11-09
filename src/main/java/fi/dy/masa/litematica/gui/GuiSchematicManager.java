@@ -4,11 +4,8 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import javax.annotation.Nullable;
-
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.util.ScreenshotRecorder;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.Screenshot;
 import fi.dy.masa.malilib.config.IConfigOptionList;
 import fi.dy.masa.malilib.config.IConfigOptionListEntry;
 import fi.dy.masa.malilib.gui.GuiBase;
@@ -25,6 +22,7 @@ import fi.dy.masa.malilib.interfaces.IConfirmationListener;
 import fi.dy.masa.malilib.interfaces.IStringConsumerFeedback;
 import fi.dy.masa.malilib.util.InfoUtils;
 import fi.dy.masa.malilib.util.StringUtils;
+import com.mojang.blaze3d.platform.NativeImage;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.gui.GuiMainMenu.ButtonListenerChangeMenu;
@@ -331,12 +329,12 @@ public class GuiSchematicManager extends GuiSchematicBrowserBase implements ISel
             @Nullable
             private final String hoverText;
 
-            private Type(String label)
+            Type(String label)
             {
                 this(label, null);
             }
 
-            private Type(String label, String hoverText)
+            Type(String label, @Nullable String hoverText)
             {
                 this.label = label;
                 this.hoverText = hoverText;
@@ -444,8 +442,8 @@ public class GuiSchematicManager extends GuiSchematicBrowserBase implements ISel
             {
                 try
                 {
-                    MinecraftClient mc = MinecraftClient.getInstance();
-                    ScreenshotRecorder.takeScreenshot(mc.getFramebuffer(), (screenshot) ->
+                    Minecraft mc = Minecraft.getInstance();
+                    Screenshot.takeScreenshot(mc.getMainRenderTarget(), (screenshot) ->
                     {
                         int x = screenshot.getWidth() >= screenshot.getHeight() ? (screenshot.getWidth() - screenshot.getHeight()) / 2 : 0;
                         int y = screenshot.getHeight() >= screenshot.getWidth() ? (screenshot.getHeight() - screenshot.getWidth()) / 2 : 0;

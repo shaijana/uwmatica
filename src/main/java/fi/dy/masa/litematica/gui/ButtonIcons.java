@@ -3,9 +3,8 @@ package fi.dy.masa.litematica.gui;
 import fi.dy.masa.litematica.Reference;
 import fi.dy.masa.malilib.gui.interfaces.IGuiIcon;
 import fi.dy.masa.malilib.render.RenderUtils;
-
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.resources.ResourceLocation;
 
 public enum ButtonIcons implements IGuiIcon
 {
@@ -19,7 +18,7 @@ public enum ButtonIcons implements IGuiIcon
     SCHEMATIC_PROJECTS      (102,  98, 14, 14),
     TASK_MANAGER            (102, 112, 14, 14),;
 
-    public static final Identifier TEXTURE = Identifier.of(Reference.MOD_ID, "textures/gui/gui_widgets.png");
+    public static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(Reference.MOD_ID, "textures/gui/gui_widgets.png");
 
     private final int u;
     private final int v;
@@ -59,7 +58,7 @@ public enum ButtonIcons implements IGuiIcon
     }
 
     @Override
-    public void renderAt(DrawContext drawContext, int x, int y, float zLevel, boolean enabled, boolean selected)
+    public void renderAt(GuiGraphics drawContext, int x, int y, float zLevel, boolean enabled, boolean selected)
     {
         int u = this.u;
 
@@ -77,7 +76,7 @@ public enum ButtonIcons implements IGuiIcon
     }
 
     @Override
-    public Identifier getTexture()
+    public ResourceLocation getTexture()
     {
         return TEXTURE;
     }

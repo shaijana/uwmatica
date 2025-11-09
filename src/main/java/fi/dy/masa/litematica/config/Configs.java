@@ -3,12 +3,10 @@ package fi.dy.masa.litematica.config;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import net.minecraft.client.Minecraft;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
-import net.minecraft.client.MinecraftClient;
-
 import fi.dy.masa.malilib.config.ConfigUtils;
 import fi.dy.masa.malilib.config.HudAlignment;
 import fi.dy.masa.malilib.config.IConfigBase;
@@ -20,7 +18,6 @@ import fi.dy.masa.malilib.util.JsonUtils;
 import fi.dy.masa.malilib.util.MessageOutputType;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.Reference;
-import fi.dy.masa.litematica.compat.lwgl.RenderCompat;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.render.LitematicaDebugHud;
 import fi.dy.masa.litematica.selection.CornerSelectionMode;
@@ -417,7 +414,6 @@ public class Configs implements IConfigHandler
                 ConfigUtils.readConfigBase(root, "InfoOverlays", InfoOverlays.OPTIONS);
                 ConfigUtils.readConfigBase(root, "Visuals", Visuals.OPTIONS);
 
-                RenderCompat.checkGpuVisuals();
                 //Litematica.debugLog("loadFromFile(): Successfully loaded config file '{}'.", configFile.toAbsolutePath());
             }
             else
@@ -427,9 +423,9 @@ public class Configs implements IConfigHandler
         }
 
         DataManager.setToolItem(Generic.TOOL_ITEM.getStringValue());
-        if (MinecraftClient.getInstance().world != null)
+        if (Minecraft.getInstance().level != null)
         {
-            DataManager.getInstance().setToolItemComponents(Generic.TOOL_ITEM_COMPONENTS.getStringValue(), MinecraftClient.getInstance().world.getRegistryManager());
+            DataManager.getInstance().setToolItemComponents(Generic.TOOL_ITEM_COMPONENTS.getStringValue(), Minecraft.getInstance().level.registryAccess());
         }
         InventoryUtils.setPickBlockableSlots(Generic.PICK_BLOCKABLE_SLOTS.getStringValue());
         DataManager.getSelectionManager().checkSelectionModeConfig();

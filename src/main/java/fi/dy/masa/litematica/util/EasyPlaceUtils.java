@@ -4,33 +4,30 @@ import java.lang.reflect.Method;
 import java.util.*;
 import javax.annotation.Nullable;
 
-import org.jetbrains.annotations.ApiStatus;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.ComparatorMode;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.world.level.block.state.properties.Half;
+import net.minecraft.world.level.block.state.properties.SlabType;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 
-import net.minecraft.block.*;
-import net.minecraft.block.enums.BlockHalf;
-import net.minecraft.block.enums.ComparatorMode;
-import net.minecraft.block.enums.SlabType;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemPlacementContext;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemUsageContext;
-import net.minecraft.registry.tag.BlockTags;
-import net.minecraft.state.property.EnumProperty;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.RaycastContext;
-import net.minecraft.world.World;
-
-import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.Message;
 import fi.dy.masa.malilib.registry.Registry;
 import fi.dy.masa.malilib.util.InfoUtils;
@@ -44,7 +41,6 @@ import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.config.Hotkeys;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.materials.MaterialCache;
-import fi.dy.masa.litematica.mixin.input.IMixinKeyBinding;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacementManager;
 import fi.dy.masa.litematica.tool.ToolMode;
 import fi.dy.masa.litematica.world.SchematicWorldHandler;
@@ -95,8 +91,8 @@ public class EasyPlaceUtils
             {
                 // TODO FIXME cross-MC-version fragile
                 String name = Block.class.getSimpleName().equals("Block") ? "onUse": "a";
-                Method method = block.getClass().getMethod(name, BlockState.class, World.class, BlockPos.class, PlayerEntity.class, BlockHitResult.class);
-                Method baseMethod = Block.class.getMethod(name, BlockState.class, World.class, BlockPos.class, PlayerEntity.class, BlockHitResult.class);
+                Method method = block.getClass().getMethod(name, BlockState.class, Level.class, BlockPos.class, Player.class, BlockHitResult.class);
+                Method baseMethod = Block.class.getMethod(name, BlockState.class, Level.class, BlockPos.class, Player.class, BlockHitResult.class);
                 val = method.equals(baseMethod) == false;
             }
             catch (Exception e)
@@ -147,12 +143,12 @@ public class EasyPlaceUtils
         }
 
 		isHandling = true;
-		ActionResult result = handleEasyPlace();
+		InteractionResult result = handleEasyPlace();
 		isHandling = false;
 //		System.out.printf("handleEasyPlaceWithMessage() --> %s (%s)\n", result != ActionResult.PASS, result.toString());
 
 		// Only print the warning message once per right click
-		if (isFirstClickEasyPlace && result == ActionResult.FAIL)
+		if (isFirstClickEasyPlace && result == InteractionResult.FAIL)
 		{
 			//MessageOutput output = Configs.InfoOverlays.EASY_PLACE_WARNINGS.getValue();
 			//MessageDispatcher.warning(1500).type(output).translate("litematica.message.easy_place_fail");
@@ -163,7 +159,7 @@ public class EasyPlaceUtils
 
 		isFirstClickEasyPlace = false;
 
-		return result != ActionResult.PASS;
+		return result != InteractionResult.PASS;
     }
 
     public static void onRightClickTail()
@@ -180,7 +176,7 @@ public class EasyPlaceUtils
     @Nullable
     private static BlockHitResult getTargetPosition(@Nullable RayTraceUtils.RayTraceWrapper traceWrapper)
     {
-        MinecraftClient mc = MinecraftClient.getInstance();
+        Minecraft mc = Minecraft.getInstance();
         BlockPos overriddenPos = Registry.BLOCK_PLACEMENT_POSITION_HANDLER.getCurrentPlacementPosition();
 
         if (overriddenPos != null)
@@ -189,21 +185,21 @@ public class EasyPlaceUtils
             {
                 return null;
             }
-            double reach = mc.player.getBlockInteractionRange();
+            double reach = mc.player.blockInteractionRange();
             Entity entity = mc.getCameraEntity();
             BlockHitResult trace = RayTraceUtils.traceToPositions(Collections.singletonList(overriddenPos), entity, reach);
             BlockPos pos = overriddenPos;
-            Vec3d hitPos;
+            Vec3 hitPos;
             Direction side;
 
             if (trace != null && trace.getType() == HitResult.Type.BLOCK)
             {
-                hitPos = trace.getPos();
-                side = trace.getSide();
+                hitPos = trace.getLocation();
+                side = trace.getDirection();
             }
             else
             {
-                hitPos = new Vec3d(pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5);
+                hitPos = new Vec3(pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5);
                 side = Direction.UP;
             }
 
@@ -221,19 +217,19 @@ public class EasyPlaceUtils
     @Nullable
     private static BlockHitResult getAdjacentClickPosition(final BlockPos targetPos)
     {
-        MinecraftClient mc = MinecraftClient.getInstance();
-        World world = mc.world;
+        Minecraft mc = Minecraft.getInstance();
+        Level world = mc.level;
         if (mc.player == null)
         {
             return null;
         }
-        double reach = mc.player.getBlockInteractionRange();
+        double reach = mc.player.blockInteractionRange();
         Entity entity = mc.getCameraEntity();
         if (entity == null || world == null)
         {
             return null;
         }
-        HitResult traceVanilla = fi.dy.masa.malilib.util.game.RayTraceUtils.getRayTraceFromEntity(world, entity, RaycastContext.FluidHandling.NONE, false, reach);
+        HitResult traceVanilla = fi.dy.masa.malilib.util.game.RayTraceUtils.getRayTraceFromEntity(world, entity, ClipContext.Fluid.NONE, false, reach);
 
         if (traceVanilla == null)
         {
@@ -248,19 +244,19 @@ public class EasyPlaceUtils
             // If there is a block in the world right behind the targeted schematic block, then use
             // that block as the click position
             if (PlacementUtils.isReplaceable(world, posVanilla, false) == false &&
-                targetPos.equals(posVanilla.offset(blockHitResult.getSide())))
+                targetPos.equals(posVanilla.relative(blockHitResult.getDirection())))
             {
-                return new BlockHitResult(blockHitResult.getPos(), ((BlockHitResult) traceVanilla).getSide(), posVanilla, false);
+                return new BlockHitResult(blockHitResult.getLocation(), ((BlockHitResult) traceVanilla).getDirection(), posVanilla, false);
             }
         }
 
         for (Direction side : Direction.values())
         {
-            BlockPos posSide = targetPos.offset(side);
+            BlockPos posSide = targetPos.relative(side);
 
             if (PlacementUtils.isReplaceable(world, posSide, false) == false)
             {
-                Vec3d hitPos = getHitPositionForSidePosition(posSide, side);
+                Vec3 hitPos = getHitPositionForSidePosition(posSide, side);
                 //return HitPosition.of(posSide, hitPos, side.getOpposite());
                 return new BlockHitResult(hitPos, side.getOpposite(), posSide, false);
             }
@@ -269,14 +265,14 @@ public class EasyPlaceUtils
         return null;
     }
 
-    private static Vec3d getHitPositionForSidePosition(BlockPos posSide, Direction sideFromTarget)
+    private static Vec3 getHitPositionForSidePosition(BlockPos posSide, Direction sideFromTarget)
     {
         Direction.Axis axis = sideFromTarget.getAxis();
-        double x = posSide.getX() + 0.5 - sideFromTarget.getOffsetX() * 0.5;
+        double x = posSide.getX() + 0.5 - sideFromTarget.getStepX() * 0.5;
         double y = posSide.getY() + (axis == Direction.Axis.Y ? (sideFromTarget == Direction.DOWN ? 1.0 : 0.0) : 0.0);
-        double z = posSide.getZ() + 0.5 - sideFromTarget.getOffsetZ() * 0.5;
+        double z = posSide.getZ() + 0.5 - sideFromTarget.getStepZ() * 0.5;
 
-        return new Vec3d(x, y, z);
+        return new Vec3(x, y, z);
     }
 
     @Nullable
@@ -303,21 +299,21 @@ public class EasyPlaceUtils
                                                           BlockState stateSchematic,
                                                           BlockState stateClient)
     {
-        MinecraftClient mc = MinecraftClient.getInstance();
+        Minecraft mc = Minecraft.getInstance();
         SlabBlock slab = (SlabBlock) stateSchematic.getBlock();
         BlockPos targetBlockPos = targetPosition.getBlockPos();
-        World worldClient = mc.world;
-        boolean isDouble = stateSchematic.get(SlabBlock.TYPE).equals(SlabType.DOUBLE);
+        Level worldClient = mc.level;
+        boolean isDouble = stateSchematic.getValue(SlabBlock.TYPE).equals(SlabType.DOUBLE);
 
         if (isDouble)
         {
             if (clientBlockIsSameMaterialSingleSlab(stateSchematic, stateClient))
             {
-                boolean isTop = stateClient.get(SlabBlock.TYPE) == SlabType.TOP;
+                boolean isTop = stateClient.getValue(SlabBlock.TYPE) == SlabType.TOP;
                 Direction side = isTop ? Direction.DOWN : Direction.UP;
-                Vec3d hitPos = targetPosition.getPos();
+                Vec3 hitPos = targetPosition.getLocation();
                 //return HitPosition.of(targetBlockPos, new Vec3d(hitPos.x, targetBlockPos.getY() + 0.5, hitPos.z), side);
-                return new BlockHitResult(new Vec3d(hitPos.x, targetBlockPos.getY() + 0.5, hitPos.z), side, targetBlockPos, false);
+                return new BlockHitResult(new Vec3(hitPos.x, targetBlockPos.getY() + 0.5, hitPos.z), side, targetBlockPos, false);
             }
             else if (PlacementUtils.isReplaceable(worldClient, targetBlockPos, true))
             {
@@ -328,7 +324,7 @@ public class EasyPlaceUtils
         // Single slab required, so the target position must be replaceable
         else if (isDouble == false && PlacementUtils.isReplaceable(worldClient, targetBlockPos, true))
         {
-            boolean isTop = stateSchematic.get(SlabBlock.TYPE) == SlabType.TOP;
+            boolean isTop = stateSchematic.getValue(SlabBlock.TYPE) == SlabType.TOP;
             return getClickPositionForSlabHalf(targetPosition, stateSchematic, isTop, worldClient);
         }
 
@@ -336,7 +332,7 @@ public class EasyPlaceUtils
     }
 
     @Nullable
-    private static BlockHitResult getClickPositionForSlabHalf(BlockHitResult targetPosition, BlockState stateSchematic, boolean isTop, World worldClient)
+    private static BlockHitResult getClickPositionForSlabHalf(BlockHitResult targetPosition, BlockState stateSchematic, boolean isTop, Level worldClient)
     {
         BlockPos targetBlockPos = targetPosition.getBlockPos();
         boolean requireAdjacent = Configs.Generic.EASY_PLACE_CLICK_ADJACENT.getBooleanValue();
@@ -351,24 +347,24 @@ public class EasyPlaceUtils
 
             if (isReplaceable)
             {
-                BlockPos posOffset = targetBlockPos.offset(clickSide);
+                BlockPos posOffset = targetBlockPos.relative(clickSide);
                 BlockState stateSide = worldClient.getBlockState(posOffset);
 
                 // Clicking on the target position itself does not create a double slab above or below, so just click on the position itself
                 if (clientBlockIsSameMaterialSingleSlab(stateSchematic, stateSide) == false)
                 {
-                    Vec3d hitPos = targetPosition.getPos();
+                    Vec3 hitPos = targetPosition.getLocation();
                     //return HitPosition.of(targetBlockPos, new Vec3d(hitPos.x, targetBlockPos.getY() + 0.5, hitPos.z), clickSide);
-                    return new BlockHitResult(new Vec3d(hitPos.x, targetBlockPos.getY() + 0.5, hitPos.z), clickSide, targetBlockPos, false);
+                    return new BlockHitResult(new Vec3(hitPos.x, targetBlockPos.getY() + 0.5, hitPos.z), clickSide, targetBlockPos, false);
                 }
             }
-            else if (worldClient.getBlockState(targetBlockPos).isLiquid())
+            else if (worldClient.getBlockState(targetBlockPos).liquid())
             {
                 // Can click on the compensated position without creating a double slab there
                 if (canClickOnAdjacentBlockToPlaceSingleSlabAt(targetBlockPos, stateSchematic, clickSide.getOpposite(), worldClient))
                 {
-                    BlockPos pos = targetBlockPos.offset(clickSide.getOpposite());
-                    Vec3d hitPos = new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
+                    BlockPos pos = targetBlockPos.relative(clickSide.getOpposite());
+                    Vec3 hitPos = new Vec3(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
                     return new BlockHitResult(hitPos, clickSide, pos, false);
                 }
             }
@@ -380,11 +376,11 @@ public class EasyPlaceUtils
     }
 
     @Nullable
-    private static BlockHitResult getAdjacentClickPositionForSlab(BlockPos targetBlockPos, BlockState stateSchematic, boolean isTop, World worldClient)
+    private static BlockHitResult getAdjacentClickPositionForSlab(BlockPos targetBlockPos, BlockState stateSchematic, boolean isTop, Level worldClient)
     {
         Direction clickSide = isTop ? Direction.DOWN : Direction.UP;
         Direction clickSideOpposite = clickSide.getOpposite();
-        BlockPos posSide = targetBlockPos.offset(clickSideOpposite);
+        BlockPos posSide = targetBlockPos.relative(clickSideOpposite);
 
         // Can click on the existing block above or below
         if (canClickOnAdjacentBlockToPlaceSingleSlabAt(targetBlockPos, stateSchematic, clickSideOpposite, worldClient))
@@ -399,11 +395,11 @@ public class EasyPlaceUtils
             {
                 if (canClickOnAdjacentBlockToPlaceSingleSlabAt(targetBlockPos, stateSchematic, side, worldClient))
                 {
-                    posSide = targetBlockPos.offset(side);
-                    Vec3d hitPos = getHitPositionForSidePosition(posSide, side);
+                    posSide = targetBlockPos.relative(side);
+                    Vec3 hitPos = getHitPositionForSidePosition(posSide, side);
                     double y = isTop ? 0.9 : 0.1;
                     //return HitPosition.of(posSide, new Vec3d(hitPos.x, posSide.getY() + y, hitPos.z), side.getOpposite());
-                    return new BlockHitResult(new Vec3d(hitPos.x, posSide.getY() + y, hitPos.z), side.getOpposite(), posSide, false);
+                    return new BlockHitResult(new Vec3(hitPos.x, posSide.getY() + y, hitPos.z), side.getOpposite(), posSide, false);
                 }
             }
         }
@@ -411,23 +407,23 @@ public class EasyPlaceUtils
         return null;
     }
 
-    private static boolean canClickOnAdjacentBlockToPlaceSingleSlabAt(BlockPos targetBlockPos, BlockState targetState, Direction side, World worldClient)
+    private static boolean canClickOnAdjacentBlockToPlaceSingleSlabAt(BlockPos targetBlockPos, BlockState targetState, Direction side, Level worldClient)
     {
-        BlockPos posSide = targetBlockPos.offset(side);
+        BlockPos posSide = targetBlockPos.relative(side);
         BlockState stateSide = worldClient.getBlockState(posSide);
 
         return PlacementUtils.isReplaceable(worldClient, posSide, false) == false &&
                (side.getAxis() != Direction.Axis.Y ||
                 clientBlockIsSameMaterialSingleSlab(targetState, stateSide) == false
-                || stateSide.get(SlabBlock.TYPE) != targetState.get(SlabBlock.TYPE));
+                || stateSide.getValue(SlabBlock.TYPE) != targetState.getValue(SlabBlock.TYPE));
     }
 
-    private static ActionResult handleEasyPlace()
+    private static InteractionResult handleEasyPlace()
     {
-        MinecraftClient mc = MinecraftClient.getInstance();
+        Minecraft mc = Minecraft.getInstance();
         Entity entity = mc.getCameraEntity();
-        ClientWorld world = mc.world;
-        double reach = mc.player.getBlockInteractionRange();
+        ClientLevel world = mc.level;
+        double reach = mc.player.blockInteractionRange();
         RayTraceUtils.RayTraceWrapper traceWrapper = RayTraceUtils.getGenericTrace(world, entity, reach, true, true, true);
 		BlockHitResult targetPosition = getTargetPosition(traceWrapper);
 
@@ -436,21 +432,21 @@ public class EasyPlaceUtils
 		{
 			if (traceWrapper != null && traceWrapper.getHitType() == RayTraceUtils.RayTraceWrapper.HitType.VANILLA_BLOCK)
 			{
-				return placementRestrictionInEffect() ? ActionResult.FAIL : ActionResult.PASS;
+				return placementRestrictionInEffect() ? InteractionResult.FAIL : InteractionResult.PASS;
 			}
 
-			return ActionResult.PASS;
+			return InteractionResult.PASS;
 		}
 
 		final BlockPos targetBlockPos = targetPosition.getBlockPos();
-		World schematicWorld = SchematicWorldHandler.getSchematicWorld();
+		Level schematicWorld = SchematicWorldHandler.getSchematicWorld();
 		BlockState stateSchematic = schematicWorld.getBlockState(targetBlockPos);
 		BlockState stateClient = world.getBlockState(targetBlockPos);
 		ItemStack requiredStack = MaterialCache.getInstance().getRequiredBuildItemForState(stateSchematic);
 
-		if (stateSchematic.isIn(BlockTags.AIR))
+		if (stateSchematic.is(BlockTags.AIR))
 		{
-			return ActionResult.FAIL;
+			return InteractionResult.FAIL;
 		}
 
 		// The block is correct already, or it was recently placed, or some of the checks failed
@@ -458,7 +454,7 @@ public class EasyPlaceUtils
 			easyPlaceIsPositionCached(targetBlockPos) ||
 			canPlaceBlock(targetBlockPos, world, stateSchematic, stateClient) == false)
 		{
-			return ActionResult.FAIL;
+			return InteractionResult.FAIL;
 		}
 
 		BlockHitResult clickPosition = getClickPosition(targetPosition, stateSchematic, stateClient);
@@ -467,40 +463,40 @@ public class EasyPlaceUtils
 
 		// *** ADDED Easy Place Code from Pre-Rewrite ***
 		InventoryUtils.schematicWorldPickBlock(requiredStack, targetBlockPos, world, mc);
-		Hand hand = EntityUtils.getUsedHandForItem(mc.player, requiredStack);
+		InteractionHand hand = EntityUtils.getUsedHandForItem(mc.player, requiredStack);
 
 		// Didn't find a valid or safe click position, or was unable to pick block
 		if (clickPosition == null || hand == null)
 		{
-			return ActionResult.FAIL;
+			return InteractionResult.FAIL;
 		}
 
 		// *** ADDED Easy Place Code from Pre-Rewrite ***
 		// Already placed to that position, possible server sync delay
 		if (EasyPlaceUtils.easyPlaceIsPositionCached(targetBlockPos))
 		{
-			return ActionResult.FAIL;
+			return InteractionResult.FAIL;
 		}
 
 		// *** ADDED Easy Place Code from Pre-Rewrite ***
 		// Ignore action if too fast
 		if (EasyPlaceUtils.easyPlaceIsTooFast())
 		{
-			return ActionResult.FAIL;
+			return InteractionResult.FAIL;
 		}
 
 		boolean isSlab = stateSchematic.getBlock() instanceof SlabBlock;
 		boolean usingAdjacentClickPosition = clickPosition.getBlockPos().equals(targetBlockPos) == false;
 		BlockPos clickPos = clickPosition.getBlockPos();
-		Vec3d hitPos = clickPosition.getPos();
-		Direction side = clickPosition.getSide();
-		Direction sideOrig = targetPosition.getSide();
+		Vec3 hitPos = clickPosition.getLocation();
+		Direction side = clickPosition.getDirection();
+		Direction sideOrig = targetPosition.getDirection();
 
 		// TODO -- POST-REWRITE CODE (No rotations?)
 		// *** ADDED Easy Place Code from Pre-Rewrite for rotations ***
 		EasyPlaceProtocol protocol = PlacementHandler.getEffectiveProtocolVersion();
 		double traceMaxRange = Configs.Generic.EASY_PLACE_VANILLA_REACH.getBooleanValue() ? 4.5 : 6;
-		HitResult traceVanilla = RayTraceUtils.getRayTraceFromEntity(mc.world, mc.player, false, traceMaxRange);
+		HitResult traceVanilla = RayTraceUtils.getRayTraceFromEntity(mc.level, mc.player, false, traceMaxRange);
 
 		if (protocol == EasyPlaceProtocol.NONE || protocol == EasyPlaceProtocol.SLAB_ONLY)
 		{
@@ -510,14 +506,14 @@ public class EasyPlaceUtils
 			{
 				BlockHitResult hitResult = (BlockHitResult) traceVanilla;
 				BlockPos posVanilla = hitResult.getBlockPos();
-				Direction sideVanilla = hitResult.getSide();
-				BlockState stateVanilla = mc.world.getBlockState(posVanilla);
-				Vec3d hit = traceVanilla.getPos();
-				ItemPlacementContext ctx = new ItemPlacementContext(new ItemUsageContext(mc.player, hand, hitResult));
+				Direction sideVanilla = hitResult.getDirection();
+				BlockState stateVanilla = mc.level.getBlockState(posVanilla);
+				Vec3 hit = traceVanilla.getLocation();
+				BlockPlaceContext ctx = new BlockPlaceContext(new UseOnContext(mc.player, hand, hitResult));
 
-				if (stateVanilla.canReplace(ctx) == false)
+				if (stateVanilla.canBeReplaced(ctx) == false)
 				{
-					posVanilla = posVanilla.offset(sideVanilla);
+					posVanilla = posVanilla.relative(sideVanilla);
 
 					if (targetBlockPos.equals(posVanilla))
 					{
@@ -534,10 +530,10 @@ public class EasyPlaceUtils
 			side = WorldUtils.applyPlacementFacing(stateSchematic, side, stateClient);
 
 			// Fluid _blocks_ are not replaceable... >_>
-			if (stateClient.canPlaceAt(world, targetBlockPos) == false &&
-				stateClient.isLiquid())
+			if (stateClient.canSurvive(world, targetBlockPos) == false &&
+				stateClient.liquid())
 			{
-				clickPos = clickPos.offset(side, -1);
+				clickPos = clickPos.relative(side, -1);
 			}
 		}
 
@@ -549,7 +545,7 @@ public class EasyPlaceUtils
 
 		if (placementData.mustFail)
 		{
-			return ActionResult.FAIL; //disallowed cases (e.g. trying to place torch with no support block)
+			return InteractionResult.FAIL; //disallowed cases (e.g. trying to place torch with no support block)
 		}
 
 		if (placementData.handled)
@@ -586,7 +582,7 @@ public class EasyPlaceUtils
 		stateClient = world.getBlockState(clickPos);
 		boolean needsSneak = hasUseAction(stateClient.getBlock());
 		boolean didFakeSneak = needsSneak && EntityUtils.setFakedSneakingState(true);
-		PlayerEntity player = mc.player;
+		Player player = mc.player;
 
 		// Mark that this position has been handled (use the non-offset position that is checked above)
 		cacheEasyPlacePosition(clickPos);
@@ -594,23 +590,23 @@ public class EasyPlaceUtils
 		BlockHitResult hitResult = new BlockHitResult(hitPos, side, clickPos, false);
 
 		//if (GameWrap.getInteractionManager().processRightClickBlock(player, world, clickPos, side.getVanillaDirection(), hitPos.toVanilla(), hand) == EnumActionResult.SUCCESS)
-		ActionResult result = mc.interactionManager.interactBlock(mc.player, hand, hitResult);
+		InteractionResult result = mc.gameMode.useItemOn(mc.player, hand, hitResult);
 
-		if (result == ActionResult.PASS)
+		if (result == InteractionResult.PASS)
 		{
-			if (ActionResult.SUCCESS.swingSource().equals(ActionResult.SwingSource.CLIENT) &&
+			if (InteractionResult.SUCCESS.swingSource().equals(InteractionResult.SwingSource.CLIENT) &&
 				Configs.Generic.EASY_PLACE_SWING_HAND.getBooleanValue())
 			{
-				player.swingHand(hand);
+				player.swing(hand);
 			}
 			//GameWrap.getClient().entityRenderer.itemRenderer.resetEquippedProgress(hand);
-			mc.getEntityRenderDispatcher().getHeldItemRenderer().resetEquipProgress(hand);
+			mc.getEntityRenderDispatcher().getItemInHandRenderer().itemUsed(hand);
 
-			if (isSlab && stateSchematic.get(SlabBlock.TYPE).equals(SlabType.DOUBLE))
+			if (isSlab && stateSchematic.getValue(SlabBlock.TYPE).equals(SlabType.DOUBLE))
 			{
 				stateClient = world.getBlockState(clickPos);
 
-				if (stateClient.getBlock() instanceof SlabBlock && stateClient.get(SlabBlock.TYPE).equals(SlabType.DOUBLE) == false)
+				if (stateClient.getBlock() instanceof SlabBlock && stateClient.getValue(SlabBlock.TYPE).equals(SlabType.DOUBLE) == false)
 				{
 					// TODO -- POST-REWRITE CODE (No rotations?)
 //                    side = stateClient.get(SlabBlock.TYPE) == SlabType.TOP ? Direction.DOWN : Direction.UP;
@@ -620,11 +616,11 @@ public class EasyPlaceUtils
 //                    //GameWrap.getInteractionManager().processRightClickBlock(player, world, targetBlockPos, side.getVanillaDirection(), hitPos.toVanilla(), hand);
 //                    mc.interactionManager.interactBlock(mc.player, hand, hitResult);
 
-					if (stateClient.getBlock() instanceof SlabBlock && stateClient.get(SlabBlock.TYPE) != SlabType.DOUBLE)
+					if (stateClient.getBlock() instanceof SlabBlock && stateClient.getValue(SlabBlock.TYPE) != SlabType.DOUBLE)
 					{
 						side = applyPlacementFacing(stateSchematic, sideOrig, stateClient);
 						hitResult = new BlockHitResult(hitPos, side, clickPos, false);
-						mc.interactionManager.interactBlock(mc.player, hand, hitResult);
+						mc.gameMode.useItemOn(mc.player, hand, hitResult);
 					}
 				}
 			}
@@ -634,10 +630,10 @@ public class EasyPlaceUtils
 				EntityUtils.setFakedSneakingState(false);
 			}
 
-			return ActionResult.SUCCESS;
+			return InteractionResult.SUCCESS;
 		}
 
-        return ActionResult.PASS;
+        return InteractionResult.PASS;
     }
 
     private static boolean clientBlockIsSameMaterialSingleSlab(BlockState stateSchematic, BlockState stateClient)
@@ -647,25 +643,25 @@ public class EasyPlaceUtils
 
         if ((blockSchematic instanceof SlabBlock) &&
             (blockClient instanceof SlabBlock) &&
-            stateClient.get(SlabBlock.TYPE).equals(SlabType.DOUBLE) == false)
+            stateClient.getValue(SlabBlock.TYPE).equals(SlabType.DOUBLE) == false)
         {
-            SlabType propSchematic = stateSchematic.get(SlabBlock.TYPE);
-            SlabType propClient = stateClient.get(SlabBlock.TYPE);
+            SlabType propSchematic = stateSchematic.getValue(SlabBlock.TYPE);
+            SlabType propClient = stateClient.getValue(SlabBlock.TYPE);
 
-            return propSchematic == propClient && stateSchematic.get(SlabBlock.TYPE) == stateClient.get(SlabBlock.TYPE);
+            return propSchematic == propClient && stateSchematic.getValue(SlabBlock.TYPE) == stateClient.getValue(SlabBlock.TYPE);
         }
 
         return false;
     }
 
-    private static boolean canPlaceBlock(BlockPos targetPos, World worldClient, BlockState stateSchematic, BlockState stateClient)
+    private static boolean canPlaceBlock(BlockPos targetPos, Level worldClient, BlockState stateSchematic, BlockState stateClient)
     {
         boolean isSlab = stateSchematic.getBlock() instanceof SlabBlock;
 
         if (isSlab)
         {
             if (PlacementUtils.isReplaceable(worldClient, targetPos, true) == false &&
-                (stateSchematic.get(SlabBlock.TYPE).equals(SlabType.DOUBLE) == false
+                (stateSchematic.getValue(SlabBlock.TYPE).equals(SlabType.DOUBLE) == false
                 || clientBlockIsSameMaterialSingleSlab(stateSchematic, stateClient) == false))
             {
                 return false;
@@ -677,7 +673,7 @@ public class EasyPlaceUtils
         return PlacementUtils.isReplaceable(worldClient, targetPos, true);
     }
 
-    private static Vec3d applyCarpetProtocolHitVec(BlockPos pos, BlockState state, Vec3d hitVecIn)
+    private static Vec3 applyCarpetProtocolHitVec(BlockPos pos, BlockState state, Vec3 hitVecIn)
     {
         double x = hitVecIn.x;
         double y = hitVecIn.y;
@@ -692,22 +688,22 @@ public class EasyPlaceUtils
 
         if (block instanceof RepeaterBlock)
         {
-            x += ((state.get(RepeaterBlock.DELAY)) - 1) * 10;
+            x += ((state.getValue(RepeaterBlock.DELAY)) - 1) * 10;
         }
-        else if (block instanceof TrapdoorBlock && state.get(TrapdoorBlock.HALF) == BlockHalf.TOP)
+        else if (block instanceof TrapDoorBlock && state.getValue(TrapDoorBlock.HALF) == Half.TOP)
         {
             x += 10;
         }
-        else if (block instanceof ComparatorBlock && state.get(ComparatorBlock.MODE) == ComparatorMode.SUBTRACT)
+        else if (block instanceof ComparatorBlock && state.getValue(ComparatorBlock.MODE) == ComparatorMode.SUBTRACT)
         {
             x += 10;
         }
-        else if (block instanceof StairsBlock && state.get(StairsBlock.HALF) == BlockHalf.TOP)
+        else if (block instanceof StairBlock && state.getValue(StairBlock.HALF) == Half.TOP)
         {
             x += 10;
         }
 
-        return new Vec3d(x, y, z);
+        return new Vec3(x, y, z);
     }
 
     private static Direction applyPlacementFacing(BlockState stateSchematic, Direction side, BlockState stateClient)
@@ -716,7 +712,7 @@ public class EasyPlaceUtils
 
         if (propOptional.isPresent())
         {
-            side = stateSchematic.get(propOptional.get()).getOpposite();
+            side = stateSchematic.getValue(propOptional.get()).getOpposite();
         }
 
         return side;
@@ -755,17 +751,17 @@ public class EasyPlaceUtils
      */
     private static boolean placementRestrictionInEffect()
     {
-        MinecraftClient mc = MinecraftClient.getInstance();
+        Minecraft mc = Minecraft.getInstance();
         Entity entity = mc.getCameraEntity();
-        World world = mc.world;
+        Level world = mc.level;
 
         if (world == null || entity == null || mc.player == null)
         {
             return false;
         }
 
-        double reach = mc.player.getBlockInteractionRange();
-        HitResult trace = fi.dy.masa.malilib.util.game.RayTraceUtils.getRayTraceFromEntity(world, entity, RaycastContext.FluidHandling.NONE, false, reach);
+        double reach = mc.player.blockInteractionRange();
+        HitResult trace = fi.dy.masa.malilib.util.game.RayTraceUtils.getRayTraceFromEntity(world, entity, ClipContext.Fluid.NONE, false, reach);
 
         if (trace == null)
         {
@@ -778,9 +774,9 @@ public class EasyPlaceUtils
             BlockPos pos = blockHitResult.getBlockPos();
             BlockState stateClient = world.getBlockState(pos);
 
-            if (stateClient.canPlaceAt(world, pos) == false)
+            if (stateClient.canSurvive(world, pos) == false)
             {
-                pos = pos.offset(blockHitResult.getSide());
+                pos = pos.relative(blockHitResult.getDirection());
                 stateClient = world.getBlockState(pos);
             }
 
@@ -791,17 +787,17 @@ public class EasyPlaceUtils
             }
 
             // Placement position is already occupied
-            if (stateClient.canPlaceAt(world, pos) == false &&
-                stateClient.isLiquid() == false)
+            if (stateClient.canSurvive(world, pos) == false &&
+                stateClient.liquid() == false)
             {
                 return true;
             }
 
-            World worldSchematic = SchematicWorldHandler.getSchematicWorld();
+            Level worldSchematic = SchematicWorldHandler.getSchematicWorld();
             LayerRange range = DataManager.getRenderLayerRange();
 
             // The targeted position should be air or it's outside the current render range
-            if (worldSchematic.isAir(pos) || range.isPositionWithinRange(pos) == false)
+            if (worldSchematic.isEmptyBlock(pos) || range.isPositionWithinRange(pos) == false)
             {
                 return true;
             }

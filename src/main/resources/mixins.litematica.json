@@ -36,7 +36,6 @@
         "entity.MixinAbstractSignEditScreen",
         "hud.MixinDebugHud",
         "hud.MixinDebugHudProfile",
-        "input.IMixinKeyBinding",
         "network.MixinClientCommonNetworkHandler",
         "network.MixinClientPlayNetworkHandler",
         "render.IMixinGameRenderer",

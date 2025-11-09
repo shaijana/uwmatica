@@ -3,15 +3,12 @@ package fi.dy.masa.litematica.gui.widgets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.state.BlockState;
 import fi.dy.masa.litematica.config.Configs;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-
-import net.minecraft.block.BlockState;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.item.ItemStack;
-
 import fi.dy.masa.malilib.gui.widgets.WidgetListBase;
 import fi.dy.masa.malilib.util.ItemType;
 import fi.dy.masa.malilib.util.StringUtils;
@@ -41,7 +38,7 @@ public class WidgetListSchematicVerificationResults extends WidgetListBase<Block
     }
 
     @Override
-    public void drawContents(DrawContext drawContext, int mouseX, int mouseY, float partialTicks)
+    public void drawContents(GuiGraphics drawContext, int mouseX, int mouseY, float partialTicks)
     {
         super.drawContents(drawContext, mouseX, mouseY, partialTicks);
         lastScrollbarPosition = this.scrollBar.getValue();
@@ -159,7 +156,7 @@ public class WidgetListSchematicVerificationResults extends WidgetListBase<Block
             list = this.guiSchematicVerifier.getPlacement().getSchematicVerifier().getMismatchOverviewFor(type);
         }
 
-        Collections.sort(list, this.sorter);
+        list.sort(this.sorter);
 
         for (BlockMismatch mismatch : list)
         {

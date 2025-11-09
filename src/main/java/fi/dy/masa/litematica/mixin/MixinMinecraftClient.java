@@ -1,7 +1,5 @@
 package fi.dy.masa.litematica.mixin;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.util.thread.ReentrantThreadExecutor;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -11,17 +9,19 @@ import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.util.EasyPlaceUtils;
 import fi.dy.masa.litematica.util.WorldUtils;
+import net.minecraft.client.Minecraft;
+import net.minecraft.util.thread.ReentrantBlockableEventLoop;
 
-@Mixin(value = MinecraftClient.class)
-public abstract class MixinMinecraftClient extends ReentrantThreadExecutor<Runnable>
+@Mixin(value = Minecraft.class)
+public abstract class MixinMinecraftClient extends ReentrantBlockableEventLoop<Runnable>
 {
     public MixinMinecraftClient(String string_1)
     {
         super(string_1);
     }
 
-    @Inject(method = "doItemUse()V", at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/item/ItemStack;getCount()I", ordinal = 0), cancellable = true)
+    @Inject(method = "startUseItem()V", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/world/item/ItemStack;getCount()I", ordinal = 0), cancellable = true)
     private void handlePlacementRestriction(CallbackInfo ci)
     {
         if (Configs.Generic.PLACEMENT_RESTRICTION.getBooleanValue())
@@ -31,7 +31,7 @@ public abstract class MixinMinecraftClient extends ReentrantThreadExecutor<Runna
             {
                 ci.cancel();
             }
-            else if (WorldUtils.handlePlacementRestriction((MinecraftClient)(Object) this))
+            else if (WorldUtils.handlePlacementRestriction((Minecraft)(Object) this))
             {
                 ci.cancel();
             }

@@ -1,6 +1,6 @@
 package fi.dy.masa.litematica.scheduler;
 
-import net.minecraft.util.profiler.Profiler;
+import net.minecraft.util.profiling.ProfilerFiller;
 
 public interface ITask
 {
@@ -25,7 +25,7 @@ public interface ITask
      * Execute the task. Return true to indicate that this task has finished.
      * @return true to indicate the task has finished and can be removed
      */
-    boolean execute(Profiler profiler);
+    boolean execute(ProfilerFiller profiler);
 
     /**
      * Returns true if this task should be removed

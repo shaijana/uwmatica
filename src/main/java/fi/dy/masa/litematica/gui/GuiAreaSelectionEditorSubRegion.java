@@ -36,7 +36,7 @@ public class GuiAreaSelectionEditorSubRegion extends GuiAreaSelectionEditorSimpl
         y += 13;
 
         int width = 202;
-        this.textFieldBoxName = new GuiTextFieldGeneric(x, y + 2, width, 16, this.textRenderer);
+        this.textFieldBoxName = new GuiTextFieldGeneric(x, y + 2, width, 16, this.font);
         this.textFieldBoxName.setTextWrapper(this.getBox().getName());
         this.addTextField(this.textFieldBoxName, new TextFieldListenerDummy());
         this.createButton(x + width + 4, y, -1, ButtonListener.Type.SET_BOX_NAME);
@@ -71,17 +71,5 @@ public class GuiAreaSelectionEditorSubRegion extends GuiAreaSelectionEditorSimpl
     @Override
     protected void createOrigin()
     {
-    }
-
-    @Override
-    protected WidgetListSelectionSubRegions getListWidget()
-    {
-        return null;
-    }
-
-    @Override
-    protected void reCreateListWidget()
-    {
-        // NO-OP
     }
 }

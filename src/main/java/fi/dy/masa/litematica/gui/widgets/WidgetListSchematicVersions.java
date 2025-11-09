@@ -2,11 +2,9 @@ package fi.dy.masa.litematica.gui.widgets;
 
 import java.util.Collection;
 import java.util.List;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.core.BlockPos;
 import com.google.common.collect.ImmutableList;
-
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.util.math.BlockPos;
-
 import fi.dy.masa.litematica.gui.GuiSchematicProjectManager;
 import fi.dy.masa.litematica.gui.Icons;
 import fi.dy.masa.litematica.render.infohud.ToolHud;
@@ -36,7 +34,7 @@ public class WidgetListSchematicVersions extends WidgetListBase<SchematicVersion
     }
 
     @Override
-    public void drawContents(DrawContext drawContext, int mouseX, int mouseY, float partialTicks)
+    public void drawContents(GuiGraphics drawContext, int mouseX, int mouseY, float partialTicks)
     {
         // Draw an outline around the entire entry list
         RenderUtils.drawOutlinedBox(drawContext, this.posX, this.posY, this.browserWidth, this.browserHeight, 0xB0000000, COLOR_HORIZONTAL_BAR);
@@ -46,7 +44,7 @@ public class WidgetListSchematicVersions extends WidgetListBase<SchematicVersion
         this.drawAdditionalContents(drawContext, mouseX, mouseY);
     }
 
-    protected void drawAdditionalContents(DrawContext drawContext, int mouseX, int mouseY)
+    protected void drawAdditionalContents(GuiGraphics drawContext, int mouseX, int mouseY)
     {
         int x = this.posX + this.totalWidth - this.infoWidth + 4;
         int y = this.posY + 4;

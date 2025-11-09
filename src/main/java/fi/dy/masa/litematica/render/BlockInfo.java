@@ -1,13 +1,13 @@
 package fi.dy.masa.litematica.render;
 
 import java.util.List;
-import net.minecraft.block.BlockState;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.state.BlockState;
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.render.RenderUtils;
 import fi.dy.masa.malilib.util.game.BlockUtils;
@@ -33,10 +33,10 @@ public class BlockInfo
         this.state = state;
         this.stack = ItemUtils.getItemForState(this.state);
 
-        Identifier rl = Registries.BLOCK.getId(this.state.getBlock());
+        ResourceLocation rl = BuiltInRegistries.BLOCK.getKey(this.state.getBlock());
         this.blockRegistryName = rl.toString();
 
-        this.stackName = this.stack.getName().getString();
+        this.stackName = this.stack.getHoverName().getString();
 
         int w = StringUtils.getStringWidth(this.stackName) + 20;
         w = Math.max(w, StringUtils.getStringWidth(this.blockRegistryName));
@@ -61,7 +61,7 @@ public class BlockInfo
         this.useBackgroundMask = toggle;
     }
 
-    public void render(DrawContext drawContext, int x, int y, MinecraftClient mc)
+    public void render(GuiGraphics drawContext, int x, int y, Minecraft mc)
     {
         if (this.state != null)
         {
@@ -72,11 +72,11 @@ public class BlockInfo
 
             RenderUtils.drawOutlinedBox(drawContext, x, y, this.totalWidth, this.totalHeight, 0xFF000000, GuiBase.COLOR_HORIZONTAL_BAR);
 
-            TextRenderer textRenderer = mc.textRenderer;
+            Font textRenderer = mc.font;
             int x1 = x + 10;
             y += 4;
 
-            drawContext.drawText(textRenderer, this.title, x1, y, 0xFFFFFFFF, false);
+            drawContext.drawString(textRenderer, this.title, x1, y, 0xFFFFFFFF, false);
 
             y += 12;
 
@@ -84,17 +84,17 @@ public class BlockInfo
 
             //mc.getRenderItem().zLevel += 100;
             RenderUtils.drawRect(drawContext, x1, y, 16, 16, 0x20FFFFFF); // light background for the item
-            drawContext.drawItem(this.stack, x1, y);
-            drawContext.drawStackOverlay(textRenderer, this.stack, x1, y);
+            drawContext.renderItem(this.stack, x1, y);
+            drawContext.renderItemDecorations(textRenderer, this.stack, x1, y);
             //mc.getRenderItem().zLevel -= 100;
 
 //            RenderUtils.disableDiffuseLighting();
 
-            drawContext.drawText(textRenderer, this.stackName, x1 + 20, y + 4, 0xFFFFFFFF, false);
+            drawContext.drawString(textRenderer, this.stackName, x1 + 20, y + 4, 0xFFFFFFFF, false);
 
             y += 20;
-            drawContext.drawText(textRenderer, this.blockRegistryName, x1, y, 0xFF4060FF, false);
-            y += textRenderer.fontHeight + 4;
+            drawContext.drawString(textRenderer, this.blockRegistryName, x1, y, 0xFF4060FF, false);
+            y += textRenderer.lineHeight + 4;
 
             RenderUtils.renderText(drawContext, x1, y, 0xFFB0B0B0, this.props);
         }

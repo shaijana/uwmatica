@@ -105,8 +105,7 @@ public class GuiSchematicProjectsBrowser extends GuiListBase<DirectoryEntry, Wid
     private void reCreateGuiElements()
     {
         this.clearButtons();
-//        this.clearWidgets();
-	    this.clearChildren();
+	    this.clearWidgets();
 
         this.createElements();
     }
@@ -208,7 +207,7 @@ public class GuiSchematicProjectsBrowser extends GuiListBase<DirectoryEntry, Wid
                 this(label, null);
             }
 
-            Type(String translationKey, String hoverText)
+            Type(String translationKey, @Nullable String hoverText)
             {
                 this.translationKey = translationKey;
                 this.hoverText = hoverText;

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 
 import fi.dy.masa.malilib.config.options.ConfigHotkey;
 import fi.dy.masa.malilib.gui.*;
@@ -19,7 +19,6 @@ import fi.dy.masa.malilib.gui.widgets.WidgetCheckBox;
 import fi.dy.masa.malilib.interfaces.IStringConsumerFeedback;
 import fi.dy.masa.malilib.util.StringUtils;
 import fi.dy.masa.malilib.util.position.PositionUtils.CoordinateType;
-import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.config.Hotkeys;
 import fi.dy.masa.litematica.data.DataManager;
@@ -106,7 +105,7 @@ public class GuiAreaSelectionEditorNormal extends GuiListBase<String, WidgetSele
         y += 13;
 
         int width = 202;
-        this.textFieldSelectionName = new GuiTextFieldGeneric(x, y + 2, width, 16, this.textRenderer);
+        this.textFieldSelectionName = new GuiTextFieldGeneric(x, y + 2, width, 16, this.font);
         this.textFieldSelectionName.setTextWrapper(this.selection.getName());
         this.addTextField(this.textFieldSelectionName, new TextFieldListenerDummy());
         x += width + 4;
@@ -274,7 +273,7 @@ public class GuiAreaSelectionEditorNormal extends GuiListBase<String, WidgetSele
                 break;
         }
 
-        GuiTextFieldInteger textField = new GuiTextFieldInteger(x + offset, y, width, 16, this.textRenderer);
+        GuiTextFieldInteger textField = new GuiTextFieldInteger(x + offset, y, width, 16, this.font);
         TextFieldListener listener = new TextFieldListener(coordType, corner, this);
         textField.setTextWrapper(text);
         this.addTextField(textField, listener);
@@ -376,9 +375,7 @@ public class GuiAreaSelectionEditorNormal extends GuiListBase<String, WidgetSele
             int value = Integer.parseInt(numberString);
             this.selection.setCoordinate(this.getBox(), corner, type, value);
         }
-        catch (NumberFormatException e)
-        {
-        }
+        catch (Exception ignored) { }
     }
 
     protected void moveCoordinate(int amount, Corner corner, CoordinateType type)
@@ -566,12 +563,12 @@ public class GuiAreaSelectionEditorNormal extends GuiListBase<String, WidgetSele
             private final String translationKey;
             @Nullable private final String hoverText;
 
-            private Type(String translationKey)
+            Type(String translationKey)
             {
                 this(translationKey, null);
             }
 
-            private Type(String translationKey, @Nullable String hoverText)
+            Type(String translationKey, @Nullable String hoverText)
             {
                 this.translationKey = translationKey;
                 this.hoverText = hoverText;
@@ -649,6 +646,8 @@ public class GuiAreaSelectionEditorNormal extends GuiListBase<String, WidgetSele
         @Override
         public void onSelectionChange(WidgetCheckBox entry)
         {
+			if (entry == null) return;
+
             if (entry.isChecked())
             {
                 // Origin

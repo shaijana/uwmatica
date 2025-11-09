@@ -2,8 +2,9 @@ package fi.dy.masa.litematica.compat.sodium;
 
 import fi.dy.masa.litematica.mixin.render.IMixinGameRenderer;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 
+@Deprecated(forRemoval = true)
 public class SodiumCompat
 {
     private static boolean hasSodium;
@@ -18,17 +19,17 @@ public class SodiumCompat
 
     public static void startBlockOutlineEnabled()
     {
-        wasBlockOutlineEnabled = ((IMixinGameRenderer) MinecraftClient.getInstance().gameRenderer).litematica_isBlockOutlineEnabled();
+        wasBlockOutlineEnabled = ((IMixinGameRenderer) Minecraft.getInstance().gameRenderer).litematica_isBlockOutlineEnabled();
 
         if (!wasBlockOutlineEnabled())
         {
-            MinecraftClient.getInstance().gameRenderer.setBlockOutlineEnabled(true);
+            Minecraft.getInstance().gameRenderer.setRenderBlockOutline(true);
         }
     }
 
     public static void endBlockOutlineEnabled()
     {
-        MinecraftClient.getInstance().gameRenderer.setBlockOutlineEnabled(wasBlockOutlineEnabled());
+        Minecraft.getInstance().gameRenderer.setRenderBlockOutline(wasBlockOutlineEnabled());
     }
 
     public static boolean wasBlockOutlineEnabled() { return wasBlockOutlineEnabled; }

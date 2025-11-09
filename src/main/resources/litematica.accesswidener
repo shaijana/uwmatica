@@ -1,5 +1,2 @@
 accessWidener v1 named
-accessible field net/minecraft/client/render/block/BlockModels models Ljava/util/Map;
-accessible field net/minecraft/client/gui/hud/debug/DebugHudEntries ENTRIES Ljava/util/Map;
-accessible field net/minecraft/client/gui/hud/debug/DebugHudProfile visibilityMap Ljava/util/Map;
-accessible field net/minecraft/client/gui/hud/debug/DebugHudProfile visibleEntries Ljava/util/List;
+accessible field net/minecraft/client/renderer/block/BlockModelShaper modelByStateCache Ljava/util/Map;

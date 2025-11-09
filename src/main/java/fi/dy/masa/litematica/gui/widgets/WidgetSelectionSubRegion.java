@@ -2,11 +2,9 @@ package fi.dy.masa.litematica.gui.widgets;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.util.math.BlockPos;
-
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.core.BlockPos;
 import fi.dy.masa.litematica.gui.GuiAreaSelectionEditorSubRegion;
 import fi.dy.masa.litematica.selection.AreaSelection;
 import fi.dy.masa.litematica.selection.Box;
@@ -56,13 +54,13 @@ public class WidgetSelectionSubRegion extends WidgetListEntryBase<String>
     }
 
     @Override
-    public boolean canSelectAt(Click click)
+    public boolean canSelectAt(MouseButtonEvent click)
     {
         return click.x() < this.buttonsStartX && super.canSelectAt(click);
     }
 
     @Override
-    public void render(DrawContext drawContext, int mouseX, int mouseY, boolean selected)
+    public void render(GuiGraphics drawContext, int mouseX, int mouseY, boolean selected)
     {
 //        RenderUtils.color(1f, 1f, 1f, 1f);
 
@@ -94,7 +92,7 @@ public class WidgetSelectionSubRegion extends WidgetListEntryBase<String>
     }
 
     @Override
-    public void postRenderHovered(DrawContext drawContext, int mouseX, int mouseY, boolean selected)
+    public void postRenderHovered(GuiGraphics drawContext, int mouseX, int mouseY, boolean selected)
     {
         List<String> text = new ArrayList<>();
 

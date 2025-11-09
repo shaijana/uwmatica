@@ -1,8 +1,8 @@
 package fi.dy.masa.litematica.render.schematic;
 
 import javax.annotation.Nullable;
+import net.minecraft.world.level.ChunkPos;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import net.minecraft.util.math.ChunkPos;
 import fi.dy.masa.litematica.world.WorldSchematic;
 
 public class ChunkRenderDispatcherSchematic
@@ -70,13 +70,13 @@ public class ChunkRenderDispatcherSchematic
 
     protected ChunkRendererSchematicVbo getOrCreateChunkRenderer(int chunkX, int chunkZ)
     {
-        long index = ChunkPos.toLong(chunkX, chunkZ);
+        long index = ChunkPos.asLong(chunkX, chunkZ);
         ChunkRendererSchematicVbo renderer = this.chunkRenderers.get(index);
 
         if (renderer == null)
         {
             renderer = this.chunkRendererFactory.create(this.world, this.renderer);
-            renderer.setPosition(chunkX << 4, this.world.getBottomY(), chunkZ << 4);
+            renderer.setPosition(chunkX << 4, this.world.getMinY(), chunkZ << 4);
             this.chunkRenderers.put(index, renderer);
         }
 

@@ -2,20 +2,18 @@ package fi.dy.masa.litematica.gui.widgets;
 
 import java.util.List;
 import javax.annotation.Nullable;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.state.BlockState;
 import org.joml.Matrix3x2fStack;
-
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockRenderType;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Identifier;
-
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.button.ButtonBase;
 import fi.dy.masa.malilib.gui.button.ButtonGeneric;
@@ -169,7 +167,7 @@ public class WidgetSchematicVerificationResult extends WidgetListEntrySortable<B
     }
 
     @Override
-    protected boolean onMouseClickedImpl(Click click, boolean doubleClick)
+    protected boolean onMouseClickedImpl(MouseButtonEvent click, boolean doubleClick)
     {
         if (super.onMouseClickedImpl(click, doubleClick))
         {
@@ -205,7 +203,7 @@ public class WidgetSchematicVerificationResult extends WidgetListEntrySortable<B
     }
 
     @Override
-    public boolean canSelectAt(Click click)
+    public boolean canSelectAt(MouseButtonEvent click)
     {
         return (this.buttonIgnore == null || click.x() < this.buttonIgnore.getX()) && super.canSelectAt(click);
     }
@@ -225,7 +223,7 @@ public class WidgetSchematicVerificationResult extends WidgetListEntrySortable<B
     }
 
     @Override
-    public void render(DrawContext drawContext, int mouseX, int mouseY, boolean selected)
+    public void render(GuiGraphics drawContext, int mouseX, int mouseY, boolean selected)
     {
         selected = this.shouldRenderAsSelected();
 
@@ -290,8 +288,8 @@ public class WidgetSchematicVerificationResult extends WidgetListEntrySortable<B
 
 //            boolean useBlockModelConfig = Configs.Visuals.SCHEMATIC_VERIFIER_BLOCK_MODELS.getBooleanValue();
             boolean useBlockModelConfig = false;
-            boolean hasModelExpected = this.mismatchInfo.stateExpected.getRenderType() == BlockRenderType.MODEL;
-            boolean hasModelFound    = this.mismatchInfo.stateFound.getRenderType() == BlockRenderType.MODEL;
+            boolean hasModelExpected = this.mismatchInfo.stateExpected.getRenderShape() == RenderShape.MODEL;
+            boolean hasModelFound    = this.mismatchInfo.stateFound.getRenderShape() == RenderShape.MODEL;
             boolean isAirItemExpected = this.mismatchInfo.stackExpected.isEmpty();
             boolean isAirItemFound    = this.mismatchInfo.stackFound.isEmpty();
             boolean useBlockModelExpected = hasModelExpected && (isAirItemExpected || useBlockModelConfig || this.mismatchInfo.stateExpected.getBlock() == Blocks.FLOWER_POT);
@@ -308,8 +306,8 @@ public class WidgetSchematicVerificationResult extends WidgetListEntrySortable<B
             }
             else
             {
-                drawContext.drawItem(this.mismatchInfo.stackExpected, x1, y);
-                drawContext.drawStackOverlay(this.textRenderer, this.mismatchInfo.stackExpected, x1, y);
+                drawContext.renderItem(this.mismatchInfo.stackExpected, x1, y);
+                drawContext.renderItemDecorations(this.textRenderer, this.mismatchInfo.stackExpected, x1, y);
             }
 
             if (this.mismatchEntry.mismatchType != MismatchType.CORRECT_STATE)
@@ -323,8 +321,8 @@ public class WidgetSchematicVerificationResult extends WidgetListEntrySortable<B
                 }
                 else
                 {
-                    drawContext.drawItem(this.mismatchInfo.stackFound, x2, y);
-                    drawContext.drawStackOverlay(this.textRenderer, this.mismatchInfo.stackFound, x2, y);
+                    drawContext.renderItem(this.mismatchInfo.stackFound, x2, y);
+                    drawContext.renderItemDecorations(this.textRenderer, this.mismatchInfo.stackFound, x2, y);
                 }
             }
         }
@@ -333,11 +331,11 @@ public class WidgetSchematicVerificationResult extends WidgetListEntrySortable<B
     }
 
     @Override
-    public void postRenderHovered(DrawContext drawContext, int mouseX, int mouseY, boolean selected)
+    public void postRenderHovered(GuiGraphics drawContext, int mouseX, int mouseY, boolean selected)
     {
         if (this.mismatchInfo != null && this.buttonIgnore != null && mouseX < this.buttonIgnore.getX())
         {
-            Matrix3x2fStack matrixStack = drawContext.getMatrices();
+            Matrix3x2fStack matrixStack = drawContext.pose();
             matrixStack.pushMatrix();
             matrixStack.translate(0, 0);    // 200
 
@@ -388,8 +386,8 @@ public class WidgetSchematicVerificationResult extends WidgetListEntrySortable<B
 
             Block blockExpected = this.stateExpected.getBlock();
             Block blockFound = this.stateFound.getBlock();
-            Identifier rl1 = Registries.BLOCK.getId(blockExpected);
-            Identifier rl2 = Registries.BLOCK.getId(blockFound);
+            ResourceLocation rl1 = BuiltInRegistries.BLOCK.getKey(blockExpected);
+            ResourceLocation rl2 = BuiltInRegistries.BLOCK.getKey(blockFound);
 
             this.blockRegistrynameExpected = rl1 != null ? rl1.toString() : "<null>";
             this.blockRegistrynameFound = rl2 != null ? rl2.toString() : "<null>";
@@ -413,9 +411,9 @@ public class WidgetSchematicVerificationResult extends WidgetListEntrySortable<B
         public static String getDisplayName(BlockState state, ItemStack stack)
         {
             Block block = state.getBlock();
-            String key = block.getTranslationKey() + ".name";
+            String key = block.getDescriptionId() + ".name";
             String name = StringUtils.translate(key);
-            name = key.equals(name) == false ? name : stack.getName().getString();
+            name = key.equals(name) == false ? name : stack.getHoverName().getString();
 
             return name;
         }
@@ -435,7 +433,7 @@ public class WidgetSchematicVerificationResult extends WidgetListEntrySortable<B
             this.useBackgroundMask = toggle;
         }
 
-        public void render(DrawContext drawContext, int x, int y, MinecraftClient mc)
+        public void render(GuiGraphics drawContext, int x, int y, Minecraft mc)
         {
             if (this.stateExpected != null && this.stateFound != null)
             {
@@ -453,19 +451,19 @@ public class WidgetSchematicVerificationResult extends WidgetListEntrySortable<B
                 int x2 = x + this.columnWidthExpected + 30;
                 y += 4;
 
-                TextRenderer textRenderer = mc.textRenderer;
+                Font textRenderer = mc.font;
                 String pre = GuiBase.TXT_WHITE + GuiBase.TXT_BOLD;
                 String strExpected = pre + StringUtils.translate("litematica.gui.label.schematic_verifier.expected") + GuiBase.TXT_RST;
                 String strFound =    pre + StringUtils.translate("litematica.gui.label.schematic_verifier.found") + GuiBase.TXT_RST;
-                drawContext.drawText(textRenderer, strExpected, x1, y, 0xFFFFFFFF,false);
-                drawContext.drawText(textRenderer, strFound,    x2, y, 0xFFFFFFFF,false);
+                drawContext.drawString(textRenderer, strExpected, x1, y, 0xFFFFFFFF,false);
+                drawContext.drawString(textRenderer, strFound,    x2, y, 0xFFFFFFFF,false);
 
                 y += 12;
 
 //                boolean useBlockModelConfig = Configs.Visuals.SCHEMATIC_VERIFIER_BLOCK_MODELS.getBooleanValue();
                 boolean useBlockModelConfig = false;
-                boolean hasModelExpected = this.stateExpected.getRenderType() == BlockRenderType.MODEL;
-                boolean hasModelFound    = this.stateFound.getRenderType() == BlockRenderType.MODEL;
+                boolean hasModelExpected = this.stateExpected.getRenderShape() == RenderShape.MODEL;
+                boolean hasModelFound    = this.stateFound.getRenderShape() == RenderShape.MODEL;
                 boolean isAirItemExpected = this.stackExpected.isEmpty();
                 boolean isAirItemFound    = this.stackFound.isEmpty();
                 boolean useBlockModelExpected = hasModelExpected && (isAirItemExpected || useBlockModelConfig || this.stateExpected.getBlock() == Blocks.FLOWER_POT);
@@ -481,12 +479,12 @@ public class WidgetSchematicVerificationResult extends WidgetListEntrySortable<B
                 //RenderSystem.disableBlend();
                 //RenderUtils.disableDiffuseLighting();
 
-                drawContext.drawText(textRenderer, this.nameExpected, x1 + 20, y + 4, 0xFFFFFFFF,false);
-                drawContext.drawText(textRenderer, this.nameFound,    x2 + 20, y + 4, 0xFFFFFFFF,false);
+                drawContext.drawString(textRenderer, this.nameExpected, x1 + 20, y + 4, 0xFFFFFFFF,false);
+                drawContext.drawString(textRenderer, this.nameFound,    x2 + 20, y + 4, 0xFFFFFFFF,false);
 
                 y += 20;
-                drawContext.drawText(textRenderer, this.blockRegistrynameExpected, x1, y, 0xFF4060FF,false);
-                drawContext.drawText(textRenderer, this.blockRegistrynameFound,    x2, y, 0xFF4060FF,false);
+                drawContext.drawString(textRenderer, this.blockRegistrynameExpected, x1, y, 0xFF4060FF,false);
+                drawContext.drawString(textRenderer, this.blockRegistrynameFound,    x2, y, 0xFF4060FF,false);
                 y += StringUtils.getFontHeight() + 4;
 
                 List<String> propsExpected = BlockUtils.getFormattedBlockStateProperties(this.stateExpected, " = ");
@@ -507,8 +505,8 @@ public class WidgetSchematicVerificationResult extends WidgetListEntrySortable<B
                 }
                 else
                 {
-                    drawContext.drawItem(this.stackExpected, x1, iconY);
-                    drawContext.drawStackOverlay(textRenderer, this.stackExpected, x1, iconY);
+                    drawContext.renderItem(this.stackExpected, x1, iconY);
+                    drawContext.renderItemDecorations(textRenderer, this.stackExpected, x1, iconY);
                 }
 
                 if (useBlockModelFound)
@@ -518,8 +516,8 @@ public class WidgetSchematicVerificationResult extends WidgetListEntrySortable<B
                 }
                 else
                 {
-                    drawContext.drawItem(this.stackFound, x2, iconY);
-                    drawContext.drawStackOverlay(textRenderer, this.stackFound, x2, iconY);
+                    drawContext.renderItem(this.stackFound, x2, iconY);
+                    drawContext.renderItemDecorations(textRenderer, this.stackFound, x2, iconY);
                 }
 
 //                mc.getRenderItem().zLevel -= 100;
@@ -528,7 +526,7 @@ public class WidgetSchematicVerificationResult extends WidgetListEntrySortable<B
         }
     }
 
-    public static void renderModelInGui(DrawContext drawContext, int x, int y, float z, BlockState state)
+    public static void renderModelInGui(GuiGraphics drawContext, int x, int y, float z, BlockState state)
     {
 //        Matrix3x2fStack matrixStack = drawContext.getMatrices();
 

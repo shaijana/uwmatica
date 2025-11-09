@@ -5,21 +5,19 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.core.Vec3i;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.tuple.Pair;
-
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.texture.NativeImageBackedTexture;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Vec3i;
-
 import fi.dy.masa.malilib.gui.interfaces.ISelectionListener;
 import fi.dy.masa.malilib.gui.widgets.WidgetFileBrowserBase;
 import fi.dy.masa.malilib.render.RenderUtils;
 import fi.dy.masa.malilib.util.StringUtils;
 import fi.dy.masa.malilib.util.data.Schema;
+import com.mojang.blaze3d.platform.NativeImage;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.Reference;
 import fi.dy.masa.litematica.data.DataManager;
@@ -35,7 +33,7 @@ public class WidgetSchematicBrowser extends WidgetFileBrowserBase
 
     protected final Map<Path, SchematicMetadata> cachedMetadata = new HashMap<>();
     protected final Map<Path, SchematicSchema> cachedVersion = new HashMap<>();
-    protected final Map<Path, Pair<Identifier, NativeImageBackedTexture>> cachedPreviewImages = new HashMap<>();
+    protected final Map<Path, Pair<ResourceLocation, DynamicTexture>> cachedPreviewImages = new HashMap<>();
     protected final GuiSchematicBrowserBase parent;
     protected final int infoWidth;
     protected final int infoHeight;
@@ -58,9 +56,9 @@ public class WidgetSchematicBrowser extends WidgetFileBrowserBase
     }
 
     @Override
-    public void close()
+    public void onClose()
     {
-        super.close();
+        super.onClose();
 
         this.clearPreviewImages();
     }
@@ -78,12 +76,12 @@ public class WidgetSchematicBrowser extends WidgetFileBrowserBase
     }
 
     @Override
-    protected void drawAdditionalContents(DrawContext drawContext, int mouseX, int mouseY)
+    protected void drawAdditionalContents(GuiGraphics drawContext, int mouseX, int mouseY)
     {
         this.drawSelectedSchematicInfo(drawContext, this.getLastSelectedEntry());
     }
 
-    protected void drawSelectedSchematicInfo(DrawContext drawContext, @Nullable DirectoryEntry entry)
+    protected void drawSelectedSchematicInfo(GuiGraphics drawContext, @Nullable DirectoryEntry entry)
     {
         int x = this.posX + this.totalWidth - this.infoWidth;
         int y = this.posY;
@@ -240,14 +238,14 @@ public class WidgetSchematicBrowser extends WidgetFileBrowserBase
             */
             //y += 12;
 
-            Pair<Identifier, NativeImageBackedTexture> pair = this.cachedPreviewImages.get(entry.getFullPath());
+            Pair<ResourceLocation, DynamicTexture> pair = this.cachedPreviewImages.get(entry.getFullPath());
 
             if (pair != null)
             {
                 //y += 14;
                 y += 12;
 
-                int iconSize = pair.getRight().getImage().getWidth();
+                int iconSize = pair.getRight().getPixels().getWidth();
                 boolean needsScaling = height < this.infoHeight;
 
 //                RenderUtils.color(1f, 1f, 1f, 1f);
@@ -259,7 +257,7 @@ public class WidgetSchematicBrowser extends WidgetFileBrowserBase
 
                 RenderUtils.drawOutlinedBox(drawContext, x + 4, y, iconSize, iconSize, 0xA0000000, COLOR_HORIZONTAL_BAR);
 
-                drawContext.drawTexture(RenderPipelines.GUI_TEXTURED, pair.getLeft(), x + 4, y, 0.0F, 0.0F, iconSize, iconSize, iconSize, iconSize);
+                drawContext.blit(RenderPipelines.GUI_TEXTURED, pair.getLeft(), x + 4, y, 0.0F, 0.0F, iconSize, iconSize, iconSize, iconSize);
             }
         }
     }
@@ -328,9 +326,9 @@ public class WidgetSchematicBrowser extends WidgetFileBrowserBase
 
     private void clearPreviewImages()
     {
-        for (Pair<Identifier, NativeImageBackedTexture> pair : this.cachedPreviewImages.values())
+        for (Pair<ResourceLocation, DynamicTexture> pair : this.cachedPreviewImages.values())
         {
-            this.mc.getTextureManager().destroyTexture(pair.getLeft());
+            this.mc.getTextureManager().release(pair.getLeft());
         }
     }
 
@@ -347,9 +345,9 @@ public class WidgetSchematicBrowser extends WidgetFileBrowserBase
                 try
                 {
                     NativeImage image = new NativeImage(size, size, false);
-                    Identifier rl = Identifier.of(Reference.MOD_ID, DigestUtils.sha1Hex(file.toAbsolutePath().toString()));
-                    NativeImageBackedTexture tex = new NativeImageBackedTexture(rl::toString, image);
-                    this.mc.getTextureManager().registerTexture(rl, tex);
+                    ResourceLocation rl = ResourceLocation.fromNamespaceAndPath(Reference.MOD_ID, DigestUtils.sha1Hex(file.toAbsolutePath().toString()));
+                    DynamicTexture tex = new DynamicTexture(rl::toString, image);
+                    this.mc.getTextureManager().register(rl, tex);
 
                     for (int y = 0, i = 0; y < size; ++y)
                     {
@@ -358,7 +356,7 @@ public class WidgetSchematicBrowser extends WidgetFileBrowserBase
                             int val = previewImageData[i++];
                             // Swap the color channels from ARGB to ABGR
                             //val = (val & 0xFF00FF00) | (val & 0xFF0000) >> 16 | (val & 0xFF) << 16;
-                            image.setColorArgb(x, y, val);
+                            image.setPixel(x, y, val);
                         }
                     }
 

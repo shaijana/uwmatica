@@ -66,8 +66,7 @@ public class GuiAreaSelectionManager extends GuiListBase<DirectoryEntry, WidgetD
     protected void reCreateGuiElements()
     {
         this.clearButtons();
-//        this.clearWidgets();
-	    this.clearChildren();
+	    this.clearWidgets();
 
         int x = this.getScreenWidth() - 13;
         int y = 24;
@@ -118,7 +117,7 @@ public class GuiAreaSelectionManager extends GuiListBase<DirectoryEntry, WidgetD
     /**
      * This is the string the DataManager uses for saving/loading/storing the last used directory
      * for each browser GUI type/contet.
-     * @return
+     * @return ()
      */
     public String getBrowserContext()
     {
@@ -144,6 +143,7 @@ public class GuiAreaSelectionManager extends GuiListBase<DirectoryEntry, WidgetD
     @Override
     public void onSelectionChange(DirectoryEntry entry)
     {
+		if (entry == null) return;
         if (entry.getType() == DirectoryEntryType.FILE && FileType.fromFile(entry.getFullPath()) == FileType.JSON)
         {
             String selectionId = entry.getFullPath().toAbsolutePath().toString();
