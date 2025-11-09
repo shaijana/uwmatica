@@ -22,6 +22,7 @@ import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.Reference;
 import fi.dy.masa.litematica.compat.lwgl.RenderCompat;
 import fi.dy.masa.litematica.data.DataManager;
+import fi.dy.masa.litematica.render.LitematicaDebugHud;
 import fi.dy.masa.litematica.selection.CornerSelectionMode;
 import fi.dy.masa.litematica.selection.SelectionMode;
 import fi.dy.masa.litematica.util.*;
@@ -33,6 +34,7 @@ public class Configs implements IConfigHandler
     private static final String GENERIC_KEY = Reference.MOD_ID+".config.generic";
     public static class Generic
     {
+	    public static final ConfigOptionList    DEBUG_HUD_MODE              = new ConfigOptionList("debugHudMode", DebugHudMode.DEFAULT).apply(GENERIC_KEY);
         public static final ConfigOptionList    EASY_PLACE_PROTOCOL         = new ConfigOptionList("easyPlaceProtocolVersion", EasyPlaceProtocol.AUTO).apply(GENERIC_KEY);
         public static final ConfigOptionList    PASTE_NBT_BEHAVIOR          = new ConfigOptionList("pasteNbtRestoreBehavior", PasteNbtBehavior.NONE).apply(GENERIC_KEY);
         public static final ConfigOptionList    PASTE_REPLACE_BEHAVIOR      = new ConfigOptionList("pasteReplaceBehavior", ReplaceBehavior.NONE).apply(GENERIC_KEY);
@@ -124,6 +126,7 @@ public class Configs implements IConfigHandler
                 COMMAND_FILL_NO_CHUNK_CLAMP,
                 COMMAND_USE_WORLDEDIT,
                 CUSTOM_SCHEMATIC_BASE_DIRECTORY_ENABLED,
+                DEBUG_HUD_MODE,
                 DEBUG_LOGGING,
                 DATAFIXER_MODE,
                 DATAFIXER_DEFAULT_SCHEMA,
@@ -430,6 +433,7 @@ public class Configs implements IConfigHandler
         }
         InventoryUtils.setPickBlockableSlots(Generic.PICK_BLOCKABLE_SLOTS.getStringValue());
         DataManager.getSelectionManager().checkSelectionModeConfig();
+	    LitematicaDebugHud.INSTANCE.checkConfig();
     }
 
     public static void saveToFile()

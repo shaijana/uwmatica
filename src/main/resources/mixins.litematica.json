@@ -35,6 +35,7 @@
         "easyplace.MixinMinecraftClient_easyPlace",
         "entity.MixinAbstractSignEditScreen",
         "hud.MixinDebugHud",
+        "hud.MixinDebugHudProfile",
         "input.IMixinKeyBinding",
         "network.MixinClientCommonNetworkHandler",
         "network.MixinClientPlayNetworkHandler",

@@ -13,6 +13,7 @@ import fi.dy.masa.litematica.compat.jade.JadeCompat;
 import fi.dy.masa.litematica.data.CachedTagManager;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.data.EntitiesDataStorage;
+import fi.dy.masa.litematica.render.LitematicaDebugHud;
 import fi.dy.masa.litematica.schematic.conversion.SchematicConversionMaps;
 import fi.dy.masa.litematica.world.SchematicWorldHandler;
 
@@ -55,12 +56,7 @@ public class WorldLoadListener implements IWorldLoadListener
             SchematicConversionMaps.computeMaps();
             EntitiesDataStorage.getInstance().onWorldJoin();
             CachedTagManager.startCache();
-
-//			// TODO -- Experimental
-//			if (mc.debugHudEntryList.getVisibility(LitematicaDebugHud.LITEMATICA_DEBUG) != DebugHudEntryVisibility.IN_F3)
-//			{
-//				mc.debugHudEntryList.setEntryVisibility(LitematicaDebugHud.LITEMATICA_DEBUG, DebugHudEntryVisibility.IN_F3);
-//			}
+	        LitematicaDebugHud.INSTANCE.checkConfig();
         }
         else
         {

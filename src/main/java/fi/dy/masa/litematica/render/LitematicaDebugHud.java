@@ -5,16 +5,22 @@ import java.util.List;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.hud.debug.DebugHudEntries;
 import net.minecraft.client.gui.hud.debug.DebugHudEntry;
+import net.minecraft.client.gui.hud.debug.DebugHudEntryVisibility;
 import net.minecraft.client.gui.hud.debug.DebugHudLines;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.WorldChunk;
 
 import fi.dy.masa.malilib.gui.GuiBase;
+import fi.dy.masa.malilib.util.StringUtils;
 import fi.dy.masa.litematica.Reference;
+import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.render.schematic.WorldRendererSchematic;
+import fi.dy.masa.litematica.util.DebugHudMode;
 import fi.dy.masa.litematica.util.EntityUtils;
 import fi.dy.masa.litematica.world.SchematicWorldHandler;
 import fi.dy.masa.litematica.world.WorldSchematic;
@@ -23,11 +29,84 @@ public class LitematicaDebugHud implements DebugHudEntry
 {
 	public static final Identifier LITEMATICA_DEBUG = Identifier.of(Reference.MOD_ID, "litematica_renderer");
 	public static final Identifier SECTION_ID = Identifier.ofVanilla(Reference.MOD_ID);
+	public static final LitematicaDebugHud INSTANCE = new LitematicaDebugHud();
+	private boolean left;
+
+	private LitematicaDebugHud()
+	{
+		this.left = true;
+	}
+
+	public DebugHudMode getMode()
+	{
+		return (DebugHudMode) Configs.Generic.DEBUG_HUD_MODE.getOptionListValue();
+	}
+
+	public void checkConfig()
+	{
+		MinecraftClient mc = MinecraftClient.getInstance();
+		if (mc.debugHudEntryList == null) return;
+
+		if (this.getMode() == DebugHudMode.VANILLA &&
+			!DebugHudEntries.ENTRIES.containsKey(LITEMATICA_DEBUG))
+		{
+			DebugHudEntries.ENTRIES.put(LITEMATICA_DEBUG, LitematicaDebugHud.INSTANCE);
+
+			if (!mc.debugHudEntryList.visibilityMap.containsKey(LITEMATICA_DEBUG))
+			{
+				mc.debugHudEntryList.visibilityMap.put(LITEMATICA_DEBUG, DebugHudEntryVisibility.IN_F3);
+			}
+
+			mc.debugHudEntryList.saveProfileFile();
+		}
+		else if (this.getMode() != DebugHudMode.VANILLA)
+		{
+			mc.debugHudEntryList.visibilityMap.remove(LITEMATICA_DEBUG);
+			DebugHudEntries.ENTRIES.remove(LITEMATICA_DEBUG);
+			mc.debugHudEntryList.saveProfileFile();
+		}
+	}
+
+	public boolean isLeft()
+	{
+		return this.left;
+	}
+
+	public void toggleRight()
+	{
+		this.left = false;
+	}
+
+	public void toggleLeft()
+	{
+		this.left = true;
+	}
+
+//	public boolean isDefaultProfile()
+//	{
+//		MinecraftClient mc = MinecraftClient.getInstance();
+//		if (mc.debugHudEntryList == null) return false;
+//
+//		List<Identifier> vis = new ArrayList<>(mc.debugHudEntryList.visibleEntries);
+//		Set<Identifier> def = DebugHudEntries.PROFILES.get(DebugProfileType.DEFAULT).keySet();
+//
+//		for (Identifier entry : def)
+//		{
+//			vis.remove(entry);
+//		}
+//
+//		return (vis.size() == 1 && vis.getFirst() == LITEMATICA_DEBUG);
+//	}
 
 	@Override
 	public void render(DebugHudLines lines, @Nullable World world, @Nullable WorldChunk clientChunk, @Nullable WorldChunk chunk)
 	{
-		List<String> list = LitematicaDebugHud.getDebugLines();
+		if (this.getMode() == DebugHudMode.NONE)
+		{
+			return;
+		}
+
+		List<String> list = LitematicaDebugHud.INSTANCE.getDebugLines();
 
 		if (!list.isEmpty())
 		{
@@ -41,35 +120,91 @@ public class LitematicaDebugHud implements DebugHudEntry
 		return true;
 	}
 
-	public static List<String> getDebugLines()
+	public List<String> getDebugLines()
 	{
 		WorldSchematic worldSchematic = SchematicWorldHandler.getSchematicWorld();
 		List<String> list = new ArrayList<>();
+		String pre = GuiBase.TXT_GOLD;
+		String red = GuiBase.TXT_RED;
+		String rst = GuiBase.TXT_RST;
 
 		if (worldSchematic != null)
 		{
+			// Loaded
 			Pair<String, String> pair = EntityUtils.getEntityDebug();
-			String pre = GuiBase.TXT_GOLD;
-			String rst = GuiBase.TXT_RST;
 
 			WorldRendererSchematic renderer = LitematicaRenderer.getInstance().getWorldRenderer();
 
-			list.add(String.format("%s[Litematica]%s %s",
-								   pre, rst, renderer.getDebugInfoRenders()));
-
-			String str = String.format("E: %d TE: %d C: %d, CT: %d, CV: %d",
-									   worldSchematic.getRegularEntityCount(),
-									   worldSchematic.getChunkProvider().getTileEntityCount(),
-									   worldSchematic.getChunkProvider().getLoadedChunkCount(),
-									   DataManager.getSchematicPlacementManager().getTouchedChunksCount(),
-									   DataManager.getSchematicPlacementManager().getLastVisibleChunksCount()
+			String str = String.format("E: %02d TE: %02d C: %02d, CT: %02d, CV: %02d",
+			                           worldSchematic.getRegularEntityCount(),
+			                           worldSchematic.getChunkProvider().getTileEntityCount(),
+			                           worldSchematic.getChunkProvider().getLoadedChunkCount(),
+			                           DataManager.getSchematicPlacementManager().getTouchedChunksCount(),
+			                           DataManager.getSchematicPlacementManager().getLastVisibleChunksCount()
 			);
 
-			list.add(String.format("%s[Litematica]%s %s %s", pre, rst, renderer.getDebugInfoEntities(), str));
-
-			if (!pair.getLeft().isEmpty())
+			if (this.isLeft())
 			{
-				list.add(String.format("%s[%s]%s %s", pre, pair.getLeft(), rst, pair.getRight()));
+				list.add(String.format("%s[Litematica]%s %s",
+				                       pre, rst,
+				                       renderer.getDebugInfoRenders()
+				));
+
+				list.add(String.format("%s[Litematica]%s %s %s",
+				                       pre, rst,
+				                       renderer.getDebugInfoEntities(),
+				                       str
+				));
+
+				if (!pair.getLeft().isEmpty())
+				{
+					list.add(String.format("%s[%s]%s %s",
+					                       pre, pair.getLeft(),
+					                       rst, pair.getRight()
+					));
+				}
+			}
+			else
+			{
+				list.add(String.format("%s %s[Litematica]%s",
+				                       renderer.getDebugInfoRenders(),
+				                       rst+pre, rst
+				));
+
+				list.add(String.format("%s %s %s[Litematica]%s",
+				                       str,
+				                       renderer.getDebugInfoEntities(),
+				                       rst+pre, rst
+				));
+
+				if (!pair.getLeft().isEmpty())
+				{
+					list.add(String.format("%s %s[%s]%s",
+					                       pair.getRight(),
+					                       rst+pre, pair.getLeft(),
+					                       rst
+					));
+				}
+			}
+		}
+		else
+		{
+			// Not loaded
+			if (this.isLeft())
+			{
+				list.add(String.format("%s[Litematica]%s %s",
+				                       pre, rst+red,
+				                       StringUtils.translate("litematica.gui.message.debug_hud.not_loaded")
+				));
+			}
+			else
+			{
+				list.add(String.format("%s%s %s[Litematica]%s",
+				                       red,
+				                       StringUtils.translate("litematica.gui.message.debug_hud.not_loaded"),
+				                       rst+pre, rst
+				));
+
 			}
 		}
 

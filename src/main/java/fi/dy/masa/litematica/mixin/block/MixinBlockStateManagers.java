@@ -9,7 +9,9 @@ import net.minecraft.block.BlockState;
 import net.minecraft.client.render.model.BlockStateManagers;
 import net.minecraft.state.StateManager;
 import net.minecraft.util.Identifier;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -20,7 +22,7 @@ import fi.dy.masa.litematica.render.schematic.blocks.FallbackBlocks;
 @Mixin(BlockStateManagers.class)
 public class MixinBlockStateManagers
 {
-	@Shadow private static Map<Identifier, StateManager<Block, BlockState>> STATIC_MANAGERS;
+	@Mutable @Final @Shadow private static Map<Identifier, StateManager<Block, BlockState>> STATIC_MANAGERS;
 
 	@Inject(method = "<clinit>", at = @At("RETURN"))
 	private static void litematica$fillFallbackBlocks(CallbackInfo ci)

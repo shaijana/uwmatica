@@ -14,8 +14,9 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 import fi.dy.masa.litematica.render.LitematicaDebugHud;
+import fi.dy.masa.litematica.util.DebugHudMode;
 
-// Original method (Still Works)
+// Original method (Works)
 @Mixin(DebugHud.class)
 public abstract class MixinDebugHud
 {
@@ -27,7 +28,12 @@ public abstract class MixinDebugHud
 					   ordinal = 0))
 	private boolean litematica_fixF3WhenAllDisabled(Collection<Identifier> instance)
 	{
-		return false;
+		if (LitematicaDebugHud.INSTANCE.getMode() == DebugHudMode.DEFAULT)
+		{
+			return false;
+		}
+
+		return instance.isEmpty();
 	}
 
 	@ModifyArg(method = "render(Lnet/minecraft/client/gui/DrawContext;)V",
@@ -35,31 +41,34 @@ public abstract class MixinDebugHud
 					 target = "Lnet/minecraft/client/gui/hud/DebugHud;drawText(Lnet/minecraft/client/gui/DrawContext;Ljava/util/List;Z)V",
 						ordinal = 0),
 			   index = 1)
-	private List<String> litematica_addDebugLines(List<String> text)
+	private List<String> litematica_addDebugLines_Left(List<String> text)
 	// Left side
     {
-		// Always display only when F3 is open.
+		// Always display only when F3 is open, whenever Default mode is ON.
 		if (this.client.debugHudEntryList.isF3Enabled())
 		{
-			List<String> list = LitematicaDebugHud.getDebugLines();
-
-			if (!list.isEmpty())
+			if (LitematicaDebugHud.INSTANCE.getMode() == DebugHudMode.DEFAULT)
 			{
-				int size = text.size();
+				List<String> list = LitematicaDebugHud.INSTANCE.getDebugLines();
 
-				if (size > 3)
+				if (!list.isEmpty())
 				{
-					size -= 3;
-				}
-				else
-				{
-					size = 0;
-					// Insert mode, but do not go beyond '0'
-				}
+					int size = text.size();
 
-				for (String entry : list)
-				{
-					text.add(size++, entry);
+					if (size > 3)
+					{
+						size -= 3;
+					}
+					else
+					{
+						size = 0;
+						// Insert mode, but do not go beyond '0'
+					}
+
+					for (String entry : list)
+					{
+						text.add(size++, entry);
+					}
 				}
 			}
 		}
