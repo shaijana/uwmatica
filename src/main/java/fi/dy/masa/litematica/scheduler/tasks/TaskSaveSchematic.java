@@ -3,9 +3,9 @@ package fi.dy.masa.litematica.scheduler.tasks;
 import java.nio.file.Path;
 import java.util.*;
 import javax.annotation.Nullable;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.Level;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.World;
 import com.google.common.collect.ImmutableMap;
 import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.util.InfoUtils;
@@ -56,7 +56,7 @@ public class TaskSaveSchematic extends TaskProcessChunkBase
     {
         if (this.fromSchematicWorld)
         {
-            return this.schematicWorld != null && this.schematicWorld.getChunkSource().hasChunk(pos.x, pos.z);
+            return this.schematicWorld != null && this.schematicWorld.getChunkManager().isChunkLoaded(pos.x, pos.z);
         }
 
         // Request entity data from Servux, if the ClientWorld matches, and treat it as not yet loaded
@@ -101,7 +101,7 @@ public class TaskSaveSchematic extends TaskProcessChunkBase
     @Override
     protected boolean processChunk(ChunkPos pos)
     {
-        Level world = this.fromSchematicWorld ? this.schematicWorld : this.world;
+        World world = this.fromSchematicWorld ? this.schematicWorld : this.world;
         ImmutableMap<String, IntBoundingBox> volumes = PositionUtils.getBoxesWithinChunk(pos.x, pos.z, this.subRegions);
         this.schematic.takeBlocksFromWorldWithinChunk(world, volumes, this.subRegions, this.info);
 

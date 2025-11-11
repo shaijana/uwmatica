@@ -4,8 +4,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 import javax.annotation.Nullable;
-import net.minecraft.client.Minecraft;
-import net.minecraft.core.BlockPos;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.util.math.BlockPos;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
@@ -21,13 +21,13 @@ import fi.dy.masa.litematica.gui.GuiSchematicProjectsBrowser;
 public class SchematicProjectsManager
 {
     //private static final Pattern PATTERN_NAME_NUMBER = Pattern.compile("(.*)([0-9]+)$");
-    private final Minecraft mc;
+    private final MinecraftClient mc;
     @Nullable
     private SchematicProject currentProject;
 
     public SchematicProjectsManager()
     {
-        this.mc = Minecraft.getInstance();
+        this.mc = MinecraftClient.getInstance();
         this.currentProject = null;
     }
 
@@ -68,7 +68,7 @@ public class SchematicProjectsManager
     {
         this.closeCurrentProject();
 
-        BlockPos origin = BlockPos.ZERO;
+        BlockPos origin = BlockPos.ORIGIN;
 
         if (this.mc.player != null)
         {
@@ -190,7 +190,7 @@ public class SchematicProjectsManager
         return false;
     }
 
-    public boolean deleteLastSeenArea(Minecraft mc)
+    public boolean deleteLastSeenArea(MinecraftClient mc)
     {
         SchematicProject project = this.getCurrentProject();
 

@@ -1,17 +1,17 @@
 package fi.dy.masa.litematica.util;
 
 import javax.annotation.Nonnull;
+import net.minecraft.util.StringIdentifiable;
 import com.google.common.collect.ImmutableList;
 import fi.dy.masa.malilib.config.IConfigOptionListEntry;
 import fi.dy.masa.malilib.util.StringUtils;
-import net.minecraft.util.StringRepresentable;
 
-public enum BlockInfoListType implements IConfigOptionListEntry, StringRepresentable
+public enum BlockInfoListType implements IConfigOptionListEntry, StringIdentifiable
 {
     ALL             ("all",             "litematica.gui.label.block_info_list_type.all"),
     RENDER_LAYERS   ("render_layers",   "litematica.gui.label.block_info_list_type.render_layers");
 
-    public static final StringRepresentable.EnumCodec<BlockInfoListType> CODEC = StringRepresentable.fromEnum(BlockInfoListType::values);
+    public static final StringIdentifiable.EnumCodec<BlockInfoListType> CODEC = StringIdentifiable.createCodec(BlockInfoListType::values);
     public static final ImmutableList<BlockInfoListType> VALUES = ImmutableList.copyOf(values());
 
     private final String configString;
@@ -24,7 +24,7 @@ public enum BlockInfoListType implements IConfigOptionListEntry, StringRepresent
     }
 
     @Override
-    public @Nonnull String getSerializedName()
+    public @Nonnull String asString()
     {
         return this.configString;
     }

@@ -5,20 +5,20 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.Slice;
 import fi.dy.masa.litematica.util.WorldUtils;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.World;
+import net.minecraft.world.chunk.WorldChunk;
 
-@Mixin(LevelChunk.class)
+@Mixin(WorldChunk.class)
 public abstract class MixinWorldChunk
 {
     @Redirect(method = "setBlockState",
                 slice = @Slice(from = @At(value = "INVOKE",
-                                target = "Lnet/minecraft/world/level/chunk/LevelChunkSection;getBlockState(III)Lnet/minecraft/world/level/block/state/BlockState;")),
+                                target = "Lnet/minecraft/world/chunk/ChunkSection;getBlockState(III)Lnet/minecraft/block/BlockState;")),
                 at = @At(value = "INVOKE",
-						 target = "Lnet/minecraft/world/level/Level;isClientSide()Z",
+						 target = "Lnet/minecraft/world/World;isClient()Z",
 						 ordinal = 0))
-    private boolean litematica_redirectIsRemote(Level world)
+    private boolean litematica_redirectIsRemote(World world)
     {
-        return WorldUtils.shouldPreventBlockUpdates(world) || world.isClientSide();
+        return WorldUtils.shouldPreventBlockUpdates(world) || world.isClient();
     }
 }

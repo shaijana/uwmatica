@@ -7,22 +7,23 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 import com.google.common.collect.ImmutableSet;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.util.Mth;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.BedBlock;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.ComparatorBlock;
-import net.minecraft.world.level.block.RepeaterBlock;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.*;
-import net.minecraft.world.level.material.Fluids;
-import net.minecraft.world.phys.Vec3;
+import net.minecraft.block.*;
+import net.minecraft.block.enums.BlockHalf;
+import net.minecraft.block.enums.ComparatorMode;
+import net.minecraft.block.enums.SlabType;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.fluid.Fluids;
+import net.minecraft.item.ItemPlacementContext;
+import net.minecraft.state.property.EnumProperty;
+import net.minecraft.state.property.Properties;
+import net.minecraft.state.property.Property;
+import net.minecraft.util.Hand;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
 
 import fi.dy.masa.malilib.util.game.BlockUtils;
 import fi.dy.masa.litematica.Litematica;
@@ -37,8 +38,8 @@ public class PlacementHandler
             // INVERTED - DaylightDetector
             // OPEN - Barrel, Door, FenceGate, Trapdoor
             // PERSISTENT - Leaves (Disabled)
-            BlockStateProperties.INVERTED,
-            BlockStateProperties.OPEN,
+            Properties.INVERTED,
+            Properties.OPEN,
             //Properties.PERSISTENT,
 
             // EnumProperty:
@@ -54,40 +55,40 @@ public class PlacementHandler
             // SLAB_TYPE - Slab - PARTIAL ONLY: TOP and BOTTOM, not DOUBLE
             // STAIR_SHAPE - Stairs (needed to get the correct state, otherwise the player facing would be a factor)
             // BLOCK_FACE - Button, Grindstone, Lever
-            BlockStateProperties.BELL_ATTACHMENT,
-            BlockStateProperties.AXIS,
-            BlockStateProperties.HALF,
-            BlockStateProperties.ATTACH_FACE,
-            BlockStateProperties.CHEST_TYPE,
-            BlockStateProperties.MODE_COMPARATOR,
-            BlockStateProperties.DOOR_HINGE,
-            BlockStateProperties.FACING,
-            BlockStateProperties.HORIZONTAL_FACING,
-            BlockStateProperties.FACING_HOPPER,
-            BlockStateProperties.ORIENTATION,
-            BlockStateProperties.RAIL_SHAPE,
-            BlockStateProperties.RAIL_SHAPE_STRAIGHT,
-            BlockStateProperties.SLAB_TYPE,
-            BlockStateProperties.STAIRS_SHAPE,
-			BlockStateProperties.COPPER_GOLEM_POSE,
+            Properties.ATTACHMENT,
+            Properties.AXIS,
+            Properties.BLOCK_HALF,
+            Properties.BLOCK_FACE,
+            Properties.CHEST_TYPE,
+            Properties.COMPARATOR_MODE,
+            Properties.DOOR_HINGE,
+            Properties.FACING,
+            Properties.HORIZONTAL_FACING,
+            Properties.HOPPER_FACING,
+            Properties.ORIENTATION,
+            Properties.RAIL_SHAPE,
+            Properties.STRAIGHT_RAIL_SHAPE,
+            Properties.SLAB_TYPE,
+            Properties.STAIR_SHAPE,
+			Properties.COPPER_GOLEM_POSE,
 
             // IntProperty:
             // BITES - Cake
             // DELAY - Repeater
             // NOTE - NoteBlock
             // ROTATION - Banner, Sign, Skull
-            BlockStateProperties.BITES,
-            BlockStateProperties.DELAY,
-            BlockStateProperties.NOTE,
-            BlockStateProperties.ROTATION_16
+            Properties.BITES,
+            Properties.DELAY,
+            Properties.NOTE,
+            Properties.ROTATION
     );
 
     /**
      * BlackList for Block States.  Entries here will be reset to their default value.
      */
     public static final ImmutableSet<Property<?>> BLACKLISTED_PROPERTIES = ImmutableSet.of(
-            BlockStateProperties.WATERLOGGED,
-            BlockStateProperties.POWERED
+            Properties.WATERLOGGED,
+            Properties.POWERED
     );
 
     public static EasyPlaceProtocol getEffectiveProtocolVersion()
@@ -96,7 +97,7 @@ public class PlacementHandler
 
         if (protocol == EasyPlaceProtocol.AUTO)
         {
-            if (Minecraft.getInstance().isLocalServer() || EntitiesDataStorage.getInstance().hasServuxServer())
+            if (MinecraftClient.getInstance().isInSingleplayer() || EntitiesDataStorage.getInstance().hasServuxServer())
             {
                 return EasyPlaceProtocol.V3;
             }
@@ -152,14 +153,14 @@ public class PlacementHandler
                 return null;
             }
         }
-        else if (state.hasProperty(BlockStateProperties.AXIS))
+        else if (state.contains(Properties.AXIS))
         {
             Direction.Axis axis = Direction.Axis.VALUES[((protocolValue >> 1) & 0x3) % 3];
             //System.out.printf("[PHv2] applying: 0x%08X (Axis -> %s)\n", protocolValue, axis.getName());
 
-            if (BlockStateProperties.AXIS.getPossibleValues().contains(axis))
+            if (Properties.AXIS.getValues().contains(axis))
             {
-                state = state.setValue(BlockStateProperties.AXIS, axis);
+                state = state.with(Properties.AXIS, axis);
                 //System.out.printf("[PHv2] axis stateOut: %s\n", state.toString());
             }
         }
@@ -175,20 +176,20 @@ public class PlacementHandler
             {
                 Integer delay = protocolValue;
 
-                if (RepeaterBlock.DELAY.getPossibleValues().contains(delay))
+                if (RepeaterBlock.DELAY.getValues().contains(delay))
                 {
-                    state = state.setValue(RepeaterBlock.DELAY, delay);
+                    state = state.with(RepeaterBlock.DELAY, delay);
                 }
             }
             else if (block instanceof ComparatorBlock)
             {
-                state = state.setValue(ComparatorBlock.MODE, ComparatorMode.SUBTRACT);
+                state = state.with(ComparatorBlock.MODE, ComparatorMode.SUBTRACT);
             }
         }
 
-        if (state.hasProperty(BlockStateProperties.HALF))
+        if (state.contains(Properties.BLOCK_HALF))
         {
-            state = state.setValue(BlockStateProperties.HALF, protocolValue > 0 ? Half.TOP : Half.BOTTOM);
+            state = state.with(Properties.BLOCK_HALF, protocolValue > 0 ? BlockHalf.TOP : BlockHalf.BOTTOM);
         }
         
         //System.out.printf("[PHv2] stateOut: %s\n", state.toString());
@@ -211,7 +212,7 @@ public class PlacementHandler
         Optional<EnumProperty<Direction>> property = BlockUtils.getFirstDirectionProperty(state);
 
         // DirectionProperty - allow all except: VERTICAL_DIRECTION (PointedDripstone)
-        if (property.isPresent() && property.get() != BlockStateProperties.VERTICAL_DIRECTION)
+        if (property.isPresent() && property.get() != Properties.VERTICAL_DIRECTION)
         {
             //System.out.printf("[PHv3] applying: 0x%08X (getFirstDirectionProperty() -> %s)\n", protocolValue, property.get().getName());
             state = applyDirectionProperty(state, context, property.get(), protocolValue);
@@ -223,7 +224,7 @@ public class PlacementHandler
 
             if (Configs.Generic.EASY_PLACE_SP_VALIDATION.getBooleanValue())
             {
-                if (state.canSurvive(context.getWorld(), context.getPos()))
+                if (state.canPlaceAt(context.getWorld(), context.getPos()))
                 {
                     //System.out.printf("[PHv3] validator passed for \"%s\"\n", property.get().getName());
                     oldState = state;
@@ -246,7 +247,7 @@ public class PlacementHandler
         // Consume the lowest unused bit
         protocolValue >>>= 1;
 
-        List<Property<?>> propList = new ArrayList<>(state.getBlock().getStateDefinition().getProperties());
+        List<Property<?>> propList = new ArrayList<>(state.getBlock().getStateManager().getProperties());
         propList.sort(Comparator.comparing(Property::getName));
 
         try
@@ -265,10 +266,10 @@ public class PlacementHandler
                 {
                     @SuppressWarnings("unchecked")
                     Property<T> prop = (Property<T>) p;
-                    List<T> list = new ArrayList<>(prop.getPossibleValues());
+                    List<T> list = new ArrayList<>(prop.getValues());
                     list.sort(Comparable::compareTo);
 
-                    int requiredBits = Mth.log2(Mth.smallestEncompassingPowerOfTwo(list.size()));
+                    int requiredBits = MathHelper.floorLog2(MathHelper.smallestEncompassingPowerOfTwo(list.size()));
                     int bitMask = ~(0xFFFFFFFF << requiredBits);
                     int valueIndex = protocolValue & bitMask;
 
@@ -278,15 +279,15 @@ public class PlacementHandler
                     {
                         T value = list.get(valueIndex);
 
-                        if (state.getValue(prop).equals(value) == false &&
+                        if (state.get(prop).equals(value) == false &&
                             value != SlabType.DOUBLE) // don't allow duping slabs by forcing a double slab via the protocol
                         {
                             //System.out.printf("[PHv3] applying \"%s\": %s\n", prop.getName(), value);
-                            state = state.setValue(prop, value);
+                            state = state.with(prop, value);
 
                             if (Configs.Generic.EASY_PLACE_SP_VALIDATION.getBooleanValue())
                             {
-                                if (state.canSurvive(context.getWorld(), context.getPos()))
+                                if (state.canPlaceAt(context.getWorld(), context.getPos()))
                                 {
                                     //System.out.printf("[PHv3] validator passed for \"%s\"\n", prop.getName());
                                     oldState = state;
@@ -323,28 +324,28 @@ public class PlacementHandler
         // This needs to be done after the initial loop, or it breaks compatibility
         for (Property<?> p : BLACKLISTED_PROPERTIES)
         {
-            if (state.hasProperty(p))
+            if (state.contains(p))
             {
                 @SuppressWarnings("unchecked")
                 Property<T> prop = (Property<T>) p;
-                BlockState def = state.getBlock().defaultBlockState();
-                state = state.setValue(prop, def.getValue(prop));
+                BlockState def = state.getBlock().getDefaultState();
+                state = state.with(prop, def.get(prop));
                 //System.out.printf("[PHv3] blacklisted state [%s] found, setting default value\n", prop.getName());
             }
         }
 
-        if (state.hasProperty(BlockStateProperties.WATERLOGGED) && (
-            oldState.hasProperty(BlockStateProperties.WATERLOGGED) && oldState.getValue(BlockStateProperties.WATERLOGGED) ||
-            (oldState.getFluidState() != null && oldState.getFluidState().getType().isSame(Fluids.WATER))
+        if (state.contains(Properties.WATERLOGGED) && (
+            oldState.contains(Properties.WATERLOGGED) && oldState.get(Properties.WATERLOGGED) ||
+            (oldState.getFluidState() != null && oldState.getFluidState().getFluid().matchesType(Fluids.WATER))
         ))
         {
             // Revert only if original state was waterlogged / Still Water already
-            state = state.setValue(BlockStateProperties.WATERLOGGED, true);
+            state = state.with(Properties.WATERLOGGED, true);
         }
 
         if (Configs.Generic.EASY_PLACE_SP_VALIDATION.getBooleanValue())
         {
-            if (state.canSurvive(context.getWorld(), context.getPos()))
+            if (state.canPlaceAt(context.getWorld(), context.getPos()))
             {
                 //System.out.printf("[PHv3] validator passed for \"%s\"\n", state);
                 return state;
@@ -362,7 +363,7 @@ public class PlacementHandler
     private static BlockState applyDirectionProperty(BlockState state, UseContext context,
                                                      EnumProperty<Direction> property, int protocolValue)
     {
-        Direction facingOrig = state.getValue(property);
+        Direction facingOrig = state.get(property);
         Direction facing = facingOrig;
         int decodedFacingIndex = (protocolValue & 0xF) >> 1;
 
@@ -372,30 +373,30 @@ public class PlacementHandler
         }
         else if (decodedFacingIndex >= 0 && decodedFacingIndex <= 5)
         {
-            facing = Direction.from3DDataValue(decodedFacingIndex);
+            facing = Direction.byIndex(decodedFacingIndex);
 
-            if (property.getPossibleValues().contains(facing) == false)
+            if (property.getValues().contains(facing) == false)
             {
-                facing = context.getEntity().getDirection().getOpposite();
+                facing = context.getEntity().getHorizontalFacing().getOpposite();
             }
         }
 
         //System.out.printf("plop facing: %s -> %s (raw: %d, dec: %d)\n", facingOrig, facing, protocolValue, decodedFacingIndex);
 
-        if (facing != facingOrig && property.getPossibleValues().contains(facing))
+        if (facing != facingOrig && property.getValues().contains(facing))
         {
             if (state.getBlock() instanceof BedBlock)
             {
-                BlockPos headPos = context.pos.relative(facing);
-                BlockPlaceContext ctx = context.getItemPlacementContext();
+                BlockPos headPos = context.pos.offset(facing);
+                ItemPlacementContext ctx = context.getItemPlacementContext();
 
-                if (context.getWorld().getBlockState(headPos).canBeReplaced(ctx) == false)
+                if (context.getWorld().getBlockState(headPos).canReplace(ctx) == false)
                 {
                     return null;
                 }
             }
 
-            state = state.setValue(property, facing);
+            state = state.with(property, facing);
         }
 
         return state;
@@ -403,16 +404,16 @@ public class PlacementHandler
 
     public static class UseContext
     {
-        private final Level world;
+        private final World world;
         private final BlockPos pos;
         private final Direction side;
-        private final Vec3 hitVec;
+        private final Vec3d hitVec;
         private final LivingEntity entity;
-        private final InteractionHand hand;
-        @Nullable private final BlockPlaceContext itemPlacementContext;
+        private final Hand hand;
+        @Nullable private final ItemPlacementContext itemPlacementContext;
 
-        public UseContext(Level world, BlockPos pos, Direction side, Vec3 hitVec,
-                           LivingEntity entity, InteractionHand hand, @Nullable BlockPlaceContext itemPlacementContext)
+        public UseContext(World world, BlockPos pos, Direction side, Vec3d hitVec,
+                           LivingEntity entity, Hand hand, @Nullable ItemPlacementContext itemPlacementContext)
         {
             this.world = world;
             this.pos = pos;
@@ -430,14 +431,14 @@ public class PlacementHandler
         }
         */
 
-        public static UseContext from(BlockPlaceContext ctx, InteractionHand hand)
+        public static UseContext from(ItemPlacementContext ctx, Hand hand)
         {
-            Vec3 pos = ctx.getClickLocation();
-            return new UseContext(ctx.getLevel(), ctx.getClickedPos(), ctx.getClickedFace(), new Vec3(pos.x, pos.y, pos.z),
+            Vec3d pos = ctx.getHitPos();
+            return new UseContext(ctx.getWorld(), ctx.getBlockPos(), ctx.getSide(), new Vec3d(pos.x, pos.y, pos.z),
                                   ctx.getPlayer(), hand, ctx);
         }
 
-        public Level getWorld()
+        public World getWorld()
         {
             return this.world;
         }
@@ -452,7 +453,7 @@ public class PlacementHandler
             return this.side;
         }
 
-        public Vec3 getHitVec()
+        public Vec3d getHitVec()
         {
             return this.hitVec;
         }
@@ -462,13 +463,13 @@ public class PlacementHandler
             return this.entity;
         }
 
-        public InteractionHand getHand()
+        public Hand getHand()
         {
             return this.hand;
         }
 
         @Nullable
-        public BlockPlaceContext getItemPlacementContext()
+        public ItemPlacementContext getItemPlacementContext()
         {
             return this.itemPlacementContext;
         }

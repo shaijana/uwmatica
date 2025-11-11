@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.ChunkPos;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.world.ClientWorld;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.interfaces.ICompletionListener;
 import fi.dy.masa.malilib.util.StringUtils;
@@ -22,7 +22,7 @@ import fi.dy.masa.litematica.util.WorldUtils;
 public abstract class TaskBase implements ITask, IInfoHudRenderer
 {
     protected final List<String> infoHudLines = new ArrayList<>();
-    protected final Minecraft mc;
+    protected final MinecraftClient mc;
     protected String name = "";
     private TaskTimer timer = new TaskTimer(1);
     @Nullable private ICompletionListener completionListener;
@@ -31,7 +31,7 @@ public abstract class TaskBase implements ITask, IInfoHudRenderer
 
     protected TaskBase()
     {
-        this.mc = Minecraft.getInstance();
+        this.mc = MinecraftClient.getInstance();
     }
 
     @Override
@@ -87,7 +87,7 @@ public abstract class TaskBase implements ITask, IInfoHudRenderer
 
     protected boolean isInWorld()
     {
-        return this.mc.level != null && this.mc.player != null;
+        return this.mc.world != null && this.mc.player != null;
     }
 
     protected void notifyListener()
@@ -108,7 +108,7 @@ public abstract class TaskBase implements ITask, IInfoHudRenderer
         }
     }
 
-    protected boolean areSurroundingChunksLoaded(ChunkPos pos, ClientLevel world, int radius)
+    protected boolean areSurroundingChunksLoaded(ChunkPos pos, ClientWorld world, int radius)
     {
         if (radius <= 0)
         {
@@ -140,7 +140,7 @@ public abstract class TaskBase implements ITask, IInfoHudRenderer
         {
             // TODO
             List<ChunkPos> list = new ArrayList<>(pendingChunks);
-            PositionUtils.CHUNK_POS_COMPARATOR.setReferencePosition(BlockPos.containing(this.mc.player.position()));
+            PositionUtils.CHUNK_POS_COMPARATOR.setReferencePosition(BlockPos.ofFloored(this.mc.player.getEntityPos()));
             PositionUtils.CHUNK_POS_COMPARATOR.setClosestFirst(true);
             list.sort(PositionUtils.CHUNK_POS_COMPARATOR);
 

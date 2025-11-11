@@ -4,14 +4,12 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.IntStream;
 import javax.annotation.Nullable;
-
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3i;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.PrimitiveCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Vec3i;
-import net.minecraft.nbt.CompoundTag;
-
 import fi.dy.masa.malilib.util.data.Schema;
 import fi.dy.masa.malilib.util.nbt.NbtUtils;
 import fi.dy.masa.litematica.util.FileType;
@@ -335,9 +333,9 @@ public class SchematicMetadata
         }
     }
 
-    public CompoundTag writeToNBT()
+    public NbtCompound writeToNBT()
     {
-        CompoundTag nbt = new CompoundTag();
+        NbtCompound nbt = new NbtCompound();
 
         nbt.putString("Name", this.name);
         nbt.putString("Author", this.author);
@@ -390,23 +388,23 @@ public class SchematicMetadata
         return nbt;
     }
 
-    public void readFromNBT(CompoundTag nbt)
+    public void readFromNBT(NbtCompound nbt)
     {
-        this.name = nbt.getStringOr("Name", "?");
-        this.author = nbt.getStringOr("Author", "?");
-        this.description = nbt.getStringOr("Description", "");
-        this.regionCount = nbt.getIntOr("RegionCount", 0);
-        this.timeCreated = nbt.getLongOr("TimeCreated", -1L);
-        this.timeModified = nbt.getLongOr("TimeModified", -1L);
+        this.name = nbt.getString("Name", "?");
+        this.author = nbt.getString("Author", "?");
+        this.description = nbt.getString("Description", "");
+        this.regionCount = nbt.getInt("RegionCount", 0);
+        this.timeCreated = nbt.getLong("TimeCreated", -1L);
+        this.timeModified = nbt.getLong("TimeModified", -1L);
 
         if (nbt.contains("TotalVolume"))
         {
-            this.totalVolume = nbt.getIntOr("TotalVolume", 0);
+            this.totalVolume = nbt.getInt("TotalVolume", 0);
         }
 
         if (nbt.contains("TotalBlocks"))
         {
-            this.totalBlocks = nbt.getIntOr("TotalBlocks", 0);
+            this.totalBlocks = nbt.getInt("TotalBlocks", 0);
         }
 
         if (nbt.contains("EnclosingSize"))
@@ -434,9 +432,9 @@ public class SchematicMetadata
      *
      * @return ()
      */
-    public CompoundTag writeToNbtExtra()
+    public NbtCompound writeToNbtExtra()
     {
-        CompoundTag nbt = this.writeToNBT();
+        NbtCompound nbt = this.writeToNBT();
 
         nbt.putString("FileType", this.type.name());
 
@@ -478,7 +476,7 @@ public class SchematicMetadata
     @Override
     public String toString()
     {
-        CompoundTag nbt = this.writeToNbtExtra();
+        NbtCompound nbt = this.writeToNbtExtra();
 
         if (nbt.contains("PreviewImageData"))
         {

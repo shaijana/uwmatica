@@ -3,9 +3,9 @@ package fi.dy.masa.litematica.mixin.world;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import fi.dy.masa.litematica.util.IWorldUpdateSuppressor;
-import net.minecraft.world.level.Level;
+import net.minecraft.world.World;
 
-@Mixin(Level.class)
+@Mixin(World.class)
 public class MixinWorld implements IWorldUpdateSuppressor
 {
     @Unique private boolean litematica_preventBlockUpdates;

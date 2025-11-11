@@ -3,24 +3,23 @@ package fi.dy.masa.litematica.world;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
-
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.EntityBlock;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.chunk.LevelChunk;
-import net.minecraft.world.level.chunk.LevelChunkSection;
-import net.minecraft.world.phys.AABB;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockEntityProvider;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.entity.Entity;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.World;
+import net.minecraft.world.chunk.ChunkSection;
+import net.minecraft.world.chunk.WorldChunk;
 import fi.dy.masa.litematica.Litematica;
 
-public class ChunkSchematic extends LevelChunk
+public class ChunkSchematic extends WorldChunk
 {
-    private static final BlockState AIR = Blocks.AIR.defaultBlockState();
+    private static final BlockState AIR = Blocks.AIR.getDefaultState();
 
     private final List<Entity> entityList = new ArrayList<>();
     private final long timeCreated;
@@ -29,13 +28,13 @@ public class ChunkSchematic extends LevelChunk
     private int entityCount;
     private boolean isEmpty = true;
 
-    public ChunkSchematic(Level worldIn, ChunkPos pos)
+    public ChunkSchematic(World worldIn, ChunkPos pos)
     {
         super(worldIn, pos);
 
-        this.timeCreated = worldIn.getGameTime();
-        this.bottomY = worldIn.getMinY();
-        this.topY = worldIn.getMaxY();
+        this.timeCreated = worldIn.getTime();
+        this.bottomY = worldIn.getBottomY();
+        this.topY = worldIn.getTopYInclusive();
         this.entityCount = 0;
     }
 
@@ -48,13 +47,13 @@ public class ChunkSchematic extends LevelChunk
         int cy = this.getSectionIndex(y);
         y &= 0xF;
 
-        LevelChunkSection[] sections = this.getSections();
+        ChunkSection[] sections = this.getSectionArray();
 
         if (cy >= 0 && cy < sections.length)
         {
-            LevelChunkSection chunkSection = sections[cy];
+            ChunkSection chunkSection = sections[cy];
 
-            if (!chunkSection.hasOnlyAir())
+            if (!chunkSection.isEmpty())
             {
                 return chunkSection.getBlockState(x, y, z);
             }
@@ -81,9 +80,9 @@ public class ChunkSchematic extends LevelChunk
 
             Block blockNew = state.getBlock();
             Block blockOld = stateOld.getBlock();
-            LevelChunkSection section = this.getSections()[cy];
+            ChunkSection section = this.getSectionArray()[cy];
 
-            if (section.hasOnlyAir() && state.isAir())
+            if (section.isEmpty() && state.isAir())
             {
                 return null;
             }
@@ -99,7 +98,7 @@ public class ChunkSchematic extends LevelChunk
 
             if (blockOld != blockNew)
             {
-                this.getLevel().removeBlockEntity(pos);
+                this.getWorld().removeBlockEntity(pos);
             }
 
             if (section.getBlockState(x, y, z).getBlock() != blockNew)
@@ -108,32 +107,32 @@ public class ChunkSchematic extends LevelChunk
             }
             else
             {
-                if (state.hasBlockEntity() && blockNew instanceof EntityBlock)
+                if (state.hasBlockEntity() && blockNew instanceof BlockEntityProvider)
                 {
-                    BlockEntity te = this.getBlockEntity(pos, LevelChunk.EntityCreationType.CHECK);
+                    BlockEntity te = this.getBlockEntity(pos, WorldChunk.CreationType.CHECK);
 
                     if (te == null)
                     {
-                        te = ((EntityBlock) blockNew).newBlockEntity(pos, state);
+                        te = ((BlockEntityProvider) blockNew).createBlockEntity(pos, state);
 
                         if (te != null)
                         {
-                            this.getLevel().getChunkAt(pos).setBlockEntity(te);
+                            this.getWorld().getWorldChunk(pos).setBlockEntity(te);
                         }
                     }
                 }
 
-                this.isUnsaved();
+                this.needsSaving();
 
                 return stateOld;
             }
         }
     }
 
-    public AABB getBoundingBox()
+    public Box getBoundingBox()
     {
         final ChunkPos pos = this.getPos();
-        AABB bb = new AABB(pos.getMinBlockX(), this.getMinY(), pos.getMinBlockZ(), pos.getMaxBlockX(), this.getMaxY(), pos.getMaxBlockZ());
+        Box bb = new Box(pos.getStartX(), this.getBottomY(), pos.getStartZ(), pos.getEndX(), this.getTopYInclusive(), pos.getEndZ());
         Litematica.debugLog("ChunkSchematic#getBoundingBox(): --> {}", bb.toString());
         return bb;
     }
@@ -145,7 +144,7 @@ public class ChunkSchematic extends LevelChunk
         this.entityList.forEach(
                 (ent ->
                 {
-                    if (ent.getUUID() == entity.getUUID() || ent.getId() == entity.getId())
+                    if (ent.getUuid() == entity.getUuid() || ent.getId() == entity.getId())
                     {
                         return;
                     }

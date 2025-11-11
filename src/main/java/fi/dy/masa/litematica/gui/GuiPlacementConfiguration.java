@@ -1,10 +1,10 @@
 package fi.dy.masa.litematica.gui;
 
 import javax.annotation.Nullable;
-import net.minecraft.client.Minecraft;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.block.Mirror;
-import net.minecraft.world.level.block.Rotation;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.util.BlockMirror;
+import net.minecraft.util.BlockRotation;
+import net.minecraft.util.math.BlockPos;
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.GuiListBase;
 import fi.dy.masa.malilib.gui.GuiTextFieldGeneric;
@@ -65,7 +65,7 @@ public class GuiPlacementConfiguration  extends GuiListBase<SubRegionPlacement, 
         int x = 12;
         int y = 22;
 
-        this.textFieldRename = new GuiTextFieldGeneric(x, y + 2, width, 16, this.font);
+        this.textFieldRename = new GuiTextFieldGeneric(x, y + 2, width, 16, this.textRenderer);
         this.textFieldRename.setMaxLengthWrapper(256);
         this.textFieldRename.setTextWrapper(this.placement.getName());
         this.addTextField(this.textFieldRename, null);
@@ -175,7 +175,7 @@ public class GuiPlacementConfiguration  extends GuiListBase<SubRegionPlacement, 
             case Z: text = String.valueOf(pos.getZ()); break;
         }
 
-        GuiTextFieldInteger textField = new GuiTextFieldInteger(x + offset, y + 2, width, 14, this.font);
+        GuiTextFieldInteger textField = new GuiTextFieldInteger(x + offset, y + 2, width, 14, this.textRenderer);
         textField.setTextWrapper(text);
         TextFieldListener listener = new TextFieldListener(type, this.placement, this);
         this.addTextField(textField, listener);
@@ -342,7 +342,7 @@ public class GuiPlacementConfiguration  extends GuiListBase<SubRegionPlacement, 
         @Override
         public void actionPerformedWithButton(ButtonBase button, int mouseButton)
         {
-            Minecraft mc = Minecraft.getInstance();
+            MinecraftClient mc = MinecraftClient.getInstance();
             if (mc.player == null) return;
             int amount = mouseButton == 1 ? -1 : 1;
             if (GuiBase.isShiftDown()) { amount *= 8; }
@@ -359,7 +359,7 @@ public class GuiPlacementConfiguration  extends GuiListBase<SubRegionPlacement, 
                 case ROTATE:
                 {
                     boolean reverse = mouseButton == 1;
-                    Rotation rotation = PositionUtils.cycleRotation(this.placement.getRotation(), reverse);
+                    BlockRotation rotation = PositionUtils.cycleRotation(this.placement.getRotation(), reverse);
                     this.placement.setRotation(rotation, this.parent);
                     break;
                 }
@@ -367,28 +367,28 @@ public class GuiPlacementConfiguration  extends GuiListBase<SubRegionPlacement, 
                 case MIRROR:
                 {
                     boolean reverse = mouseButton == 1;
-                    Mirror mirror = PositionUtils.cycleMirror(this.placement.getMirror(), reverse);
+                    BlockMirror mirror = PositionUtils.cycleMirror(this.placement.getMirror(), reverse);
                     this.placement.setMirror(mirror, this.parent);
                     break;
                 }
 
                 case MOVE_TO_PLAYER:
                 {
-                    BlockPos pos = BlockPos.containing(mc.player.position());
+                    BlockPos pos = BlockPos.ofFloored(mc.player.getEntityPos());
                     this.placement.setOrigin(pos, this.parent);
                     break;
                 }
 
                 case NUDGE_COORD_X:
-                    this.placement.setOrigin(oldOrigin.offset(amount, 0, 0), this.parent);
+                    this.placement.setOrigin(oldOrigin.add(amount, 0, 0), this.parent);
                     break;
 
                 case NUDGE_COORD_Y:
-                    this.placement.setOrigin(oldOrigin.offset(0, amount, 0), this.parent);
+                    this.placement.setOrigin(oldOrigin.add(0, amount, 0), this.parent);
                     break;
 
                 case NUDGE_COORD_Z:
-                    this.placement.setOrigin(oldOrigin.offset(0, 0, amount), this.parent);
+                    this.placement.setOrigin(oldOrigin.add(0, 0, amount), this.parent);
                     break;
 
                 case TOGGLE_ENABLED:

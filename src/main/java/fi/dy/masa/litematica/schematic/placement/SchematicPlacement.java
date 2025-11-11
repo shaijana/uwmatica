@@ -4,12 +4,12 @@ import java.nio.file.Path;
 import java.util.*;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.block.Mirror;
-import net.minecraft.world.level.block.Rotation;
-import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.structure.StructurePlacementData;
+import net.minecraft.util.BlockMirror;
+import net.minecraft.util.BlockRotation;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -52,8 +52,8 @@ public class SchematicPlacement
     private final LitematicaSchematic schematic;
     private BlockPos origin;
     private String name;
-    private Rotation rotation;
-    private Mirror mirror;
+    private BlockRotation rotation;
+    private BlockMirror mirror;
     private BlockInfoListType verifierType;
     private boolean ignoreEntities;
     private boolean enabled;
@@ -97,8 +97,8 @@ public class SchematicPlacement
         this.schematicFile = schematic.getFile();
         this.origin = origin;
         this.name = name;
-        this.rotation = Rotation.NONE;
-        this.mirror = Mirror.NONE;
+        this.rotation = BlockRotation.NONE;
+        this.mirror = BlockMirror.NONE;
         this.verifierType = BlockInfoListType.ALL;
         this.subRegionCount = schematic.getSubRegionCount();
         this.enabled = enabled;
@@ -310,12 +310,12 @@ public class SchematicPlacement
         return origin;
     }
 
-    public Rotation getRotation()
+    public BlockRotation getRotation()
     {
         return rotation;
     }
 
-    public Mirror getMirror()
+    public BlockMirror getMirror()
     {
         return mirror;
     }
@@ -365,9 +365,9 @@ public class SchematicPlacement
         return this.verifier;
     }
 
-    public StructurePlaceSettings getPlacementSettings()
+    public StructurePlacementData getPlacementSettings()
     {
-        StructurePlaceSettings placement = new StructurePlaceSettings();
+        StructurePlacementData placement = new StructurePlacementData();
 
         placement.setMirror(this.mirror);
         placement.setRotation(this.rotation);
@@ -490,10 +490,10 @@ public class SchematicPlacement
             if (placement.matchesRequirement(required))
             {
                 BlockPos boxOriginRelative = placement.getPos();
-                BlockPos boxOriginAbsolute = PositionUtils.getTransformedBlockPos(boxOriginRelative, this.mirror, this.rotation).offset(this.origin);
+                BlockPos boxOriginAbsolute = PositionUtils.getTransformedBlockPos(boxOriginRelative, this.mirror, this.rotation).add(this.origin);
                 BlockPos pos2 = PositionUtils.getRelativeEndPositionFromAreaSize(areaSize);
                 pos2 = PositionUtils.getTransformedBlockPos(pos2, this.mirror, this.rotation);
-                pos2 = PositionUtils.getTransformedBlockPos(pos2, placement.getMirror(), placement.getRotation()).offset(boxOriginAbsolute);
+                pos2 = PositionUtils.getTransformedBlockPos(pos2, placement.getMirror(), placement.getRotation()).add(boxOriginAbsolute);
 
                 builder.put(name, new Box(boxOriginAbsolute, pos2, name));
             }
@@ -518,10 +518,10 @@ public class SchematicPlacement
                 if (areaSize != null)
                 {
                     BlockPos boxOriginRelative = placement.getPos();
-                    BlockPos boxOriginAbsolute = PositionUtils.getTransformedBlockPos(boxOriginRelative, this.mirror, this.rotation).offset(this.origin);
+                    BlockPos boxOriginAbsolute = PositionUtils.getTransformedBlockPos(boxOriginRelative, this.mirror, this.rotation).add(this.origin);
                     BlockPos pos2 = PositionUtils.getRelativeEndPositionFromAreaSize(areaSize);
                     pos2 = PositionUtils.getTransformedBlockPos(pos2, this.mirror, this.rotation);
-                    pos2 = PositionUtils.getTransformedBlockPos(pos2, placement.getMirror(), placement.getRotation()).offset(boxOriginAbsolute);
+                    pos2 = PositionUtils.getTransformedBlockPos(pos2, placement.getMirror(), placement.getRotation()).add(boxOriginAbsolute);
 
                     builder.put(regionName, new Box(boxOriginAbsolute, pos2, regionName));
                 }
@@ -638,7 +638,7 @@ public class SchematicPlacement
         }
     }
 
-    public void setSubRegionRotation(String regionName, Rotation rotation, IMessageConsumer feedback)
+    public void setSubRegionRotation(String regionName, BlockRotation rotation, IMessageConsumer feedback)
     {
         if (this.isLocked())
         {
@@ -657,7 +657,7 @@ public class SchematicPlacement
         }
     }
 
-    public void setSubRegionMirror(String regionName, Mirror mirror, IMessageConsumer feedback)
+    public void setSubRegionMirror(String regionName, BlockMirror mirror, IMessageConsumer feedback)
     {
         if (this.isLocked())
         {
@@ -840,7 +840,7 @@ public class SchematicPlacement
         return this;
     }
 
-    public SchematicPlacement setRotation(Rotation rotation, IMessageConsumer feedback)
+    public SchematicPlacement setRotation(BlockRotation rotation, IMessageConsumer feedback)
     {
         if (this.isLocked())
         {
@@ -861,7 +861,7 @@ public class SchematicPlacement
         return this;
     }
 
-    public SchematicPlacement setMirror(Mirror mirror, IMessageConsumer feedback)
+    public SchematicPlacement setMirror(BlockMirror mirror, IMessageConsumer feedback)
     {
         if (this.isLocked())
         {
@@ -1005,8 +1005,8 @@ public class SchematicPlacement
             UUID hashCode = JsonUtils.hasString(obj, "hash_code") ? UUID.fromString(JsonUtils.getString(obj, "hash_code")) : null;
             String name = obj.get("name").getAsString();
             BlockPos pos = new BlockPos(posArr.get(0).getAsInt(), posArr.get(1).getAsInt(), posArr.get(2).getAsInt());
-            Rotation rotation = Rotation.valueOf(obj.get("rotation").getAsString());
-            Mirror mirror = Mirror.valueOf(obj.get("mirror").getAsString());
+            BlockRotation rotation = BlockRotation.valueOf(obj.get("rotation").getAsString());
+            BlockMirror mirror = BlockMirror.valueOf(obj.get("mirror").getAsString());
             boolean enabled = JsonUtils.getBoolean(obj, "enabled");
             boolean enableRender = JsonUtils.getBoolean(obj, "enable_render");
 
@@ -1097,9 +1097,9 @@ public class SchematicPlacement
         return color;
     }
 
-    public CompoundTag toNbt(boolean withSchematic)
+    public NbtCompound toNbt(boolean withSchematic)
     {
-        CompoundTag compound = new CompoundTag();
+        NbtCompound compound = new NbtCompound();
         compound.putString("Name", this.name);
         compound.putString("HashCode", this.hashId.toString());
 
@@ -1112,11 +1112,11 @@ public class SchematicPlacement
         NbtUtils.writeBlockPosToArrayTag(this.origin, compound, "Origin");
         compound.putInt("Rotation", this.rotation.ordinal());
         compound.putInt("Mirror", this.mirror.ordinal());
-        CompoundTag subs = new CompoundTag();
+        NbtCompound subs = new NbtCompound();
 
         for (String name : this.relativeSubRegionPlacements.keySet())
         {
-            CompoundTag sub = new CompoundTag();
+            NbtCompound sub = new NbtCompound();
             SubRegionPlacement subRegionPlacement = this.relativeSubRegionPlacements.get(name);
             subs.put(name, sub);
 
@@ -1132,39 +1132,39 @@ public class SchematicPlacement
         compound.put("SubRegions", subs);
         compound.putString("ReplaceMode", Configs.Generic.PASTE_REPLACE_BEHAVIOR.getStringValue());
         compound.putString("PasteLayerBehavior", Configs.Generic.PASTE_LAYER_BEHAVIOR.getStringValue());
-        compound.store("RenderLayerRange", LayerRange.CODEC, DataManager.getRenderLayerRange());
+        compound.put("RenderLayerRange", LayerRange.CODEC, DataManager.getRenderLayerRange());
 
         ((SchematicPlacementEventHandler) SchematicPlacementEventHandler.getInstance()).onSavePlacementToNbt(this, compound);
 
         return compound;
     }
 
-    public static @Nullable SchematicPlacement createFromNbt(CompoundTag nbt)
+    public static @Nullable SchematicPlacement createFromNbt(NbtCompound nbt)
     {
-        String name = nbt.getStringOr("Name", "?");
-        UUID hashCode = nbt.contains("HashCode") ? UUID.fromString(nbt.getStringOr("HashCode", "")) : null;
+        String name = nbt.getString("Name", "?");
+        UUID hashCode = nbt.contains("HashCode") ? UUID.fromString(nbt.getString("HashCode", "")) : null;
         LitematicaSchematic schematic = new LitematicaSchematic(Path.of(name), nbt.getCompoundOrEmpty("Schematics"), FileType.LITEMATICA_SCHEMATIC);
         BlockPos origin = NbtUtils.readBlockPosFromArrayTag(nbt, "Origin");
-        Rotation rot = Rotation.values()[nbt.getIntOr("Rotation", 0)];
-        Mirror mirror = Mirror.values()[nbt.getIntOr("Mirror", 0)];
+        BlockRotation rot = BlockRotation.values()[nbt.getInt("Rotation", 0)];
+        BlockMirror mirror = BlockMirror.values()[nbt.getInt("Mirror", 0)];
 
         SchematicPlacement placement = SchematicPlacement.createFor(schematic, origin, name, true, true, hashCode);
         placement.rotation = rot;
         placement.mirror = mirror;
-        CompoundTag subs = nbt.getCompoundOrEmpty("SubRegions");
+        NbtCompound subs = nbt.getCompoundOrEmpty("SubRegions");
 
-        for (String key : subs.keySet())
+        for (String key : subs.getKeys())
         {
-            CompoundTag entry = subs.getCompoundOrEmpty(key);
+            NbtCompound entry = subs.getCompoundOrEmpty(key);
 
             if (!entry.isEmpty())
             {
-                name = entry.getStringOr("Name", "?");
+                name = entry.getString("Name", "?");
                 origin = NbtUtils.readBlockPosFromArrayTag(entry, "Pos");
-                rot = Rotation.values()[entry.getIntOr("Rotation", 0)];
-                mirror = Mirror.values()[entry.getIntOr("Mirror", 0)];
-                boolean enabled = entry.getBooleanOr("Enabled", true);
-                boolean ignore = entry.getBooleanOr("IgnoreEntities", false);
+                rot = BlockRotation.values()[entry.getInt("Rotation", 0)];
+                mirror = BlockMirror.values()[entry.getInt("Mirror", 0)];
+                boolean enabled = entry.getBoolean("Enabled", true);
+                boolean ignore = entry.getBoolean("IgnoreEntities", false);
 
                 SubRegionPlacement subRegion = new SubRegionPlacement(origin, name);
                 subRegion.setMirror(mirror);
@@ -1186,31 +1186,31 @@ public class SchematicPlacement
 
         return placement;
     }
-    public static @Nullable SchematicPlacement createFromNbt(@Nonnull LitematicaSchematic schematic, CompoundTag nbt)
+    public static @Nullable SchematicPlacement createFromNbt(@Nonnull LitematicaSchematic schematic, NbtCompound nbt)
     {
-        String name = nbt.getStringOr("Name", "?");
-        UUID hashCode = nbt.contains("HashCode") ? UUID.fromString(nbt.getStringOr("HashCode", "")) : null;
+        String name = nbt.getString("Name", "?");
+        UUID hashCode = nbt.contains("HashCode") ? UUID.fromString(nbt.getString("HashCode", "")) : null;
         BlockPos origin = NbtUtils.readBlockPosFromArrayTag(nbt, "Origin");
-        Rotation rot = Rotation.values()[nbt.getIntOr("Rotation", 0)];
-        Mirror mirror = Mirror.values()[nbt.getIntOr("Mirror", 0)];
+        BlockRotation rot = BlockRotation.values()[nbt.getInt("Rotation", 0)];
+        BlockMirror mirror = BlockMirror.values()[nbt.getInt("Mirror", 0)];
 
         SchematicPlacement placement = SchematicPlacement.createFor(schematic, origin, name, true, true, hashCode);
         placement.rotation = rot;
         placement.mirror = mirror;
-        CompoundTag subs = nbt.getCompoundOrEmpty("SubRegions");
+        NbtCompound subs = nbt.getCompoundOrEmpty("SubRegions");
 
-        for (String key : subs.keySet())
+        for (String key : subs.getKeys())
         {
-            CompoundTag entry = subs.getCompoundOrEmpty(key);
+            NbtCompound entry = subs.getCompoundOrEmpty(key);
 
             if (!entry.isEmpty())
             {
-                name = entry.getStringOr("Name", "?");
+                name = entry.getString("Name", "?");
                 origin = NbtUtils.readBlockPosFromArrayTag(entry, "Pos");
-                rot = Rotation.values()[entry.getIntOr("Rotation", 0)];
-                mirror = Mirror.values()[entry.getIntOr("Mirror", 0)];
-                boolean enabled = entry.getBooleanOr("Enabled", true);
-                boolean ignore = entry.getBooleanOr("IgnoreEntities", false);
+                rot = BlockRotation.values()[entry.getInt("Rotation", 0)];
+                mirror = BlockMirror.values()[entry.getInt("Mirror", 0)];
+                boolean enabled = entry.getBoolean("Enabled", true);
+                boolean ignore = entry.getBoolean("IgnoreEntities", false);
 
                 SubRegionPlacement subRegion = new SubRegionPlacement(origin, name);
                 subRegion.setMirror(mirror);

@@ -2,19 +2,17 @@ package fi.dy.masa.litematica.scheduler.tasks;
 
 import java.util.List;
 import javax.annotation.Nullable;
-
-import net.minecraft.commands.arguments.blocks.BlockStateParser;
-import net.minecraft.core.BlockPos;
-import net.minecraft.util.profiling.ProfilerFiller;
-import net.minecraft.world.Container;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.state.BlockState;
-
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.command.argument.BlockArgumentParser;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.Inventory;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.profiler.Profiler;
+import net.minecraft.world.World;
 import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.util.InfoUtils;
 import fi.dy.masa.malilib.util.IntBoundingBox;
@@ -50,11 +48,11 @@ public class TaskFillArea extends TaskProcessChunkMultiPhase
         this.maxBoxVolume = Configs.Generic.COMMAND_FILL_MAX_VOLUME.getIntegerValue();
         this.maxCommandsPerTick = Configs.Generic.COMMAND_LIMIT.getIntegerValue();
         this.fillCommand = Configs.Generic.COMMAND_NAME_FILL.getStringValue();
-        this.blockString = BlockStateParser.serialize(fillState);
+        this.blockString = BlockArgumentParser.stringifyBlockState(fillState);
 
         if (replaceState != null)
         {
-            this.replaceBlockString = BlockStateParser.serialize(replaceState);
+            this.replaceBlockString = BlockArgumentParser.stringifyBlockState(replaceState);
         }
         else
         {
@@ -97,7 +95,7 @@ public class TaskFillArea extends TaskProcessChunkMultiPhase
     }
 
     @Override
-    public boolean execute(ProfilerFiller profiler)
+    public boolean execute(Profiler profiler)
     {
         return this.executeMultiPhase(profiler);
     }
@@ -145,8 +143,8 @@ public class TaskFillArea extends TaskProcessChunkMultiPhase
 
         WorldUtils.setShouldPreventBlockUpdates(this.world, true);
 
-        BlockState barrier = Blocks.BARRIER.defaultBlockState();
-        BlockPos.MutableBlockPos posMutable = new BlockPos.MutableBlockPos();
+        BlockState barrier = Blocks.BARRIER.getDefaultState();
+        BlockPos.Mutable posMutable = new BlockPos.Mutable();
 
         for (int z = box.minZ; z <= box.maxZ; ++z)
         {
@@ -161,13 +159,13 @@ public class TaskFillArea extends TaskProcessChunkMultiPhase
                     {
                         BlockEntity te = this.world.getBlockEntity(posMutable);
 
-                        if (te instanceof Container)
+                        if (te instanceof Inventory)
                         {
-                            ((Container) te).clearContent();
-                            this.world.setBlock(posMutable, barrier, 0x32);
+                            ((Inventory) te).clear();
+                            this.world.setBlockState(posMutable, barrier, 0x32);
                         }
 
-                        this.world.setBlock(posMutable, this.fillState, 0x32);
+                        this.world.setBlockState(posMutable, this.fillState, 0x32);
                     }
                 }
             }
@@ -176,14 +174,14 @@ public class TaskFillArea extends TaskProcessChunkMultiPhase
         WorldUtils.setShouldPreventBlockUpdates(this.world, false);
     }
 
-    public static void directRemoveEntities(IntBoundingBox box, Level world)
+    public static void directRemoveEntities(IntBoundingBox box, World world)
     {
-        net.minecraft.world.phys.AABB aabb = new net.minecraft.world.phys.AABB(box.minX, box.minY, box.minZ, box.maxX + 1, box.maxY + 1, box.maxZ + 1);
-        List<Entity> entities = world.getEntities((Entity) null, aabb, EntityUtils.NOT_PLAYER);
+        net.minecraft.util.math.Box aabb = new net.minecraft.util.math.Box(box.minX, box.minY, box.minZ, box.maxX + 1, box.maxY + 1, box.maxZ + 1);
+        List<Entity> entities = world.getOtherEntities((Entity) null, aabb, EntityUtils.NOT_PLAYER);
 
         for (Entity entity : entities)
         {
-            if ((entity instanceof Player) == false)
+            if ((entity instanceof PlayerEntity) == false)
             {
                 entity.discard();
             }
@@ -194,9 +192,9 @@ public class TaskFillArea extends TaskProcessChunkMultiPhase
     {
         if (removeEntities)
         {
-            net.minecraft.world.phys.AABB aabb = new net.minecraft.world.phys.AABB(box.minX, box.minY, box.minZ, box.maxX + 1, box.maxY + 1, box.maxZ + 1);
+            net.minecraft.util.math.Box aabb = new net.minecraft.util.math.Box(box.minX, box.minY, box.minZ, box.maxX + 1, box.maxY + 1, box.maxZ + 1);
 
-            if (this.world.getEntities(this.mc.player, aabb, EntityUtils.NOT_PLAYER).size() > 0)
+            if (this.world.getOtherEntities(this.mc.player, aabb, EntityUtils.NOT_PLAYER).size() > 0)
             {
                 String killCmd = String.format("kill @e[type=!player,x=%d,y=%d,z=%d,dx=%d,dy=%d,dz=%d]",
                         box.minX               , box.minY               , box.minZ,

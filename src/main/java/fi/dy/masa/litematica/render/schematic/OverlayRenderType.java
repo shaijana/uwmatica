@@ -27,7 +27,7 @@ public enum OverlayRenderType
         this.ensurePipelines();
     }
 
-    public VertexFormat.Mode getDrawMode()
+    public VertexFormat.DrawMode getDrawMode()
     {
         return this.pipeline.getVertexFormatMode();
     }

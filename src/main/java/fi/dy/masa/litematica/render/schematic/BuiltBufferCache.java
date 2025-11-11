@@ -2,17 +2,17 @@ package fi.dy.masa.litematica.render.schematic;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
-import com.mojang.blaze3d.vertex.MeshData;
+import net.minecraft.client.render.BlockRenderLayer;
+import net.minecraft.client.render.BuiltBuffer;
+import net.minecraft.client.render.RenderLayer;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class BuiltBufferCache implements AutoCloseable
 {
-    private final ConcurrentHashMap<ChunkSectionLayer, MeshData> blockBuffers;
-    private final ConcurrentHashMap<RenderType, MeshData> layerBuffers;
-    private final ConcurrentHashMap<OverlayRenderType, MeshData> overlayBuffers;
+    private final ConcurrentHashMap<BlockRenderLayer, BuiltBuffer> blockBuffers;
+    private final ConcurrentHashMap<RenderLayer, BuiltBuffer> layerBuffers;
+    private final ConcurrentHashMap<OverlayRenderType, BuiltBuffer> overlayBuffers;
 
     protected BuiltBufferCache()
     {
@@ -21,12 +21,12 @@ public class BuiltBufferCache implements AutoCloseable
 	    this.overlayBuffers = new ConcurrentHashMap<>();
     }
 
-    protected boolean hasBuiltBufferByBlockLayer(ChunkSectionLayer layer)
+    protected boolean hasBuiltBufferByBlockLayer(BlockRenderLayer layer)
     {
         return this.blockBuffers.containsKey(layer);
     }
 
-    protected boolean hasBuiltBufferByLayer(RenderType layer)
+    protected boolean hasBuiltBufferByLayer(RenderLayer layer)
     {
         return this.layerBuffers.containsKey(layer);
     }
@@ -36,7 +36,7 @@ public class BuiltBufferCache implements AutoCloseable
         return this.overlayBuffers.containsKey(type);
     }
 
-    protected void storeBuiltBufferByBlockLayer(ChunkSectionLayer layer, @Nonnull MeshData newBuffer)
+    protected void storeBuiltBufferByBlockLayer(BlockRenderLayer layer, @Nonnull BuiltBuffer newBuffer)
     {
         if (this.hasBuiltBufferByBlockLayer(layer))
         {
@@ -48,7 +48,7 @@ public class BuiltBufferCache implements AutoCloseable
         }
     }
 
-    protected void storeBuiltBufferByLayer(RenderType layer, @Nonnull MeshData newBuffer)
+    protected void storeBuiltBufferByLayer(RenderLayer layer, @Nonnull BuiltBuffer newBuffer)
     {
         if (this.hasBuiltBufferByLayer(layer))
         {
@@ -60,7 +60,7 @@ public class BuiltBufferCache implements AutoCloseable
         }
     }
 
-    protected void storeBuiltBufferByType(OverlayRenderType type, @Nonnull MeshData newBuffer)
+    protected void storeBuiltBufferByType(OverlayRenderType type, @Nonnull BuiltBuffer newBuffer)
     {
         if (this.hasBuiltBufferByType(type))
         {
@@ -73,26 +73,26 @@ public class BuiltBufferCache implements AutoCloseable
     }
 
     @Nullable
-    protected MeshData getBuiltBufferByBlockLayer(ChunkSectionLayer layer)
+    protected BuiltBuffer getBuiltBufferByBlockLayer(BlockRenderLayer layer)
     {
         return this.blockBuffers.get(layer);
     }
 
     @Nullable
-    protected MeshData getBuiltBufferByLayer(RenderType layer)
+    protected BuiltBuffer getBuiltBufferByLayer(RenderLayer layer)
     {
         return this.layerBuffers.get(layer);
     }
 
     @Nullable
-    protected MeshData getBuiltBufferByType(OverlayRenderType type)
+    protected BuiltBuffer getBuiltBufferByType(OverlayRenderType type)
     {
         return this.overlayBuffers.get(type);
     }
 
     protected void closeAll()
     {
-        ArrayList<MeshData> builtBuffers;
+        ArrayList<BuiltBuffer> builtBuffers;
 
         synchronized (this.blockBuffers)
         {
@@ -111,7 +111,7 @@ public class BuiltBufferCache implements AutoCloseable
         }
         try
         {
-            builtBuffers.forEach(MeshData::close);
+            builtBuffers.forEach(BuiltBuffer::close);
         }
         catch (Exception ignored) { }
     }

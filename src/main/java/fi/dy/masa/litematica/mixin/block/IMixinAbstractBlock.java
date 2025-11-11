@@ -1,16 +1,16 @@
 package fi.dy.masa.litematica.mixin.block;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.LevelReader;
-import net.minecraft.world.level.block.state.BlockBehaviour;
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.block.AbstractBlock;
+import net.minecraft.block.BlockState;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.WorldView;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
-@Mixin(BlockBehaviour.class)
+@Mixin(AbstractBlock.class)
 public interface IMixinAbstractBlock
 {
-    @Invoker("getCloneItemStack")
-    ItemStack litematica_getPickStack(LevelReader worldView, BlockPos blockPos, BlockState blockState, boolean bl);
+    @Invoker("getPickStack")
+    ItemStack litematica_getPickStack(WorldView worldView, BlockPos blockPos, BlockState blockState, boolean bl);
 }

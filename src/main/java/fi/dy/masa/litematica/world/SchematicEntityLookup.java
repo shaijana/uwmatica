@@ -7,14 +7,13 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import javax.annotation.Nonnull;
+import net.minecraft.util.TypeFilter;
+import net.minecraft.util.function.LazyIterationConsumer;
+import net.minecraft.util.math.Box;
+import net.minecraft.world.entity.EntityLike;
+import net.minecraft.world.entity.EntityLookup;
 
-import net.minecraft.util.AbortableIterationConsumer;
-import net.minecraft.world.level.entity.EntityAccess;
-import net.minecraft.world.level.entity.EntityTypeTest;
-import net.minecraft.world.level.entity.LevelEntityGetter;
-import net.minecraft.world.phys.AABB;
-
-public class SchematicEntityLookup<T extends EntityAccess> implements LevelEntityGetter<T>, AutoCloseable
+public class SchematicEntityLookup<T extends EntityLike> implements EntityLookup<T>, AutoCloseable
 {
     private final ConcurrentHashMap<Integer, T> entityMap;
     private final ConcurrentHashMap<UUID, Integer> uuidMap;
@@ -27,16 +26,16 @@ public class SchematicEntityLookup<T extends EntityAccess> implements LevelEntit
 
     protected void put(T entity)
     {
-        T tmp = this.get(entity.getUUID());
+        T tmp = this.get(entity.getUuid());
 
         if (tmp != null)
         {
-            this.remove(entity.getUUID());
+            this.remove(entity.getUuid());
         }
 
         synchronized (this.uuidMap)
         {
-            this.uuidMap.put(entity.getUUID(), entity.getId());
+            this.uuidMap.put(entity.getUuid(), entity.getId());
         }
 
         synchronized (this.entityMap)
@@ -74,7 +73,7 @@ public class SchematicEntityLookup<T extends EntityAccess> implements LevelEntit
                 {
                     T e = this.entityMap.get(id);
 
-                    if (e.getUUID().equals(uuid))
+                    if (e.getUuid().equals(uuid))
                     {
                         this.entityMap.remove(id);
                         return;
@@ -91,11 +90,11 @@ public class SchematicEntityLookup<T extends EntityAccess> implements LevelEntit
         {
             T e = this.entityMap.get(id);
 
-            if (!this.uuidMap.containsKey(e.getUUID()))
+            if (!this.uuidMap.containsKey(e.getUuid()))
             {
                 synchronized (this.uuidMap)
                 {
-                    this.uuidMap.put(e.getUUID(), id);
+                    this.uuidMap.put(e.getUuid(), id);
                 }
             }
 
@@ -129,7 +128,7 @@ public class SchematicEntityLookup<T extends EntityAccess> implements LevelEntit
         {
             T e = this.entityMap.get(id);
 
-            if (e.getUUID().equals(uuid))
+            if (e.getUuid().equals(uuid))
             {
                 if (!this.uuidMap.containsKey(uuid))
                 {
@@ -147,20 +146,20 @@ public class SchematicEntityLookup<T extends EntityAccess> implements LevelEntit
     }
 
     @Override
-    public @Nonnull Iterable<T> getAll()
+    public @Nonnull Iterable<T> iterate()
     {
         return Iterables.unmodifiableIterable(this.entityMap.values());
     }
 
     @Override
-    public void get(@Nonnull AABB box, @Nonnull Consumer<T> action)
+    public void forEachIntersects(@Nonnull Box box, @Nonnull Consumer<T> action)
     {
         this.entityMap.forEach(
                 (id, e) ->
                 {
                     if (box.intersects(e.getBoundingBox()))
                     {
-                        AbortableIterationConsumer<T> consumer = AbortableIterationConsumer.forConsumer(action);
+                        LazyIterationConsumer<T> consumer = LazyIterationConsumer.forConsumer(action);
 
                         if (consumer.accept(e).shouldAbort())
                         {
@@ -171,12 +170,12 @@ public class SchematicEntityLookup<T extends EntityAccess> implements LevelEntit
     }
 
     @Override
-    public <U extends T> void get(@Nonnull EntityTypeTest<T, U> filter, @Nonnull AABB box, @Nonnull AbortableIterationConsumer<U> consumer)
+    public <U extends T> void forEachIntersects(@Nonnull TypeFilter<T, U> filter, @Nonnull Box box, @Nonnull LazyIterationConsumer<U> consumer)
     {
         this.entityMap.forEach(
                 (id, e) ->
                 {
-                    U filtered = filter.tryCast(e);
+                    U filtered = filter.downcast(e);
 
                     if (filtered != null && box.intersects(filtered.getBoundingBox()))
                     {
@@ -189,12 +188,12 @@ public class SchematicEntityLookup<T extends EntityAccess> implements LevelEntit
     }
 
     @Override
-    public <U extends T> void get(@Nonnull EntityTypeTest<T, U> filter, @Nonnull AbortableIterationConsumer<U> consumer)
+    public <U extends T> void forEach(@Nonnull TypeFilter<T, U> filter, @Nonnull LazyIterationConsumer<U> consumer)
     {
         this.entityMap.forEach(
                 (id, e) ->
                 {
-                    U filtered = filter.tryCast(e);
+                    U filtered = filter.downcast(e);
 
                     if (filtered != null)
                     {

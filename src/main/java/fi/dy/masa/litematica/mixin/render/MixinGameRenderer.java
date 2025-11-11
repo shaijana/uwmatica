@@ -8,17 +8,17 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import fi.dy.masa.litematica.render.LitematicaRenderer;
-import net.minecraft.client.Camera;
-import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.render.Camera;
+import net.minecraft.client.render.GameRenderer;
 
 @Mixin(GameRenderer.class)
 public class MixinGameRenderer
 {
-	@Shadow @Final private Camera mainCamera;
+	@Shadow @Final private Camera camera;
 
-	@Inject(method = "extractCamera", at = @At("TAIL"))
+	@Inject(method = "updateCameraState", at = @At("TAIL"))
 	private void litematica_updateCameraState(float f, CallbackInfo ci)
 	{
-		LitematicaRenderer.getInstance().updateCameraState(this.mainCamera, f);
+		LitematicaRenderer.getInstance().updateCameraState(this.camera, f);
 	}
 }

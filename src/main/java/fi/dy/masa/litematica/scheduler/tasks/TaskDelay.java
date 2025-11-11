@@ -1,7 +1,7 @@
 package fi.dy.masa.litematica.scheduler.tasks;
 
 import java.util.function.BooleanSupplier;
-import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.util.profiler.Profiler;
 import fi.dy.masa.litematica.scheduler.TaskScheduler;
 
 public class TaskDelay extends TaskBase
@@ -20,7 +20,7 @@ public class TaskDelay extends TaskBase
     }
 
     @Override
-    public boolean execute(ProfilerFiller profiler)
+    public boolean execute(Profiler profiler)
     {
         if (this.startConditionChecker.getAsBoolean())
         {

@@ -3,9 +3,7 @@ package fi.dy.masa.litematica.gui;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
-
-import net.minecraft.core.BlockPos;
-
+import net.minecraft.util.math.BlockPos;
 import fi.dy.masa.malilib.config.options.ConfigHotkey;
 import fi.dy.masa.malilib.gui.*;
 import fi.dy.masa.malilib.gui.Message.MessageType;
@@ -105,7 +103,7 @@ public class GuiAreaSelectionEditorNormal extends GuiListBase<String, WidgetSele
         y += 13;
 
         int width = 202;
-        this.textFieldSelectionName = new GuiTextFieldGeneric(x, y + 2, width, 16, this.font);
+        this.textFieldSelectionName = new GuiTextFieldGeneric(x, y + 2, width, 16, this.textRenderer);
         this.textFieldSelectionName.setTextWrapper(this.selection.getName());
         this.addTextField(this.textFieldSelectionName, new TextFieldListenerDummy());
         x += width + 4;
@@ -273,7 +271,7 @@ public class GuiAreaSelectionEditorNormal extends GuiListBase<String, WidgetSele
                 break;
         }
 
-        GuiTextFieldInteger textField = new GuiTextFieldInteger(x + offset, y, width, 16, this.font);
+        GuiTextFieldInteger textField = new GuiTextFieldInteger(x + offset, y, width, 16, this.textRenderer);
         TextFieldListener listener = new TextFieldListener(coordType, corner, this);
         textField.setTextWrapper(text);
         this.addTextField(textField, listener);

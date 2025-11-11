@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import net.minecraft.util.Mth;
+import net.minecraft.util.math.MathHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
@@ -187,7 +187,7 @@ public abstract class MaterialListBase implements IMaterialList
 
     public void setMultiplier(int multiplier)
     {
-        this.multiplier = Mth.clamp(multiplier, 1, Integer.MAX_VALUE);
+        this.multiplier = MathHelper.clamp(multiplier, 1, Integer.MAX_VALUE);
     }
 
     public void updateCounts()

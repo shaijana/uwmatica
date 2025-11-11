@@ -1,18 +1,18 @@
 package fi.dy.masa.litematica.util;
 
 import javax.annotation.Nonnull;
+import net.minecraft.util.StringIdentifiable;
 import com.google.common.collect.ImmutableList;
 import fi.dy.masa.malilib.config.IConfigOptionListEntry;
 import fi.dy.masa.malilib.util.StringUtils;
-import net.minecraft.util.StringRepresentable;
 
-public enum ReplaceBehavior implements IConfigOptionListEntry, StringRepresentable
+public enum ReplaceBehavior implements IConfigOptionListEntry, StringIdentifiable
 {
     NONE            ("none",            "litematica.gui.label.replace_behavior.none"),
     ALL             ("all",             "litematica.gui.label.replace_behavior.all"),
     WITH_NON_AIR    ("with_non_air",    "litematica.gui.label.replace_behavior.with_non_air");
 
-    public static final StringRepresentable.EnumCodec<ReplaceBehavior> CODEC = StringRepresentable.fromEnum(ReplaceBehavior::values);
+    public static final StringIdentifiable.EnumCodec<ReplaceBehavior> CODEC = StringIdentifiable.createCodec(ReplaceBehavior::values);
     public static final ImmutableList<ReplaceBehavior> VALUES = ImmutableList.copyOf(values());
     private final String configString;
     private final String translationKey;
@@ -24,7 +24,7 @@ public enum ReplaceBehavior implements IConfigOptionListEntry, StringRepresentab
     }
 
     @Override
-    public @Nonnull String getSerializedName()
+    public @Nonnull String asString()
     {
         return this.configString;
     }

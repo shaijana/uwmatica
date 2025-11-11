@@ -3,10 +3,10 @@ package fi.dy.masa.litematica.gui.widgets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Vec3i;
+import net.minecraft.client.gui.Click;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3i;
 import com.google.common.collect.ImmutableList;
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.button.ButtonBase;
@@ -72,13 +72,13 @@ public class WidgetPlacementSubRegion extends WidgetListEntryBase<SubRegionPlace
     }
 
     @Override
-    public boolean canSelectAt(MouseButtonEvent click)
+    public boolean canSelectAt(Click click)
     {
         return click.x() < this.buttonsStartX && super.canSelectAt(click);
     }
 
     @Override
-    public void render(GuiGraphics drawContext, int mouseX, int mouseY, boolean selected)
+    public void render(DrawContext drawContext, int mouseX, int mouseY, boolean selected)
     {
 //        RenderUtils.color(1f, 1f, 1f, 1f);
 
@@ -136,7 +136,7 @@ public class WidgetPlacementSubRegion extends WidgetListEntryBase<SubRegionPlace
     }
 
     @Override
-    public void postRenderHovered(GuiGraphics drawContext, int mouseX, int mouseY, boolean selected)
+    public void postRenderHovered(DrawContext drawContext, int mouseX, int mouseY, boolean selected)
     {
         LitematicaSchematic schematic = this.schematicPlacement.getSchematic();
         Path schematicFile = schematic.getFile();
@@ -156,7 +156,7 @@ public class WidgetPlacementSubRegion extends WidgetListEntryBase<SubRegionPlace
 
             BlockPos o = this.placement.getPos();
             o = PositionUtils.getTransformedBlockPos(o, this.schematicPlacement.getMirror(), this.schematicPlacement.getRotation());
-            o = o.offset(this.schematicPlacement.getOrigin());
+            o = o.add(this.schematicPlacement.getOrigin());
             String strOrigin = String.format("x: %d, y: %d, z: %d", o.getX(), o.getY(), o.getZ());
             text.add(StringUtils.translate("litematica.gui.label.schematic_placement.origin", strOrigin));
 

@@ -3,7 +3,7 @@ package fi.dy.masa.litematica.gui;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
-import net.minecraft.core.BlockPos;
+import net.minecraft.util.math.BlockPos;
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.GuiStringListSelection;
 import fi.dy.masa.malilib.gui.Message.MessageType;
@@ -181,7 +181,7 @@ public class GuiSchematicLoad extends GuiSchematicBrowserBase
 
                     if (DataManager.getCreatePlacementOnLoad() && this.gui.mc.player != null)
                     {
-                        BlockPos pos = BlockPos.containing(this.gui.mc.player.position());
+                        BlockPos pos = BlockPos.ofFloored(this.gui.mc.player.getEntityPos());
                         String name = schematic.getMetadata().getName();
                         boolean enabled = GuiBase.isShiftDown() == false;
 

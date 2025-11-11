@@ -4,11 +4,10 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import javax.annotation.Nonnull;
-
-import net.minecraft.util.StringRepresentable;
+import net.minecraft.util.StringIdentifiable;
 import com.google.common.collect.ImmutableList;
 
-public enum FileType implements StringRepresentable
+public enum FileType implements StringIdentifiable
 {
 	INVALID,
 	UNKNOWN,
@@ -18,7 +17,7 @@ public enum FileType implements StringRepresentable
 	SPONGE_SCHEMATIC,
 	VANILLA_STRUCTURE;
 
-	public static final StringRepresentable.EnumCodec<FileType> CODEC = StringRepresentable.fromEnum(FileType::values);
+	public static final StringIdentifiable.EnumCodec<FileType> CODEC = StringIdentifiable.createCodec(FileType::values);
 	public static final ImmutableList<FileType> VALUES = ImmutableList.copyOf(values());
 
 	public static FileType fromName(String fileName)
@@ -101,7 +100,7 @@ public enum FileType implements StringRepresentable
 	}
 
 	@Override
-	public @Nonnull String getSerializedName()
+	public @Nonnull String asString()
 	{
 		return getString(this);
 	}

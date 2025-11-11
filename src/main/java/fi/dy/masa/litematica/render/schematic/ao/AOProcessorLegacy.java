@@ -1,15 +1,15 @@
 package fi.dy.masa.litematica.render.schematic.ao;
 
 import java.util.BitSet;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.world.level.BlockAndTintGetter;
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.block.BlockState;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.world.BlockRenderView;
 
 public class AOProcessorLegacy extends AOProcessor
 {
     @Override
-    public void apply(BlockAndTintGetter world, BlockState state, BlockPos pos, Direction direction, float[] box, BitSet shapeState, boolean hasShade)
+    public void apply(BlockRenderView world, BlockState state, BlockPos pos, Direction direction, float[] box, BitSet shapeState, boolean hasShade)
     {
         // 2018
         EnumNeighborInfo neighborInfo = EnumNeighborInfo.getNeighbourInfo(direction);
@@ -64,7 +64,7 @@ public class AOProcessorLegacy extends AOProcessor
             this.brightness[vertexTranslations.vert3] = b4;
         }
 
-        float b = world.getShade(direction, hasShade);
+        float b = world.getBrightness(direction, hasShade);
 
         for (int index = 0; index < this.brightness.length; ++index)
         {
@@ -133,17 +133,17 @@ public class AOProcessorLegacy extends AOProcessor
 
         public static EnumNeighborInfo getNeighbourInfo(Direction p_178273_0_)
         {
-            return VALUES[p_178273_0_.get3DDataValue()];
+            return VALUES[p_178273_0_.getIndex()];
         }
 
         static
         {
-            VALUES[Direction.DOWN.get3DDataValue()] = DOWN;
-            VALUES[Direction.UP.get3DDataValue()] = UP;
-            VALUES[Direction.NORTH.get3DDataValue()] = NORTH;
-            VALUES[Direction.SOUTH.get3DDataValue()] = SOUTH;
-            VALUES[Direction.WEST.get3DDataValue()] = WEST;
-            VALUES[Direction.EAST.get3DDataValue()] = EAST;
+            VALUES[Direction.DOWN.getIndex()] = DOWN;
+            VALUES[Direction.UP.getIndex()] = UP;
+            VALUES[Direction.NORTH.getIndex()] = NORTH;
+            VALUES[Direction.SOUTH.getIndex()] = SOUTH;
+            VALUES[Direction.WEST.getIndex()] = WEST;
+            VALUES[Direction.EAST.getIndex()] = EAST;
         }
     }
 
@@ -166,7 +166,7 @@ public class AOProcessorLegacy extends AOProcessor
 
         Orientation(Direction p_i46233_3_, boolean p_i46233_4_)
         {
-            this.shape = p_i46233_3_.get3DDataValue() + (p_i46233_4_ ? Direction.values().length : 0);
+            this.shape = p_i46233_3_.getIndex() + (p_i46233_4_ ? Direction.values().length : 0);
         }
     }
 
@@ -195,17 +195,17 @@ public class AOProcessorLegacy extends AOProcessor
 
         public static VertexTranslations getVertexTranslations(Direction p_178184_0_)
         {
-            return VALUES[p_178184_0_.get3DDataValue()];
+            return VALUES[p_178184_0_.getIndex()];
         }
 
         static
         {
-            VALUES[Direction.DOWN.get3DDataValue()] = DOWN;
-            VALUES[Direction.UP.get3DDataValue()] = UP;
-            VALUES[Direction.NORTH.get3DDataValue()] = NORTH;
-            VALUES[Direction.SOUTH.get3DDataValue()] = SOUTH;
-            VALUES[Direction.WEST.get3DDataValue()] = WEST;
-            VALUES[Direction.EAST.get3DDataValue()] = EAST;
+            VALUES[Direction.DOWN.getIndex()] = DOWN;
+            VALUES[Direction.UP.getIndex()] = UP;
+            VALUES[Direction.NORTH.getIndex()] = NORTH;
+            VALUES[Direction.SOUTH.getIndex()] = SOUTH;
+            VALUES[Direction.WEST.getIndex()] = WEST;
+            VALUES[Direction.EAST.getIndex()] = EAST;
         }
     }
 }

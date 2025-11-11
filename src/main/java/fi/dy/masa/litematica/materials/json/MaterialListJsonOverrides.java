@@ -3,12 +3,12 @@ package fi.dy.masa.litematica.materials.json;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import net.minecraft.core.Holder;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.tags.ItemTags;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.item.Item;
+import net.minecraft.item.Items;
+import net.minecraft.recipe.Ingredient;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.registry.tag.ItemTags;
 import fi.dy.masa.malilib.data.CachedTagUtils;
 import org.apache.commons.lang3.math.Fraction;
 import org.apache.commons.lang3.tuple.Pair;
@@ -27,9 +27,9 @@ public class MaterialListJsonOverrides
         this.initPackingOverrides();
     }
 
-    private Holder<Item> add(Item item)
+    private RegistryEntry<Item> add(Item item)
     {
-        return BuiltInRegistries.ITEM.wrapAsHolder(item);
+        return Registries.ITEM.getEntry(item);
     }
 
     private void initOverrides()
@@ -159,7 +159,7 @@ public class MaterialListJsonOverrides
         this.packingOverrides.add(new ResultOverride(this.add(Items.WHEAT), this.add(Items.HAY_BLOCK), by9));
     }
 
-    protected Pair<Holder<Item>, Integer> matchOverride(Holder<Item> result, Integer total)
+    protected Pair<RegistryEntry<Item>, Integer> matchOverride(RegistryEntry<Item> result, Integer total)
     {
         for (ResultOverride map : this.overrides)
         {
@@ -172,7 +172,7 @@ public class MaterialListJsonOverrides
         return Pair.of(result, total);
     }
 
-    protected Triple<Holder<Item>, Float, Integer> matchPackingOverride(Holder<Item> result, Integer total)
+    protected Triple<RegistryEntry<Item>, Float, Integer> matchPackingOverride(RegistryEntry<Item> result, Integer total)
     {
         for (ResultOverride map : this.packingOverrides)
         {
@@ -186,165 +186,165 @@ public class MaterialListJsonOverrides
     }
 
     // Overrides for re-dying recipe's
-    protected Holder<Item> overridePrimaryMaterial(Holder<Item> firstItem)
+    protected RegistryEntry<Item> overridePrimaryMaterial(RegistryEntry<Item> firstItem)
     {
-        if (firstItem.is(ItemTags.WOOL))
+        if (firstItem.isIn(ItemTags.WOOL))
         {
-            return BuiltInRegistries.ITEM.wrapAsHolder(Items.WHITE_WOOL);
+            return Registries.ITEM.getEntry(Items.WHITE_WOOL);
         }
-        else if (firstItem.is(ItemTags.WOOL_CARPETS))
+        else if (firstItem.isIn(ItemTags.WOOL_CARPETS))
         {
-            return BuiltInRegistries.ITEM.wrapAsHolder(Items.WHITE_CARPET);
+            return Registries.ITEM.getEntry(Items.WHITE_CARPET);
         }
-        else if (firstItem.is(ItemTags.BEDS))
+        else if (firstItem.isIn(ItemTags.BEDS))
         {
-            return BuiltInRegistries.ITEM.wrapAsHolder(Items.WHITE_BED);
+            return Registries.ITEM.getEntry(Items.WHITE_BED);
         }
-        else if (firstItem.is(ItemTags.CANDLES))
+        else if (firstItem.isIn(ItemTags.CANDLES))
         {
-            return BuiltInRegistries.ITEM.wrapAsHolder(Items.CANDLE);
+            return Registries.ITEM.getEntry(Items.CANDLE);
         }
-        else if (firstItem.is(ItemTags.SHULKER_BOXES))
+        else if (firstItem.isIn(ItemTags.SHULKER_BOXES))
         {
-            return BuiltInRegistries.ITEM.wrapAsHolder(Items.SHULKER_BOX);
+            return Registries.ITEM.getEntry(Items.SHULKER_BOX);
         }
-        else if (firstItem.is(ItemTags.BANNERS))
+        else if (firstItem.isIn(ItemTags.BANNERS))
         {
-            return BuiltInRegistries.ITEM.wrapAsHolder(Items.WHITE_BANNER);
+            return Registries.ITEM.getEntry(Items.WHITE_BANNER);
         }
-        else if (firstItem.is(ItemTags.TERRACOTTA))
+        else if (firstItem.isIn(ItemTags.TERRACOTTA))
         {
-            return BuiltInRegistries.ITEM.wrapAsHolder(Items.TERRACOTTA);
+            return Registries.ITEM.getEntry(Items.TERRACOTTA);
         }
-        else if (firstItem.is(ItemTags.BUNDLES))
+        else if (firstItem.isIn(ItemTags.BUNDLES))
         {
-            return BuiltInRegistries.ITEM.wrapAsHolder(Items.BUNDLE);
+            return Registries.ITEM.getEntry(Items.BUNDLE);
         }
-        else if (firstItem.is(ItemTags.HARNESSES))
+        else if (firstItem.isIn(ItemTags.HARNESSES))
         {
-            return BuiltInRegistries.ITEM.wrapAsHolder(Items.WHITE_HARNESS);
+            return Registries.ITEM.getEntry(Items.WHITE_HARNESS);
         }
         else if (CachedTagUtils.matchItemTag(CachedTagManager.GLASS_ITEMS_KEY, firstItem))
         {
-            return BuiltInRegistries.ITEM.wrapAsHolder(Items.GLASS);
+            return Registries.ITEM.getEntry(Items.GLASS);
         }
         else if (CachedTagUtils.matchItemTag(CachedTagManager.GLASS_PANE_ITEMS_KEY, firstItem))
         {
-            return BuiltInRegistries.ITEM.wrapAsHolder(Items.GLASS_PANE);
+            return Registries.ITEM.getEntry(Items.GLASS_PANE);
         }
         else if (CachedTagUtils.matchItemTag(CachedTagManager.CONCRETE_POWDER_ITEMS_KEY, firstItem))
         {
-            return BuiltInRegistries.ITEM.wrapAsHolder(Items.WHITE_CONCRETE_POWDER);
+            return Registries.ITEM.getEntry(Items.WHITE_CONCRETE_POWDER);
         }
         else if (CachedTagUtils.matchItemTag(CachedTagManager.CONCRETE_ITEMS_KEY, firstItem))
         {
-            return BuiltInRegistries.ITEM.wrapAsHolder(Items.WHITE_CONCRETE);
+            return Registries.ITEM.getEntry(Items.WHITE_CONCRETE);
         }
         else if (CachedTagUtils.matchItemTag(CachedTagManager.GLAZED_TERRACOTTA_ITEMS_KEY, firstItem))
         {
-            return BuiltInRegistries.ITEM.wrapAsHolder(Items.WHITE_GLAZED_TERRACOTTA);
+            return Registries.ITEM.getEntry(Items.WHITE_GLAZED_TERRACOTTA);
         }
 
         return this.matchOverride(firstItem, 1).getLeft();
     }
 
     // Overrides for particular cases, such as redying of beds instead of choosing the Wool recipe.
-    protected boolean overrideShouldSkipRecipe(Holder<Item> input, List<Ingredient> ingredients)
+    protected boolean overrideShouldSkipRecipe(RegistryEntry<Item> input, List<Ingredient> ingredients)
     {
         for (Ingredient ing : ingredients)
         {
-            if (input.is(ItemTags.BEDS))
+            if (input.isIn(ItemTags.BEDS))
             {
-                if (ing.test(Items.WHITE_BED.getDefaultInstance()) ||
-                    ing.test(Items.BLACK_BED.getDefaultInstance()))
+                if (ing.test(Items.WHITE_BED.getDefaultStack()) ||
+                    ing.test(Items.BLACK_BED.getDefaultStack()))
                 {
                     return true;
                 }
             }
-            else if (input.is(ItemTags.WOOL))
+            else if (input.isIn(ItemTags.WOOL))
             {
-                if (ing.test(Items.WHITE_WOOL.getDefaultInstance()) ||
-                    ing.test(Items.BLACK_WOOL.getDefaultInstance()))
+                if (ing.test(Items.WHITE_WOOL.getDefaultStack()) ||
+                    ing.test(Items.BLACK_WOOL.getDefaultStack()))
                 {
                     return true;
                 }
             }
-            else if (input.is(ItemTags.WOOL_CARPETS))
+            else if (input.isIn(ItemTags.WOOL_CARPETS))
             {
-                if (ing.test(Items.WHITE_CARPET.getDefaultInstance()) ||
-                    ing.test(Items.BLACK_CARPET.getDefaultInstance()))
+                if (ing.test(Items.WHITE_CARPET.getDefaultStack()) ||
+                    ing.test(Items.BLACK_CARPET.getDefaultStack()))
                 {
                     return true;
                 }
             }
-            else if (input.is(ItemTags.CANDLES))
+            else if (input.isIn(ItemTags.CANDLES))
             {
-                if (ing.test(Items.WHITE_CANDLE.getDefaultInstance()) ||
-                    ing.test(Items.BLACK_CANDLE.getDefaultInstance()))
+                if (ing.test(Items.WHITE_CANDLE.getDefaultStack()) ||
+                    ing.test(Items.BLACK_CANDLE.getDefaultStack()))
                 {
                     return true;
                 }
             }
-            else if (input.is(ItemTags.SHULKER_BOXES))
+            else if (input.isIn(ItemTags.SHULKER_BOXES))
             {
-                if (ing.test(Items.WHITE_SHULKER_BOX.getDefaultInstance()) ||
-                    ing.test(Items.BLACK_SHULKER_BOX.getDefaultInstance()))
+                if (ing.test(Items.WHITE_SHULKER_BOX.getDefaultStack()) ||
+                    ing.test(Items.BLACK_SHULKER_BOX.getDefaultStack()))
                 {
                     return true;
                 }
             }
-            else if (input.is(ItemTags.BANNERS))
+            else if (input.isIn(ItemTags.BANNERS))
             {
-                if (ing.test(Items.WHITE_BANNER.getDefaultInstance()) ||
-                    ing.test(Items.BLACK_BANNER.getDefaultInstance()))
+                if (ing.test(Items.WHITE_BANNER.getDefaultStack()) ||
+                    ing.test(Items.BLACK_BANNER.getDefaultStack()))
                 {
                     return true;
                 }
             }
-            else if (input.is(ItemTags.TERRACOTTA))
+            else if (input.isIn(ItemTags.TERRACOTTA))
             {
-                if (ing.test(Items.WHITE_TERRACOTTA.getDefaultInstance()) ||
-                    ing.test(Items.BLACK_TERRACOTTA.getDefaultInstance()))
+                if (ing.test(Items.WHITE_TERRACOTTA.getDefaultStack()) ||
+                    ing.test(Items.BLACK_TERRACOTTA.getDefaultStack()))
                 {
                     return true;
                 }
             }
             else if (CachedTagUtils.matchItemTag(CachedTagManager.GLASS_ITEMS_KEY, input))
             {
-                if (ing.test(Items.WHITE_STAINED_GLASS.getDefaultInstance()) ||
-                    ing.test(Items.BLACK_STAINED_GLASS.getDefaultInstance()))
+                if (ing.test(Items.WHITE_STAINED_GLASS.getDefaultStack()) ||
+                    ing.test(Items.BLACK_STAINED_GLASS.getDefaultStack()))
                 {
                     return true;
                 }
             }
             else if (CachedTagUtils.matchItemTag(CachedTagManager.GLASS_PANE_ITEMS_KEY, input))
             {
-                if (ing.test(Items.WHITE_STAINED_GLASS_PANE.getDefaultInstance()) ||
-                    ing.test(Items.BLACK_STAINED_GLASS_PANE.getDefaultInstance()))
+                if (ing.test(Items.WHITE_STAINED_GLASS_PANE.getDefaultStack()) ||
+                    ing.test(Items.BLACK_STAINED_GLASS_PANE.getDefaultStack()))
                 {
                     return true;
                 }
             }
             else if (CachedTagUtils.matchItemTag(CachedTagManager.CONCRETE_ITEMS_KEY, input))
             {
-                if (ing.test(Items.WHITE_CONCRETE.getDefaultInstance()) ||
-                    ing.test(Items.BLACK_CONCRETE.getDefaultInstance()))
+                if (ing.test(Items.WHITE_CONCRETE.getDefaultStack()) ||
+                    ing.test(Items.BLACK_CONCRETE.getDefaultStack()))
                 {
                     return true;
                 }
             }
             else if (CachedTagUtils.matchItemTag(CachedTagManager.CONCRETE_POWDER_ITEMS_KEY, input))
             {
-                if (ing.test(Items.WHITE_CONCRETE_POWDER.getDefaultInstance()) ||
-                    ing.test(Items.BLACK_CONCRETE_POWDER.getDefaultInstance()))
+                if (ing.test(Items.WHITE_CONCRETE_POWDER.getDefaultStack()) ||
+                    ing.test(Items.BLACK_CONCRETE_POWDER.getDefaultStack()))
                 {
                     return true;
                 }
             }
             else if (CachedTagUtils.matchItemTag(CachedTagManager.GLAZED_TERRACOTTA_ITEMS_KEY, input))
             {
-                if (ing.test(Items.WHITE_GLAZED_TERRACOTTA.getDefaultInstance()) ||
-                    ing.test(Items.BLACK_GLAZED_TERRACOTTA.getDefaultInstance()))
+                if (ing.test(Items.WHITE_GLAZED_TERRACOTTA.getDefaultStack()) ||
+                    ing.test(Items.BLACK_GLAZED_TERRACOTTA.getDefaultStack()))
                 {
                     return true;
                 }
@@ -354,7 +354,7 @@ public class MaterialListJsonOverrides
         return false;
     }
 
-    protected boolean shouldKeepItemOrBlock(Holder<Item> input)
+    protected boolean shouldKeepItemOrBlock(RegistryEntry<Item> input)
     {
 //        if (CachedTagManager.matchItemTag(CachedTagManager.PACKED_BLOCK_ITEMS_KEY, input))
 //        {
@@ -365,9 +365,9 @@ public class MaterialListJsonOverrides
         return CachedTagUtils.matchItemTag(CachedTagManager.UNPACKED_BLOCK_ITEMS_KEY, input);
     }
 
-    public record ResultOverride(Holder<Item> input, Holder<Item> result, Fraction multiplier)
+    public record ResultOverride(RegistryEntry<Item> input, RegistryEntry<Item> result, Fraction multiplier)
     {
-        public boolean match(Holder<Item> otherItem) { return this.input().is(otherItem.unwrapKey().orElseThrow()); }
+        public boolean match(RegistryEntry<Item> otherItem) { return this.input().matchesKey(otherItem.getKey().orElseThrow()); }
 
         public Integer mulInt(Integer totalIn) { return totalIn * this.multiplier().intValue(); }
 

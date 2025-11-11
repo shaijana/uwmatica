@@ -3,91 +3,89 @@ package fi.dy.masa.litematica.world;
 import java.util.*;
 import java.util.function.Predicate;
 import javax.annotation.Nonnull;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.render.DimensionEffects;
+import net.minecraft.component.type.MapIdComponent;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.boss.dragon.EnderDragonPart;
+import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.fluid.Fluid;
+import net.minecraft.item.FuelRegistry;
+import net.minecraft.item.map.MapState;
+import net.minecraft.particle.BlockParticleEffect;
+import net.minecraft.particle.ParticleEffect;
+import net.minecraft.recipe.BrewingRecipeRegistry;
+import net.minecraft.recipe.RecipeManager;
+import net.minecraft.registry.DynamicRegistryManager;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.resource.featuretoggle.FeatureSet;
+import net.minecraft.scoreboard.Scoreboard;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvent;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.TypeFilter;
+import net.minecraft.util.collection.Pool;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.MutableWorldProperties;
+import net.minecraft.world.World;
+import net.minecraft.world.WorldProperties;
+import net.minecraft.world.biome.Biome;
+import net.minecraft.world.border.WorldBorder;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.world.chunk.WorldChunk;
+import net.minecraft.world.chunk.light.LightingProvider;
+import net.minecraft.world.dimension.DimensionType;
+import net.minecraft.world.dimension.DimensionTypes;
+import net.minecraft.world.entity.EntityLookup;
+import net.minecraft.world.event.GameEvent;
+import net.minecraft.world.explosion.ExplosionBehavior;
+import net.minecraft.world.tick.EmptyTickSchedulers;
+import net.minecraft.world.tick.QueryableTickScheduler;
+import net.minecraft.world.tick.TickManager;
 import com.google.common.collect.ImmutableList;
 import org.jetbrains.annotations.Nullable;
-
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.DimensionSpecialEffects;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.core.Holder;
-import net.minecraft.core.RegistryAccess;
-import net.minecraft.core.particles.ExplosionParticleInfo;
-import net.minecraft.core.particles.ParticleOptions;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundEvent;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.Mth;
-import net.minecraft.util.random.WeightedList;
-import net.minecraft.world.TickRateManager;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.boss.EnderDragonPart;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.flag.FeatureFlagSet;
-import net.minecraft.world.item.alchemy.PotionBrewing;
-import net.minecraft.world.item.crafting.RecipeAccess;
-import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.ExplosionDamageCalculator;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.entity.FuelValues;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.border.WorldBorder;
-import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.LevelChunk;
-import net.minecraft.world.level.chunk.status.ChunkStatus;
-import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
-import net.minecraft.world.level.dimension.DimensionType;
-import net.minecraft.world.level.entity.EntityTypeTest;
-import net.minecraft.world.level.entity.LevelEntityGetter;
-import net.minecraft.world.level.gameevent.GameEvent;
-import net.minecraft.world.level.lighting.LevelLightEngine;
-import net.minecraft.world.level.material.Fluid;
-import net.minecraft.world.level.saveddata.maps.MapId;
-import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
-import net.minecraft.world.level.storage.LevelData;
-import net.minecraft.world.level.storage.WritableLevelData;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.scores.Scoreboard;
-import net.minecraft.world.ticks.BlackholeTickAccess;
-import net.minecraft.world.ticks.LevelTickAccess;
-
 import fi.dy.masa.malilib.util.WorldUtils;
 import fi.dy.masa.litematica.Reference;
 import fi.dy.masa.litematica.render.schematic.WorldRendererSchematic;
 
-public class WorldSchematic extends Level
+public class WorldSchematic extends World
 {
-    protected static final ResourceKey<Level> REGISTRY_KEY = ResourceKey.create(Registries.DIMENSION, ResourceLocation.fromNamespaceAndPath(Reference.MOD_ID, "schematic_world"));
+    protected static final RegistryKey<World> REGISTRY_KEY = RegistryKey.of(RegistryKeys.WORLD, Identifier.of(Reference.MOD_ID, "schematic_world"));
 
-    protected final Minecraft mc;
+    protected final MinecraftClient mc;
     protected final ChunkManagerSchematic chunkManagerSchematic;
     @Nullable protected final WorldRendererSchematic worldRenderer;
-    private final TickRateManager tickManager;
-    private final Holder<DimensionType> dimensionType;
+    private final TickManager tickManager;
+    private final RegistryEntry<DimensionType> dimensionType;
     private final HashMap<UUID, ChunkPos> entityMap;
     private final SchematicEntityLookup<Entity> entityLookup;
-    protected Holder<Biome> biome;
-    private DimensionSpecialEffects dimensionEffects = new DimensionSpecialEffects.OverworldEffects();
-    private LevelData.RespawnData properties;
+    protected RegistryEntry<Biome> biome;
+    private DimensionEffects dimensionEffects = new DimensionEffects.Overworld();
+    private WorldProperties.SpawnPoint properties;
     protected int nextEntityId;
     protected int entityCount;
 
-    public WorldSchematic(WritableLevelData properties,
-                          @Nonnull RegistryAccess registryManager,
-                          Holder<DimensionType> dimension,
+    public WorldSchematic(MutableWorldProperties properties,
+                          @Nonnull DynamicRegistryManager registryManager,
+                          RegistryEntry<DimensionType> dimension,
                           @Nullable WorldRendererSchematic worldRenderer)
     {
-        super(properties, REGISTRY_KEY, !registryManager.equals(RegistryAccess.EMPTY) ? registryManager : SchematicWorldHandler.INSTANCE.getRegistryManager(), dimension, true, false, 0L, 0);
+        super(properties, REGISTRY_KEY, !registryManager.equals(DynamicRegistryManager.EMPTY) ? registryManager : SchematicWorldHandler.INSTANCE.getRegistryManager(), dimension, true, false, 0L, 0);
 
-        this.mc = Minecraft.getInstance();
+        this.mc = MinecraftClient.getInstance();
 
-        if (this.mc == null || this.mc.level == null)
+        if (this.mc == null || this.mc.world == null)
         {
             throw new RuntimeException("WorldSchematic invoked when MinecraftClient.getInstance() or mc.world is null");
         }
@@ -96,33 +94,33 @@ public class WorldSchematic extends Level
         this.chunkManagerSchematic = new ChunkManagerSchematic(this);
         this.dimensionType = dimension;
 
-        if (!registryManager.equals(RegistryAccess.EMPTY))
+        if (!registryManager.equals(DynamicRegistryManager.EMPTY))
         {
             this.setDimension(registryManager);
         }
         else
         {
-            this.setDimension(this.mc.level.registryAccess());
+            this.setDimension(this.mc.world.getRegistryManager());
         }
 
-        this.tickManager = new TickRateManager();
+        this.tickManager = new TickManager();
         this.entityCount = 0;
         this.entityMap = new HashMap<>();
         this.entityLookup = new SchematicEntityLookup<>();
-        this.properties = LevelData.RespawnData.DEFAULT;
+        this.properties = WorldProperties.SpawnPoint.DEFAULT;
     }
 
     @Override
     public String toString()
     {
-        return "SchematicWorld["+REGISTRY_KEY.location().toString()+"]";
+        return "SchematicWorld["+REGISTRY_KEY.getValue().toString()+"]";
     }
 
-    private void setDimension(RegistryAccess registryManager)
+    private void setDimension(DynamicRegistryManager registryManager)
     {
-        registryManager.lookup(Registries.DIMENSION_TYPE).ifPresent(entryLookup -> {
-            Holder<DimensionType> nether = entryLookup.get(BuiltinDimensionTypes.NETHER).orElse(null);
-            Holder<DimensionType> end = entryLookup.get(BuiltinDimensionTypes.END).orElse(null);
+        registryManager.getOptional(RegistryKeys.DIMENSION_TYPE).ifPresent(entryLookup -> {
+            RegistryEntry<DimensionType> nether = entryLookup.getOptional(DimensionTypes.THE_NETHER).orElse(null);
+            RegistryEntry<DimensionType> end = entryLookup.getOptional(DimensionTypes.THE_END).orElse(null);
     
             if (nether != null && this.dimensionType.equals(nether))
             {
@@ -138,40 +136,40 @@ public class WorldSchematic extends Level
             }
         });
     
-        this.dimensionEffects = DimensionSpecialEffects.forType(this.dimensionType.value());
+        this.dimensionEffects = DimensionEffects.byDimensionType(this.dimensionType.value());
     }
 
     public ChunkManagerSchematic getChunkProvider()
     {
-        return this.getChunkSource();
+        return this.getChunkManager();
     }
 
     @Override
-    public @Nonnull ChunkManagerSchematic getChunkSource()
+    public @Nonnull ChunkManagerSchematic getChunkManager()
     {
         return this.chunkManagerSchematic;
     }
 
     @Override
-    public @Nonnull TickRateManager tickRateManager()
+    public @Nonnull TickManager getTickManager()
     {
         return this.tickManager;
     }
 
     @Nullable
     @Override
-    public MapItemSavedData getMapData(MapId id) { return null; }
+    public MapState getMapState(MapIdComponent id) { return null; }
 
     @Override
-    public @Nonnull LevelTickAccess<Block> getBlockTicks()
+    public @Nonnull QueryableTickScheduler<Block> getBlockTickScheduler()
     {
-        return BlackholeTickAccess.emptyLevelList();
+        return EmptyTickSchedulers.getClientTickScheduler();
     }
 
     @Override
-    public @Nonnull LevelTickAccess<Fluid> getFluidTicks()
+    public @Nonnull QueryableTickScheduler<Fluid> getFluidTickScheduler()
     {
-        return BlackholeTickAccess.emptyLevelList();
+        return EmptyTickSchedulers.getClientTickScheduler();
     }
 
     public int getRegularEntityCount()
@@ -185,7 +183,7 @@ public class WorldSchematic extends Level
     }
 
     @Override
-    public @Nonnull LevelChunk getChunkAt(BlockPos pos)
+    public @Nonnull WorldChunk getWorldChunk(BlockPos pos)
     {
         return this.getChunk(pos.getX() >> 4, pos.getZ() >> 4);
     }
@@ -193,17 +191,17 @@ public class WorldSchematic extends Level
     @Override
     public @Nonnull ChunkSchematic getChunk(int chunkX, int chunkZ)
     {
-        return this.chunkManagerSchematic.getChunkForLighting(chunkX, chunkZ);
+        return this.chunkManagerSchematic.getChunk(chunkX, chunkZ);
     }
 
     @Override
-    public ChunkAccess getChunk(int chunkX, int chunkZ, @Nonnull ChunkStatus status, boolean required)
+    public Chunk getChunk(int chunkX, int chunkZ, @Nonnull ChunkStatus status, boolean required)
     {
         return this.getChunk(chunkX, chunkZ);
     }
 
     @Override
-    public @Nonnull Holder<Biome> getUncachedNoiseBiome(int biomeX, int biomeY, int biomeZ)
+    public @Nonnull RegistryEntry<Biome> getGeneratorStoredBiome(int biomeX, int biomeY, int biomeZ)
     {
         return this.biome;
     }
@@ -211,18 +209,18 @@ public class WorldSchematic extends Level
     @Override
     public int getSeaLevel()
     {
-        if (this.mc != null && this.mc.level != null)
+        if (this.mc != null && this.mc.world != null)
         {
-            return this.mc.level.getSeaLevel();
+            return this.mc.world.getSeaLevel();
         }
 
         return 0;
     }
 
     @Override
-    public boolean setBlock(BlockPos pos, @Nonnull BlockState newState, int flags)
+    public boolean setBlockState(BlockPos pos, @Nonnull BlockState newState, int flags)
     {
-        if (pos.getY() < this.getMinY() || pos.getY() >= this.getMaxY())
+        if (pos.getY() < this.getBottomY() || pos.getY() >= this.getTopYInclusive())
         {
             return false;
         }
@@ -233,12 +231,12 @@ public class WorldSchematic extends Level
     }
 
     @Override
-    public boolean addFreshEntity(Entity entity)
+    public boolean spawnEntity(Entity entity)
     {
-        int chunkX = Mth.floor(entity.getX() / 16.0D);
-        int chunkZ = Mth.floor(entity.getZ() / 16.0D);
+        int chunkX = MathHelper.floor(entity.getX() / 16.0D);
+        int chunkZ = MathHelper.floor(entity.getZ() / 16.0D);
 
-        if (!this.chunkManagerSchematic.hasChunk(chunkX, chunkZ))
+        if (!this.chunkManagerSchematic.isChunkLoaded(chunkX, chunkZ))
         {
             return false;
         }
@@ -246,9 +244,9 @@ public class WorldSchematic extends Level
         {
             entity.setId(this.nextEntityId++);
             // TODO --> MOVE TO SchematicEntityLookup
-            this.chunkManagerSchematic.getChunkForLighting(chunkX, chunkZ).addEntity(entity);
+            this.chunkManagerSchematic.getChunk(chunkX, chunkZ).addEntity(entity);
             ++this.entityCount;
-            this.entityMap.put(entity.getUUID(), new ChunkPos(chunkX, chunkZ));
+            this.entityMap.put(entity.getUuid(), new ChunkPos(chunkX, chunkZ));
             this.entityLookup.put(entity);
             return true;
         }
@@ -286,7 +284,7 @@ public class WorldSchematic extends Level
 
     @Nullable
     @Override
-    public Entity getEntity(int id)
+    public Entity getEntityById(int id)
     {
         return this.entityLookup.get(id);
     }
@@ -310,43 +308,43 @@ public class WorldSchematic extends Level
     }
 
     @Override
-    public @Nonnull Collection<EnderDragonPart> dragonParts()
+    public @Nonnull Collection<EnderDragonPart> getEnderDragonParts()
     {
         return List.of();
     }
 
     @Override
-    public @Nonnull List<? extends Player> players()
+    public @Nonnull List<? extends PlayerEntity> getPlayers()
     {
         return ImmutableList.of();
     }
 
     @Override
-    public long getGameTime()
+    public long getTime()
     {
-        return this.mc.level != null ? this.mc.level.getGameTime() : 0;
+        return this.mc.world != null ? this.mc.world.getTime() : 0;
     }
 
     @Override
     public @Nonnull Scoreboard getScoreboard()
     {
-        return this.mc.level != null ? this.mc.level.getScoreboard() : null;
+        return this.mc.world != null ? this.mc.world.getScoreboard() : null;
     }
 
     @Override
-    public @Nonnull RecipeAccess recipeAccess()
+    public @Nonnull RecipeManager getRecipeManager()
     {
-        return this.mc.level != null ? this.mc.level.recipeAccess() : null;
+        return this.mc.world != null ? this.mc.world.getRecipeManager() : null;
     }
 
     @Override
-    protected @Nonnull LevelEntityGetter<Entity> getEntities()
+    protected @Nonnull EntityLookup<Entity> getEntityLookup()
     {
         return this.entityLookup;
     }
 
     @Override
-    public @Nonnull List<Entity> getEntities(@Nullable final Entity except, @Nonnull final AABB box, @Nonnull Predicate<? super Entity> predicate)
+    public @Nonnull List<Entity> getOtherEntities(@Nullable final Entity except, @Nonnull final Box box, @Nonnull Predicate<? super Entity> predicate)
     {
         final List<Entity> list = new ArrayList<>();
         List<ChunkSchematic> chunks = this.getChunksWithinBox(box);
@@ -373,14 +371,14 @@ public class WorldSchematic extends Level
     }
 
     @Override
-    public @Nonnull <T extends Entity> List<T> getEntities(@Nonnull EntityTypeTest<Entity, T> arg, @Nonnull AABB box, @Nonnull Predicate<? super T> predicate)
+    public @Nonnull <T extends Entity> List<T> getEntitiesByType(@Nonnull TypeFilter<Entity, T> arg, @Nonnull Box box, @Nonnull Predicate<? super T> predicate)
     {
         ArrayList<T> list = new ArrayList<>();
 
         // TODO --> MOVE TO SchematicEntityLookup
-        for (Entity e : this.getEntities((Entity) null, box, e -> true))
+        for (Entity e : this.getOtherEntities((Entity) null, box, e -> true))
         {
-            T t = arg.tryCast(e);
+            T t = arg.downcast(e);
 
             if (t != null && predicate.test(t))
             {
@@ -391,12 +389,12 @@ public class WorldSchematic extends Level
         return list;
     }
 
-    public List<ChunkSchematic> getChunksWithinBox(AABB box)
+    public List<ChunkSchematic> getChunksWithinBox(Box box)
     {
-        final int minX = Mth.floor(box.minX / 16.0);
-        final int minZ = Mth.floor(box.minZ / 16.0);
-        final int maxX = Mth.floor(box.maxX / 16.0);
-        final int maxZ = Mth.floor(box.maxZ / 16.0);
+        final int minX = MathHelper.floor(box.minX / 16.0);
+        final int minZ = MathHelper.floor(box.minZ / 16.0);
+        final int maxX = MathHelper.floor(box.maxX / 16.0);
+        final int maxZ = MathHelper.floor(box.maxZ / 16.0);
 
         List<ChunkSchematic> chunks = new ArrayList<>();
 
@@ -417,7 +415,7 @@ public class WorldSchematic extends Level
     }
 
     @Override
-    public void setBlocksDirty(@Nonnull BlockPos pos, @Nonnull BlockState stateOld, @Nonnull BlockState stateNew)
+    public void scheduleBlockRerenderIfNeeded(@Nonnull BlockPos pos, @Nonnull BlockState stateOld, @Nonnull BlockState stateNew)
     {
         if (stateNew != stateOld)
         {
@@ -426,22 +424,22 @@ public class WorldSchematic extends Level
     }
 
     @Override
-    public void playSeededSound(@Nullable Entity source, double x, double y, double z, @Nonnull Holder<SoundEvent> sound, @Nonnull SoundSource category, float volume, float pitch, long seed)
+    public void playSound(@Nullable Entity source, double x, double y, double z, @Nonnull RegistryEntry<SoundEvent> sound, @Nonnull SoundCategory category, float volume, float pitch, long seed)
     {
         // NO-OP
     }
 
     @Override
-    public void playSeededSound(@Nullable Entity source, @Nonnull Entity entity, @Nonnull Holder<SoundEvent> sound, @Nonnull SoundSource category, float volume, float pitch, long seed)
+    public void playSoundFromEntity(@Nullable Entity source, @Nonnull Entity entity, @Nonnull RegistryEntry<SoundEvent> sound, @Nonnull SoundCategory category, float volume, float pitch, long seed)
     {
         // NO-OP
     }
 
 	@Override
-	public void explode(@Nullable Entity entity, @Nullable DamageSource damageSource, @Nullable ExplosionDamageCalculator behavior,
+	public void createExplosion(@Nullable Entity entity, @Nullable DamageSource damageSource, @Nullable ExplosionBehavior behavior,
 	                    double x, double y, double z, float power, boolean createFire,
-	                    @Nonnull ExplosionInteraction explosionSourceType, @Nonnull ParticleOptions smallParticle, @Nonnull ParticleOptions largeParticle,
-	                    @Nonnull WeightedList<ExplosionParticleInfo> blockParticles, @Nonnull Holder<SoundEvent> soundEvent)
+	                    @Nonnull ExplosionSourceType explosionSourceType, @Nonnull ParticleEffect smallParticle, @Nonnull ParticleEffect largeParticle,
+	                    @Nonnull Pool<BlockParticleEffect> blockParticles, @Nonnull RegistryEntry<SoundEvent> soundEvent)
 	{
 		// NO-OP
 	}
@@ -455,88 +453,88 @@ public class WorldSchematic extends Level
     }
 
     @Override
-    public int getMinY()
+    public int getBottomY()
     {
-        return this.mc.level != null ? this.mc.level.getMinY() : -64;
+        return this.mc.world != null ? this.mc.world.getBottomY() : -64;
     }
 
     @Override
     public int getHeight()
     {
-        return this.mc.level != null ? this.mc.level.getHeight() : 384;
+        return this.mc.world != null ? this.mc.world.getHeight() : 384;
     }
 
     // The following HeightLimitView overrides are to work around an incompatibility with Lithium 0.7.4+
 
     @Override
-    public int getMaxY()
+    public int getTopYInclusive()
     {
-        return this.getMinY() + this.getHeight();
+        return this.getBottomY() + this.getHeight();
     }
 
     @Override
-    public int getMinSectionY()
+    public int getBottomSectionCoord()
     {
-        return this.getMinY() >> 4;
+        return this.getBottomY() >> 4;
     }
 
     @Override
-    public int getMaxSectionY()
+    public int getTopSectionCoord()
     {
-        return this.getMaxY() >> 4;
+        return this.getTopYInclusive() >> 4;
     }
 
     @Override
-    public int getSectionsCount()
+    public int countVerticalSections()
     {
-        return this.getMaxSectionY() - this.getMinSectionY();
+        return this.getTopSectionCoord() - this.getBottomSectionCoord();
     }
 
     @Override
-    public boolean isOutsideBuildHeight(BlockPos pos)
+    public boolean isOutOfHeightLimit(BlockPos pos)
     {
-        return this.isOutsideBuildHeight(pos.getY());
+        return this.isOutOfHeightLimit(pos.getY());
     }
 
     @Override
-    public boolean isOutsideBuildHeight(int y)
+    public boolean isOutOfHeightLimit(int y)
     {
-        return (y < this.getMinY()) || (y >= this.getMaxY());
+        return (y < this.getBottomY()) || (y >= this.getTopYInclusive());
     }
 
     @Override
     public int getSectionIndex(int y)
     {
-        return (y >> 4) - (this.getMinY() >> 4);
+        return (y >> 4) - (this.getBottomY() >> 4);
     }
 
     @Override
-    public int getSectionIndexFromSectionY(int coord)
+    public int sectionCoordToIndex(int coord)
     {
-        return coord - (this.getMinY() >> 4);
+        return coord - (this.getBottomY() >> 4);
     }
 
     @Override
-    public int getSectionYFromSectionIndex(int index)
+    public int sectionIndexToCoord(int index)
     {
-        return index + (this.getMinY() >> 4);
+        return index + (this.getBottomY() >> 4);
     }
 
     // For AO compatibility
-    public Holder<DimensionType> getDimensionType()
+    public RegistryEntry<DimensionType> getDimensionType()
     {
         return this.dimensionType;
     }
 
-    public DimensionSpecialEffects getDimensionEffects()
+    public DimensionEffects getDimensionEffects()
     {
         return this.dimensionEffects;
     }
 
     @Override
-    public float getShade(@Nonnull Direction direction, boolean shaded)
+    public float getBrightness(@Nonnull Direction direction, boolean shaded)
     {
-        boolean darkened = this.getDimensionEffects().constantAmbientLight();
+        boolean darkened = this.getDimensionEffects().isDarkened();
 
         if (!shaded)
         {
@@ -555,78 +553,78 @@ public class WorldSchematic extends Level
     }
 
     @Override
-    public @Nonnull LevelLightEngine getLightEngine()
+    public @Nonnull LightingProvider getLightingProvider()
     {
         // Returns the Fake Lighting Provider, if configured to do so
-        return this.getChunkSource().getLightEngine();
+        return this.getChunkManager().getLightingProvider();
     }
 
     @Override
-    public void sendBlockUpdated(@Nonnull BlockPos blockPos_1, @Nonnull BlockState blockState_1, @Nonnull BlockState blockState_2, int flags)
+    public void updateListeners(@Nonnull BlockPos blockPos_1, @Nonnull BlockState blockState_1, @Nonnull BlockState blockState_2, int flags)
     {
         // NO-OP
     }
 
     @Override
-    public void destroyBlockProgress(int entityId, @Nonnull BlockPos pos, int progress)
+    public void setBlockBreakingInfo(int entityId, @Nonnull BlockPos pos, int progress)
     {
         // NO-OP
     }
 
     @Override
-    public void globalLevelEvent(int eventId, @Nonnull BlockPos pos, int data)
+    public void syncGlobalEvent(int eventId, @Nonnull BlockPos pos, int data)
     {
         // NO-OP
     }
     
     @Override
-    public void gameEvent(@Nonnull Holder<GameEvent> event, @Nonnull Vec3 emitterPos, @Nonnull GameEvent.Context emitter)
+    public void emitGameEvent(@Nonnull RegistryEntry<GameEvent> event, @Nonnull Vec3d emitterPos, @Nonnull GameEvent.Emitter emitter)
     {
         // NO-OP
     }
 
     @Override
-    public void levelEvent(@Nullable Entity entity, int eventId, @Nonnull BlockPos pos, int data)
+    public void syncWorldEvent(@Nullable Entity entity, int eventId, @Nonnull BlockPos pos, int data)
     {
         // NO-OP
     }
 
     @Override
-    public @Nonnull RegistryAccess registryAccess()
+    public @Nonnull DynamicRegistryManager getRegistryManager()
     {
-        if (this.mc != null && this.mc.level != null)
+        if (this.mc != null && this.mc.world != null)
         {
-            return this.mc.level.registryAccess();
+            return this.mc.world.getRegistryManager();
         }
-        else if (!SchematicWorldHandler.INSTANCE.getRegistryManager().equals(RegistryAccess.EMPTY))
+        else if (!SchematicWorldHandler.INSTANCE.getRegistryManager().equals(DynamicRegistryManager.EMPTY))
         {
             return SchematicWorldHandler.INSTANCE.getRegistryManager();
         }
         else
         {
-            return RegistryAccess.EMPTY;
+            return DynamicRegistryManager.EMPTY;
         }
     }
 
     @Override
-    public @Nonnull PotionBrewing potionBrewing()
+    public @Nonnull BrewingRecipeRegistry getBrewingRecipeRegistry()
     {
-        if (this.mc != null && this.mc.level != null)
+        if (this.mc != null && this.mc.world != null)
         {
-            return this.mc.level.potionBrewing();
+            return this.mc.world.getBrewingRecipeRegistry();
         }
         else
         {
-            return PotionBrewing.EMPTY;
+            return BrewingRecipeRegistry.EMPTY;
         }
     }
 
     @Override
-    public @Nonnull FuelValues fuelValues()
+    public @Nonnull FuelRegistry getFuelRegistry()
     {
-        if (this.mc != null && this.mc.level != null)
+        if (this.mc != null && this.mc.world != null)
         {
-            return this.mc.level.fuelValues();
+            return this.mc.world.getFuelRegistry();
         }
         else
         {
@@ -635,50 +633,50 @@ public class WorldSchematic extends Level
     }
 
     @Override
-    public @Nonnull FeatureFlagSet enabledFeatures()
+    public @Nonnull FeatureSet getEnabledFeatures()
     {
-        if (this.mc != null && this.mc.level != null)
+        if (this.mc != null && this.mc.world != null)
         {
-            return this.mc.level.enabledFeatures();
+            return this.mc.world.getEnabledFeatures();
         }
         else
         {
-            return FeatureFlagSet.of();
+            return FeatureSet.empty();
         }
     }
 
     @Override
-    public @Nonnull String gatherChunkSourceStats()
+    public @Nonnull String asString()
     {
-        return "Chunks[SCH] W: "+this.getChunkSource().gatherStats()+" E: "+this.getRegularEntityCount()+" (eL: "+this.entityLookup.size()+"/"+ this.entityMap.size()+")";
+        return "Chunks[SCH] W: "+this.getChunkManager().getDebugString()+" E: "+this.getRegularEntityCount()+" (eL: "+this.entityLookup.size()+"/"+ this.entityMap.size()+")";
     }
 
     @Override
-    public void setRespawnData(LevelData.RespawnData arg)
+    public void setSpawnPoint(WorldProperties.SpawnPoint arg)
     {
-        this.properties = new LevelData.RespawnData(arg.globalPos(), arg.pitch(), arg.yaw());
+        this.properties = new WorldProperties.SpawnPoint(arg.globalPos(), arg.pitch(), arg.yaw());
     }
 
     @Override
-    public @Nonnull LevelData.RespawnData getRespawnData()
+    public @Nonnull WorldProperties.SpawnPoint getSpawnPoint()
     {
         return this.properties;
     }
 
     @Override
-    public void gameEvent(@Nullable Entity entity, @Nonnull Holder<GameEvent> event, @Nonnull Vec3 pos)
+    public void emitGameEvent(@Nullable Entity entity, @Nonnull RegistryEntry<GameEvent> event, @Nonnull Vec3d pos)
     {
         // NO-OP
     }
 
     @Override
-    public void gameEvent(@Nullable Entity entity, @Nonnull Holder<GameEvent> event, @Nonnull BlockPos pos)
+    public void emitGameEvent(@Nullable Entity entity, @Nonnull RegistryEntry<GameEvent> event, @Nonnull BlockPos pos)
     {
         // NO-OP
     }
 
     @Override
-    public void gameEvent(@Nonnull ResourceKey<GameEvent> event, @Nonnull BlockPos pos, @Nullable GameEvent.Context emitter)
+    public void emitGameEvent(@Nonnull RegistryKey<GameEvent> event, @Nonnull BlockPos pos, @Nullable GameEvent.Emitter emitter)
     {
         // NO-OP
     }
@@ -686,6 +684,6 @@ public class WorldSchematic extends Level
 	@Override
 	public @Nonnull WorldBorder getWorldBorder()
 	{
-		return WorldBorder.Settings.DEFAULT.toWorldBorder();
+		return WorldBorder.Properties.DEFAULT.toWorldBorder();
 	}
 }

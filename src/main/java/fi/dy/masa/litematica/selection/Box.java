@@ -2,9 +2,9 @@ package fi.dy.masa.litematica.selection;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import net.minecraft.core.BlockPos;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.codec.PacketCodecs;
+import net.minecraft.util.math.BlockPos;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import io.netty.buffer.ByteBuf;
@@ -21,41 +21,41 @@ public class Box
 {
     public static final Codec<Box> CODEC = RecordCodecBuilder.create(
             inst -> inst.group(
-                    BlockPos.CODEC.fieldOf("pos1").forGetter(get -> get.pos1 != null ? get.pos1 : BlockPos.ZERO),
-                    BlockPos.CODEC.fieldOf("pos2").forGetter(get -> get.pos2 != null ? get.pos2 : BlockPos.ZERO),
+                    BlockPos.CODEC.fieldOf("pos1").forGetter(get -> get.pos1 != null ? get.pos1 : BlockPos.ORIGIN),
+                    BlockPos.CODEC.fieldOf("pos2").forGetter(get -> get.pos2 != null ? get.pos2 : BlockPos.ORIGIN),
                     PrimitiveCodec.STRING.fieldOf("name").forGetter(get -> get.name)
             ).apply(inst, Box::new)
     );
-    public static final StreamCodec<ByteBuf, Box> PACKET_CODEC = new StreamCodec<>()
+    public static final PacketCodec<ByteBuf, Box> PACKET_CODEC = new PacketCodec<>()
     {
         @Override
         public @Nonnull Box decode(@Nonnull ByteBuf buf)
         {
             return new Box(
-                    BlockPos.STREAM_CODEC.decode(buf),
-                    BlockPos.STREAM_CODEC.decode(buf),
-                    ByteBufCodecs.STRING_UTF8.decode(buf)
+                    BlockPos.PACKET_CODEC.decode(buf),
+                    BlockPos.PACKET_CODEC.decode(buf),
+                    PacketCodecs.STRING.decode(buf)
             );
         }
 
         @Override
         public void encode(@Nonnull ByteBuf buf, Box value)
         {
-            BlockPos.STREAM_CODEC.encode(buf, value.pos1 != null ? value.pos1 : BlockPos.ZERO);
-            BlockPos.STREAM_CODEC.encode(buf, value.pos2 != null ? value.pos2 : BlockPos.ZERO);
-            ByteBufCodecs.STRING_UTF8.encode(buf, value.name);
+            BlockPos.PACKET_CODEC.encode(buf, value.pos1 != null ? value.pos1 : BlockPos.ORIGIN);
+            BlockPos.PACKET_CODEC.encode(buf, value.pos2 != null ? value.pos2 : BlockPos.ORIGIN);
+            PacketCodecs.STRING.encode(buf, value.name);
         }
     };
     @Nullable private BlockPos pos1;
     @Nullable private BlockPos pos2;
-    private BlockPos size = BlockPos.ZERO;
+    private BlockPos size = BlockPos.ORIGIN;
     private String name = "Unnamed";
     private Corner selectedCorner = Corner.NONE;
 
     public Box()
     {
-        this.pos1 = BlockPos.ZERO;
-        this.pos2 = BlockPos.ZERO;
+        this.pos1 = BlockPos.ORIGIN;
+        this.pos2 = BlockPos.ORIGIN;
         this.updateSize();
     }
 
@@ -146,7 +146,7 @@ public class Box
         }
         else if (this.pos1 == null && this.pos2 == null)
         {
-            this.size = BlockPos.ZERO;
+            this.size = BlockPos.ORIGIN;
         }
         else
         {

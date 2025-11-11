@@ -1,8 +1,8 @@
 package fi.dy.masa.litematica.gui.widgets;
 
 import javax.annotation.Nullable;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.core.BlockPos;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.util.math.BlockPos;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -72,7 +72,7 @@ public class WidgetSchematicEntry extends WidgetListEntryBase<LitematicaSchemati
     }
 
     @Override
-    public void render(GuiGraphics drawContext, int mouseX, int mouseY, boolean selected)
+    public void render(DrawContext drawContext, int mouseX, int mouseY, boolean selected)
     {
 //        RenderUtils.color(1f, 1f, 1f, 1f);
 
@@ -124,7 +124,7 @@ public class WidgetSchematicEntry extends WidgetListEntryBase<LitematicaSchemati
     }
 
     @Override
-    public void postRenderHovered(GuiGraphics drawContext, int mouseX, int mouseY, boolean selected)
+    public void postRenderHovered(DrawContext drawContext, int mouseX, int mouseY, boolean selected)
     {
 //        RenderUtils.color(1f, 1f, 1f, 1f);
 
@@ -174,7 +174,7 @@ public class WidgetSchematicEntry extends WidgetListEntryBase<LitematicaSchemati
         {
             if (this.type == Type.CREATE_PLACEMENT && this.widget.mc.player != null)
             {
-                BlockPos pos = BlockPos.containing(this.widget.mc.player.position());
+                BlockPos pos = BlockPos.ofFloored(this.widget.mc.player.getEntityPos());
                 LitematicaSchematic entry = this.widget.schematic;
                 String name = entry.getMetadata().getName();
                 boolean enabled = GuiBase.isShiftDown() == false;

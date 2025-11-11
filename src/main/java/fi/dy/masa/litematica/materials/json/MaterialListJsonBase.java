@@ -3,11 +3,11 @@ package fi.dy.masa.litematica.materials.json;
 import java.util.HashMap;
 import java.util.List;
 import javax.annotation.Nullable;
-import net.minecraft.core.Holder;
-import net.minecraft.resources.RegistryOps;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.item.crafting.display.RecipeDisplayId;
+import net.minecraft.item.Item;
+import net.minecraft.recipe.Ingredient;
+import net.minecraft.recipe.NetworkRecipeId;
+import net.minecraft.registry.RegistryOps;
+import net.minecraft.registry.entry.RegistryEntry;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
@@ -16,14 +16,14 @@ import fi.dy.masa.malilib.util.game.RecipeBookUtils;
 
 public class MaterialListJsonBase
 {
-    private final Holder<Item> input;
+    private final RegistryEntry<Item> input;
     private final int count;
     private @Nullable MaterialListJsonEntry materialsCrafting;
     private @Nullable MaterialListJsonEntry materialsStonecutter;
     private @Nullable MaterialListJsonEntry materialsFurnace;
     private @Nullable MaterialListJsonEntry materialsRemaining;
 
-    public MaterialListJsonBase(final Holder<Item> input, final int count, @Nullable Holder<Item> prevItem, boolean craftingOnly)
+    public MaterialListJsonBase(final RegistryEntry<Item> input, final int count, @Nullable RegistryEntry<Item> prevItem, boolean craftingOnly)
     {
         this.input = input;
         this.count = count;
@@ -119,7 +119,7 @@ public class MaterialListJsonBase
         return this.materialsRemaining;
     }
 
-    public Holder<Item> getInput()
+    public RegistryEntry<Item> getInput()
     {
         return this.input;
     }
@@ -136,19 +136,19 @@ public class MaterialListJsonBase
      * @param prevItem ()
      * @return (True|False)
      */
-    private boolean checkIfLoop(MaterialListJsonEntry entry, Holder<Item> inputItem, Holder<Item> prevItem)
+    private boolean checkIfLoop(MaterialListJsonEntry entry, RegistryEntry<Item> inputItem, RegistryEntry<Item> prevItem)
     {
-        HashMap<RecipeDisplayId, List<Ingredient>> recipeReq = entry.getRecipeRequirements();
-        HashMap<RecipeDisplayId, RecipeBookUtils.Type> recipeTypes = entry.getRecipeTypes();
+        HashMap<NetworkRecipeId, List<Ingredient>> recipeReq = entry.getRecipeRequirements();
+        HashMap<NetworkRecipeId, RecipeBookUtils.Type> recipeTypes = entry.getRecipeTypes();
 
 //        Litematica.LOGGER.warn("checkIfLoop(): input: [{}], prev: [{}]", inputItem.getIdAsString(), prevItem != null ? prevItem.getIdAsString() : "<>");
 
         if (!recipeReq.isEmpty() && !recipeTypes.isEmpty())
         {
-            RecipeDisplayId firstId = recipeTypes.keySet().stream().toList().getFirst();
+            NetworkRecipeId firstId = recipeTypes.keySet().stream().toList().getFirst();
             List<Ingredient> ingredients = recipeReq.get(firstId);
             Ingredient ingredient = ingredients.getFirst();
-            List<Holder<Item>> ingItems = ((IMixinIngredient) (Object) ingredient).malilib_getEntries().stream().toList();
+            List<RegistryEntry<Item>> ingItems = ((IMixinIngredient) (Object) ingredient).malilib_getEntries().stream().toList();
 
             if (ingItems.contains(inputItem) || ingItems.contains(prevItem))
             {
@@ -177,7 +177,7 @@ public class MaterialListJsonBase
     {
         JsonObject obj = new JsonObject();
 
-        obj.add("Item", new JsonPrimitive(this.getInput().getRegisteredName()));
+        obj.add("Item", new JsonPrimitive(this.getInput().getIdAsString()));
         obj.add("Count", new JsonPrimitive(this.getCount()));
 
         if (this.materialsCrafting != null)

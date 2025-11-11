@@ -66,7 +66,7 @@ public class GuiAreaSelectionManager extends GuiListBase<DirectoryEntry, WidgetD
     protected void reCreateGuiElements()
     {
         this.clearButtons();
-	    this.clearWidgets();
+	    this.clearChildren();
 
         int x = this.getScreenWidth() - 13;
         int y = 24;
@@ -223,7 +223,7 @@ public class GuiAreaSelectionManager extends GuiListBase<DirectoryEntry, WidgetD
 
             private final String labelKey;
 
-            private ButtonType(String labelKey)
+            ButtonType(String labelKey)
             {
                 this.labelKey = labelKey;
             }

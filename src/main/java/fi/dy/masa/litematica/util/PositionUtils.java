@@ -3,22 +3,20 @@ package fi.dy.masa.litematica.util;
 import java.util.*;
 import java.util.function.BiConsumer;
 import javax.annotation.Nullable;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.util.BlockMirror;
+import net.minecraft.util.BlockRotation;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.Vec3i;
+import net.minecraft.world.World;
+import net.minecraft.world.border.WorldBorder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.tuple.Pair;
-
-import net.minecraft.client.Minecraft;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.core.Vec3i;
-import net.minecraft.util.Mth;
-import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Mirror;
-import net.minecraft.world.level.block.Rotation;
-import net.minecraft.world.level.border.WorldBorder;
-import net.minecraft.world.phys.Vec3;
-
 import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.util.InfoUtils;
 import fi.dy.masa.malilib.util.IntBoundingBox;
@@ -74,7 +72,7 @@ public class PositionUtils
 
     public static long getChunkPosLong(BlockPos blockPos)
     {
-        return ChunkPos.asLong(blockPos.getX() >> 4, blockPos.getZ() >> 4);
+        return ChunkPos.toLong(blockPos.getX() >> 4, blockPos.getZ() >> 4);
     }
 
     public static BlockPos getMinCorner(BlockPos pos1, BlockPos pos2)
@@ -102,19 +100,19 @@ public class PositionUtils
         return pos;
     }
 
-    public static boolean arePositionsWithinWorld(Level world, BlockPos pos1, BlockPos pos2)
+    public static boolean arePositionsWithinWorld(World world, BlockPos pos1, BlockPos pos2)
     {
-        if (pos1.getY() >= world.getMinY() && pos1.getY() < world.getMaxY() &&
-            pos2.getY() >= world.getMinY() && pos2.getY() < world.getMaxY())
+        if (pos1.getY() >= world.getBottomY() && pos1.getY() < world.getTopYInclusive() &&
+            pos2.getY() >= world.getBottomY() && pos2.getY() < world.getTopYInclusive())
         {
             WorldBorder border = world.getWorldBorder();
-            return border.isWithinBounds(pos1) && border.isWithinBounds(pos2);
+            return border.contains(pos1) && border.contains(pos2);
         }
 
         return false;
     }
 
-    public static boolean isBoxWithinWorld(Level world, Box box)
+    public static boolean isBoxWithinWorld(World world, Box box)
     {
         if (box.getPos1() != null && box.getPos2() != null)
         {
@@ -124,11 +122,11 @@ public class PositionUtils
         return false;
     }
 
-    public static boolean isPlacementWithinWorld(Level world, SchematicPlacement schematicPlacement, boolean respectRenderRange)
+    public static boolean isPlacementWithinWorld(World world, SchematicPlacement schematicPlacement, boolean respectRenderRange)
     {
         LayerRange range = DataManager.getRenderLayerRange();
-        BlockPos.MutableBlockPos posMutable1 = new BlockPos.MutableBlockPos();
-        BlockPos.MutableBlockPos posMutable2 = new BlockPos.MutableBlockPos();
+        BlockPos.Mutable posMutable1 = new BlockPos.Mutable();
+        BlockPos.Mutable posMutable2 = new BlockPos.Mutable();
 
         for (Box box : schematicPlacement.getSubRegionBoxes(RequiredEnabled.PLACEMENT_ENABLED).values())
         {
@@ -227,7 +225,7 @@ public class PositionUtils
     public static BlockPos getEnclosingAreaSize(Collection<Box> boxes)
     {
         Pair<BlockPos, BlockPos> pair = getEnclosingAreaCorners(boxes);
-        return pair.getRight().subtract(pair.getLeft()).offset(1, 1, 1);
+        return pair.getRight().subtract(pair.getLeft()).add(1, 1, 1);
     }
 
     /**
@@ -244,8 +242,8 @@ public class PositionUtils
             return null;
         }
 
-        BlockPos.MutableBlockPos posMin = new BlockPos.MutableBlockPos( 60000000,  60000000,  60000000);
-        BlockPos.MutableBlockPos posMax = new BlockPos.MutableBlockPos(-60000000, -60000000, -60000000);
+        BlockPos.Mutable posMin = new BlockPos.Mutable( 60000000,  60000000,  60000000);
+        BlockPos.Mutable posMax = new BlockPos.Mutable(-60000000, -60000000, -60000000);
 
         for (Box box : boxes)
         {
@@ -253,10 +251,10 @@ public class PositionUtils
             getMinMaxCoords(posMin, posMax, box.getPos2());
         }
 
-        return Pair.of(posMin.immutable(), posMax.immutable());
+        return Pair.of(posMin.toImmutable(), posMax.toImmutable());
     }
 
-    private static void getMinMaxCoords(BlockPos.MutableBlockPos posMin, BlockPos.MutableBlockPos posMax, @Nullable BlockPos posToCheck)
+    private static void getMinMaxCoords(BlockPos.Mutable posMin, BlockPos.Mutable posMax, @Nullable BlockPos posToCheck)
     {
         if (posToCheck != null)
         {
@@ -271,10 +269,10 @@ public class PositionUtils
     }
 
     @Nullable
-    public static IntBoundingBox clampBoxToWorldHeightRange(IntBoundingBox box, Level world)
+    public static IntBoundingBox clampBoxToWorldHeightRange(IntBoundingBox box, World world)
     {
-        int minY = world.getMinY();
-        int maxY = world.getMaxY();
+        int minY = world.getBottomY();
+        int maxY = world.getTopYInclusive();
 
         if (box.minY > maxY || box.maxY < minY)
         {
@@ -500,7 +498,7 @@ public class PositionUtils
     /**
      * Creates an enclosing AABB around the given positions. They will both be inside the box.
      */
-    public static net.minecraft.world.phys.AABB createEnclosingAABB(BlockPos pos1, BlockPos pos2)
+    public static net.minecraft.util.math.Box createEnclosingAABB(BlockPos pos1, BlockPos pos2)
     {
         int minX = Math.min(pos1.getX(), pos2.getX());
         int minY = Math.min(pos1.getY(), pos2.getY());
@@ -512,7 +510,7 @@ public class PositionUtils
         return createAABB(minX, minY, minZ, maxX, maxY, maxZ);
     }
 
-    public static net.minecraft.world.phys.AABB createAABBFrom(IntBoundingBox bb)
+    public static net.minecraft.util.math.Box createAABBFrom(IntBoundingBox bb)
     {
         return createAABB(bb.minX, bb.minY, bb.minZ, bb.maxX + 1, bb.maxY + 1, bb.maxZ + 1);
     }
@@ -520,7 +518,7 @@ public class PositionUtils
     /**
      * Creates an AABB for the given position
      */
-    public static net.minecraft.world.phys.AABB createAABBForPosition(BlockPos pos)
+    public static net.minecraft.util.math.Box createAABBForPosition(BlockPos pos)
     {
         return createAABBForPosition(pos.getX(), pos.getY(), pos.getZ());
     }
@@ -528,7 +526,7 @@ public class PositionUtils
     /**
      * Creates an AABB for the given position
      */
-    public static net.minecraft.world.phys.AABB createAABBForPosition(int x, int y, int z)
+    public static net.minecraft.util.math.Box createAABBForPosition(int x, int y, int z)
     {
         return createAABB(x, y, z, x + 1, y + 1, z + 1);
     }
@@ -536,9 +534,9 @@ public class PositionUtils
     /**
      * Creates an AABB with the given bounds
      */
-    public static net.minecraft.world.phys.AABB createAABB(int minX, int minY, int minZ, int maxX, int maxY, int maxZ)
+    public static net.minecraft.util.math.Box createAABB(int minX, int minY, int minZ, int maxX, int maxY, int maxZ)
     {
-        return new net.minecraft.world.phys.AABB(minX, minY, minZ, maxX, maxY, maxZ);
+        return new net.minecraft.util.math.Box(minX, minY, minZ, maxX, maxY, maxZ);
     }
 
     /**
@@ -646,7 +644,7 @@ public class PositionUtils
     {
         SelectionManager sm = DataManager.getSelectionManager();
         AreaSelection area = sm.getCurrentSelection();
-        Level world = Minecraft.getInstance().level;
+        World world = MinecraftClient.getInstance().world;
 
         if (area == null || world == null)
         {
@@ -744,7 +742,7 @@ public class PositionUtils
     /**
      * Mirrors and then rotates the given position around the origin
      */
-    public static BlockPos getTransformedBlockPos(BlockPos pos, Mirror mirror, Rotation rotation)
+    public static BlockPos getTransformedBlockPos(BlockPos pos, BlockMirror mirror, BlockRotation rotation)
     {
         int x = pos.getX();
         int y = pos.getY();
@@ -778,7 +776,7 @@ public class PositionUtils
         }
     }
 
-    public static BlockPos getReverseTransformedBlockPos(BlockPos pos, Mirror mirror, Rotation rotation)
+    public static BlockPos getReverseTransformedBlockPos(BlockPos pos, BlockMirror mirror, BlockRotation rotation)
     {
         int x = pos.getX();
         int y = pos.getY();
@@ -828,7 +826,7 @@ public class PositionUtils
      * Does the opposite transform from getTransformedBlockPos(), to return the original,
      * non-transformed position from the transformed position.
      */
-    public static BlockPos getOriginalPositionFromTransformed(BlockPos pos, Mirror mirror, Rotation rotation)
+    public static BlockPos getOriginalPositionFromTransformed(BlockPos pos, BlockMirror mirror, BlockRotation rotation)
     {
         int x = pos.getX();
         int y = pos.getY();
@@ -871,7 +869,7 @@ public class PositionUtils
         return new BlockPos(x, y, z);
     }
 
-    public static Vec3 getTransformedPosition(Vec3 originalPos, Mirror mirror, Rotation rotation)
+    public static Vec3d getTransformedPosition(Vec3d originalPos, BlockMirror mirror, BlockRotation rotation)
     {
         double x = originalPos.x;
         double y = originalPos.y;
@@ -893,26 +891,26 @@ public class PositionUtils
         switch (rotation)
         {
             case COUNTERCLOCKWISE_90:
-                return new Vec3(z, y, 1.0D - x);
+                return new Vec3d(z, y, 1.0D - x);
             case CLOCKWISE_90:
-                return new Vec3(1.0D - z, y, x);
+                return new Vec3d(1.0D - z, y, x);
             case CLOCKWISE_180:
-                return new Vec3(1.0D - x, y, 1.0D - z);
+                return new Vec3d(1.0D - x, y, 1.0D - z);
             default:
-                return transformed ? new Vec3(x, y, z) : originalPos;
+                return transformed ? new Vec3d(x, y, z) : originalPos;
         }
     }
 
-    public static Rotation getReverseRotation(Rotation rotationIn)
+    public static BlockRotation getReverseRotation(BlockRotation rotationIn)
     {
         switch (rotationIn)
         {
             case COUNTERCLOCKWISE_90:
-                return Rotation.CLOCKWISE_90;
+                return BlockRotation.CLOCKWISE_90;
             case CLOCKWISE_90:
-                return Rotation.COUNTERCLOCKWISE_90;
+                return BlockRotation.COUNTERCLOCKWISE_90;
             case CLOCKWISE_180:
-                return Rotation.CLOCKWISE_180;
+                return BlockRotation.CLOCKWISE_180;
             default:
                 return rotationIn;
         }
@@ -982,39 +980,39 @@ public class PositionUtils
         return z2 > z1 ? Direction.SOUTH : Direction.WEST;
     }
 
-    public static Rotation cycleRotation(Rotation rotation, boolean reverse)
+    public static BlockRotation cycleRotation(BlockRotation rotation, boolean reverse)
     {
         int ordinal = rotation.ordinal();
 
         if (reverse)
         {
-            ordinal = ordinal == 0 ? Rotation.values().length - 1 : ordinal - 1;
+            ordinal = ordinal == 0 ? BlockRotation.values().length - 1 : ordinal - 1;
         }
         else
         {
-            ordinal = ordinal >= Rotation.values().length - 1 ? 0 : ordinal + 1;
+            ordinal = ordinal >= BlockRotation.values().length - 1 ? 0 : ordinal + 1;
         }
 
-        return Rotation.values()[ordinal];
+        return BlockRotation.values()[ordinal];
     }
 
-    public static Mirror cycleMirror(Mirror mirror, boolean reverse)
+    public static BlockMirror cycleMirror(BlockMirror mirror, boolean reverse)
     {
         int ordinal = mirror.ordinal();
 
         if (reverse)
         {
-            ordinal = ordinal == 0 ? Mirror.values().length - 1 : ordinal - 1;
+            ordinal = ordinal == 0 ? BlockMirror.values().length - 1 : ordinal - 1;
         }
         else
         {
-            ordinal = ordinal >= Mirror.values().length - 1 ? 0 : ordinal + 1;
+            ordinal = ordinal >= BlockMirror.values().length - 1 ? 0 : ordinal + 1;
         }
 
-        return Mirror.values()[ordinal];
+        return BlockMirror.values()[ordinal];
     }
 
-    public static String getRotationNameShort(Rotation rotation)
+    public static String getRotationNameShort(BlockRotation rotation)
     {
         switch (rotation)
         {
@@ -1026,7 +1024,7 @@ public class PositionUtils
         }
     }
 
-    public static String getMirrorName(Mirror mirror)
+    public static String getMirrorName(BlockMirror mirror)
     {
         switch (mirror)
         {
@@ -1037,9 +1035,9 @@ public class PositionUtils
         }
     }
 
-    public static float getRotatedYaw(float yaw, Rotation rotation)
+    public static float getRotatedYaw(float yaw, BlockRotation rotation)
     {
-        yaw = Mth.wrapDegrees(yaw);
+        yaw = MathHelper.wrapDegrees(yaw);
 
         switch (rotation)
         {
@@ -1058,9 +1056,9 @@ public class PositionUtils
         return yaw;
     }
 
-    public static float getMirroredYaw(float yaw, Mirror mirror)
+    public static float getMirroredYaw(float yaw, BlockMirror mirror)
     {
-        yaw = Mth.wrapDegrees(yaw);
+        yaw = MathHelper.wrapDegrees(yaw);
 
         switch (mirror)
         {
@@ -1143,7 +1141,7 @@ public class PositionUtils
 
     public static class BlockPosComparator implements Comparator<BlockPos>
     {
-        private BlockPos posReference = BlockPos.ZERO;
+        private BlockPos posReference = BlockPos.ORIGIN;
         private boolean closestFirst;
 
         public void setClosestFirst(boolean closestFirst)
@@ -1159,8 +1157,8 @@ public class PositionUtils
         @Override
         public int compare(BlockPos pos1, BlockPos pos2)
         {
-            double dist1 = pos1.distSqr(this.posReference);
-            double dist2 = pos2.distSqr(this.posReference);
+            double dist1 = pos1.getSquaredDistance(this.posReference);
+            double dist2 = pos2.getSquaredDistance(this.posReference);
 
             if (dist1 == dist2)
             {
@@ -1173,7 +1171,7 @@ public class PositionUtils
 
     public static class ChunkPosComparator implements Comparator<ChunkPos>
     {
-        private BlockPos posReference = BlockPos.ZERO;
+        private BlockPos posReference = BlockPos.ORIGIN;
         private boolean closestFirst;
 
         public ChunkPosComparator setClosestFirst(boolean closestFirst)

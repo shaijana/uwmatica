@@ -12,13 +12,13 @@ import fi.dy.masa.litematica.scheduler.TaskScheduler;
 @Mixin(MinecraftServer.class)
 public abstract class MixinMinecraftServer
 {
-    @Shadow public abstract boolean isDedicatedServer();
-    @Shadow public abstract boolean shouldInformAdmins();
+    @Shadow public abstract boolean isDedicated();
+    @Shadow public abstract boolean shouldBroadcastConsoleToOps();
 
-    @Inject(method = "logTickMethodTime", at = @At("HEAD"))
+    @Inject(method = "pushTickLog", at = @At("HEAD"))
     private void litematica_onServerTickOmegaHackFixBecauseLunarBreaksMinecraftEvenThoughABooleanSupplierIsAlwaysSupposedToBeThereEvenAccordingToMojangMappingsButIsNotWhenYouAreRunningLunarAndTheyCannotExplainWhyThisWouldBreakButItDoesEvenThoughNothingHasChangedInMinecraftUnlessYouArePlayingWithLunar(long tickStartTime, CallbackInfo ci)
     {
-        if (!this.isDedicatedServer() && this.shouldInformAdmins())
+        if (!this.isDedicated() && this.shouldBroadcastConsoleToOps())
         {
             TaskScheduler.getInstanceServer().runTasks();
         }

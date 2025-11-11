@@ -1,10 +1,10 @@
 package fi.dy.masa.litematica.interfaces;
 
 import javax.annotation.Nullable;
-import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.block.Mirror;
-import net.minecraft.world.level.block.Rotation;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.util.BlockMirror;
+import net.minecraft.util.BlockRotation;
+import net.minecraft.util.math.BlockPos;
 import com.google.gson.JsonObject;
 import fi.dy.masa.litematica.schematic.LitematicaSchematic;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
@@ -56,7 +56,7 @@ public interface ISchematicPlacementEventListener
      * @param enabled ()
      * @param enableRender ()
      */
-    default void onPlacementCreateFromJson(SchematicPlacement placement, LitematicaSchematic schematic, BlockPos origin, String name, Rotation rotation, Mirror mirror, boolean enabled, boolean enableRender, JsonObject obj) {}
+    default void onPlacementCreateFromJson(SchematicPlacement placement, LitematicaSchematic schematic, BlockPos origin, String name, BlockRotation rotation, BlockMirror mirror, boolean enabled, boolean enableRender, JsonObject obj) {}
 
     /**
      * Event callback when a Schematic Placement is created from loading it via an NbtCompound (Litematic Transmit).
@@ -67,7 +67,7 @@ public interface ISchematicPlacementEventListener
      * @param enabled ()
      * @param enableRender ()
      */
-    default void onPlacementCreateFromNbt(SchematicPlacement placement, LitematicaSchematic schematic, BlockPos origin, String name, Rotation rotation, Mirror mirror, boolean enabled, boolean enableRender, CompoundTag nbt) {}
+    default void onPlacementCreateFromNbt(SchematicPlacement placement, LitematicaSchematic schematic, BlockPos origin, String name, BlockRotation rotation, BlockMirror mirror, boolean enabled, boolean enableRender, NbtCompound nbt) {}
 
     /**
      * Event callback when a Schematic Placement is being saved to JSON.
@@ -81,7 +81,7 @@ public interface ISchematicPlacementEventListener
      * @param placement ()
      * @param nbt ()
      */
-    default void onSavePlacementToNbt(SchematicPlacement placement, CompoundTag nbt) {}
+    default void onSavePlacementToNbt(SchematicPlacement placement, NbtCompound nbt) {}
 
     /**
      * Event callback when a Schematic Placement is created from loading it via the JSON Config.
@@ -91,7 +91,7 @@ public interface ISchematicPlacementEventListener
      * @param enabled ()
      * @param enableRender ()
      */
-    default void onSubRegionCreateFromJson(SubRegionPlacement subRegion, BlockPos origin, String name, Rotation rotation, Mirror mirror, boolean enabled, boolean enableRender, JsonObject obj) {}
+    default void onSubRegionCreateFromJson(SubRegionPlacement subRegion, BlockPos origin, String name, BlockRotation rotation, BlockMirror mirror, boolean enabled, boolean enableRender, JsonObject obj) {}
 
     /**
      * Event callback when a Schematic Placement is being saved to JSON.
@@ -140,14 +140,14 @@ public interface ISchematicPlacementEventListener
      * @param placement ()
      * @param mirror ()
      */
-    default void onSetMirror(SchematicPlacement placement, Mirror mirror) {}
+    default void onSetMirror(SchematicPlacement placement, BlockMirror mirror) {}
 
     /**
      * Event callback when a Schematic Placement's Block Rotation is changed.
      * @param placement ()
      * @param rotation ()
      */
-    default void onSetRotation(SchematicPlacement placement, Rotation rotation) {}
+    default void onSetRotation(SchematicPlacement placement, BlockRotation rotation) {}
 
     /**
      * Event callback when a Schematic Placement is reset.
@@ -181,14 +181,14 @@ public interface ISchematicPlacementEventListener
      * @param subRegion ()
      * @param mirror ()
      */
-    default void onSetSubRegionMirror(SubRegionPlacement subRegion, Mirror mirror) {}
+    default void onSetSubRegionMirror(SubRegionPlacement subRegion, BlockMirror mirror) {}
 
     /**
      * Event callback when a Schematic Placement's Block Rotation is changed.
      * @param subRegion ()
      * @param rotation ()
      */
-    default void onSetSubRegionRotation(SubRegionPlacement subRegion, Rotation rotation) {}
+    default void onSetSubRegionRotation(SubRegionPlacement subRegion, BlockRotation rotation) {}
 
     /**
      * Event callback when a Schematic Placement is reset.

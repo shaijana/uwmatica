@@ -2,9 +2,9 @@ package fi.dy.masa.litematica.interfaces;
 
 import java.util.List;
 import javax.annotation.Nonnull;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.block.Mirror;
-import net.minecraft.world.level.block.Rotation;
+import net.minecraft.util.BlockMirror;
+import net.minecraft.util.BlockRotation;
+import net.minecraft.util.math.BlockPos;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacementEventFlag;
 import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement;
@@ -23,9 +23,9 @@ public interface ISchematicPlacementEventManager
 
     void invokeSetSubRegionOrigin(@Nonnull ISchematicPlacementEventListener listener, @Nonnull SubRegionPlacement subRegion, BlockPos pos);
 
-    void invokeSetSubRegionMirror(@Nonnull ISchematicPlacementEventListener listener, @Nonnull SubRegionPlacement subRegion, Mirror mirror);
+    void invokeSetSubRegionMirror(@Nonnull ISchematicPlacementEventListener listener, @Nonnull SubRegionPlacement subRegion, BlockMirror mirror);
 
-    void invokeSetSubRegionRotation(@Nonnull ISchematicPlacementEventListener listener, @Nonnull SubRegionPlacement subRegion, Rotation rot);
+    void invokeSetSubRegionRotation(@Nonnull ISchematicPlacementEventListener listener, @Nonnull SubRegionPlacement subRegion, BlockRotation rot);
 
     void invokeSubRegionModified(@Nonnull ISchematicPlacementEventListener listener, @Nonnull SchematicPlacement placement, @Nonnull String subRegionName);
 

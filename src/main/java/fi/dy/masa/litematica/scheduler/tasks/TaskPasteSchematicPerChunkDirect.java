@@ -3,10 +3,10 @@ package fi.dy.masa.litematica.scheduler.tasks;
 import java.util.ArrayList;
 import java.util.Collection;
 import com.google.common.collect.ArrayListMultimap;
-import net.minecraft.Util;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.profiling.ProfilerFiller;
-import net.minecraft.world.level.ChunkPos;
+import net.minecraft.util.Util;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.profiler.Profiler;
 import fi.dy.masa.litematica.render.infohud.InfoHud;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
 import fi.dy.masa.litematica.util.SchematicPlacingUtils;
@@ -27,8 +27,8 @@ public class TaskPasteSchematicPerChunkDirect extends TaskPasteSchematicPerChunk
     public boolean canExecute()
     {
         return super.canExecute() &&
-               this.mc.hasSingleplayerServer() &&
-               this.world != null && this.world.isClientSide() == false;
+               this.mc.isIntegratedServerRunning() &&
+               this.world != null && this.world.isClient() == false;
     }
 
     @Override
@@ -40,7 +40,7 @@ public class TaskPasteSchematicPerChunkDirect extends TaskPasteSchematicPerChunk
     }
 
     @Override
-    public boolean execute(ProfilerFiller profiler)
+    public boolean execute(Profiler profiler)
     {
         // Nothing to do
         if (this.ignoreBlocks && this.ignoreEntities)
@@ -50,16 +50,16 @@ public class TaskPasteSchematicPerChunkDirect extends TaskPasteSchematicPerChunk
 
         profiler.push("per_chunk_paste");
 
-        MinecraftServer server = this.mc.getSingleplayerServer();
+        MinecraftServer server = this.mc.getServer();
 		if (server == null) return true;
-        final long vanillaTickTime = server.getTickTimesNanos()[server.getTickCount() % 100];
-        final long timeStart = Util.getNanos();
+        final long vanillaTickTime = server.getTickTimes()[server.getTicks() % 100];
+        final long timeStart = Util.getMeasuringTimeNano();
 
         this.sortChunkList();
 
         for (int chunkIndex = 0; chunkIndex < this.pendingChunks.size(); ++chunkIndex)
         {
-            long currentTime = Util.getNanos();
+            long currentTime = Util.getMeasuringTimeNano();
             long elapsedTickTime = vanillaTickTime + (currentTime - timeStart);
 
             if (elapsedTickTime >= 60000000L)

@@ -1,10 +1,10 @@
 package fi.dy.masa.litematica.scheduler.tasks;
 
 import java.util.List;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.block.BlockState;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.Direction;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import fi.dy.masa.malilib.util.IntBoundingBox;
 import fi.dy.masa.malilib.util.LayerRange;
@@ -57,7 +57,7 @@ public abstract class TaskCountBlocksBase extends TaskProcessChunkBase
     {
         LayerRange range = this.layerRange;
         Direction.Axis axis = range.getAxis();
-        BlockPos.MutableBlockPos posMutable = new BlockPos.MutableBlockPos();
+        BlockPos.Mutable posMutable = new BlockPos.Mutable();
 
         for (IntBoundingBox bb : this.getBoxesInChunk(pos))
         {

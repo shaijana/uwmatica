@@ -7,7 +7,7 @@ import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
-import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.network.ClientPlayerEntity;
 import fi.dy.masa.malilib.util.LayerRange;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.data.DataManager;
@@ -33,7 +33,7 @@ public class TaskPasteSchematicSetblockToMcfunction extends TaskPasteSchematicPe
     }
 
     @Override
-    protected void sendCommand(String command, LocalPlayer player)
+    protected void sendCommand(String command, ClientPlayerEntity player)
     {
         if (this.writer == null || this.commandsInCurrentFile > this.maxCommandsPerFile)
         {

@@ -2,11 +2,11 @@ package fi.dy.masa.litematica.schematic.placement;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import net.minecraft.core.BlockPos;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.world.level.block.Mirror;
-import net.minecraft.world.level.block.Rotation;
+import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.codec.PacketCodecs;
+import net.minecraft.util.BlockMirror;
+import net.minecraft.util.BlockRotation;
+import net.minecraft.util.math.BlockPos;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
@@ -27,52 +27,52 @@ public class SubRegionPlacement
                     PrimitiveCodec.STRING.fieldOf("Name").forGetter(get -> get.name),
                     BlockPos.CODEC.fieldOf("DefaultPos").forGetter(get -> get.defaultPos),
                     BlockPos.CODEC.fieldOf("Pos").forGetter(get -> get.pos),
-                    Rotation.CODEC.fieldOf("Rotation").forGetter(get -> get.rotation),
-                    Mirror.CODEC.fieldOf("Mirror").forGetter(get -> get.mirror),
+                    BlockRotation.CODEC.fieldOf("Rotation").forGetter(get -> get.rotation),
+                    BlockMirror.CODEC.fieldOf("Mirror").forGetter(get -> get.mirror),
                     PrimitiveCodec.BOOL.fieldOf("Enabled").forGetter(get -> get.enabled),
                     PrimitiveCodec.BOOL.fieldOf("RenderingEnabled").forGetter(get -> get.renderingEnabled),
                     PrimitiveCodec.BOOL.fieldOf("IgnoreEntities").forGetter(get -> get.ignoreEntities),
                     PrimitiveCodec.INT.fieldOf("CoordinateLockMask").forGetter(get -> get.coordinateLockMask)
             ).apply(inst, SubRegionPlacement::new)
     );
-    public static final StreamCodec<ByteBuf, Mirror> BLOCK_MIRROR_PACKET_CODEC = ByteBufCodecs.STRING_UTF8.map(Mirror::valueOf, Mirror::getSerializedName);
-    public static final StreamCodec<ByteBuf, SubRegionPlacement> PACKET_CODEC = new StreamCodec<>()
+    public static final PacketCodec<ByteBuf, BlockMirror> BLOCK_MIRROR_PACKET_CODEC = PacketCodecs.STRING.xmap(BlockMirror::valueOf, BlockMirror::asString);
+    public static final PacketCodec<ByteBuf, SubRegionPlacement> PACKET_CODEC = new PacketCodec<>()
     {
         @Override
         public void encode(@Nonnull ByteBuf buf, SubRegionPlacement value)
         {
-            ByteBufCodecs.STRING_UTF8.encode(buf, value.name);
-            BlockPos.STREAM_CODEC.encode(buf, value.defaultPos);
-            BlockPos.STREAM_CODEC.encode(buf, value.pos);
-            Rotation.STREAM_CODEC.encode(buf, value.rotation);
+            PacketCodecs.STRING.encode(buf, value.name);
+            BlockPos.PACKET_CODEC.encode(buf, value.defaultPos);
+            BlockPos.PACKET_CODEC.encode(buf, value.pos);
+            BlockRotation.PACKET_CODEC.encode(buf, value.rotation);
             BLOCK_MIRROR_PACKET_CODEC.encode(buf, value.mirror);
-            ByteBufCodecs.BOOL.encode(buf, value.enabled);
-            ByteBufCodecs.BOOL.encode(buf, value.renderingEnabled);
-            ByteBufCodecs.BOOL.encode(buf, value.ignoreEntities);
-            ByteBufCodecs.INT.encode(buf, value.coordinateLockMask);
+            PacketCodecs.BOOLEAN.encode(buf, value.enabled);
+            PacketCodecs.BOOLEAN.encode(buf, value.renderingEnabled);
+            PacketCodecs.BOOLEAN.encode(buf, value.ignoreEntities);
+            PacketCodecs.INTEGER.encode(buf, value.coordinateLockMask);
         }
 
         @Override
         public @Nonnull SubRegionPlacement decode(@Nonnull ByteBuf buf)
         {
             return new SubRegionPlacement(
-                ByteBufCodecs.STRING_UTF8.decode(buf),
-                BlockPos.STREAM_CODEC.decode(buf),
-                BlockPos.STREAM_CODEC.decode(buf),
-                Rotation.STREAM_CODEC.decode(buf),
+                PacketCodecs.STRING.decode(buf),
+                BlockPos.PACKET_CODEC.decode(buf),
+                BlockPos.PACKET_CODEC.decode(buf),
+                BlockRotation.PACKET_CODEC.decode(buf),
                 BLOCK_MIRROR_PACKET_CODEC.decode(buf),
-                ByteBufCodecs.BOOL.decode(buf),
-                ByteBufCodecs.BOOL.decode(buf),
-                ByteBufCodecs.BOOL.decode(buf),
-                ByteBufCodecs.INT.decode(buf)
+                PacketCodecs.BOOLEAN.decode(buf),
+                PacketCodecs.BOOLEAN.decode(buf),
+                PacketCodecs.BOOLEAN.decode(buf),
+                PacketCodecs.INTEGER.decode(buf)
             );
         }
     };
     private final String name;
     private final BlockPos defaultPos;
     private BlockPos pos;
-    private Rotation rotation = Rotation.NONE;
-    private Mirror mirror = Mirror.NONE;
+    private BlockRotation rotation = BlockRotation.NONE;
+    private BlockMirror mirror = BlockMirror.NONE;
     private boolean enabled = true;
     private boolean renderingEnabled = true;
     private boolean ignoreEntities;
@@ -86,7 +86,7 @@ public class SubRegionPlacement
         SchematicPlacementEventHandler.getInstance().onSubRegionInit(this);
     }
 
-    private SubRegionPlacement(String name, BlockPos defPos, BlockPos pos, Rotation rot, Mirror mirror, Boolean enabled, Boolean renderingEnabled, Boolean ignoreEntities, Integer coordinateLockMask)
+    private SubRegionPlacement(String name, BlockPos defPos, BlockPos pos, BlockRotation rot, BlockMirror mirror, Boolean enabled, Boolean renderingEnabled, Boolean ignoreEntities, Integer coordinateLockMask)
     {
         this(defPos, name);
         this.pos = pos;
@@ -164,12 +164,12 @@ public class SubRegionPlacement
         return this.pos;
     }
 
-    public Rotation getRotation()
+    public BlockRotation getRotation()
     {
         return this.rotation;
     }
 
-    public Mirror getMirror()
+    public BlockMirror getMirror()
     {
         return this.mirror;
     }
@@ -207,13 +207,13 @@ public class SubRegionPlacement
         SchematicPlacementEventHandler.getInstance().onSetSubRegionOrigin(this, this.pos);
     }
 
-    void setRotation(Rotation rotation)
+    void setRotation(BlockRotation rotation)
     {
         this.rotation = rotation;
         SchematicPlacementEventHandler.getInstance().onSetSubRegionRotation(this, rotation);
     }
 
-    void setMirror(Mirror mirror)
+    void setMirror(BlockMirror mirror)
     {
         this.mirror = mirror;
         SchematicPlacementEventHandler.getInstance().onSetSubRegionMirror(this, mirror);
@@ -223,8 +223,8 @@ public class SubRegionPlacement
     {
         SchematicPlacementEventHandler.getInstance().onSubRegionReset(this);
         this.pos = this.defaultPos;
-        this.rotation = Rotation.NONE;
-        this.mirror = Mirror.NONE;
+        this.rotation = BlockRotation.NONE;
+        this.mirror = BlockMirror.NONE;
         this.enabled = true;
         this.ignoreEntities = false;
     }
@@ -238,8 +238,8 @@ public class SubRegionPlacement
     {
         return this.isEnabled() == false ||
                this.ignoreEntities() ||
-               this.getMirror() != Mirror.NONE ||
-               this.getRotation() != Rotation.NONE ||
+               this.getMirror() != BlockMirror.NONE ||
+               this.getRotation() != BlockRotation.NONE ||
                this.getPos().equals(originalPosition) == false;
     }
 
@@ -291,8 +291,8 @@ public class SubRegionPlacement
 
             try
             {
-                Rotation rotation = Rotation.valueOf(obj.get("rotation").getAsString());
-                Mirror mirror = Mirror.valueOf(obj.get("mirror").getAsString());
+                BlockRotation rotation = BlockRotation.valueOf(obj.get("rotation").getAsString());
+                BlockMirror mirror = BlockMirror.valueOf(obj.get("mirror").getAsString());
 
                 placement.setRotation(rotation);
                 placement.setMirror(mirror);

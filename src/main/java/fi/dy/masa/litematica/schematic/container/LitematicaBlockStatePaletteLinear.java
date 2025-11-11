@@ -4,16 +4,16 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import net.minecraft.core.HolderGetter;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.NbtUtils;
-import net.minecraft.nbt.Tag;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtHelper;
+import net.minecraft.nbt.NbtList;
+import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.codec.PacketCodecs;
+import net.minecraft.registry.RegistryEntryLookup;
+import net.minecraft.registry.RegistryKeys;
 import io.netty.buffer.ByteBuf;
 
 import com.mojang.serialization.Codec;
@@ -29,21 +29,21 @@ public class LitematicaBlockStatePaletteLinear implements ILitematicaBlockStateP
                     Codec.list(BlockState.CODEC).fieldOf("StatePalette").forGetter(LitematicaBlockStatePaletteLinear::fromMapping)
             ).apply(inst, LitematicaBlockStatePaletteLinear::new)
     );
-    public static final StreamCodec<ByteBuf, LitematicaBlockStatePaletteLinear> PACKET_CODEC = new StreamCodec<>()
+    public static final PacketCodec<ByteBuf, LitematicaBlockStatePaletteLinear> PACKET_CODEC = new PacketCodec<>()
     {
         @Override
         public void encode(@Nonnull ByteBuf buf, LitematicaBlockStatePaletteLinear value)
         {
-            ByteBufCodecs.INT.encode(buf, value.bits);
-            ByteBufCodecs.TRUSTED_TAG.encode(buf, value.writeToNBT());
+            PacketCodecs.INTEGER.encode(buf, value.bits);
+            PacketCodecs.UNLIMITED_NBT_ELEMENT.encode(buf, value.writeToNBT());
         }
 
         @Override
         public @Nonnull LitematicaBlockStatePaletteLinear decode(@Nonnull ByteBuf buf)
         {
-            Integer bitsIn = ByteBufCodecs.INT.decode(buf);
-            Tag nbt = ByteBufCodecs.TRUSTED_TAG.decode(buf);
-            return new LitematicaBlockStatePaletteLinear(bitsIn, (ListTag) nbt);
+            Integer bitsIn = PacketCodecs.INTEGER.decode(buf);
+            NbtElement nbt = PacketCodecs.UNLIMITED_NBT_ELEMENT.decode(buf);
+            return new LitematicaBlockStatePaletteLinear(bitsIn, (NbtList) nbt);
         }
     };
     private final BlockState[] states;
@@ -66,7 +66,7 @@ public class LitematicaBlockStatePaletteLinear implements ILitematicaBlockStateP
         this.setMapping(list);
     }
 
-    private LitematicaBlockStatePaletteLinear(int bitsIn, ListTag list)
+    private LitematicaBlockStatePaletteLinear(int bitsIn, NbtList list)
     {
         this.bits = bitsIn;
         this.resizeHandler = null;
@@ -146,16 +146,16 @@ public class LitematicaBlockStatePaletteLinear implements ILitematicaBlockStateP
     }
 
     @Override
-    public void readFromNBT(ListTag tagList)
+    public void readFromNBT(NbtList tagList)
     {
         //RegistryEntryLookup<Block> lookup = Registries.BLOCK.getReadOnlyWrapper();
-        HolderGetter<Block> lookup = SchematicWorldHandler.INSTANCE.getRegistryManager().lookupOrThrow(Registries.BLOCK);
+        RegistryEntryLookup<Block> lookup = SchematicWorldHandler.INSTANCE.getRegistryManager().getOrThrow(RegistryKeys.BLOCK);
         final int size = tagList.size();
 
         for (int i = 0; i < size; ++i)
         {
-            CompoundTag tag = tagList.getCompoundOrEmpty(i);
-            BlockState state = NbtUtils.readBlockState(lookup, tag);
+            NbtCompound tag = tagList.getCompoundOrEmpty(i);
+            BlockState state = NbtHelper.toBlockState(lookup, tag);
 
             if (i > 0 || state != LitematicaBlockStateContainer.AIR_BLOCK_STATE)
             {
@@ -165,9 +165,9 @@ public class LitematicaBlockStatePaletteLinear implements ILitematicaBlockStateP
     }
 
     @Override
-    public ListTag writeToNBT()
+    public NbtList writeToNBT()
     {
-        ListTag tagList = new ListTag();
+        NbtList tagList = new NbtList();
 
         for (int id = 0; id < this.currentSize; ++id)
         {
@@ -178,7 +178,7 @@ public class LitematicaBlockStatePaletteLinear implements ILitematicaBlockStateP
                 state = LitematicaBlockStateContainer.AIR_BLOCK_STATE;
             }
 
-            CompoundTag tag = NbtUtils.writeBlockState(state);
+            NbtCompound tag = NbtHelper.fromBlockState(state);
             tagList.add(tag);
         }
 

@@ -2,8 +2,8 @@ package fi.dy.masa.litematica.gui.widgets;
 
 import java.nio.file.Path;
 import javax.annotation.Nullable;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.core.BlockPos;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.util.math.BlockPos;
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.interfaces.ISelectionListener;
 import fi.dy.masa.malilib.gui.widgets.WidgetFileBrowserBase;
@@ -69,7 +69,7 @@ public class WidgetSchematicProjectBrowser extends WidgetFileBrowserBase impleme
     }
 
     @Override
-    protected void drawAdditionalContents(GuiGraphics drawContext, int mouseX, int mouseY)
+    protected void drawAdditionalContents(DrawContext drawContext, int mouseX, int mouseY)
     {
         int x = this.posX + this.totalWidth - this.infoWidth + 4;
         int y = this.posY + 4;

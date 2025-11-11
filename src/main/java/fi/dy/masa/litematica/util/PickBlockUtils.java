@@ -1,15 +1,15 @@
 package fi.dy.masa.litematica.util;
 
 import javax.annotation.Nullable;
-import net.minecraft.client.Minecraft;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.Hand;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import org.jetbrains.annotations.ApiStatus;
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.registry.Registry;
@@ -26,17 +26,17 @@ public class PickBlockUtils
 {
 	// FIXME DO NOT USE
     @Nullable
-    public static InteractionHand doPickBlockForStack(ItemStack stack)
+    public static Hand doPickBlockForStack(ItemStack stack)
     {
-        Minecraft mc = Minecraft.getInstance();
-        Player player = mc.player;
+        MinecraftClient mc = MinecraftClient.getInstance();
+        PlayerEntity player = mc.player;
         if (player == null)
         {
             return null;
         }
 //        boolean ignoreNbt = Configs.Generic.PICK_BLOCK_IGNORE_NBT.getBooleanValue();
         boolean ignoreNbt = false;
-        InteractionHand hand = EntityUtils.getUsedHandForItem(player, stack, ignoreNbt);
+        Hand hand = EntityUtils.getUsedHandForItem(player, stack, ignoreNbt);
 
         if (stack.isEmpty() == false && hand == null)
         {
@@ -58,10 +58,10 @@ public class PickBlockUtils
 
     // FIXME DO NOT USE
 	@Nullable
-    public static InteractionHand pickBlockLast()
+    public static Hand pickBlockLast()
     {
-        Minecraft mc = Minecraft.getInstance();
-        Level world = mc.level;
+        MinecraftClient mc = MinecraftClient.getInstance();
+        World world = mc.world;
         BlockPos pos = Registry.BLOCK_PLACEMENT_POSITION_HANDLER.getCurrentPlacementPosition();
 
         if (mc.player == null)
@@ -72,7 +72,7 @@ public class PickBlockUtils
         // No overrides by other mods
         if (pos == null)
         {
-            double reach = mc.player.blockInteractionRange();
+            double reach = mc.player.getBlockInteractionRange();
             Entity entity = mc.getCameraEntity();
 
 			if (entity != null)
@@ -91,17 +91,17 @@ public class PickBlockUtils
 
 	// FIXME DO NOT USE
     @Nullable
-    private static InteractionHand doPickBlockForPosition(BlockPos pos)
+    private static Hand doPickBlockForPosition(BlockPos pos)
     {
-        Minecraft mc = Minecraft.getInstance();
-        Player player = mc.player;
+        MinecraftClient mc = MinecraftClient.getInstance();
+        PlayerEntity player = mc.player;
         if (player == null)
         {
             return null;
         }
 
-        Level world = SchematicWorldHandler.getSchematicWorld();
-        Level clientWorld = mc.level;
+        World world = SchematicWorldHandler.getSchematicWorld();
+        World clientWorld = mc.world;
         if (world == null || clientWorld == null)
         {
             return null;
@@ -113,7 +113,7 @@ public class PickBlockUtils
 
         if (stack.isEmpty() == false)
         {
-            InteractionHand hand = EntityUtils.getUsedHandForItem(player, stack, ignoreNbt);
+            Hand hand = EntityUtils.getUsedHandForItem(player, stack, ignoreNbt);
 
             if (hand == null)
             {
@@ -124,12 +124,12 @@ public class PickBlockUtils
                     // The creative mode pick block with NBT only works correctly
                     // if the server world doesn't have a TileEntity in that position.
                     // Otherwise it would try to write whatever that TE is into the picked ItemStack.
-                    if (te != null && mc.level.isEmptyBlock(pos))
+                    if (te != null && mc.world.isAir(pos))
                     {
                         stack = stack.copy();
                         //ItemUtils.storeBlockEntityInStack(stack, te);
                         //te.setStackNbt(stack, clientWorld.getRegistryManager());
-                        BlockUtils.setStackNbt(stack, te, clientWorld.registryAccess());
+                        BlockUtils.setStackNbt(stack, te, clientWorld.getRegistryManager());
                     }
                 }
 

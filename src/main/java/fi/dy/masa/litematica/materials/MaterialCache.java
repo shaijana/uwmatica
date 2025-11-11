@@ -4,18 +4,17 @@ import java.util.IdentityHashMap;
 import javax.annotation.Nullable;
 import com.google.common.collect.ImmutableList;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Vec3i;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.item.alchemy.PotionContents;
-import net.minecraft.world.item.alchemy.Potions;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.*;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.BedPart;
-import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
-import net.minecraft.world.level.block.state.properties.SlabType;
+import net.minecraft.block.*;
+import net.minecraft.block.enums.BedPart;
+import net.minecraft.block.enums.DoubleBlockHalf;
+import net.minecraft.block.enums.SlabType;
+import net.minecraft.component.type.PotionContentsComponent;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.potion.Potions;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3i;
+import net.minecraft.world.World;
 
 import fi.dy.masa.litematica.mixin.block.IMixinAbstractBlock;
 import fi.dy.masa.litematica.util.WorldUtils;
@@ -55,7 +54,7 @@ public class MaterialCache
         return this.getRequiredBuildItemForState(state, this.tempWorld, this.checkPos);
     }
 
-    public ItemStack getRequiredBuildItemForState(BlockState state, Level world, BlockPos pos)
+    public ItemStack getRequiredBuildItemForState(BlockState state, World world, BlockPos pos)
     {
         ItemStack stack = this.buildItemsForStates.get(state);
 
@@ -79,13 +78,13 @@ public class MaterialCache
         return stack;
     }
 
-    protected ItemStack getItemForStateFromWorld(BlockState state, Level world, BlockPos pos, boolean isBuildItem)
+    protected ItemStack getItemForStateFromWorld(BlockState state, World world, BlockPos pos, boolean isBuildItem)
     {
         ItemStack stack = isBuildItem ? this.getStateToItemOverride(state) : null;
 
         if (stack == null)
         {
-            world.setBlock(pos, state, 0x14);
+            world.setBlockState(pos, state, 0x14);
             stack = ((IMixinAbstractBlock) state.getBlock()).litematica_getPickStack(world, pos, state, false);
         }
 
@@ -142,7 +141,7 @@ public class MaterialCache
         return this.getItems(state, this.tempWorld, this.checkPos);
     }
 
-    public ImmutableList<ItemStack> getItems(BlockState state, Level world, BlockPos pos)
+    public ImmutableList<ItemStack> getItems(BlockState state, World world, BlockPos pos)
     {
         Block block = state.getBlock();
 
@@ -170,12 +169,12 @@ public class MaterialCache
             }
             else if (block == Blocks.WATER_CAULDRON)
             {
-                final int level = state.getValue(LayeredCauldronBlock.LEVEL);
+                final int level = state.get(LeveledCauldronBlock.LEVEL);
 
                 return switch (level)
                 {
-                    case 1 -> ImmutableList.of(new ItemStack(Blocks.CAULDRON), PotionContents.createItemStack(Items.POTION, Potions.WATER));
-                    case 2 -> ImmutableList.of(new ItemStack(Blocks.CAULDRON), PotionContents.createItemStack(Items.POTION, Potions.WATER), PotionContents.createItemStack(Items.POTION, Potions.WATER));
+                    case 1 -> ImmutableList.of(new ItemStack(Blocks.CAULDRON), PotionContentsComponent.createStack(Items.POTION, Potions.WATER));
+                    case 2 -> ImmutableList.of(new ItemStack(Blocks.CAULDRON), PotionContentsComponent.createStack(Items.POTION, Potions.WATER), PotionContentsComponent.createStack(Items.POTION, Potions.WATER));
                     case 3 -> ImmutableList.of(new ItemStack(Blocks.CAULDRON), new ItemStack(Items.WATER_BUCKET));
                     default -> ImmutableList.of(new ItemStack(Blocks.CAULDRON));
                 };
@@ -212,7 +211,7 @@ public class MaterialCache
         }
         else if (block == Blocks.LAVA)
         {
-            if (state.getValue(LiquidBlock.LEVEL) == 0)
+            if (state.get(FluidBlock.LEVEL) == 0)
             {
                 return new ItemStack(Items.LAVA_BUCKET);
             }
@@ -223,7 +222,7 @@ public class MaterialCache
         }
         else if (block == Blocks.WATER)
         {
-            if (state.getValue(LiquidBlock.LEVEL) == 0)
+            if (state.get(FluidBlock.LEVEL) == 0)
             {
                 return new ItemStack(Items.WATER_BUCKET);
             }
@@ -232,15 +231,15 @@ public class MaterialCache
                 return ItemStack.EMPTY;
             }
         }
-        else if (block instanceof DoorBlock && state.getValue(DoorBlock.HALF) == DoubleBlockHalf.UPPER)
+        else if (block instanceof DoorBlock && state.get(DoorBlock.HALF) == DoubleBlockHalf.UPPER)
         {
             return ItemStack.EMPTY;
         }
-        else if (block instanceof BedBlock && state.getValue(BedBlock.PART) == BedPart.HEAD)
+        else if (block instanceof BedBlock && state.get(BedBlock.PART) == BedPart.HEAD)
         {
             return ItemStack.EMPTY;
         }
-        else if (block instanceof DoublePlantBlock && state.getValue(DoublePlantBlock.HALF) == DoubleBlockHalf.UPPER)
+        else if (block instanceof TallPlantBlock && state.get(TallPlantBlock.HALF) == DoubleBlockHalf.UPPER)
         {
             return ItemStack.EMPTY;
         }
@@ -252,29 +251,29 @@ public class MaterialCache
     {
         Block block = state.getBlock();
 
-        if (block instanceof SlabBlock && state.getValue(SlabBlock.TYPE) == SlabType.DOUBLE)
+        if (block instanceof SlabBlock && state.get(SlabBlock.TYPE) == SlabType.DOUBLE)
         {
             stack.setCount(2);
         }
         else if (block == Blocks.SNOW)
         {
-            stack.setCount(state.getValue(SnowLayerBlock.LAYERS));
+            stack.setCount(state.get(SnowBlock.LAYERS));
         }
         else if (block instanceof TurtleEggBlock)
         {
-            stack.setCount(state.getValue(TurtleEggBlock.EGGS));
+            stack.setCount(state.get(TurtleEggBlock.EGGS));
         }
         else if (block instanceof SeaPickleBlock)
         {
-            stack.setCount(state.getValue(SeaPickleBlock.PICKLES));
+            stack.setCount(state.get(SeaPickleBlock.PICKLES));
         }
         else if (block instanceof CandleBlock)
         {
-            stack.setCount(state.getValue(CandleBlock.CANDLES));
+            stack.setCount(state.get(CandleBlock.CANDLES));
         }
-        else if (block instanceof MultifaceSpreadeableBlock)
+        else if (block instanceof MultifaceGrowthBlock)
         {
-            stack.setCount(MultifaceSpreadeableBlock.availableFaces(state).size());
+            stack.setCount(MultifaceGrowthBlock.collectDirections(state).size());
         }
     }
 }

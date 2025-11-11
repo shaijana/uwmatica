@@ -5,10 +5,10 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.BiConsumer;
-import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.util.profiling.ProfilerFiller;
-import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.Level;
+import net.minecraft.client.world.ClientWorld;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.profiler.Profiler;
+import net.minecraft.world.World;
 import com.google.common.collect.ArrayListMultimap;
 import fi.dy.masa.malilib.util.IntBoundingBox;
 import fi.dy.masa.malilib.util.LayerMode;
@@ -25,18 +25,18 @@ public abstract class TaskProcessChunkBase extends TaskBase
 {
     protected final ArrayListMultimap<ChunkPos, IntBoundingBox> boxesInChunks = ArrayListMultimap.create();
     protected final ArrayList<ChunkPos> pendingChunks = new ArrayList<>();
-    protected final ClientLevel clientWorld;
+    protected final ClientWorld clientWorld;
     protected final WorldSchematic schematicWorld;
-    protected final Level world;
+    protected final World world;
     protected final boolean isClientWorld;
     protected PositionUtils.ChunkPosComparator comparator = new PositionUtils.ChunkPosComparator();
 
     protected TaskProcessChunkBase(String nameOnHud)
     {
-        this.clientWorld = this.mc.level;
+        this.clientWorld = this.mc.world;
         this.world = WorldUtils.getBestWorld(this.mc);
         this.schematicWorld = SchematicWorldHandler.getSchematicWorld();
-        this.isClientWorld = (this.world == this.mc.level);
+        this.isClientWorld = (this.world == this.mc.world);
         this.name = StringUtils.translate(nameOnHud);
         this.comparator.setClosestFirst(true);
 
@@ -44,7 +44,7 @@ public abstract class TaskProcessChunkBase extends TaskBase
     }
 
     @Override
-    public boolean execute(ProfilerFiller profiler)
+    public boolean execute(Profiler profiler)
     {
         return this.executeForAllPendingChunks(profiler);
     }
@@ -76,7 +76,7 @@ public abstract class TaskProcessChunkBase extends TaskBase
         return true;
     }
 
-    protected boolean executeForAllPendingChunks(ProfilerFiller profiler)
+    protected boolean executeForAllPendingChunks(Profiler profiler)
     {
         profiler.push("process_chunks");
 
@@ -229,7 +229,7 @@ public abstract class TaskProcessChunkBase extends TaskBase
         {
             if (this.mc.player != null)
             {
-                this.comparator.setReferencePosition(this.mc.player.blockPosition());
+                this.comparator.setReferencePosition(this.mc.player.getBlockPos());
                 this.pendingChunks.sort(this.comparator);
             }
 

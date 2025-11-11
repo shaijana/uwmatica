@@ -2,13 +2,13 @@ package fi.dy.masa.litematica.network;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtAccounter;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.world.level.ChunkPos;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtSizeTracker;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.packet.CustomPayload;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import io.netty.buffer.Unpooled;
 import fi.dy.masa.malilib.network.IClientPayloadData;
 import fi.dy.masa.litematica.Litematica;
@@ -19,9 +19,9 @@ public class ServuxLitematicaPacket implements IClientPayloadData
     private int transactionId;
     private int entityId;
     private BlockPos pos;
-    private CompoundTag nbt;
+    private NbtCompound nbt;
     private ChunkPos chunkPos;
-    private FriendlyByteBuf buffer;
+    private PacketByteBuf buffer;
     public static final int PROTOCOL_VERSION = 1;
 
     private ServuxLitematicaPacket(Type type)
@@ -29,59 +29,59 @@ public class ServuxLitematicaPacket implements IClientPayloadData
         this.packetType = type;
         this.transactionId = -1;
         this.entityId = -1;
-        this.pos = BlockPos.ZERO;
-        this.chunkPos = ChunkPos.ZERO;
-        this.nbt = new CompoundTag();
+        this.pos = BlockPos.ORIGIN;
+        this.chunkPos = ChunkPos.ORIGIN;
+        this.nbt = new NbtCompound();
         this.clearPacket();
     }
 
-    public static ServuxLitematicaPacket MetadataRequest(@Nullable CompoundTag nbt)
+    public static ServuxLitematicaPacket MetadataRequest(@Nullable NbtCompound nbt)
     {
         var packet = new ServuxLitematicaPacket(Type.PACKET_C2S_METADATA_REQUEST);
         if (nbt != null)
         {
-            packet.nbt.merge(nbt);
+            packet.nbt.copyFrom(nbt);
         }
         return packet;
     }
 
-    public static ServuxLitematicaPacket MetadataResponse(@Nullable CompoundTag nbt)
+    public static ServuxLitematicaPacket MetadataResponse(@Nullable NbtCompound nbt)
     {
         var packet = new ServuxLitematicaPacket(Type.PACKET_S2C_METADATA);
         if (nbt != null)
         {
-            packet.nbt.merge(nbt);
+            packet.nbt.copyFrom(nbt);
         }
         return packet;
     }
 
     // Entity simple response
-    public static ServuxLitematicaPacket SimpleEntityResponse(int entityId, @Nullable CompoundTag nbt)
+    public static ServuxLitematicaPacket SimpleEntityResponse(int entityId, @Nullable NbtCompound nbt)
     {
         var packet = new ServuxLitematicaPacket(Type.PACKET_S2C_ENTITY_NBT_RESPONSE_SIMPLE);
         if (nbt != null)
         {
-            packet.nbt.merge(nbt);
+            packet.nbt.copyFrom(nbt);
         }
         packet.entityId = entityId;
         return packet;
     }
 
-    public static ServuxLitematicaPacket SimpleBlockResponse(BlockPos pos, @Nullable CompoundTag nbt)
+    public static ServuxLitematicaPacket SimpleBlockResponse(BlockPos pos, @Nullable NbtCompound nbt)
     {
         var packet = new ServuxLitematicaPacket(Type.PACKET_S2C_BLOCK_NBT_RESPONSE_SIMPLE);
         if (nbt != null)
         {
-            packet.nbt.merge(nbt);
+            packet.nbt.copyFrom(nbt);
         }
-        packet.pos = pos.immutable();
+        packet.pos = pos.toImmutable();
         return packet;
     }
 
     public static ServuxLitematicaPacket BlockEntityRequest(BlockPos pos)
     {
         var packet = new ServuxLitematicaPacket(Type.PACKET_C2S_BLOCK_ENTITY_REQUEST);
-        packet.pos = pos.immutable();
+        packet.pos = pos.toImmutable();
         return packet;
     }
 
@@ -92,45 +92,45 @@ public class ServuxLitematicaPacket implements IClientPayloadData
         return packet;
     }
 
-    public static ServuxLitematicaPacket BulkNbtRequest(ChunkPos chunkPos, @Nullable CompoundTag nbt)
+    public static ServuxLitematicaPacket BulkNbtRequest(ChunkPos chunkPos, @Nullable NbtCompound nbt)
     {
         var packet = new ServuxLitematicaPacket(Type.PACKET_C2S_BULK_ENTITY_NBT_REQUEST);
         packet.chunkPos = chunkPos;
         if (nbt != null)
         {
-            packet.nbt.merge(nbt);
+            packet.nbt.copyFrom(nbt);
         }
         return packet;
     }
 
     // Nbt Packet, using Packet Splitter
-    public static ServuxLitematicaPacket ResponseS2CStart(@Nonnull CompoundTag nbt)
+    public static ServuxLitematicaPacket ResponseS2CStart(@Nonnull NbtCompound nbt)
     {
         var packet = new ServuxLitematicaPacket(Type.PACKET_S2C_NBT_RESPONSE_START);
-        packet.nbt.merge(nbt);
+        packet.nbt.copyFrom(nbt);
         return packet;
     }
 
-    public static ServuxLitematicaPacket ResponseS2CData(@Nonnull FriendlyByteBuf buffer)
+    public static ServuxLitematicaPacket ResponseS2CData(@Nonnull PacketByteBuf buffer)
     {
         var packet = new ServuxLitematicaPacket(Type.PACKET_S2C_NBT_RESPONSE_DATA);
-        packet.buffer = new FriendlyByteBuf(buffer.copy());
-        packet.nbt = new CompoundTag();
+        packet.buffer = new PacketByteBuf(buffer.copy());
+        packet.nbt = new NbtCompound();
         return packet;
     }
 
-    public static ServuxLitematicaPacket ResponseC2SStart(@Nonnull CompoundTag nbt)
+    public static ServuxLitematicaPacket ResponseC2SStart(@Nonnull NbtCompound nbt)
     {
         var packet = new ServuxLitematicaPacket(Type.PACKET_C2S_NBT_RESPONSE_START);
-        packet.nbt.merge(nbt);
+        packet.nbt.copyFrom(nbt);
         return packet;
     }
 
-    public static ServuxLitematicaPacket ResponseC2SData(@Nonnull FriendlyByteBuf buffer)
+    public static ServuxLitematicaPacket ResponseC2SData(@Nonnull PacketByteBuf buffer)
     {
         var packet = new ServuxLitematicaPacket(Type.PACKET_C2S_NBT_RESPONSE_DATA);
-        packet.buffer = new FriendlyByteBuf(buffer.copy());
-        packet.nbt = new CompoundTag();
+        packet.buffer = new PacketByteBuf(buffer.copy());
+        packet.nbt = new NbtCompound();
         return packet;
     }
 
@@ -139,7 +139,7 @@ public class ServuxLitematicaPacket implements IClientPayloadData
         if (this.buffer != null)
         {
             this.buffer.clear();
-            this.buffer = new FriendlyByteBuf(Unpooled.buffer());
+            this.buffer = new PacketByteBuf(Unpooled.buffer());
         }
     }
 
@@ -162,7 +162,7 @@ public class ServuxLitematicaPacket implements IClientPayloadData
 
         if (this.nbt != null && !this.nbt.isEmpty())
         {
-            total += this.nbt.sizeInBytes();
+            total += this.nbt.getSizeInBytes();
         }
         if (this.buffer != null)
         {
@@ -183,14 +183,14 @@ public class ServuxLitematicaPacket implements IClientPayloadData
 
     public BlockPos getPos() { return this.pos; }
 
-    public CompoundTag getCompound()
+    public NbtCompound getCompound()
     {
         return this.nbt;
     }
 
     public ChunkPos getChunkPos() { return this.chunkPos; }
 
-    public FriendlyByteBuf getBuffer()
+    public PacketByteBuf getBuffer()
     {
         return this.buffer;
     }
@@ -206,7 +206,7 @@ public class ServuxLitematicaPacket implements IClientPayloadData
     }
 
     @Override
-    public void toPacket(FriendlyByteBuf output)
+    public void toPacket(PacketByteBuf output)
     {
         output.writeVarInt(this.packetType.get());
 
@@ -308,7 +308,7 @@ public class ServuxLitematicaPacket implements IClientPayloadData
     }
 
     @Nullable
-    public static ServuxLitematicaPacket fromPacket(FriendlyByteBuf input)
+    public static ServuxLitematicaPacket fromPacket(PacketByteBuf input)
     {
         int i = input.readVarInt();
         Type type = getType(i);
@@ -351,7 +351,7 @@ public class ServuxLitematicaPacket implements IClientPayloadData
             {
                 try
                 {
-                    return ServuxLitematicaPacket.SimpleBlockResponse(input.readBlockPos(), (CompoundTag) input.readNbt(NbtAccounter.unlimitedHeap()));
+                    return ServuxLitematicaPacket.SimpleBlockResponse(input.readBlockPos(), (NbtCompound) input.readNbt(NbtSizeTracker.ofUnlimitedBytes()));
                 }
                 catch (Exception e)
                 {
@@ -362,7 +362,7 @@ public class ServuxLitematicaPacket implements IClientPayloadData
             {
                 try
                 {
-                    return ServuxLitematicaPacket.SimpleEntityResponse(input.readVarInt(), (CompoundTag) input.readNbt(NbtAccounter.unlimitedHeap()));
+                    return ServuxLitematicaPacket.SimpleEntityResponse(input.readVarInt(), (NbtCompound) input.readNbt(NbtSizeTracker.ofUnlimitedBytes()));
                 }
                 catch (Exception e)
                 {
@@ -373,7 +373,7 @@ public class ServuxLitematicaPacket implements IClientPayloadData
             {
                 try
                 {
-                    return ServuxLitematicaPacket.BulkNbtRequest(input.readChunkPos(), (CompoundTag) input.readNbt(NbtAccounter.unlimitedHeap()));
+                    return ServuxLitematicaPacket.BulkNbtRequest(input.readChunkPos(), (NbtCompound) input.readNbt(NbtSizeTracker.ofUnlimitedBytes()));
                 }
                 catch (Exception e)
                 {
@@ -385,7 +385,7 @@ public class ServuxLitematicaPacket implements IClientPayloadData
                 // Read Packet Buffer Slice
                 try
                 {
-                    return ServuxLitematicaPacket.ResponseS2CData(new FriendlyByteBuf(input.readBytes(input.readableBytes())));
+                    return ServuxLitematicaPacket.ResponseS2CData(new PacketByteBuf(input.readBytes(input.readableBytes())));
                 }
                 catch (Exception e)
                 {
@@ -397,7 +397,7 @@ public class ServuxLitematicaPacket implements IClientPayloadData
                 // Read Packet Buffer Slice
                 try
                 {
-                    return ServuxLitematicaPacket.ResponseC2SData(new FriendlyByteBuf(input.readBytes(input.readableBytes())));
+                    return ServuxLitematicaPacket.ResponseC2SData(new PacketByteBuf(input.readBytes(input.readableBytes())));
                 }
                 catch (Exception e)
                 {
@@ -439,12 +439,12 @@ public class ServuxLitematicaPacket implements IClientPayloadData
     {
         if (this.nbt != null && !this.nbt.isEmpty())
         {
-            this.nbt = new CompoundTag();
+            this.nbt = new NbtCompound();
         }
         this.clearPacket();
         this.transactionId = -1;
         this.entityId = -1;
-        this.pos = BlockPos.ZERO;
+        this.pos = BlockPos.ORIGIN;
         this.packetType = null;
     }
 
@@ -488,23 +488,23 @@ public class ServuxLitematicaPacket implements IClientPayloadData
         int get() { return this.type; }
     }
 
-    public record Payload(ServuxLitematicaPacket data) implements CustomPacketPayload
+    public record Payload(ServuxLitematicaPacket data) implements CustomPayload
     {
-        public static final CustomPacketPayload.Type<Payload> ID = new CustomPacketPayload.Type<>(ServuxLitematicaHandler.CHANNEL_ID);
-        public static final StreamCodec<FriendlyByteBuf, Payload> CODEC = CustomPacketPayload.codec(Payload::write, Payload::new);
+        public static final CustomPayload.Id<Payload> ID = new CustomPayload.Id<>(ServuxLitematicaHandler.CHANNEL_ID);
+        public static final PacketCodec<PacketByteBuf, Payload> CODEC = CustomPayload.codecOf(Payload::write, Payload::new);
 
-        public Payload(FriendlyByteBuf input)
+        public Payload(PacketByteBuf input)
         {
             this(fromPacket(input));
         }
 
-        private void write(FriendlyByteBuf output)
+        private void write(PacketByteBuf output)
         {
             data.toPacket(output);
         }
 
         @Override
-        public @Nonnull CustomPacketPayload.Type<? extends CustomPacketPayload> type()
+        public @Nonnull CustomPayload.Id<? extends CustomPayload> getId()
         {
             return ID;
         }

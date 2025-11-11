@@ -4,12 +4,12 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
 import fi.dy.masa.litematica.util.IEntityInvoker;
-import net.minecraft.world.entity.Entity;
+import net.minecraft.entity.Entity;
 
 @Mixin(Entity.class)
 public abstract class MixinEntity implements IEntityInvoker
 {
-    @Shadow protected boolean wasTouchingWater;
+    @Shadow protected boolean touchingWater;
 
     public MixinEntity()
     {
@@ -19,9 +19,9 @@ public abstract class MixinEntity implements IEntityInvoker
     @Override
     public void litematica$toggleTouchingWater(boolean toggle)
     {
-        if (toggle != this.wasTouchingWater)
+        if (toggle != this.touchingWater)
         {
-            this.wasTouchingWater = toggle;
+            this.touchingWater = toggle;
         }
     }
 }

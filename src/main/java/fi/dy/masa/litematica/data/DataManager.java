@@ -7,12 +7,12 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import net.minecraft.core.RegistryAccess;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.registry.DynamicRegistryManager;
+import net.minecraft.registry.Registries;
+import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
@@ -42,8 +42,8 @@ public class DataManager implements IDirectoryCache
     private static final DataManager INSTANCE = new DataManager();
 
     private static final Map<String, Path> LAST_DIRECTORIES = new HashMap<>();
-    private static final ArrayList<ToBooleanFunction<Component>> CHAT_LISTENERS = new ArrayList<>();
-    public static final ResourceLocation CARPET_HELLO = ResourceLocation.fromNamespaceAndPath("carpet", "hello");
+    private static final ArrayList<ToBooleanFunction<Text>> CHAT_LISTENERS = new ArrayList<>();
+    public static final Identifier CARPET_HELLO = Identifier.of("carpet", "hello");
 
     private static ItemStack toolItem = new ItemStack(Items.STICK);
     private ItemStack toolItemComponents = null;
@@ -102,7 +102,7 @@ public class DataManager implements IDirectoryCache
         return clientTickStart;
     }
 
-    public void onWorldPre(@Nonnull RegistryAccess registryManager)
+    public void onWorldPre(@Nonnull DynamicRegistryManager registryManager)
     {
         Litematica.debugLog("DataManager#onWorldPre()");
         setToolItemComponents(Configs.Generic.TOOL_ITEM_COMPONENTS.getStringValue(), registryManager);
@@ -140,7 +140,7 @@ public class DataManager implements IDirectoryCache
         this.hasIntegratedServer = toggle;
     }
 
-    public static void addChatListener(ToBooleanFunction<Component> listener)
+    public static void addChatListener(ToBooleanFunction<Text> listener)
     {
         synchronized (CHAT_LISTENERS)
         {
@@ -148,7 +148,7 @@ public class DataManager implements IDirectoryCache
         }
     }
 
-    public static void removeChatListener(ToBooleanFunction<Component> listener)
+    public static void removeChatListener(ToBooleanFunction<Text> listener)
     {
         synchronized (CHAT_LISTENERS)
         {
@@ -164,13 +164,13 @@ public class DataManager implements IDirectoryCache
         }
     }
 
-    public static boolean onChatMessage(Component text)
+    public static boolean onChatMessage(Text text)
     {
         synchronized (CHAT_LISTENERS)
         {
             boolean cancel = false;
 
-            for (ToBooleanFunction<Component> listener : CHAT_LISTENERS)
+            for (ToBooleanFunction<Text> listener : CHAT_LISTENERS)
             {
                 cancel |= listener.applyAsBoolean(text);
             }
@@ -639,7 +639,7 @@ public class DataManager implements IDirectoryCache
         {
             // Fall back to a stick
             toolItem = new ItemStack(Items.STICK);
-            Configs.Generic.TOOL_ITEM.setValueFromString(BuiltInRegistries.ITEM.getKey(Items.STICK).toString());
+            Configs.Generic.TOOL_ITEM.setValueFromString(Registries.ITEM.getId(Items.STICK).toString());
         }
     }
 
@@ -649,9 +649,9 @@ public class DataManager implements IDirectoryCache
      *
      * @param toolItemString (String representation of the Data Component aware id type)
      */
-    public void setToolItemComponents(String toolItemString, @Nonnull RegistryAccess registryManager)
+    public void setToolItemComponents(String toolItemString, @Nonnull DynamicRegistryManager registryManager)
     {
-        if (registryManager.equals(RegistryAccess.EMPTY) || toolItemString.isEmpty() || toolItemString.equals("empty"))
+        if (registryManager.equals(DynamicRegistryManager.EMPTY) || toolItemString.isEmpty() || toolItemString.equals("empty"))
         {
             this.toolItemComponents = null;
         }

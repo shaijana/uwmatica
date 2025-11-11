@@ -4,34 +4,34 @@ import java.util.Iterator;
 import java.util.function.BooleanSupplier;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.chunk.ChunkSource;
-import net.minecraft.world.level.chunk.LevelChunk;
-import net.minecraft.world.level.chunk.status.ChunkStatus;
-import net.minecraft.world.level.lighting.LevelLightEngine;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.chunk.ChunkManager;
+import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.world.chunk.WorldChunk;
+import net.minecraft.world.chunk.light.LightingProvider;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 
 import fi.dy.masa.litematica.config.Configs;
 
-public class ChunkManagerSchematic extends ChunkSource
+public class ChunkManagerSchematic extends ChunkManager
 {
     private final WorldSchematic world;
     private final Long2ObjectMap<ChunkSchematic> loadedChunks = new Long2ObjectOpenHashMap<>(8192);
     private final ChunkSchematic blankChunk;
-    private final LevelLightEngine lightingProvider;
+    private final LightingProvider lightingProvider;
     private final FakeLightingProvider fakeLightingProvider;
 
     public ChunkManagerSchematic(WorldSchematic world)
     {
         this.world = world;
         this.blankChunk = new ChunkSchematic(world, new ChunkPos(0, 0));
-        this.lightingProvider = new LevelLightEngine(this, true, world.dimensionType().hasSkyLight());
+        this.lightingProvider = new LightingProvider(this, true, world.getDimension().hasSkyLight());
         this.fakeLightingProvider = new FakeLightingProvider(this);
     }
 
     @Override
-    public @Nonnull WorldSchematic getLevel()
+    public @Nonnull WorldSchematic getWorld()
     {
         return this.world;
     }
@@ -39,23 +39,23 @@ public class ChunkManagerSchematic extends ChunkSource
     public void loadChunk(int chunkX, int chunkZ)
     {
         ChunkSchematic chunk = new ChunkSchematic(this.world, new ChunkPos(chunkX, chunkZ));
-        this.loadedChunks.put(ChunkPos.asLong(chunkX, chunkZ), chunk);
+        this.loadedChunks.put(ChunkPos.toLong(chunkX, chunkZ), chunk);
     }
 
     @Override
-    public boolean hasChunk(int chunkX, int chunkZ)
+    public boolean isChunkLoaded(int chunkX, int chunkZ)
     {
-        return this.loadedChunks.containsKey(ChunkPos.asLong(chunkX, chunkZ));
+        return this.loadedChunks.containsKey(ChunkPos.toLong(chunkX, chunkZ));
     }
 
     @Override
-    public @Nonnull String gatherStats()
+    public @Nonnull String getDebugString()
     {
-        return "Schematic Chunk Cache: " + this.getLoadedChunksCount();
+        return "Schematic Chunk Cache: " + this.getLoadedChunkCount();
     }
 
     @Override
-    public int getLoadedChunksCount()
+    public int getLoadedChunkCount()
     {
         return this.loadedChunks.size();
     }
@@ -66,28 +66,28 @@ public class ChunkManagerSchematic extends ChunkSource
     }
 
     @Override
-    public LevelChunk getChunk(int chunkX, int chunkZ, @Nonnull ChunkStatus status, boolean fallbackToEmpty)
+    public WorldChunk getChunk(int chunkX, int chunkZ, @Nonnull ChunkStatus status, boolean fallbackToEmpty)
     {
-        ChunkSchematic chunk = this.getChunkForLighting(chunkX, chunkZ);
+        ChunkSchematic chunk = this.getChunk(chunkX, chunkZ);
         return chunk == null && fallbackToEmpty ? this.blankChunk : chunk;
     }
 
     @Override
-    public ChunkSchematic getChunkForLighting(int chunkX, int chunkZ)
+    public ChunkSchematic getChunk(int chunkX, int chunkZ)
     {
-        ChunkSchematic chunk = this.loadedChunks.get(ChunkPos.asLong(chunkX, chunkZ));
+        ChunkSchematic chunk = this.loadedChunks.get(ChunkPos.toLong(chunkX, chunkZ));
         return chunk == null ? this.blankChunk : chunk;
     }
 
     @Nullable
     public ChunkSchematic getChunkIfExists(int chunkX, int chunkZ)
     {
-        return this.loadedChunks.get(ChunkPos.asLong(chunkX, chunkZ));
+        return this.loadedChunks.get(ChunkPos.toLong(chunkX, chunkZ));
     }
 
     public void unloadChunk(int chunkX, int chunkZ)
     {
-        ChunkSchematic chunk = this.loadedChunks.remove(ChunkPos.asLong(chunkX, chunkZ));
+        ChunkSchematic chunk = this.loadedChunks.remove(ChunkPos.toLong(chunkX, chunkZ));
 
         if (chunk != null)
         {
@@ -98,7 +98,7 @@ public class ChunkManagerSchematic extends ChunkSource
     }
 
     @Override
-    public @Nonnull LevelLightEngine getLightEngine()
+    public @Nonnull LightingProvider getLightingProvider()
     {
         if (Configs.Visuals.ENABLE_SCHEMATIC_FAKE_LIGHTING.getBooleanValue())
         {

@@ -1,12 +1,12 @@
 package fi.dy.masa.litematica.render.schematic.ao;
 
 import java.util.BitSet;
-import net.minecraft.Util;
-import net.minecraft.client.renderer.LevelRenderer;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.world.level.BlockAndTintGetter;
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.block.BlockState;
+import net.minecraft.client.render.WorldRenderer;
+import net.minecraft.util.Util;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.world.BlockRenderView;
 import it.unimi.dsi.fastutil.longs.Long2FloatLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2IntLinkedOpenHashMap;
 import fi.dy.masa.litematica.render.schematic.BlockModelRendererSchematic;
@@ -16,37 +16,37 @@ public class AOProcessorModern extends AOProcessor
     private static final Direction[] DIRECTIONS = Direction.values();
 
     @Override
-    public void apply(BlockAndTintGetter world, BlockState state, BlockPos pos, Direction direction, float[] box, BitSet shapeState, boolean hasShade)
+    public void apply(BlockRenderView world, BlockState state, BlockPos pos, Direction direction, float[] box, BitSet shapeState, boolean hasShade)
     {
         // 24w36a
-        BlockPos blockPos = shapeState.get(0) ? pos.relative(direction) : pos;
+        BlockPos blockPos = shapeState.get(0) ? pos.offset(direction) : pos;
         ND neighborData = ND.getData(direction);
-        BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos();
+        BlockPos.Mutable mutable = new BlockPos.Mutable();
         BC brightnessCache = BlockModelRendererSchematic.CACHE.get();
-        mutable.setWithOffset(blockPos, neighborData.faces[0]);
+        mutable.set(blockPos, neighborData.faces[0]);
         BlockState blockState = world.getBlockState(mutable);
         int i = brightnessCache.getInt(blockState, world, mutable);
         float f = brightnessCache.getFloat(blockState, world, mutable);
-        mutable.setWithOffset(blockPos, neighborData.faces[1]);
+        mutable.set(blockPos, neighborData.faces[1]);
         BlockState blockState2 = world.getBlockState(mutable);
         int j = brightnessCache.getInt(blockState2, world, mutable);
         float g = brightnessCache.getFloat(blockState2, world, mutable);
-        mutable.setWithOffset(blockPos, neighborData.faces[2]);
+        mutable.set(blockPos, neighborData.faces[2]);
         BlockState blockState3 = world.getBlockState(mutable);
         int k = brightnessCache.getInt(blockState3, world, mutable);
         float h = brightnessCache.getFloat(blockState3, world, mutable);
-        mutable.setWithOffset(blockPos, neighborData.faces[3]);
+        mutable.set(blockPos, neighborData.faces[3]);
         BlockState blockState4 = world.getBlockState(mutable);
         int l = brightnessCache.getInt(blockState4, world, mutable);
         float m = brightnessCache.getFloat(blockState4, world, mutable);
-        BlockState blockState5 = world.getBlockState(mutable.setWithOffset(blockPos, neighborData.faces[0]).move(direction));
-        boolean bl2 = !blockState5.isViewBlocking(world, mutable) || blockState5.getLightBlock() == 0;
-        BlockState blockState6 = world.getBlockState(mutable.setWithOffset(blockPos, neighborData.faces[1]).move(direction));
-        boolean bl3 = !blockState6.isViewBlocking(world, mutable) || blockState6.getLightBlock() == 0;
-        BlockState blockState7 = world.getBlockState(mutable.setWithOffset(blockPos, neighborData.faces[2]).move(direction));
-        boolean bl4 = !blockState7.isViewBlocking(world, mutable) || blockState7.getLightBlock() == 0;
-        BlockState blockState8 = world.getBlockState(mutable.setWithOffset(blockPos, neighborData.faces[3]).move(direction));
-        boolean bl5 = !blockState8.isViewBlocking(world, mutable) || blockState8.getLightBlock() == 0;
+        BlockState blockState5 = world.getBlockState(mutable.set(blockPos, neighborData.faces[0]).move(direction));
+        boolean bl2 = !blockState5.shouldBlockVision(world, mutable) || blockState5.getOpacity() == 0;
+        BlockState blockState6 = world.getBlockState(mutable.set(blockPos, neighborData.faces[1]).move(direction));
+        boolean bl3 = !blockState6.shouldBlockVision(world, mutable) || blockState6.getOpacity() == 0;
+        BlockState blockState7 = world.getBlockState(mutable.set(blockPos, neighborData.faces[2]).move(direction));
+        boolean bl4 = !blockState7.shouldBlockVision(world, mutable) || blockState7.getOpacity() == 0;
+        BlockState blockState8 = world.getBlockState(mutable.set(blockPos, neighborData.faces[3]).move(direction));
+        boolean bl5 = !blockState8.shouldBlockVision(world, mutable) || blockState8.getOpacity() == 0;
         float n;
         int o;
         BlockState blockState9;
@@ -57,7 +57,7 @@ public class AOProcessorModern extends AOProcessor
         }
         else
         {
-            mutable.setWithOffset(blockPos, neighborData.faces[0]).move(neighborData.faces[2]);
+            mutable.set(blockPos, neighborData.faces[0]).move(neighborData.faces[2]);
             blockState9 = world.getBlockState(mutable);
             n = brightnessCache.getFloat(blockState9, world, mutable);
             o = brightnessCache.getInt(blockState9, world, mutable);
@@ -72,7 +72,7 @@ public class AOProcessorModern extends AOProcessor
         }
         else
         {
-            mutable.setWithOffset(blockPos, neighborData.faces[0]).move(neighborData.faces[3]);
+            mutable.set(blockPos, neighborData.faces[0]).move(neighborData.faces[3]);
             blockState9 = world.getBlockState(mutable);
             p = brightnessCache.getFloat(blockState9, world, mutable);
             q = brightnessCache.getInt(blockState9, world, mutable);
@@ -87,7 +87,7 @@ public class AOProcessorModern extends AOProcessor
         }
         else
         {
-            mutable.setWithOffset(blockPos, neighborData.faces[1]).move(neighborData.faces[2]);
+            mutable.set(blockPos, neighborData.faces[1]).move(neighborData.faces[2]);
             blockState9 = world.getBlockState(mutable);
             r = brightnessCache.getFloat(blockState9, world, mutable);
             s = brightnessCache.getInt(blockState9, world, mutable);
@@ -102,16 +102,16 @@ public class AOProcessorModern extends AOProcessor
         }
         else
         {
-            mutable.setWithOffset(blockPos, neighborData.faces[1]).move(neighborData.faces[3]);
+            mutable.set(blockPos, neighborData.faces[1]).move(neighborData.faces[3]);
             blockState9 = world.getBlockState(mutable);
             t = brightnessCache.getFloat(blockState9, world, mutable);
             u = brightnessCache.getInt(blockState9, world, mutable);
         }
 
         int v = brightnessCache.getInt(state, world, pos);
-        mutable.setWithOffset(pos, direction);
+        mutable.set(pos, direction);
         BlockState blockState10 = world.getBlockState(mutable);
-        if (shapeState.get(0) || !blockState10.isSolidRender())
+        if (shapeState.get(0) || !blockState10.isOpaqueFullCube())
         {
             v = brightnessCache.getInt(blockState10, world, mutable);
         }
@@ -173,7 +173,7 @@ public class AOProcessorModern extends AOProcessor
             this.brightness[translation.fourthCorner] = aa;
         }
 
-        x = world.getShade(direction, hasShade);
+        x = world.getBrightness(direction, hasShade);
 
         for (int av = 0; av < this.brightness.length; ++av)
         {
@@ -248,7 +248,7 @@ public class AOProcessorModern extends AOProcessor
             this.floatCache.clear();
         }
 
-        public int getInt(BlockState state, BlockAndTintGetter world, BlockPos pos)
+        public int getInt(BlockState state, BlockRenderView world, BlockPos pos)
         {
             long l = pos.asLong();
             int i;
@@ -261,7 +261,7 @@ public class AOProcessorModern extends AOProcessor
                 }
             }
 
-            i = LevelRenderer.getLightColor(world, pos);
+            i = WorldRenderer.getLightmapCoordinates(world, pos);
             if (this.enabled)
             {
                 if (this.intCache.size() == 100)
@@ -275,7 +275,7 @@ public class AOProcessorModern extends AOProcessor
             return i;
         }
 
-        public float getFloat(BlockState state, BlockAndTintGetter blockView, BlockPos pos)
+        public float getFloat(BlockState state, BlockRenderView blockView, BlockPos pos)
         {
             long l = pos.asLong();
             float f;
@@ -288,7 +288,7 @@ public class AOProcessorModern extends AOProcessor
                 }
             }
 
-            f = state.getShadeBrightness(blockView, pos);
+            f = state.getAmbientOcclusionLightLevel(blockView, pos);
             if (this.enabled)
             {
                 if (this.floatCache.size() == 100)
@@ -320,12 +320,12 @@ public class AOProcessorModern extends AOProcessor
         final NO[] neighbor4;
         private static final ND[] VALUES = Util.make(new ND[6], (values) ->
         {
-            values[Direction.DOWN.get3DDataValue()] = DOWN;
-            values[Direction.UP.get3DDataValue()] = UP;
-            values[Direction.NORTH.get3DDataValue()] = NORTH;
-            values[Direction.SOUTH.get3DDataValue()] = SOUTH;
-            values[Direction.WEST.get3DDataValue()] = WEST;
-            values[Direction.EAST.get3DDataValue()] = EAST;
+            values[Direction.DOWN.getIndex()] = DOWN;
+            values[Direction.UP.getIndex()] = UP;
+            values[Direction.NORTH.getIndex()] = NORTH;
+            values[Direction.SOUTH.getIndex()] = SOUTH;
+            values[Direction.WEST.getIndex()] = WEST;
+            values[Direction.EAST.getIndex()] = EAST;
         });
 
         ND(final Direction[] faces, final float f, final boolean nonCubicWeight, final NO[] neighbor1, final NO[] neighbor2, final NO[] neighbor3, final NO[] neighbor4)
@@ -340,7 +340,7 @@ public class AOProcessorModern extends AOProcessor
 
         public static ND getData(Direction direction)
         {
-            return VALUES[direction.get3DDataValue()];
+            return VALUES[direction.getIndex()];
         }
     }
 
@@ -363,7 +363,7 @@ public class AOProcessorModern extends AOProcessor
 
         NO(final Direction direction, final boolean flip)
         {
-            this.shape = direction.get3DDataValue() + (flip ? DIRECTIONS.length : 0);
+            this.shape = direction.getIndex() + (flip ? DIRECTIONS.length : 0);
         }
     }
 
@@ -382,12 +382,12 @@ public class AOProcessorModern extends AOProcessor
         final int fourthCorner;
         private static final Tl[] VALUES = Util.make(new Tl[6], (values) ->
         {
-            values[Direction.DOWN.get3DDataValue()] = DOWN;
-            values[Direction.UP.get3DDataValue()] = UP;
-            values[Direction.NORTH.get3DDataValue()] = NORTH;
-            values[Direction.SOUTH.get3DDataValue()] = SOUTH;
-            values[Direction.WEST.get3DDataValue()] = WEST;
-            values[Direction.EAST.get3DDataValue()] = EAST;
+            values[Direction.DOWN.getIndex()] = DOWN;
+            values[Direction.UP.getIndex()] = UP;
+            values[Direction.NORTH.getIndex()] = NORTH;
+            values[Direction.SOUTH.getIndex()] = SOUTH;
+            values[Direction.WEST.getIndex()] = WEST;
+            values[Direction.EAST.getIndex()] = EAST;
         });
 
         Tl(final int firstCorner, final int secondCorner, final int thirdCorner, final int fourthCorner)
@@ -400,7 +400,7 @@ public class AOProcessorModern extends AOProcessor
 
         public static Tl getTranslations(Direction direction)
         {
-            return VALUES[direction.get3DDataValue()];
+            return VALUES[direction.getIndex()];
         }
     }
 }

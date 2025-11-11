@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.block.BlockState;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import org.jetbrains.annotations.ApiStatus;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.interfaces.ISchematicPickBlockEventListener;
@@ -100,7 +100,7 @@ public class SchematicPickBlockEventHandler implements ISchematicPickBlockEventM
 	}
 
 	@ApiStatus.Internal
-	public boolean executePickBlockHandler(Level world, BlockPos pos, ItemStack stack)
+	public boolean executePickBlockHandler(World world, BlockPos pos, ItemStack stack)
 	{
 		if (this.slotHandler != null)
 		{
@@ -153,7 +153,7 @@ public class SchematicPickBlockEventHandler implements ISchematicPickBlockEventM
 	}
 
 	@ApiStatus.Internal
-	public boolean onSchematicPickBlockPreGather(Level schematicWorld, BlockPos pos, BlockState expectedState)
+	public boolean onSchematicPickBlockPreGather(World schematicWorld, BlockPos pos, BlockState expectedState)
 	{
 		for (ISchematicPickBlockEventListener handler : this.handlers)
 		{
@@ -182,7 +182,7 @@ public class SchematicPickBlockEventHandler implements ISchematicPickBlockEventM
 	}
 
 	@ApiStatus.Internal
-	public boolean onSchematicPickBlockPrePick(Level schematicWorld, BlockPos pos, BlockState expectedState, ItemStack stack)
+	public boolean onSchematicPickBlockPrePick(World schematicWorld, BlockPos pos, BlockState expectedState, ItemStack stack)
 	{
 		for (ISchematicPickBlockEventListener handler : this.handlers)
 		{

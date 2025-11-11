@@ -1,17 +1,17 @@
 package fi.dy.masa.litematica.util;
 
 import javax.annotation.Nonnull;
+import net.minecraft.util.StringIdentifiable;
 import com.google.common.collect.ImmutableList;
 import fi.dy.masa.malilib.config.IConfigOptionListEntry;
 import fi.dy.masa.malilib.util.StringUtils;
-import net.minecraft.util.StringRepresentable;
 
-public enum PasteLayerBehavior implements IConfigOptionListEntry, StringRepresentable
+public enum PasteLayerBehavior implements IConfigOptionListEntry, StringIdentifiable
 {
     ALL             ("all",             "litematica.gui.label.paste_layer_behavior.all"),
     RENDERED_ONLY   ("rendered_only",   "litematica.gui.label.paste_layer_behavior.rendered_only");
 
-    public static final EnumCodec<PasteLayerBehavior> CODEC = StringRepresentable.fromEnum(PasteLayerBehavior::values);
+    public static final EnumCodec<PasteLayerBehavior> CODEC = StringIdentifiable.createCodec(PasteLayerBehavior::values);
     public static final ImmutableList<PasteLayerBehavior> VALUES = ImmutableList.copyOf(values());
     private final String configString;
     private final String translationKey;
@@ -23,7 +23,7 @@ public enum PasteLayerBehavior implements IConfigOptionListEntry, StringRepresen
     }
 
     @Override
-    public @Nonnull String getSerializedName()
+    public @Nonnull String asString()
     {
         return this.configString;
     }

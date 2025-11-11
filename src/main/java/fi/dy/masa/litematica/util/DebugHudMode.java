@@ -1,19 +1,19 @@
 package fi.dy.masa.litematica.util;
 
 import javax.annotation.Nonnull;
+import net.minecraft.util.StringIdentifiable;
 import com.google.common.collect.ImmutableList;
 import fi.dy.masa.malilib.config.IConfigOptionListEntry;
 import fi.dy.masa.malilib.util.StringUtils;
-import net.minecraft.util.StringRepresentable;
 
-public enum DebugHudMode implements IConfigOptionListEntry, StringRepresentable
+public enum DebugHudMode implements IConfigOptionListEntry, StringIdentifiable
 {
 	DEFAULT     ("default",      "litematica.gui.label.debug_info_mode.default"),
 	VANILLA     ("vanilla",      "litematica.gui.label.debug_info_mode.vanilla"),
 	NONE        ("none",         "litematica.gui.label.debug_info_mode.none"),
 	;
 
-	public static final EnumCodec<DebugHudMode> CODEC = StringRepresentable.fromEnum(DebugHudMode::values);
+	public static final EnumCodec<DebugHudMode> CODEC = StringIdentifiable.createCodec(DebugHudMode::values);
 	public static final ImmutableList<DebugHudMode> VALUES = ImmutableList.copyOf(values());
 	private final String configString;
 	private final String translationKey;
@@ -25,7 +25,7 @@ public enum DebugHudMode implements IConfigOptionListEntry, StringRepresentable
 	}
 
 	@Override
-	public @Nonnull String getSerializedName()
+	public @Nonnull String asString()
 	{
 		return this.configString;
 	}

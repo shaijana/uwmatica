@@ -4,14 +4,14 @@ import java.util.Arrays;
 import java.util.stream.LongStream;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Vec3i;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.nbt.NbtList;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.codec.PacketCodecs;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3i;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
@@ -43,13 +43,13 @@ public class LitematicaBlockStateContainer implements ILitematicaBlockStatePalet
                     PrimitiveCodec.LONG_STREAM.optionalFieldOf("BlockCounts", LongStream.empty()).forGetter(get -> Arrays.stream(get.blockCounts))
             ).apply(inst, LitematicaBlockStateContainer::new)
     );
-    public static final StreamCodec<ByteBuf, LitematicaBlockStateContainer> PACKET_CODEC = new StreamCodec<>()
+    public static final PacketCodec<ByteBuf, LitematicaBlockStateContainer> PACKET_CODEC = new PacketCodec<>()
     {
         @Override
         public void encode(@Nonnull ByteBuf buf, LitematicaBlockStateContainer value)
         {
             LitematicaBitArray.PACKET_CODEC.encode(buf, value.storage);
-            ByteBufCodecs.INT.encode(buf, value.bits);
+            PacketCodecs.INTEGER.encode(buf, value.bits);
             if (value.palette instanceof LitematicaBlockStatePaletteHashMap hash)
             {
                 LitematicaBlockStatePaletteHashMap.PACKET_CODEC.encode(buf, hash);
@@ -60,20 +60,20 @@ public class LitematicaBlockStateContainer implements ILitematicaBlockStatePalet
             }
             else throw new RuntimeException();
 
-            ByteBufCodecs.INT.encode(buf, value.sizeX);
-            ByteBufCodecs.INT.encode(buf, value.sizeY);
-            ByteBufCodecs.INT.encode(buf, value.sizeZ);
-            ByteBufCodecs.INT.encode(buf, value.sizeLayer);
-            Vec3i.STREAM_CODEC.encode(buf, value.size);
-            ByteBufCodecs.LONG.encode(buf, value.totalVolume);
-            ByteBufCodecs.LONG_ARRAY.encode(buf, value.blockCounts);
+            PacketCodecs.INTEGER.encode(buf, value.sizeX);
+            PacketCodecs.INTEGER.encode(buf, value.sizeY);
+            PacketCodecs.INTEGER.encode(buf, value.sizeZ);
+            PacketCodecs.INTEGER.encode(buf, value.sizeLayer);
+            Vec3i.PACKET_CODEC.encode(buf, value.size);
+            PacketCodecs.LONG.encode(buf, value.totalVolume);
+            PacketCodecs.LONG_ARRAY.encode(buf, value.blockCounts);
         }
 
         @Override
         public @Nonnull LitematicaBlockStateContainer decode(@Nonnull ByteBuf buf)
         {
             LitematicaBitArray storage = LitematicaBitArray.PACKET_CODEC.decode(buf);
-            int bits = ByteBufCodecs.INT.decode(buf);
+            int bits = PacketCodecs.INTEGER.decode(buf);
             ILitematicaBlockStatePalette palette;
 
             if (bits <= 4)
@@ -87,18 +87,18 @@ public class LitematicaBlockStateContainer implements ILitematicaBlockStatePalet
 
             return new LitematicaBlockStateContainer(
                     bits, storage, palette,
-                    ByteBufCodecs.INT.decode(buf),
-                    ByteBufCodecs.INT.decode(buf),
-                    ByteBufCodecs.INT.decode(buf),
-                    ByteBufCodecs.INT.decode(buf),
-                    Vec3i.STREAM_CODEC.decode(buf),
-                    ByteBufCodecs.LONG.decode(buf),
-                    Arrays.stream(ByteBufCodecs.LONG_ARRAY.decode(buf))
+                    PacketCodecs.INTEGER.decode(buf),
+                    PacketCodecs.INTEGER.decode(buf),
+                    PacketCodecs.INTEGER.decode(buf),
+                    PacketCodecs.INTEGER.decode(buf),
+                    Vec3i.PACKET_CODEC.decode(buf),
+                    PacketCodecs.LONG.decode(buf),
+                    Arrays.stream(PacketCodecs.LONG_ARRAY.decode(buf))
             );
         }
     };
 
-    public static final BlockState AIR_BLOCK_STATE = Blocks.AIR.defaultBlockState();
+    public static final BlockState AIR_BLOCK_STATE = Blocks.AIR.getDefaultState();
     protected LitematicaBitArray storage;
     protected ILitematicaBlockStatePalette palette;
     protected final Vec3i size;
@@ -249,7 +249,7 @@ public class LitematicaBlockStateContainer implements ILitematicaBlockStatePalet
         return this.palette;
     }
 
-    public static LitematicaBlockStateContainer createFrom(ListTag palette, long[] blockStates, BlockPos size)
+    public static LitematicaBlockStateContainer createFrom(NbtList palette, long[] blockStates, BlockPos size)
     {
         int bits = Math.max(2, Integer.SIZE - Integer.numberOfLeadingZeros(palette.size() - 1));
         LitematicaBlockStateContainer container = new LitematicaBlockStateContainer(size.getX(), size.getY(), size.getZ(), bits, blockStates);
@@ -272,7 +272,7 @@ public class LitematicaBlockStateContainer implements ILitematicaBlockStatePalet
     {
         int volume = size.getX() * size.getY() * size.getZ();
         LitematicaBitArray bitArray = new LitematicaBitArray(bits, volume);
-        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.wrappedBuffer(blockStates));
+        PacketByteBuf buf = new PacketByteBuf(Unpooled.wrappedBuffer(blockStates));
         long[] blockCounts = new long[1 << bits];
 
         for (int i = 0; i < volume; ++i)
