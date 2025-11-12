@@ -72,6 +72,7 @@ public class GuiSchematicManager extends GuiSchematicBrowserBase implements ISel
         int x = 10;
         int y = this.getScreenHeight() - 26;
 
+		if (this.getListWidget() == null) return;
         DirectoryEntry selected = this.getListWidget().getLastSelectedEntry();
 
         if (selected != null)
@@ -85,15 +86,15 @@ public class GuiSchematicManager extends GuiSchematicBrowserBase implements ISel
                 x = this.createButton(x, y, ButtonListener.Type.EXPORT_SCHEMATIC);
                 x = this.createButton(x, y, ButtonListener.Type.EXPORT_TYPE);
                 x = this.createButton(x, y, ButtonListener.Type.IMPORT_SCHEMATIC);
-				x = this.createButton(x, y, ButtonListener.Type.COPY);
 				x = this.createButton(x, y, ButtonListener.Type.RENAME_FILE);
+				x = this.createButton(x, y, ButtonListener.Type.COPY);
 				x = this.createButton(x, y, ButtonListener.Type.DELETE);
             }
             else if (type == FileType.SPONGE_SCHEMATIC || type == FileType.SCHEMATICA_SCHEMATIC || type == FileType.VANILLA_STRUCTURE)
             {
                 x = this.createButton(x, y, ButtonListener.Type.IMPORT_SCHEMATIC);
-				x = this.createButton(x, y, ButtonListener.Type.COPY);
 				x = this.createButton(x, y, ButtonListener.Type.RENAME_FILE);
+				x = this.createButton(x, y, ButtonListener.Type.COPY);
 				x = this.createButton(x, y, ButtonListener.Type.DELETE);
             }
 		}
@@ -334,7 +335,7 @@ public class GuiSchematicManager extends GuiSchematicBrowserBase implements ISel
         {
             IMPORT_SCHEMATIC            ("litematica.gui.button.import"),
             EXPORT_SCHEMATIC            ("litematica.gui.button.schematic_manager.export_as"),
-            RENAME_SCHEMATIC            ("litematica.gui.button.rename"),
+            RENAME_SCHEMATIC            ("litematica.gui.button.rename_schematic"),
 			COPY            			("litematica.gui.button.copy"),
 			RENAME_FILE            		("litematica.gui.button.rename_file"),
             DELETE						("litematica.gui.button.delete"),

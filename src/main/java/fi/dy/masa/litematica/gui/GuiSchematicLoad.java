@@ -1,25 +1,6 @@
 package fi.dy.masa.litematica.gui;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Collection;
-
 import fi.dy.masa.litematica.config.Configs;
-import fi.dy.masa.malilib.gui.GuiConfirmAction;
-import fi.dy.masa.malilib.gui.GuiTextInputFeedback;
-import fi.dy.masa.malilib.interfaces.IStringConsumerFeedback;
-import fi.dy.masa.malilib.util.*;
-import net.minecraft.util.math.BlockPos;
-import fi.dy.masa.malilib.gui.GuiBase;
-import fi.dy.masa.malilib.gui.GuiStringListSelection;
-import fi.dy.masa.malilib.gui.Message.MessageType;
-import fi.dy.masa.malilib.gui.button.ButtonBase;
-import fi.dy.masa.malilib.gui.button.ButtonGeneric;
-import fi.dy.masa.malilib.gui.button.IButtonActionListener;
-import fi.dy.masa.malilib.gui.interfaces.ISelectionListener;
-import fi.dy.masa.malilib.gui.interfaces.IStringListConsumer;
-import fi.dy.masa.malilib.gui.widgets.WidgetCheckBox;
-import fi.dy.masa.malilib.gui.widgets.WidgetFileBrowserBase.DirectoryEntry;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.data.SchematicHolder;
 import fi.dy.masa.litematica.gui.GuiMainMenu.ButtonListenerChangeMenu;
@@ -29,6 +10,27 @@ import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacementManager;
 import fi.dy.masa.litematica.util.FileType;
 import fi.dy.masa.litematica.util.WorldUtils;
+import fi.dy.masa.malilib.gui.GuiBase;
+import fi.dy.masa.malilib.gui.GuiStringListSelection;
+import fi.dy.masa.malilib.gui.GuiTextInputFeedback;
+import fi.dy.masa.malilib.gui.Message.MessageType;
+import fi.dy.masa.malilib.gui.button.ButtonBase;
+import fi.dy.masa.malilib.gui.button.ButtonGeneric;
+import fi.dy.masa.malilib.gui.button.IButtonActionListener;
+import fi.dy.masa.malilib.gui.interfaces.ISelectionListener;
+import fi.dy.masa.malilib.gui.interfaces.IStringListConsumer;
+import fi.dy.masa.malilib.gui.widgets.WidgetCheckBox;
+import fi.dy.masa.malilib.gui.widgets.WidgetFileBrowserBase.DirectoryEntry;
+import fi.dy.masa.malilib.interfaces.IStringConsumerFeedback;
+import fi.dy.masa.malilib.util.FileRenamer;
+import fi.dy.masa.malilib.util.GuiUtils;
+import fi.dy.masa.malilib.util.InfoUtils;
+import fi.dy.masa.malilib.util.StringUtils;
+import net.minecraft.util.math.BlockPos;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Collection;
 
 public class GuiSchematicLoad extends GuiSchematicBrowserBase
 {
@@ -78,9 +80,10 @@ public class GuiSchematicLoad extends GuiSchematicBrowserBase
         y = this.getScreenHeight() - 26;
         x += this.createButton(x, y, -1, ButtonListener.Type.LOAD_SCHEMATIC) + 4;
         x += this.createButton(x, y, -1, ButtonListener.Type.MATERIAL_LIST) + 4;
-		x += this.createButton(x, y, -1, ButtonListener.Type.COPY) + 4;
-		x += this.createButton(x, y, -1, ButtonListener.Type.RENAME) + 4;
-		x += this.createButton(x, y, -1, ButtonListener.Type.DELETE) + 4;
+		x += this.createButton(x, y, -1, ButtonListener.Type.RENAME_SCHEMATIC) + 4;
+		x += this.createButton(x, y, -1, ButtonListener.Type.RENAME_FILE) + 4;
+//		x += this.createButton(x, y, -1, ButtonListener.Type.DELETE) + 4;
+		// Masa doesn't want "destructive" operations in the Load GUI.
 
         ButtonListenerChangeMenu.ButtonType type = ButtonListenerChangeMenu.ButtonType.LOADED_SCHEMATICS;
         label = StringUtils.translate(type.getLabelKey());
@@ -137,17 +140,18 @@ public class GuiSchematicLoad extends GuiSchematicBrowserBase
 
             if (entry == null)
             {
+				// Masa doesn't want "destructive" operations in the Load GUI.
 				// Used to delete an empty folder that is selected
-				if (this.type == Type.DELETE)
-				{
-					Path target = this.gui.getListWidget().getCurrentDirectory();
-					FileDeleter deleter = new FileDeleter(target, this.gui.getListWidget(), Configs.Generic.DISPLAY_FILE_OPS_FEEDBACK.getBooleanValue());
-					GuiBase.openGui(new GuiConfirmAction(180, "litematica.gui.title.delete_confirm", deleter, this.gui, "litematica.message.delete_confirm", target.getFileName().toString()));
-				}
-				else
-				{
+//				if (this.type == Type.DELETE)
+//				{
+//					Path target = this.gui.getListWidget().getCurrentDirectory();
+//					FileDeleter deleter = new FileDeleter(target, this.gui.getListWidget(), Configs.Generic.DISPLAY_FILE_OPS_FEEDBACK.getBooleanValue());
+//					GuiBase.openGui(new GuiConfirmAction(180, "litematica.gui.title.delete_confirm", deleter, this.gui, "litematica.message.delete_confirm", target.getFileName().toString()));
+//				}
+//				else
+//				{
 					this.gui.addMessage(MessageType.ERROR, "litematica.error.schematic_load.no_schematic_selected");
-				}
+//				}
             }
 			else
 			{
@@ -229,37 +233,75 @@ public class GuiSchematicLoad extends GuiSchematicBrowserBase
 							GuiBase.openGui(new GuiMaterialList(materialList));
 						}
 					}
+					else if (this.type == Type.RENAME_SCHEMATIC)
+					{
+						String oldName = schematic.getMetadata().getName();
+						GuiBase.openGui(new GuiTextInputFeedback(256, "litematica.gui.title.rename_schematic", oldName, this.gui, new SchematicRenamer(entry.getDirectory(), entry.getName(), this.gui)));
+					}
+					// Masa doesn't want "destructive" operations in the Load GUI.
+//					else if (this.type == Type.COPY)
+//					{
+//						FileCopier copier = new FileCopier(file, this.gui.getListWidget(), Configs.Generic.DISPLAY_FILE_OPS_FEEDBACK.getBooleanValue());
+//						GuiBase.openGui(new GuiTextInputFeedback(256, "litematica.gui.title.copy_file", entry.getName(), this.gui, copier));
+//					}
+					else if (this.type == Type.RENAME_FILE)
+					{
+						FileRenamer renamer = new FileRenamer(file, this.gui.getListWidget(), Configs.Generic.DISPLAY_FILE_OPS_FEEDBACK.getBooleanValue());
+						GuiBase.openGui(new GuiTextInputFeedback(256, "litematica.gui.title.rename_file_or_directory", entry.getName(), this.gui, renamer));
+					}
+					// Masa doesn't want "destructive" operations in the Load GUI.
+//					else if (this.type == Type.DELETE)
+//					{
+//						FileDeleter deleter = new FileDeleter(file, this.gui.getListWidget(), Configs.Generic.DISPLAY_FILE_OPS_FEEDBACK.getBooleanValue());
+//						GuiBase.openGui(new GuiConfirmAction(180, "litematica.gui.title.delete_confirm", deleter, this.gui, "litematica.message.delete_confirm", file.getFileName().toString()));
+//					}
 
 					if (warnType)
 					{
 						InfoUtils.showGuiOrInGameMessage(MessageType.WARNING, 15000, "litematica.message.warn.schematic_load_non_litematica");
 					}
-					else if (this.type == Type.COPY)
-					{
-						FileCopier copier = new FileCopier(file, this.gui.getListWidget(), Configs.Generic.DISPLAY_FILE_OPS_FEEDBACK.getBooleanValue());
-						GuiBase.openGui(new GuiTextInputFeedback(256, "litematica.gui.title.copy_file", entry.getName(), this.gui, copier));
-					}
-					else if (this.type == Type.RENAME)
-					{
-						FileRenamer renamer = new FileRenamer(file, this.gui.getListWidget(), Configs.Generic.DISPLAY_FILE_OPS_FEEDBACK.getBooleanValue());
-						GuiBase.openGui(new GuiTextInputFeedback(256, "litematica.gui.title.rename_file_or_directory", entry.getName(), this.gui, renamer));
-					}
-					else if (this.type == Type.DELETE)
-					{
-						FileDeleter deleter = new FileDeleter(file, this.gui.getListWidget(), Configs.Generic.DISPLAY_FILE_OPS_FEEDBACK.getBooleanValue());
-						GuiBase.openGui(new GuiConfirmAction(180, "litematica.gui.title.delete_confirm", deleter, this.gui, "litematica.message.delete_confirm", file.getFileName().toString()));
-					}
 				}
 			}
         }
 
+		private record SchematicRenamer(Path dir, String fileName, GuiSchematicLoad gui)
+				implements IStringConsumerFeedback
+		{
+			@Override
+			public boolean setString(String string)
+			{
+				LitematicaSchematic schematic = LitematicaSchematic.createFromFile(this.dir, this.fileName);
+
+				if (schematic != null)
+				{
+					schematic.getMetadata().setName(string);
+					schematic.getMetadata().setTimeModifiedToNow();
+
+					if (schematic.writeToFile(this.dir, this.fileName, true))
+					{
+						if (this.gui.getListWidget() != null)
+						{
+							this.gui.getListWidget().clearSchematicMetadataCache();
+						}
+
+						return true;
+					}
+				}
+				else
+				{
+					this.gui.setString(StringUtils.translate("litematica.error.schematic_rename.read_failed"));
+				}
+
+				return false;
+			}
+		}
+
 		public enum Type
         {
-            LOAD_SCHEMATIC  ("litematica.gui.button.load_schematic_to_memory"),
-            MATERIAL_LIST   ("litematica.gui.button.material_list"),
-			COPY			("litematica.gui.button.copy"),
-			RENAME			("litematica.gui.button.rename"),
-			DELETE   		("litematica.gui.button.delete"),
+            LOAD_SCHEMATIC  	("litematica.gui.button.load_schematic_to_memory"),
+            MATERIAL_LIST   	("litematica.gui.button.material_list"),
+			RENAME_SCHEMATIC	("litematica.gui.button.rename_schematic"),
+			RENAME_FILE			("litematica.gui.button.rename_file"),
 			;
 
             private final String translationKey;

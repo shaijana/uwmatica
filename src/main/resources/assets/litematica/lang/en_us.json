@@ -671,6 +671,7 @@
     "litematica.gui.button.remove": "Remove",
     "litematica.gui.button.remove_placement": "Remove placement",
     "litematica.gui.button.rename": "Rename",
+    "litematica.gui.button.rename_schematic": "Rename Schematic",
     "litematica.gui.button.rename_file": "Rename File",
     "litematica.gui.button.rotation_value": "Rotation: %s",
     "litematica.gui.button.save_new_schematic_version": "Save Version",
