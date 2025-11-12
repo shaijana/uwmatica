@@ -4,6 +4,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 
+import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.malilib.gui.GuiConfirmAction;
 import fi.dy.masa.malilib.gui.GuiTextInputFeedback;
 import fi.dy.masa.malilib.interfaces.IStringConsumerFeedback;
@@ -77,8 +78,8 @@ public class GuiSchematicLoad extends GuiSchematicBrowserBase
         y = this.getScreenHeight() - 26;
         x += this.createButton(x, y, -1, ButtonListener.Type.LOAD_SCHEMATIC) + 4;
         x += this.createButton(x, y, -1, ButtonListener.Type.MATERIAL_LIST) + 4;
-		x += this.createButton(x, y, -1, ButtonListener.Type.RENAME_SCHEMATIC) + 4;
-		x += this.createButton(x, y, -1, ButtonListener.Type.RENAME_FILE) + 4;
+		x += this.createButton(x, y, -1, ButtonListener.Type.COPY) + 4;
+		x += this.createButton(x, y, -1, ButtonListener.Type.RENAME) + 4;
 		x += this.createButton(x, y, -1, ButtonListener.Type.DELETE) + 4;
 
         ButtonListenerChangeMenu.ButtonType type = ButtonListenerChangeMenu.ButtonType.LOADED_SCHEMATICS;
@@ -140,7 +141,7 @@ public class GuiSchematicLoad extends GuiSchematicBrowserBase
 				if (this.type == Type.DELETE)
 				{
 					Path target = this.gui.getListWidget().getCurrentDirectory();
-					FileDeleter deleter = new FileDeleter(target, this.gui.getListWidget());
+					FileDeleter deleter = new FileDeleter(target, this.gui.getListWidget(), Configs.Generic.DISPLAY_FILE_OPS_FEEDBACK.getBooleanValue());
 					GuiBase.openGui(new GuiConfirmAction(180, "litematica.gui.title.delete_confirm", deleter, this.gui, "litematica.message.delete_confirm", target.getFileName().toString()));
 				}
 				else
@@ -233,59 +234,31 @@ public class GuiSchematicLoad extends GuiSchematicBrowserBase
 					{
 						InfoUtils.showGuiOrInGameMessage(MessageType.WARNING, 15000, "litematica.message.warn.schematic_load_non_litematica");
 					}
-					else if (this.type == Type.RENAME_SCHEMATIC)
+					else if (this.type == Type.COPY)
 					{
-						String oldName = schematic.getMetadata().getName();
-						GuiBase.openGui(new GuiTextInputFeedback(256, "litematica.gui.title.rename_schematic", oldName, this.gui, new SchematicRenamer(entry.getDirectory(), entry.getName(), this.gui)));
+						FileCopier copier = new FileCopier(file, this.gui.getListWidget(), Configs.Generic.DISPLAY_FILE_OPS_FEEDBACK.getBooleanValue());
+						GuiBase.openGui(new GuiTextInputFeedback(256, "litematica.gui.title.copy_file", entry.getName(), this.gui, copier));
 					}
-					else if (this.type == Type.RENAME_FILE)
+					else if (this.type == Type.RENAME)
 					{
-						FileRenamer renamer = new FileRenamer(file, this.gui.getListWidget());
+						FileRenamer renamer = new FileRenamer(file, this.gui.getListWidget(), Configs.Generic.DISPLAY_FILE_OPS_FEEDBACK.getBooleanValue());
 						GuiBase.openGui(new GuiTextInputFeedback(256, "litematica.gui.title.rename_file_or_directory", entry.getName(), this.gui, renamer));
 					}
 					else if (this.type == Type.DELETE)
 					{
-						FileDeleter deleter = new FileDeleter(file, this.gui.getListWidget());
+						FileDeleter deleter = new FileDeleter(file, this.gui.getListWidget(), Configs.Generic.DISPLAY_FILE_OPS_FEEDBACK.getBooleanValue());
 						GuiBase.openGui(new GuiConfirmAction(180, "litematica.gui.title.delete_confirm", deleter, this.gui, "litematica.message.delete_confirm", file.getFileName().toString()));
 					}
 				}
 			}
         }
 
-		private record SchematicRenamer(Path dir, String fileName, GuiSchematicLoad gui)
-				implements IStringConsumerFeedback
-		{
-			@Override
-			public boolean setString(String string)
-			{
-				LitematicaSchematic schematic = LitematicaSchematic.createFromFile(this.dir, this.fileName);
-
-				if (schematic != null)
-				{
-					schematic.getMetadata().setName(string);
-					schematic.getMetadata().setTimeModifiedToNow();
-
-					if (schematic.writeToFile(this.dir, this.fileName, true))
-					{
-						this.gui.getListWidget().clearSchematicMetadataCache();
-						return true;
-					}
-				}
-				else
-				{
-					this.gui.setString(StringUtils.translate("litematica.error.schematic_rename.read_failed"));
-				}
-
-				return false;
-			}
-		}
-
 		public enum Type
         {
             LOAD_SCHEMATIC  ("litematica.gui.button.load_schematic_to_memory"),
             MATERIAL_LIST   ("litematica.gui.button.material_list"),
-			RENAME_SCHEMATIC("litematica.gui.button.rename"),
-			RENAME_FILE		("litematica.gui.button.rename_file"),
+			COPY			("litematica.gui.button.copy"),
+			RENAME			("litematica.gui.button.rename"),
 			DELETE   		("litematica.gui.button.delete"),
 			;
 

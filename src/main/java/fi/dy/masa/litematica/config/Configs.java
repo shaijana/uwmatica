@@ -61,6 +61,7 @@ public class Configs implements IConfigHandler
         public static final ConfigBoolean       DEBUG_LOGGING               = new ConfigBoolean("debugLogging", false).apply(GENERIC_KEY);
         public static final ConfigOptionList    DATAFIXER_MODE              = new ConfigOptionList("datafixerMode", DataFixerMode.ALWAYS).apply(GENERIC_KEY);
         public static final ConfigInteger       DATAFIXER_DEFAULT_SCHEMA    = new ConfigInteger("datafixerDefaultSchema", 1139, 99, 2724, true).apply(GENERIC_KEY);
+		public static final ConfigBoolean       DISPLAY_FILE_OPS_FEEDBACK   = new ConfigBoolean("displayFileOpsFeedback", false).apply(GENERIC_KEY);
         public static final ConfigBoolean       EASY_PLACE_CLICK_ADJACENT   = new ConfigBoolean("easyPlaceClickAdjacent", false).apply(GENERIC_KEY);
         public static final ConfigBoolean       EASY_PLACE_FIRST            = new ConfigBoolean("easyPlaceFirst", true).apply(GENERIC_KEY);
         public static final ConfigBoolean       EASY_PLACE_HOLD_ENABLED     = new ConfigBoolean("easyPlaceHoldEnabled", true).apply(GENERIC_KEY);
@@ -125,6 +126,7 @@ public class Configs implements IConfigHandler
                 CUSTOM_SCHEMATIC_BASE_DIRECTORY_ENABLED,
                 DEBUG_HUD_MODE,
                 DEBUG_LOGGING,
+				DISPLAY_FILE_OPS_FEEDBACK,
                 DATAFIXER_MODE,
                 DATAFIXER_DEFAULT_SCHEMA,
                 EASY_PLACE_CLICK_ADJACENT,
