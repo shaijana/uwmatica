@@ -105,7 +105,7 @@ public class GuiSchematicProjectsBrowser extends GuiListBase<DirectoryEntry, Wid
     private void reCreateGuiElements()
     {
         this.clearButtons();
-	    this.clearChildren();
+	    this.clearWidgets();    // todo check
 
         this.createElements();
     }
