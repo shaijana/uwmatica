@@ -270,7 +270,7 @@ public class GuiSchematicManager extends GuiSchematicBrowserBase implements ISel
 			else if (this.type == Type.RENAME_FILE)
 			{
 				FileRenamer renamer = new FileRenamer(file, this.gui.getListWidget(), Configs.Generic.DISPLAY_FILE_OPS_FEEDBACK.getBooleanValue());
-				GuiBase.openGui(new GuiTextInputFeedback(256, "litematica.gui.title.rename_file_or_directory", entry.getName(), this.gui, renamer));
+				GuiBase.openGui(new GuiTextInputFeedback(256, "litematica.gui.title.rename_file", entry.getName(), this.gui, renamer));
 			}
             else if (this.type == Type.DELETE)
             {

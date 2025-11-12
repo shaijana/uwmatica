@@ -886,6 +886,7 @@
     "litematica.gui.title.rename_area_selection": "Rename Area Selection",
     "litematica.gui.title.rename_area_sub_region": "Rename Sub Region",
     "litematica.gui.title.rename_schematic": "Rename Schematic",
+    "litematica.gui.title.rename_file": "Rename File",
     "litematica.gui.title.rename_file_or_directory": "Rename File or Directory",
     "litematica.gui.title.save_exported_schematic": "Save an exported %s of '%s'",
     "litematica.gui.title.save_imported_schematic": "Save an imported Schematic",
