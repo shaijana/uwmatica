@@ -4,6 +4,9 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import javax.annotation.Nullable;
+
+import fi.dy.masa.malilib.util.FileDeleter;
+import fi.dy.masa.malilib.util.FileRenamer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.util.ScreenshotRecorder;
@@ -19,7 +22,6 @@ import fi.dy.masa.malilib.gui.button.ConfigButtonOptionList;
 import fi.dy.masa.malilib.gui.button.IButtonActionListener;
 import fi.dy.masa.malilib.gui.interfaces.ISelectionListener;
 import fi.dy.masa.malilib.gui.widgets.WidgetFileBrowserBase.DirectoryEntry;
-import fi.dy.masa.malilib.interfaces.IConfirmationListener;
 import fi.dy.masa.malilib.interfaces.IStringConsumerFeedback;
 import fi.dy.masa.malilib.util.InfoUtils;
 import fi.dy.masa.malilib.util.StringUtils;
@@ -85,11 +87,13 @@ public class GuiSchematicManager extends GuiSchematicBrowserBase implements ISel
                 x = this.createButton(x, y, ButtonListener.Type.EXPORT_SCHEMATIC);
                 x = this.createButton(x, y, ButtonListener.Type.EXPORT_TYPE);
                 x = this.createButton(x, y, ButtonListener.Type.IMPORT_SCHEMATIC);
+				x = this.createButton(x, y, ButtonListener.Type.RENAME_FILE);
                 x = this.createButton(x, y, ButtonListener.Type.DELETE_SCHEMATIC);
             }
             else if (type == FileType.SPONGE_SCHEMATIC || type == FileType.SCHEMATICA_SCHEMATIC || type == FileType.VANILLA_STRUCTURE)
             {
                 x = this.createButton(x, y, ButtonListener.Type.IMPORT_SCHEMATIC);
+				x = this.createButton(x, y, ButtonListener.Type.RENAME_FILE);
                 x = this.createButton(x, y, ButtonListener.Type.DELETE_SCHEMATIC);
             }
         }
@@ -257,9 +261,14 @@ public class GuiSchematicManager extends GuiSchematicBrowserBase implements ISel
                 String oldName = schematic != null ? schematic.getMetadata().getName() : "";
                 GuiBase.openGui(new GuiTextInputFeedback(256, "litematica.gui.title.rename_schematic", oldName, this.gui, new SchematicRenamer(entry.getDirectory(), entry.getName(), this.gui)));
             }
+			else if (this.type == Type.RENAME_FILE)
+			{
+				FileRenamer renamer = new FileRenamer(file, this.gui.getListWidget());
+				GuiBase.openGui(new GuiTextInputFeedback(256, "litematica.gui.title.rename_file_or_directory", entry.getName(), this.gui, renamer));
+			}
             else if (this.type == Type.DELETE_SCHEMATIC)
             {
-                FileDeleter deleter = new FileDeleter(entry.getFullPath());
+                FileDeleter deleter = new FileDeleter(entry.getFullPath(), this.gui.getListWidget());
                 GuiBase.openGui(new GuiConfirmAction(400, "litematica.gui.title.confirm_file_deletion", deleter, this.gui, "litematica.gui.message.confirm_file_deletion", entry.getName()));
             }
             else if (this.type == Type.SET_PREVIEW)
@@ -321,6 +330,7 @@ public class GuiSchematicManager extends GuiSchematicBrowserBase implements ISel
             IMPORT_SCHEMATIC            ("litematica.gui.button.import"),
             EXPORT_SCHEMATIC            ("litematica.gui.button.schematic_manager.export_as"),
             RENAME_SCHEMATIC            ("litematica.gui.button.rename"),
+			RENAME_FILE            		("litematica.gui.button.rename_file"),
             DELETE_SCHEMATIC            ("litematica.gui.button.delete"),
             SET_PREVIEW                 ("litematica.gui.button.set_preview", "litematica.info.schematic_manager.preview.right_click_to_cancel"),
             EXPORT_TYPE                 ("");
@@ -353,127 +363,110 @@ public class GuiSchematicManager extends GuiSchematicBrowserBase implements ISel
         }
     }
 
-    private static class SchematicRenamer implements IStringConsumerFeedback
-    {
-        private final Path dir;
-        private final String fileName;
-        private final GuiSchematicManager gui;
+	private record SchematicRenamer(Path dir, String fileName, GuiSchematicManager gui)
+			implements IStringConsumerFeedback
+	{
+		@Override
+		public boolean setString(String string)
+		{
+			LitematicaSchematic schematic = LitematicaSchematic.createFromFile(this.dir, this.fileName);
 
-        public SchematicRenamer(Path dir, String fileName, GuiSchematicManager gui)
-        {
-            this.dir = dir;
-            this.fileName = fileName;
-            this.gui = gui;
-        }
+			if (schematic != null)
+			{
+				schematic.getMetadata().setName(string);
+				schematic.getMetadata().setTimeModifiedToNow();
 
-        @Override
-        public boolean setString(String string)
-        {
-            LitematicaSchematic schematic = LitematicaSchematic.createFromFile(this.dir, this.fileName);
+				if (schematic.writeToFile(this.dir, this.fileName, true))
+				{
+					this.gui.getListWidget().clearSchematicMetadataCache();
+					return true;
+				}
+			}
+			else
+			{
+				this.gui.setString(StringUtils.translate("litematica.error.schematic_rename.read_failed"));
+			}
 
-            if (schematic != null)
-            {
-                schematic.getMetadata().setName(string);
-                schematic.getMetadata().setTimeModifiedToNow();
+			return false;
+		}
+	}
 
-                if (schematic.writeToFile(this.dir, this.fileName, true))
-                {
-                    this.gui.getListWidget().clearSchematicMetadataCache();
-                    return true;
-                }
-            }
-            else
-            {
-                this.gui.setString(StringUtils.translate("litematica.error.schematic_rename.read_failed"));
-            }
+//    public static class FileDeleter implements IConfirmationListener
+//    {
+//        protected final Path file;
+//
+//        public FileDeleter(Path file)
+//        {
+//           this.file = file;
+//        }
+//
+//        @Override
+//        public boolean onActionCancelled()
+//        {
+//            return false;
+//        }
+//
+//        @Override
+//        public boolean onActionConfirmed()
+//        {
+//            try
+//            {
+//                Files.delete(this.file);
+//                return true;
+//            }
+//            catch (Exception e)
+//            {
+//                InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, "litematica.error.generic.failed_to_delete_file", this.file.toAbsolutePath());
+//            }
+//
+//            return false;
+//        }
+//    }
 
-            return false;
-        }
-    }
+	public record PreviewGenerator(Path dir, String fileName)
+	{
+		public void createAndSetPreviewImage()
+		{
+			LitematicaSchematic schematic = LitematicaSchematic.createFromFile(this.dir, this.fileName);
 
-    public static class FileDeleter implements IConfirmationListener
-    {
-        protected final Path file;
+			if (schematic != null)
+			{
+				try
+				{
+					MinecraftClient mc = MinecraftClient.getInstance();
+					ScreenshotRecorder.takeScreenshot(mc.getFramebuffer(), (screenshot) ->
+					{
+						int x = screenshot.getWidth() >= screenshot.getHeight()
+								? (screenshot.getWidth() - screenshot.getHeight()) / 2 : 0;
+						int y = screenshot.getHeight() >= screenshot.getWidth()
+								? (screenshot.getHeight() - screenshot.getWidth()) / 2 : 0;
+						int longerSide = Math.min(screenshot.getWidth(), screenshot.getHeight());
+						//System.out.printf("w: %d, h: %d, x: %d, y: %d\n", screenshot.getWidth(), screenshot.getHeight(), x, y);
+						//int previewDimensions = 140;
+						int previewDimensions = 120;
+						NativeImage scaled = new NativeImage(previewDimensions, previewDimensions, false);
+						screenshot.resizeSubRectTo(x, y, longerSide, longerSide, scaled);
+						@SuppressWarnings("deprecation")
+						int[] pixels = scaled.makePixelArray();
 
-        public FileDeleter(Path file)
-        {
-           this.file = file;
-        }
+						schematic.getMetadata().setPreviewImagePixelData(pixels);
+						schematic.getMetadata().setTimeModifiedToNow();
+						schematic.writeToFile(this.dir, this.fileName, true);
 
-        @Override
-        public boolean onActionCancelled()
-        {
-            return false;
-        }
-
-        @Override
-        public boolean onActionConfirmed()
-        {
-            try
-            {
-                Files.delete(this.file);
-                return true;
-            }
-            catch (Exception e)
-            {
-                InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, "litematica.error.generic.failed_to_delete_file", this.file.toAbsolutePath());
-            }
-
-            return false;
-        }
-    }
-
-    public static class PreviewGenerator
-    {
-        private final Path dir;
-        private final String fileName;
-
-        public PreviewGenerator(Path dir, String fileName)
-        {
-            this.dir = dir;
-            this.fileName = fileName;
-        }
-
-        public void createAndSetPreviewImage()
-        {
-            LitematicaSchematic schematic = LitematicaSchematic.createFromFile(this.dir, this.fileName);
-
-            if (schematic != null)
-            {
-                try
-                {
-                    MinecraftClient mc = MinecraftClient.getInstance();
-                    ScreenshotRecorder.takeScreenshot(mc.getFramebuffer(), (screenshot) ->
-                    {
-                        int x = screenshot.getWidth() >= screenshot.getHeight() ? (screenshot.getWidth() - screenshot.getHeight()) / 2 : 0;
-                        int y = screenshot.getHeight() >= screenshot.getWidth() ? (screenshot.getHeight() - screenshot.getWidth()) / 2 : 0;
-                        int longerSide = Math.min(screenshot.getWidth(), screenshot.getHeight());
-                        //System.out.printf("w: %d, h: %d, x: %d, y: %d\n", screenshot.getWidth(), screenshot.getHeight(), x, y);
-                        //int previewDimensions = 140;
-                        int previewDimensions = 120;
-                        NativeImage scaled = new NativeImage(previewDimensions, previewDimensions, false);
-                        screenshot.resizeSubRectTo(x, y, longerSide, longerSide, scaled);
-                        @SuppressWarnings("deprecation")
-                        int[] pixels = scaled.makePixelArray();
-
-                        schematic.getMetadata().setPreviewImagePixelData(pixels);
-                        schematic.getMetadata().setTimeModifiedToNow();
-                        schematic.writeToFile(this.dir, this.fileName, true);
-
-                        InfoUtils.showGuiOrInGameMessage(MessageType.SUCCESS, "litematica.info.schematic_manager.preview.success");
-                    });
-                }
-                catch (Exception e)
-                {
-                    Litematica.LOGGER.warn("Exception while creating preview image", e);
-                }
-            }
-            else
-            {
-                InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, "litematica.error.schematic_rename.read_failed");
-            }
-        }
-    }
+						InfoUtils.showGuiOrInGameMessage(MessageType.SUCCESS, "litematica.info.schematic_manager.preview.success");
+					});
+				}
+				catch (Exception e)
+				{
+					Litematica.LOGGER.warn("Exception while creating preview image", e);
+				}
+			}
+			else
+			{
+				InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, "litematica.error.schematic_rename.read_failed");
+			}
+		}
+	}
 
     public enum ExportType implements IConfigOptionListEntry
     {
