@@ -1205,7 +1205,7 @@ public class WorldRendererSchematic
 
 	public void prepareBlockEntities(Camera camera, Frustum frustum, WorldRenderState renderStates, MatrixStack matrices, float tickProgress, Profiler profiler)
     {
-        Litematica.LOGGER.warn("prepareBlockEntities()");
+//        Litematica.LOGGER.warn("prepareBlockEntities()");
         this.profiler = profiler;
         profiler.push("block_entities_prepare");
 
