@@ -1,6 +1,7 @@
 package fi.dy.masa.litematica.mixin.render;
 
 import com.llamalad7.mixinextras.sugar.Local;
+import fi.dy.masa.litematica.compat.sodium.SodiumCompat;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
@@ -174,10 +175,16 @@ public abstract class MixinWorldRenderer
 
 	@Inject(method = "fillEntityRenderStates", at = @At(value = "RETURN"))
     private void litematica_onPostPrepareEntities(Camera camera, Frustum frustum, RenderTickCounter tickCounter,
-                                                  WorldRenderState entityRenderStates, CallbackInfo ci)
+                                                  WorldRenderState renderStates, CallbackInfo ci)
     {
         this.litematica$prepareProfiler();
-        LitematicaRenderer.getInstance().piecewisePrepareEntities(camera, frustum, entityRenderStates, tickCounter, this.profiler);
+        LitematicaRenderer.getInstance().piecewisePrepareEntities(camera, frustum, renderStates, tickCounter, this.profiler);
+
+		// Why Sodium?
+		if (SodiumCompat.hasSodium())
+		{
+			LitematicaRenderer.getInstance().piecewisePrepareBlockEntities(camera, frustum, renderStates, tickCounter.getTickProgress(false), this.profiler);
+		}
     }
 
 	@Inject(method = "pushEntityRenders", at = @At("RETURN"))
@@ -192,8 +199,12 @@ public abstract class MixinWorldRenderer
     private void litematica_onPostPrepareBlockEntities(Camera camera, float tickProgress, WorldRenderState renderStates,
                                                        CallbackInfo ci)
     {
-        this.litematica$prepareProfiler();
-        LitematicaRenderer.getInstance().piecewisePrepareBlockEntities(camera, this.capturedFrustum, renderStates, tickProgress, this.profiler);
+		// Why Sodium?
+		if (!SodiumCompat.hasSodium())
+		{
+			this.litematica$prepareProfiler();
+			LitematicaRenderer.getInstance().piecewisePrepareBlockEntities(camera, this.capturedFrustum, renderStates, tickProgress, this.profiler);
+		}
     }
 
     @Inject(method = "renderBlockEntities", at = @At(value = "RETURN"))

@@ -1070,7 +1070,7 @@ public class WorldRendererSchematic
 
     public void prepareEntities(Camera camera, Frustum frustum, WorldRenderState renderStates, RenderTickCounter tickCounter, Profiler profiler)
     {
-        // Litematica.LOGGER.warn("prepareEntities()");
+//        Litematica.LOGGER.warn("prepareEntities()");
         this.profiler = profiler;
 
         if (this.renderEntitiesStartupCounter > 0)
@@ -1179,7 +1179,7 @@ public class WorldRendererSchematic
 
 	public void renderEntities(Camera camera, Frustum frustum, MatrixStack matrices, WorldRenderState renderStates, OrderedRenderCommandQueue queue, Profiler profiler)
 	{
-        // Litematica.LOGGER.warn("renderEntities()");
+//        Litematica.LOGGER.warn("renderEntities()");
         if (this.schematicRenderState.entityStates.isEmpty())
         {
             return;
@@ -1205,7 +1205,7 @@ public class WorldRendererSchematic
 
 	public void prepareBlockEntities(Camera camera, Frustum frustum, WorldRenderState renderStates, MatrixStack matrices, float tickProgress, Profiler profiler)
     {
-        // Litematica.LOGGER.warn("prepareBlockEntities()");
+        Litematica.LOGGER.warn("prepareBlockEntities()");
         this.profiler = profiler;
         profiler.push("block_entities_prepare");
 
@@ -1292,7 +1292,7 @@ public class WorldRendererSchematic
 
 	public void renderBlockEntities(Camera camera, Frustum frustum, MatrixStack matrices, WorldRenderState renderStates, OrderedRenderCommandQueue queue, Profiler profiler)
 	{
-        // Litematica.LOGGER.warn("renderBlockEntities()");
+//        Litematica.LOGGER.warn("renderBlockEntities()");
         if (this.schematicRenderState.tileEntityStates.isEmpty())
         {
             return;
