@@ -6,10 +6,6 @@ import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import org.jetbrains.annotations.ApiStatus;
-
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.ShapeContext;
@@ -26,7 +22,9 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
-
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import org.jetbrains.annotations.ApiStatus;
 import fi.dy.masa.malilib.util.LayerRange;
 import fi.dy.masa.malilib.util.MathUtils;
 import fi.dy.masa.litematica.config.Configs;
@@ -287,10 +285,10 @@ public class RayTraceUtils
 
     /**
      * Ray traces to the closest position on the given list
-     * @param posList
-     * @param entity
-     * @param range
-     * @return
+     * @param posList ()
+     * @param entity ()
+     * @param range ()
+     * @return ()
      */
     @Nullable
     public static BlockHitResult traceToPositions(List<BlockPos> posList, Entity entity, double range)

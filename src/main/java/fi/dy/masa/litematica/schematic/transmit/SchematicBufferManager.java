@@ -3,9 +3,7 @@ package fi.dy.masa.litematica.schematic.transmit;
 import java.nio.file.Path;
 import java.util.HashMap;
 import javax.annotation.Nullable;
-
 import net.minecraft.nbt.NbtCompound;
-
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.schematic.LitematicaSchematic;

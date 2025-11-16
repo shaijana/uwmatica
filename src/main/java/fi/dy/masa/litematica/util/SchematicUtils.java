@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import javax.annotation.Nullable;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
@@ -21,9 +19,14 @@ import net.minecraft.util.BlockMirror;
 import net.minecraft.util.BlockRotation;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.*;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
-
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.GuiTextInput;
 import fi.dy.masa.malilib.gui.Message.MessageType;
@@ -50,6 +53,7 @@ import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement;
 import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement.RequiredEnabled;
 import fi.dy.masa.litematica.schematic.projects.SchematicProject;
 import fi.dy.masa.litematica.selection.AreaSelection;
+import fi.dy.masa.litematica.selection.Box;
 import fi.dy.masa.litematica.selection.SelectionManager;
 import fi.dy.masa.litematica.tool.ToolMode;
 import fi.dy.masa.litematica.util.RayTraceUtils.RayTraceWrapper;
@@ -317,7 +321,7 @@ public class SchematicUtils
                 if (stack.getItem() instanceof BlockItem)
                 {
                     // Smuggle in a reference to the Schematic world to the use context
-                    World worldClient = mc.player.getWorld();
+                    World worldClient = mc.player.getEntityWorld();
                     ((IMixinEntity) mc.player).litematica_setWorld(worldSchematic);
 
                     BlockHitResult hit = new BlockHitResult(trace.getPos(), side, pos.offset(side), false);
@@ -1084,6 +1088,59 @@ public class SchematicUtils
 
         return state;
     }
+
+	/**
+	 * Requested to be added by Earthcomputer from Litemoretica.
+	 * @param currentSelection
+	 * @param mcWorld
+	 * @return
+	 */
+	public static boolean saveAreaSelectionToSchematic(AreaSelection currentSelection, World mcWorld)
+	{
+		if (currentSelection == null)
+		{
+			return false;
+		}
+
+		WorldSchematic schematicWorld = SchematicWorldHandler.getSchematicWorld();
+
+		if (schematicWorld == null)
+		{
+			return false;
+		}
+
+		for (Box subregion : currentSelection.getAllSubRegionBoxes())
+		{
+			BlockPos pos1 = subregion.getPos1();
+			BlockPos pos2 = subregion.getPos2();
+			if (pos1 == null || pos2 == null)
+			{
+				continue;
+			}
+
+			BlockPos.Mutable pos = new BlockPos.Mutable();
+
+			for (int y = Math.min(pos1.getY(), pos2.getY()), yEnd = Math.max(pos1.getY(), pos2.getY()); y <= yEnd; y++)
+			{
+				for (int x = Math.min(pos1.getX(), pos2.getX()), xEnd = Math.max(pos1.getX(), pos2.getX()); x <= xEnd; x++)
+				{
+					for (int z = Math.min(pos1.getZ(), pos2.getZ()), zEnd = Math.max(pos1.getZ(), pos2.getZ()); z <= zEnd; z++)
+					{
+						pos.set(x, y, z);
+						BlockState worldState = mcWorld.getBlockState(pos);
+						BlockState schematicState = schematicWorld.getBlockState(pos);
+
+						if (worldState != schematicState)
+						{
+							setTargetedSchematicBlockState(pos, worldState);
+						}
+					}
+				}
+			}
+		}
+
+		return true;
+	}
 
     private static class ReplacementInfo
     {

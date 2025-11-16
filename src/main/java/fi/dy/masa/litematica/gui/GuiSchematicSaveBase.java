@@ -1,9 +1,10 @@
 package fi.dy.masa.litematica.gui;
 
 import javax.annotation.Nullable;
-
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
-
+import net.minecraft.client.input.CharInput;
+import net.minecraft.client.input.KeyInput;
 import fi.dy.masa.malilib.gui.GuiTextFieldGeneric;
 import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.gui.button.ButtonGeneric;
@@ -163,43 +164,43 @@ public abstract class GuiSchematicSaveBase extends GuiSchematicBrowserBase imple
     }
 
     @Override
-    public boolean onMouseClicked(int mouseX, int mouseY, int mouseButton)
+    public boolean onMouseClicked(Click click, boolean doubleClick)
     {
-        if (this.textField.mouseClickedWrapper(mouseX, mouseY, mouseButton))
+        if (this.textField.mouseClickedWrapper(click, doubleClick))
         {
             return true;
         }
 
-        return super.onMouseClicked(mouseX, mouseY, mouseButton);
+        return super.onMouseClicked(click, doubleClick);
     }
 
     @Override
-    public boolean onKeyTyped(int keyCode, int scanCode, int modifiers)
+    public boolean onKeyTyped(KeyInput input)
     {
-        if (this.textField.keyPressedWrapper(keyCode, scanCode, modifiers))
+        if (this.textField.keyPressedWrapper(input))
         {
             this.getListWidget().clearSelection();
             return true;
         }
-        else if (keyCode == KeyCodes.KEY_TAB)
+        else if (input.key() == KeyCodes.KEY_TAB)
         {
             this.textField.setFocusedWrapper(! this.textField.isFocusedWrapper());
             return true;
         }
 
-        return super.onKeyTyped(keyCode, scanCode, modifiers);
+        return super.onKeyTyped(input);
     }
 
     @Override
-    public boolean onCharTyped(char charIn, int modifiers)
+    public boolean onCharTyped(CharInput input)
     {
-        if (this.textField.charTypedWrapper(charIn, modifiers))
+        if (this.textField.charTypedWrapper(input))
         {
             this.getListWidget().clearSelection();
             return true;
         }
 
-        return super.onCharTyped(charIn, modifiers);
+        return super.onCharTyped(input);
     }
 
     public enum ButtonType

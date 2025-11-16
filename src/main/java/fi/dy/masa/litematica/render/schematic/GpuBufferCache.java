@@ -3,17 +3,21 @@ package fi.dy.masa.litematica.render.schematic;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-
 import net.minecraft.client.render.BlockRenderLayer;
 import net.minecraft.client.render.RenderLayer;
 
 public class GpuBufferCache implements AutoCloseable
 {
-    private final ConcurrentHashMap<BlockRenderLayer, ChunkRenderObjectBuffers> blockBuffers = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<RenderLayer, ChunkRenderObjectBuffers> layerBuffers = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<OverlayRenderType, ChunkRenderObjectBuffers> overlayBuffers = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<BlockRenderLayer, ChunkRenderObjectBuffers> blockBuffers;
+    private final ConcurrentHashMap<RenderLayer, ChunkRenderObjectBuffers> layerBuffers;
+    private final ConcurrentHashMap<OverlayRenderType, ChunkRenderObjectBuffers> overlayBuffers;
 
-    protected GpuBufferCache() { }
+    protected GpuBufferCache()
+    {
+	    this.blockBuffers = new ConcurrentHashMap<>();
+	    this.layerBuffers = new ConcurrentHashMap<>();
+	    this.overlayBuffers = new ConcurrentHashMap<>();
+    }
 
     protected boolean hasBuffersByBlockLayer(BlockRenderLayer layer)
     {

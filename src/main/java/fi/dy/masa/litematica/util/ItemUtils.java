@@ -11,7 +11,6 @@ import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-
 import fi.dy.masa.litematica.mixin.block.IMixinAbstractBlock;
 
 public class ItemUtils

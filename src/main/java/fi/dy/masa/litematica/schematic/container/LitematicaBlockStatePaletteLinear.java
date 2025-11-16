@@ -2,12 +2,8 @@ package fi.dy.masa.litematica.schematic.container;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import io.netty.buffer.ByteBuf;
-
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.codecs.PrimitiveCodec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.nbt.NbtCompound;
@@ -18,7 +14,11 @@ import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.codec.PacketCodecs;
 import net.minecraft.registry.RegistryEntryLookup;
 import net.minecraft.registry.RegistryKeys;
+import io.netty.buffer.ByteBuf;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.PrimitiveCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import fi.dy.masa.litematica.world.SchematicWorldHandler;
 
 public class LitematicaBlockStatePaletteLinear implements ILitematicaBlockStatePalette
@@ -32,14 +32,14 @@ public class LitematicaBlockStatePaletteLinear implements ILitematicaBlockStateP
     public static final PacketCodec<ByteBuf, LitematicaBlockStatePaletteLinear> PACKET_CODEC = new PacketCodec<>()
     {
         @Override
-        public void encode(ByteBuf buf, LitematicaBlockStatePaletteLinear value)
+        public void encode(@Nonnull ByteBuf buf, LitematicaBlockStatePaletteLinear value)
         {
             PacketCodecs.INTEGER.encode(buf, value.bits);
             PacketCodecs.UNLIMITED_NBT_ELEMENT.encode(buf, value.writeToNBT());
         }
 
         @Override
-        public LitematicaBlockStatePaletteLinear decode(ByteBuf buf)
+        public @Nonnull LitematicaBlockStatePaletteLinear decode(@Nonnull ByteBuf buf)
         {
             Integer bitsIn = PacketCodecs.INTEGER.decode(buf);
             NbtElement nbt = PacketCodecs.UNLIMITED_NBT_ELEMENT.decode(buf);

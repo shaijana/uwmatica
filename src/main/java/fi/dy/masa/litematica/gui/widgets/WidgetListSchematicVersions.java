@@ -2,11 +2,9 @@ package fi.dy.masa.litematica.gui.widgets;
 
 import java.util.Collection;
 import java.util.List;
-import com.google.common.collect.ImmutableList;
-
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.util.math.BlockPos;
-
+import com.google.common.collect.ImmutableList;
 import fi.dy.masa.litematica.gui.GuiSchematicProjectManager;
 import fi.dy.masa.litematica.gui.Icons;
 import fi.dy.masa.litematica.render.infohud.ToolHud;

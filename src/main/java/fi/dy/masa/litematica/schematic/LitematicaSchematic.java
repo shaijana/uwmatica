@@ -25,7 +25,10 @@ import net.minecraft.entity.decoration.BlockAttachedEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.inventory.Inventory;
-import net.minecraft.nbt.*;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.NbtLongArray;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryEntryLookup;
@@ -44,7 +47,10 @@ import net.minecraft.world.tick.TickPriority;
 
 import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.interfaces.IStringConsumer;
-import fi.dy.masa.malilib.util.*;
+import fi.dy.masa.malilib.util.FileUtils;
+import fi.dy.masa.malilib.util.InfoUtils;
+import fi.dy.masa.malilib.util.IntBoundingBox;
+import fi.dy.masa.malilib.util.StringUtils;
 import fi.dy.masa.malilib.util.data.Constants;
 import fi.dy.masa.malilib.util.data.Schema;
 import fi.dy.masa.malilib.util.nbt.NbtUtils;
@@ -53,8 +59,6 @@ import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.data.EntitiesDataStorage;
-import fi.dy.masa.litematica.schematic.transmit.SchematicBuffer;
-import fi.dy.masa.litematica.schematic.transmit.SchematicBufferManager;
 import fi.dy.masa.litematica.mixin.world.IMixinWorldTickScheduler;
 import fi.dy.masa.litematica.network.ServuxLitematicaHandler;
 import fi.dy.masa.litematica.network.ServuxLitematicaPacket;
@@ -66,12 +70,10 @@ import fi.dy.masa.litematica.schematic.conversion.SchematicConverter;
 import fi.dy.masa.litematica.schematic.conversion.SchematicDowngradeConverter;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
 import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement;
+import fi.dy.masa.litematica.schematic.transmit.SchematicBuffer;
+import fi.dy.masa.litematica.schematic.transmit.SchematicBufferManager;
 import fi.dy.masa.litematica.selection.AreaSelection;
 import fi.dy.masa.litematica.selection.Box;
-import fi.dy.masa.litematica.util.BlockUtils;
-import fi.dy.masa.litematica.util.EntityUtils;
-import fi.dy.masa.litematica.util.PositionUtils;
-import fi.dy.masa.litematica.util.WorldUtils;
 import fi.dy.masa.litematica.util.*;
 import fi.dy.masa.litematica.world.SchematicWorldHandler;
 
@@ -677,7 +679,7 @@ public class LitematicaSchematic
             net.minecraft.util.math.Box bb = PositionUtils.createEnclosingAABB(box.getPos1(), box.getPos2());
             BlockPos regionPosAbs = box.getPos1();
             List<EntityInfo> list = new ArrayList<>();
-            List<Entity> entities = world.getOtherEntities(null, bb, EntityUtils.NOT_PLAYER);
+            List<Entity> entities = world.getOtherEntities((Entity) null, bb, EntityUtils.NOT_PLAYER);
 
             for (Entity entity : entities)
             {
@@ -718,7 +720,7 @@ public class LitematicaSchematic
             }
 
             net.minecraft.util.math.Box bb = PositionUtils.createAABBFrom(entry.getValue());
-            List<Entity> entities = world.getOtherEntities(null, bb, EntityUtils.NOT_PLAYER);
+            List<Entity> entities = world.getOtherEntities((Entity) null, bb, EntityUtils.NOT_PLAYER);
             BlockPos regionPosAbs = box.getPos1();
 
             for (Entity entity : entities)
@@ -1636,7 +1638,7 @@ public class LitematicaSchematic
         for (int id = 0; id < size; ++id)
         {
             NbtCompound tag = tagList.getCompoundOrEmpty(id);
-            BlockState state = NbtHelper.toBlockState(lookup, tag);
+            BlockState state = net.minecraft.nbt.NbtHelper.toBlockState(lookup, tag);
             list.add(state);
         }
 
@@ -1686,7 +1688,7 @@ public class LitematicaSchematic
         return new Vec3i(tag.getInt("Width", 0), tag.getInt("Height", 0), tag.getInt("Length", 0));
     }
 
-    protected boolean readSpongePaletteFromTag(NbtCompound tag, ILitematicaBlockStatePalette palette)
+    protected boolean readSpongePaletteFromTag(NbtCompound tag, ILitematicaBlockStatePalette palette, int minecraftDataVersion)
     {
         final int size = tag.getKeys().size();
         List<BlockState> list = new ArrayList<>(size);
@@ -1700,7 +1702,8 @@ public class LitematicaSchematic
         for (String key : tag.getKeys())
         {
             int id = tag.getInt(key, 0);
-            Optional<BlockState> stateOptional = BlockUtils.getBlockStateFromString(key);
+	        // Also updates Block Names ... Now.
+	        Optional<BlockState> stateOptional = BlockUtils.getBlockStateFromString(key, minecraftDataVersion);
             BlockState state;
 
             if (stateOptional.isPresent())
@@ -1814,7 +1817,7 @@ public class LitematicaSchematic
 
         this.blockContainers.put(schematicName, container);
 
-        if (this.readSpongePaletteFromTag(paletteTag, container.getPalette()) == false)
+        if (this.readSpongePaletteFromTag(paletteTag, container.getPalette(), minecraftDataVersion) == false)
         {
             return false;
         }
@@ -2120,9 +2123,10 @@ public class LitematicaSchematic
                 NbtCompound t = paletteTag.getCompoundOrEmpty(id);
                 if (minecraftDataVersion < LitematicaSchematic.MINECRAFT_DATA_VERSION && effective != null)
                 {
+					// Also updates Block Names
                     t = SchematicConversionMaps.updateBlockStates(t, minecraftDataVersion);
                 }
-                BlockState state = NbtHelper.toBlockState(lookup, t);
+                BlockState state = net.minecraft.nbt.NbtHelper.toBlockState(lookup, t);
                 list.add(state);
             }
 
@@ -2318,7 +2322,7 @@ public class LitematicaSchematic
         for (int i = 0; i < size; ++i)
         {
             NbtCompound tag = palette.getCompoundOrEmpty(i);
-            BlockState state = NbtHelper.toBlockState(lookup, tag);
+            BlockState state = net.minecraft.nbt.NbtHelper.toBlockState(lookup, tag);
 
             if (i > 0 || state != LitematicaBlockStateContainer.AIR_BLOCK_STATE)
             {

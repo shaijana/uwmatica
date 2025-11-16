@@ -1,6 +1,12 @@
 package fi.dy.masa.litematica.schematic.placement;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.codec.PacketCodecs;
+import net.minecraft.util.BlockMirror;
+import net.minecraft.util.BlockRotation;
+import net.minecraft.util.math.BlockPos;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
@@ -9,12 +15,6 @@ import io.netty.buffer.ByteBuf;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.PrimitiveCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.codec.PacketCodecs;
-import net.minecraft.util.BlockMirror;
-import net.minecraft.util.BlockRotation;
-import net.minecraft.util.math.BlockPos;
-
 import fi.dy.masa.malilib.util.JsonUtils;
 import fi.dy.masa.malilib.util.position.PositionUtils.CoordinateType;
 import fi.dy.masa.litematica.Litematica;
@@ -39,7 +39,7 @@ public class SubRegionPlacement
     public static final PacketCodec<ByteBuf, SubRegionPlacement> PACKET_CODEC = new PacketCodec<>()
     {
         @Override
-        public void encode(ByteBuf buf, SubRegionPlacement value)
+        public void encode(@Nonnull ByteBuf buf, SubRegionPlacement value)
         {
             PacketCodecs.STRING.encode(buf, value.name);
             BlockPos.PACKET_CODEC.encode(buf, value.defaultPos);
@@ -53,7 +53,7 @@ public class SubRegionPlacement
         }
 
         @Override
-        public SubRegionPlacement decode(ByteBuf buf)
+        public @Nonnull SubRegionPlacement decode(@Nonnull ByteBuf buf)
         {
             return new SubRegionPlacement(
                 PacketCodecs.STRING.decode(buf),

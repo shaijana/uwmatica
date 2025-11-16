@@ -2,11 +2,9 @@ package fi.dy.masa.litematica.interfaces;
 
 import java.util.List;
 import javax.annotation.Nonnull;
-
 import net.minecraft.util.BlockMirror;
 import net.minecraft.util.BlockRotation;
 import net.minecraft.util.math.BlockPos;
-
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacementEventFlag;
 import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement;

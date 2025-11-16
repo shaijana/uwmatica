@@ -4,13 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
-import org.jetbrains.annotations.ApiStatus;
-
 import net.minecraft.block.BlockState;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-
+import org.jetbrains.annotations.ApiStatus;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.interfaces.ISchematicPickBlockEventListener;
 import fi.dy.masa.litematica.interfaces.ISchematicPickBlockEventManager;

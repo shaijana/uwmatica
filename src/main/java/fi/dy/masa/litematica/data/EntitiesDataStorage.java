@@ -3,11 +3,9 @@ package fi.dy.masa.litematica.data;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
-import com.google.gson.JsonObject;
-import org.apache.commons.lang3.tuple.Pair;
-
-import com.mojang.datafixers.util.Either;
-import net.minecraft.block.*;
+import net.minecraft.block.BlockEntityProvider;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.ChestBlock;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.block.entity.ChestBlockEntity;
@@ -33,11 +31,18 @@ import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
-import net.minecraft.util.math.*;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
+import com.google.gson.JsonObject;
+import org.apache.commons.lang3.tuple.Pair;
 
+import com.mojang.datafixers.util.Either;
 import fi.dy.masa.malilib.interfaces.IClientTickHandler;
 import fi.dy.masa.malilib.interfaces.IDataSyncer;
 import fi.dy.masa.malilib.mixin.entity.IMixinAbstractHorseEntity;
@@ -45,7 +50,6 @@ import fi.dy.masa.malilib.mixin.entity.IMixinPiglinEntity;
 import fi.dy.masa.malilib.mixin.network.IMixinDataQueryHandler;
 import fi.dy.masa.malilib.network.ClientPlayHandler;
 import fi.dy.masa.malilib.network.IPluginClientPlayHandler;
-import fi.dy.masa.malilib.util.data.Constants;
 import fi.dy.masa.malilib.util.InventoryUtils;
 import fi.dy.masa.malilib.util.nbt.NbtEntityUtils;
 import fi.dy.masa.malilib.util.nbt.NbtKeys;
@@ -56,7 +60,6 @@ import fi.dy.masa.litematica.Reference;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.network.ServuxLitematicaHandler;
 import fi.dy.masa.litematica.network.ServuxLitematicaPacket;
-import fi.dy.masa.litematica.schematic.LitematicaSchematic;
 import fi.dy.masa.litematica.util.EntityUtils;
 import fi.dy.masa.litematica.util.PositionUtils;
 import fi.dy.masa.litematica.util.WorldUtils;
@@ -984,7 +987,7 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
         BlockPos pos2 = new BlockPos(chunkPos.getEndX(),   maxY, chunkPos.getEndZ());
         Box bb = PositionUtils.createEnclosingAABB(pos1, pos2);
         Set<BlockPos> teSet = chunk.getBlockEntityPositions();
-        List<Entity> entList = world.getOtherEntities(null, bb, EntityUtils.NOT_PLAYER);
+        List<Entity> entList = world.getOtherEntities((Entity) null, bb, EntityUtils.NOT_PLAYER);
 
         Litematica.debugLog("EntitiesDataStorage#requestBackupBulkEntityData(): for chunkPos {} (minY [{}], maxY [{}]) // Request --> TE: [{}], E: [{}]", chunkPos.toString(), minY, maxY, teSet.size(), entList.size());
         //System.out.printf("0: ChunkPos [%s], Box [%s] // teSet [%d], entList [%d]\n", chunkPos.toString(), bb.toString(), teSet.size(), entList.size());
@@ -1311,12 +1314,13 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
     private void checkForPendingChunkTimeout(ChunkPos pos)
     {
         if ((this.hasServuxServer() && this.hasPendingChunk(pos)) ||
-            (this.getIfReceivedBackupPackets() && this.hasPendingChunk(pos)))
+            (this.getIfReceivedBackupPackets() && this.hasPendingChunk(pos)) &&
+             this.mc.world != null)
         {
             long now = Util.getMeasuringTimeMs();
 
             // Take no action when ChunkPos is not loaded by the ClientWorld.
-            if (WorldUtils.isClientChunkLoaded(mc.world, pos.x, pos.z) == false)
+            if (WorldUtils.isClientChunkLoaded(this.mc.world, pos.x, pos.z) == false)
             {
                 this.pendingChunkTimeout.replace(pos, now);
                 return;

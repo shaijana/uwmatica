@@ -1,6 +1,7 @@
 package fi.dy.masa.litematica.schematic.conversion;
 
 import java.util.*;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import net.minecraft.block.*;
@@ -98,7 +99,7 @@ public class SchematicConverter
 
     /**
      * Creates the post process state filter array.
-     * @param palette
+     * @param palette ()
      * @return true if there are at least some states that need post processing
      */
     public boolean createPostProcessStateFilter(BlockState[] palette)
@@ -108,7 +109,7 @@ public class SchematicConverter
 
     /**
      * Creates the post process state filter array.
-     * @param palette
+     * @param palette ()
      * @return true if there are at least some states that need post processing
      */
     public boolean createPostProcessStateFilter(Collection<BlockState> palette)
@@ -266,7 +267,7 @@ public class SchematicConverter
         }
 
         @Override
-        public BlockState getBlockState(BlockPos pos)
+        public @Nonnull BlockState getBlockState(BlockPos pos)
         {
             if (pos.getX() >= 0 && pos.getX() < this.size.getX() &&
                 pos.getY() >= 0 && pos.getY() < this.size.getY() &&
@@ -279,7 +280,7 @@ public class SchematicConverter
         }
 
         @Override
-        public FluidState getFluidState(BlockPos pos)
+        public @Nonnull FluidState getFluidState(@Nonnull BlockPos pos)
         {
             // FIXME change when fluids become completely separate
             return this.getBlockState(pos).getFluidState();
@@ -287,7 +288,7 @@ public class SchematicConverter
 
         @Override
         @Nullable
-        public BlockEntity getBlockEntity(BlockPos pos)
+        public BlockEntity getBlockEntity(@Nonnull BlockPos pos)
         {
             return null;
         }

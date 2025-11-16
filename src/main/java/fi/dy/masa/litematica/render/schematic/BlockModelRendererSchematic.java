@@ -4,13 +4,16 @@ import java.util.BitSet;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.jetbrains.annotations.ApiStatus;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.color.block.BlockColors;
-import net.minecraft.client.render.*;
+import net.minecraft.client.render.OverlayTexture;
+import net.minecraft.client.render.RenderLayers;
+import net.minecraft.client.render.VertexConsumer;
+import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.render.block.FluidRenderer;
 import net.minecraft.client.render.model.BakedModelManager;
 import net.minecraft.client.render.model.BakedQuad;
@@ -18,7 +21,6 @@ import net.minecraft.client.render.model.BlockModelPart;
 import net.minecraft.client.render.model.BlockStateModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.fluid.FluidState;
-import net.minecraft.item.ItemDisplayContext;
 import net.minecraft.util.crash.CrashException;
 import net.minecraft.util.crash.CrashReport;
 import net.minecraft.util.crash.CrashReportSection;
@@ -30,7 +32,6 @@ import net.minecraft.util.math.random.BaseRandom;
 import net.minecraft.util.math.random.LocalRandom;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.world.BlockRenderView;
-
 import fi.dy.masa.malilib.util.position.PositionUtils;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
@@ -39,14 +40,15 @@ import fi.dy.masa.litematica.render.schematic.ao.AOProcessorModern;
 
 public class BlockModelRendererSchematic
 {
-    private final LocalRandom random = new LocalRandom(0);
+	public static final ThreadLocal<AOProcessorModern.BC> CACHE = ThreadLocal.withInitial(AOProcessorModern.BC::new);
+    private final LocalRandom random;
     private final BlockColors colorMap;
     private final FluidRenderer liquidRenderer;
     private BakedModelManager bakedManager;
-    public static final ThreadLocal<AOProcessorModern.BC> CACHE = ThreadLocal.withInitial(AOProcessorModern.BC::new);
 
     public BlockModelRendererSchematic(BlockColors blockColorsIn)
     {
+		this.random = new LocalRandom(0);
         this.colorMap = blockColorsIn;
         this.liquidRenderer = new FluidRenderer();
     }
@@ -76,7 +78,9 @@ public class BlockModelRendererSchematic
                                BlockPos posIn, MatrixStack matrixStack,
                                VertexConsumer vertexConsumer, long rand)
     {
-        boolean ao = MinecraftClient.isAmbientOcclusionEnabled() && stateIn.getLuminance() == 0 && modelParts.getFirst().useAmbientOcclusion();
+        boolean ao = MinecraftClient.isAmbientOcclusionEnabled() &&
+		        stateIn.getLuminance() == 0 &&
+		        (!modelParts.isEmpty() && modelParts.getFirst().useAmbientOcclusion());
 
         Vec3d offset = stateIn.getModelOffset(posIn);
         matrixStack.translate((float) offset.x, (float) offset.y, (float) offset.z);
@@ -86,12 +90,12 @@ public class BlockModelRendererSchematic
         {
             if (ao)
             {
-                //System.out.printf("renderModelSmooth(): pos [%s] / state [%s]\n", posIn.toShortString(), stateIn);
+//                System.out.printf("renderModelSmooth(): pos [%s] / state [%s] / parts? [%d]\n", posIn.toShortString(), stateIn, modelParts.size());
                 return this.renderModelSmooth(worldIn, modelParts, stateIn, posIn, matrixStack, vertexConsumer, this.random, rand, overlay);
             }
             else
             {
-                //System.out.printf("renderModelFlat(): pos [%s] / state [%s]\n", posIn.toShortString(), stateIn);
+//                System.out.printf("renderModelFlat(): pos [%s] / state [%s] / parts? [%d]\n", posIn.toShortString(), stateIn, modelParts.size());
                 return this.renderModelFlat(worldIn, modelParts, stateIn, posIn, matrixStack, vertexConsumer, this.random, rand, overlay);
             }
         }
@@ -462,7 +466,7 @@ public class BlockModelRendererSchematic
         {
             CrashReport crashReport = CrashReport.create(var9, "Tesselating liquid in world");
             CrashReportSection crashReportSection = crashReport.addElement("Block being tesselated");
-            CrashReportSection.addBlockInfo(crashReportSection, world, pos, null);
+            CrashReportSection.addBlockInfo(crashReportSection, world, pos, stateIn);
             throw new CrashException(crashReport);
         }
     }
@@ -489,8 +493,8 @@ public class BlockModelRendererSchematic
         float blue = (float) (i & 0xFF) / 255.0f;
 
         this.renderBlockEntity(consumer.getBuffer(RenderLayers.getEntityBlockLayer(stateIn)), matrixStack, bakedModel, red, green, blue, light, overlay);
-        this.bakedManager.getBlockEntityModelsSupplier().get()
-                    .render(stateIn.getBlock(), ItemDisplayContext.NONE, matrixStack, consumer, light, overlay);
+//        this.bakedManager.getBlockEntityModelsSupplier().get()
+//                    .render(stateIn.getBlock(), ItemDisplayContext.NONE, matrixStack, consumer, light, overlay);
 
         return true;
     }

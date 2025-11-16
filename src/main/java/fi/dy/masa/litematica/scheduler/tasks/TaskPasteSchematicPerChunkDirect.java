@@ -7,7 +7,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.profiler.Profiler;
-
 import fi.dy.masa.litematica.render.infohud.InfoHud;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
 import fi.dy.masa.litematica.util.SchematicPlacingUtils;
@@ -29,7 +28,7 @@ public class TaskPasteSchematicPerChunkDirect extends TaskPasteSchematicPerChunk
     {
         return super.canExecute() &&
                this.mc.isIntegratedServerRunning() &&
-               this.world != null && this.world.isClient == false;
+               this.world != null && this.world.isClient() == false;
     }
 
     @Override
@@ -52,6 +51,7 @@ public class TaskPasteSchematicPerChunkDirect extends TaskPasteSchematicPerChunk
         profiler.push("per_chunk_paste");
 
         MinecraftServer server = this.mc.getServer();
+		if (server == null) return true;
         final long vanillaTickTime = server.getTickTimes()[server.getTicks() % 100];
         final long timeStart = Util.getMeasuringTimeNano();
 

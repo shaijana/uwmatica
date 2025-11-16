@@ -6,10 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
-
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.entity.Entity;
@@ -17,7 +13,9 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.gui.interfaces.IMessageConsumer;
@@ -370,7 +368,7 @@ public class SelectionManager
 
         if (selection != null && mc.player != null)
         {
-            BlockPos pos = BlockPos.ofFloored(mc.player.getPos());
+            BlockPos pos = BlockPos.ofFloored(mc.player.getEntityPos());
 
             if (selection.createNewSubRegionBox(pos, selection.getName()) != null)
             {
@@ -400,7 +398,7 @@ public class SelectionManager
                 return false;
             }
 
-            BlockPos pos = BlockPos.ofFloored(mc.player.getPos());
+            BlockPos pos = BlockPos.ofFloored(mc.player.getEntityPos());
 
             if (selection.createNewSubRegionBox(pos, name) != null)
             {

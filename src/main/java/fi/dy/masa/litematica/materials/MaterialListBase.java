@@ -4,14 +4,15 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import net.minecraft.util.math.MathHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import fi.dy.masa.litematica.util.BlockInfoListType;
 import fi.dy.masa.malilib.interfaces.ICompletionListener;
 import fi.dy.masa.malilib.util.JsonUtils;
-import net.minecraft.util.math.MathHelper;
 
 public abstract class MaterialListBase implements IMaterialList
 {
@@ -69,7 +70,7 @@ public abstract class MaterialListBase implements IMaterialList
         return this.materialListFiltered;
     }
 
-    public void setCompletionListener(ICompletionListener listener)
+    public void setCompletionListener(@Nonnull ICompletionListener listener)
     {
         this.completionListener = listener;
     }

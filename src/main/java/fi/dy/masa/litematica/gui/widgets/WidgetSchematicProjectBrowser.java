@@ -2,10 +2,8 @@ package fi.dy.masa.litematica.gui.widgets;
 
 import java.nio.file.Path;
 import javax.annotation.Nullable;
-
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.util.math.BlockPos;
-
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.interfaces.ISelectionListener;
 import fi.dy.masa.malilib.gui.widgets.WidgetFileBrowserBase;

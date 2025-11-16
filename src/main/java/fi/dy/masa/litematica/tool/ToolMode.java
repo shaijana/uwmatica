@@ -1,13 +1,13 @@
 package fi.dy.masa.litematica.tool;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import com.google.common.collect.ImmutableList;
-
-import com.mojang.serialization.Codec;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.StringIdentifiable;
+import com.google.common.collect.ImmutableList;
 
+import com.mojang.serialization.Codec;
 import fi.dy.masa.malilib.util.StringUtils;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.util.EntityUtils;
@@ -58,7 +58,7 @@ public enum ToolMode implements StringIdentifiable
     }
 
     @Override
-    public String asString()
+    public @Nonnull String asString()
     {
         return this.configString;
     }

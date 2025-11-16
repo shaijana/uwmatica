@@ -3,9 +3,9 @@ package fi.dy.masa.litematica.util;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import com.google.common.collect.ImmutableList;
-
+import javax.annotation.Nonnull;
 import net.minecraft.util.StringIdentifiable;
+import com.google.common.collect.ImmutableList;
 
 public enum FileType implements StringIdentifiable
 {
@@ -100,7 +100,7 @@ public enum FileType implements StringIdentifiable
 	}
 
 	@Override
-	public String asString()
+	public @Nonnull String asString()
 	{
 		return getString(this);
 	}

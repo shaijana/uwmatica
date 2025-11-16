@@ -5,21 +5,19 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import com.google.common.collect.Sets;
-import org.apache.logging.log4j.Logger;
-
-import com.mojang.blaze3d.buffers.GpuBuffer;
-import com.mojang.blaze3d.systems.CommandEncoder;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.systems.VertexSorter;
-import fi.dy.masa.litematica.util.IgnoreBlockRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.*;
+import net.minecraft.client.render.BlockRenderLayer;
+import net.minecraft.client.render.BufferBuilder;
+import net.minecraft.client.render.BuiltBuffer;
+import net.minecraft.client.render.Camera;
+import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.render.RenderLayers;
 import net.minecraft.client.render.block.entity.BlockEntityRenderer;
+import net.minecraft.client.render.block.entity.state.BlockEntityRenderState;
 import net.minecraft.client.render.model.BlockModelPart;
 import net.minecraft.client.util.BufferAllocator;
 import net.minecraft.client.util.math.MatrixStack;
@@ -34,7 +32,14 @@ import net.minecraft.util.math.random.Random;
 import net.minecraft.util.profiler.Profiler;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.chunk.WorldChunk;
+import com.google.common.collect.Sets;
+import org.apache.logging.log4j.Logger;
 
+import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.systems.CommandEncoder;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.systems.VertexSorter;
+import com.mojang.blaze3d.vertex.*;
 import fi.dy.masa.malilib.util.EntityUtils;
 import fi.dy.masa.malilib.util.IntBoundingBox;
 import fi.dy.masa.malilib.util.LayerRange;
@@ -45,6 +50,7 @@ import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.render.RenderUtils;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacementManager.PlacementPart;
+import fi.dy.masa.litematica.util.IgnoreBlockRegistry;
 import fi.dy.masa.litematica.util.OverlayType;
 import fi.dy.masa.litematica.util.PositionUtils;
 import fi.dy.masa.litematica.world.WorldSchematic;
@@ -57,9 +63,10 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
     protected volatile WorldSchematic world;
     protected final WorldRendererSchematic worldRenderer;
     // UNTHREADED CODE
+    private final Random rand;
     protected final ReentrantLock chunkRenderLock;
     protected final ReentrantLock chunkRenderDataLock;
-    protected final Set<BlockEntity> setBlockEntities = new HashSet<>();
+    protected final Set<BlockEntity> setBlockEntities;
     protected Profiler profiler;
     //
     //protected final AtomicReference<Set<BlockEntity>> setBlockEntities = new AtomicReference<>(new HashSet<>());
@@ -68,12 +75,12 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
 
 //    protected final Map<RenderLayer, GpuBuffer> vertexBufferBlocks;
 //    protected final Map<OverlayRenderType, GpuBuffer> vertexBufferOverlay;
-    protected final List<IntBoundingBox> boxes = new ArrayList<>();
-    protected final EnumSet<OverlayRenderType> existingOverlays = EnumSet.noneOf(OverlayRenderType.class);
+    protected final List<IntBoundingBox> boxes;
+    protected final EnumSet<OverlayRenderType> existingOverlays;
 
     private net.minecraft.util.math.Box boundingBox;
     protected Color4f overlayColor;
-    protected boolean hasOverlay = false;
+    protected boolean hasOverlay;
     private boolean ignoreClientWorldFluids;
     private IgnoreBlockRegistry ignoreBlockRegistry;
 
@@ -97,19 +104,29 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
     {
         this.world = world;
         this.worldRenderer = worldRenderer;
+		this.rand = Random.create();
         this.chunkRenderData = ChunkRenderDataSchematic.EMPTY;
         this.chunkRenderLock = new ReentrantLock();
+		this.setBlockEntities = new HashSet<>();
         this.chunkRenderDataLock = new ReentrantLock();
         this.position = new BlockPos.Mutable();
         this.chunkRelativePos = new BlockPos.Mutable();
+		this.boxes = new ArrayList<>();
+		this.existingOverlays = EnumSet.noneOf(OverlayRenderType.class);
         this.builderCache = new BufferBuilderCache();
         this.gpuBufferCache = new GpuBufferCache();
+		this.hasOverlay = false;
     }
 
     public boolean hasOverlay()
     {
         return this.hasOverlay;
     }
+
+	public boolean isEmpty()
+	{
+		return this.boxes.isEmpty();
+	}
 
     protected Profiler getProfiler()
     {
@@ -316,6 +333,11 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
             {
                 return;
             }
+
+			if (task.getChunkRenderData() != null)
+			{
+				task.getChunkRenderData().clearAll();
+			}
 
             task.setChunkRenderData(data);
         }
@@ -626,7 +648,6 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
         boolean useDefault = false;
         BlockPos.Mutable relPos = this.getChunkRelativePosition(pos);
         OverlayRenderType overlayType;
-        Random rand = Random.create();
 
 //        LOGGER.error("[VBO] renderOverlay: type: [{}] (bool: {}), relPos: [{}] // stateSchematic: [{}]", type.name(), missing, relPos.toShortString(), stateSchematic.toString());
 
@@ -646,7 +667,7 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
             {
                 this.getProfiler().swap("cull_inner_sides");
                 BlockPos.Mutable posMutable = new BlockPos.Mutable();
-                List<BlockModelPart> modelParts = this.worldRenderer.getModelParts(relPos, stateSchematic, rand);
+                List<BlockModelPart> modelParts = this.worldRenderer.getModelParts(relPos, stateSchematic, this.rand);
 
                 if (!RenderUtils.hasQuads(modelParts))
                 {
@@ -700,7 +721,7 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
                 if (missing && Configs.Visuals.SCHEMATIC_OVERLAY_MODEL_SIDES.getBooleanValue())
                 {
                     this.getProfiler().swap("render_model_sides");
-                    List<BlockModelPart> modelParts = this.worldRenderer.getModelParts(relPos, stateSchematic, rand);
+                    List<BlockModelPart> modelParts = this.worldRenderer.getModelParts(relPos, stateSchematic, this.rand);
 
                     if (!RenderUtils.hasQuads(modelParts))
                     {
@@ -807,7 +828,7 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
                          */
 
                         this.getProfiler().swap("render_model_batched");
-                        List<BlockModelPart> modelParts = this.worldRenderer.getModelParts(relPos, stateSchematic, rand);
+                        List<BlockModelPart> modelParts = this.worldRenderer.getModelParts(relPos, stateSchematic, this.rand);
 
                         if (!RenderUtils.hasQuads(modelParts))
                         {
@@ -834,7 +855,7 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
                 if (missing && Configs.Visuals.SCHEMATIC_OVERLAY_MODEL_OUTLINE.getBooleanValue())
                 {
                     this.getProfiler().swap("render_model_batched");
-                    List<BlockModelPart> modelParts = this.worldRenderer.getModelParts(relPos, stateSchematic, rand);
+                    List<BlockModelPart> modelParts = this.worldRenderer.getModelParts(relPos, stateSchematic, this.rand);
 
                     if (!RenderUtils.hasQuads(modelParts))
                     {
@@ -1077,14 +1098,13 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
         return overlayColor;
     }
 
-//    private void addBlockEntity(BlockPos pos, ChunkRenderDataSchematic chunkRenderData, Set<BlockEntity> blockEntities)
     private <T extends BlockEntity> void addBlockEntity(BlockPos pos, ChunkRenderDataSchematic chunkRenderData)
     {
         BlockEntity te = this.schematicWorldView.getBlockEntity(pos, WorldChunk.CreationType.CHECK);
 
         if (te != null)
         {
-            BlockEntityRenderer<BlockEntity> tesr = this.worldRenderer.getBlockEntityRenderer().get(te);
+            BlockEntityRenderer<BlockEntity, BlockEntityRenderState> tesr = this.worldRenderer.getBlockEntityRenderer().get(te);
 
             if (tesr != null)
             {
@@ -1093,7 +1113,6 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
                 // noCullingTE
                 if (tesr.rendersOutsideBoundingBox())
                 {
-//                    blockEntities.add(te);
                     chunkRenderData.addNoCullBlockEntity(te);
                 }
             }
@@ -1582,7 +1601,7 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
     }
 
     private void resortRenderOverlay(OverlayRenderType type, float x, float y, float z, @Nonnull ChunkRenderDataSchematic chunkRenderData, @Nonnull BufferAllocatorCache allocators)
-            throws InterruptedException
+//            throws InterruptedException
     {
         //LOGGER.warn("[VBO] resortRenderOverlay() overlay type [{}]", type.name());
 

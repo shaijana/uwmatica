@@ -2,8 +2,6 @@ package fi.dy.masa.litematica.materials;
 
 import java.util.Collections;
 import java.util.List;
-import org.joml.Matrix3x2fStack;
-
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
@@ -13,7 +11,7 @@ import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.util.math.BlockPos;
-
+import org.joml.Matrix3x2fStack;
 import fi.dy.masa.malilib.config.HudAlignment;
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.render.RenderUtils;
@@ -84,7 +82,7 @@ public class MaterialListHudRenderer implements IInfoHudRenderer
         {
             MaterialListUtils.updateAvailableCounts(this.materialList.getMaterialsAll(), mc.player);
             list = this.materialList.getMaterialsMissingOnly(true);
-            Collections.sort(list, this.sorter);
+            list.sort(this.sorter);
             this.lastUpdateTime = currentTime;
         }
         else

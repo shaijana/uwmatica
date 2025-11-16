@@ -6,6 +6,7 @@ import fi.dy.masa.litematica.config.Configs;
 /**
  * Makes an attempt to adjust Visual Configs for different GPU Models to help reduce crashes
  */
+@Deprecated(forRemoval = true)
 public class RenderCompat
 {
     public static void checkGpuVisuals()

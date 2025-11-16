@@ -1,7 +1,5 @@
 package fi.dy.masa.litematica.mixin;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.util.thread.ReentrantThreadExecutor;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -9,7 +7,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
+import fi.dy.masa.litematica.util.EasyPlaceUtils;
 import fi.dy.masa.litematica.util.WorldUtils;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.util.thread.ReentrantThreadExecutor;
 
 @Mixin(value = MinecraftClient.class)
 public abstract class MixinMinecraftClient extends ReentrantThreadExecutor<Runnable>
@@ -25,15 +26,12 @@ public abstract class MixinMinecraftClient extends ReentrantThreadExecutor<Runna
     {
         if (Configs.Generic.PLACEMENT_RESTRICTION.getBooleanValue())
         {
-            /*
             if (Configs.Generic.EASY_PLACE_POST_REWRITE.getBooleanValue()
                 && EasyPlaceUtils.handlePlacementRestriction())
             {
                 ci.cancel();
             }
-            else
-             */
-            if (WorldUtils.handlePlacementRestriction((MinecraftClient)(Object) this))
+            else if (WorldUtils.handlePlacementRestriction((MinecraftClient)(Object) this))
             {
                 ci.cancel();
             }

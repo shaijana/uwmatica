@@ -1,6 +1,10 @@
 package fi.dy.masa.litematica.selection;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.codec.PacketCodecs;
+import net.minecraft.util.math.BlockPos;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import io.netty.buffer.ByteBuf;
@@ -8,10 +12,6 @@ import io.netty.buffer.ByteBuf;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.PrimitiveCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.codec.PacketCodecs;
-import net.minecraft.util.math.BlockPos;
-
 import fi.dy.masa.malilib.util.JsonUtils;
 import fi.dy.masa.malilib.util.position.PositionUtils.CoordinateType;
 import fi.dy.masa.litematica.util.PositionUtils;
@@ -29,7 +29,7 @@ public class Box
     public static final PacketCodec<ByteBuf, Box> PACKET_CODEC = new PacketCodec<>()
     {
         @Override
-        public Box decode(ByteBuf buf)
+        public @Nonnull Box decode(@Nonnull ByteBuf buf)
         {
             return new Box(
                     BlockPos.PACKET_CODEC.decode(buf),
@@ -39,7 +39,7 @@ public class Box
         }
 
         @Override
-        public void encode(ByteBuf buf, Box value)
+        public void encode(@Nonnull ByteBuf buf, Box value)
         {
             BlockPos.PACKET_CODEC.encode(buf, value.pos1 != null ? value.pos1 : BlockPos.ORIGIN);
             BlockPos.PACKET_CODEC.encode(buf, value.pos2 != null ? value.pos2 : BlockPos.ORIGIN);
@@ -163,14 +163,12 @@ public class Box
     {
         BlockPos pos = this.getPosition(corner);
 
-        switch (type)
-        {
-            case X: return pos.getX();
-            case Y: return pos.getY();
-            case Z: return pos.getZ();
-        }
-
-        return 0;
+	    return switch (type)
+	    {
+		    case X -> pos.getX();
+		    case Y -> pos.getY();
+		    case Z -> pos.getZ();
+	    };
     }
 
     protected void setPosition(BlockPos pos, Corner corner)

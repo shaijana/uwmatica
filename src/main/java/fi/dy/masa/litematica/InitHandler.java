@@ -1,14 +1,13 @@
 package fi.dy.masa.litematica;
 
-import fi.dy.masa.litematica.network.UWPacketHandler; //Shaijana
-import net.minecraft.client.MinecraftClient;
-
 import fi.dy.masa.malilib.config.ConfigManager;
 import fi.dy.masa.malilib.event.*;
 import fi.dy.masa.malilib.interfaces.IInitializationHandler;
 import fi.dy.masa.malilib.interfaces.IRenderer;
 import fi.dy.masa.malilib.registry.Registry;
 import fi.dy.masa.malilib.util.data.ModInfo;
+import net.minecraft.client.MinecraftClient;
+import fi.dy.masa.litematica.network.UWPacketHandler; //Shaijana
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.data.EntitiesDataStorage;

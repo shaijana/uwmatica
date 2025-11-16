@@ -6,12 +6,10 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import net.minecraft.block.entity.SignBlockEntity;
-import net.minecraft.client.gui.screen.ingame.AbstractSignEditScreen;
-
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.util.WorldUtils;
+import net.minecraft.block.entity.SignBlockEntity;
+import net.minecraft.client.gui.screen.ingame.AbstractSignEditScreen;
 
 @Mixin(value = AbstractSignEditScreen.class, priority = 990)
 public class MixinAbstractSignEditScreen

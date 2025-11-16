@@ -1,15 +1,13 @@
 package fi.dy.masa.litematica.gui.widgets;
 
 import javax.annotation.Nullable;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.util.math.BlockPos;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.util.math.BlockPos;
-
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.button.ButtonBase;
 import fi.dy.masa.malilib.gui.button.ButtonGeneric;
@@ -174,9 +172,9 @@ public class WidgetSchematicEntry extends WidgetListEntryBase<LitematicaSchemati
         @Override
         public void actionPerformedWithButton(ButtonBase button, int mouseButton)
         {
-            if (this.type == Type.CREATE_PLACEMENT)
+            if (this.type == Type.CREATE_PLACEMENT && this.widget.mc.player != null)
             {
-                BlockPos pos = BlockPos.ofFloored(this.widget.mc.player.getPos());
+                BlockPos pos = BlockPos.ofFloored(this.widget.mc.player.getEntityPos());
                 LitematicaSchematic entry = this.widget.schematic;
                 String name = entry.getMetadata().getName();
                 boolean enabled = GuiBase.isShiftDown() == false;
@@ -188,8 +186,7 @@ public class WidgetSchematicEntry extends WidgetListEntryBase<LitematicaSchemati
             }
             else if (this.type == Type.SAVE_TO_FILE)
             {
-                LitematicaSchematic entry = this.widget.schematic;
-                GuiSchematicSave gui = new GuiSchematicSave(entry);
+                GuiSchematicSave gui = new GuiSchematicSave(this.widget.schematic);
                 gui.setParent(GuiUtils.getCurrentScreen());
                 GuiBase.openGui(gui);
             }

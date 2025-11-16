@@ -13,7 +13,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.PillarBlock;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.datafixer.Schemas;
 import net.minecraft.datafixer.TypeReferences;
 import net.minecraft.nbt.*;
 import net.minecraft.registry.RegistryEntryLookup;
@@ -21,7 +21,6 @@ import net.minecraft.registry.RegistryKeys;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-
 import fi.dy.masa.malilib.util.nbt.NbtUtils;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.config.Configs;
@@ -235,7 +234,7 @@ public class SchematicConversionMaps
             //RegistryEntryLookup<Block> lookup = Registries.BLOCK.getReadOnlyWrapper();
             RegistryEntryLookup<Block> lookup = SchematicWorldHandler.INSTANCE.getRegistryManager().getOrThrow(RegistryKeys.BLOCK);
             // Store the id + meta => state maps before renaming the block for the state <=> state maps
-            BlockState state = NbtHelper.toBlockState(lookup, newStateTag);
+            BlockState state = net.minecraft.nbt.NbtHelper.toBlockState(lookup, newStateTag);
             //System.out.printf("id: %5d, state: %s, tag: %s\n", idMeta, state, newStateTag);
             ID_META_TO_BLOCKSTATE.putIfAbsent(idMeta, state);
 
@@ -287,7 +286,7 @@ public class SchematicConversionMaps
             //RegistryEntryLookup<Block> lookup = Registries.BLOCK.getReadOnlyWrapper();
             RegistryEntryLookup<Block> lookup = SchematicWorldHandler.INSTANCE.getRegistryManager().getOrThrow(RegistryKeys.BLOCK);
             // Store the id + meta => state maps before renaming the block for the state <=> state maps
-            BlockState state = NbtHelper.toBlockState(lookup, newStateTag);
+            BlockState state = net.minecraft.nbt.NbtHelper.toBlockState(lookup, newStateTag);
             //System.out.printf("id: %5d, state: %s, tag: %s\n", idMeta, state, newStateTag);
             ID_META_TO_BLOCKSTATE.putIfAbsent(idMeta, state);
 
@@ -473,7 +472,7 @@ public class SchematicConversionMaps
 
         try
         {
-            return MinecraftClient.getInstance().getDataFixer()
+            return Schemas.getFixer()
                     .update(TypeReferences.BLOCK_NAME, new Dynamic<>(NbtOps.INSTANCE, tagStr), oldVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION)
                     .getValue().asString()
                     .orElse(oldName);
@@ -485,14 +484,23 @@ public class SchematicConversionMaps
         }
     }
 
-    /**
+	/**
      * These are the Vanilla Data Fixer's for the 1.20.x -> 1.20.5 changes
      */
     public static NbtCompound updateBlockStates(NbtCompound oldBlockState, int oldVersion)
     {
+		String oldName = oldBlockState.getString("Name", "");
+		String blockName = updateBlockName(oldName, oldVersion);
+
+		if (!oldName.equalsIgnoreCase(blockName))
+		{
+			oldBlockState.putString("Name", blockName);
+//			Litematica.LOGGER.error("updateBlockName: [{}] -> [{}]", oldName, blockName);
+		}
+
         try
         {
-            return (NbtCompound) MinecraftClient.getInstance().getDataFixer().update(TypeReferences.BLOCK_STATE, new Dynamic<>(NbtOps.INSTANCE, oldBlockState), oldVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION).getValue();
+            return (NbtCompound) Schemas.getFixer().update(TypeReferences.BLOCK_STATE, new Dynamic<>(NbtOps.INSTANCE, oldBlockState), oldVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION).getValue();
         }
         catch (Exception e)
         {
@@ -506,7 +514,7 @@ public class SchematicConversionMaps
     {
         try
         {
-            return (NbtCompound) MinecraftClient.getInstance().getDataFixer().update(TypeReferences.BLOCK_ENTITY, new Dynamic<>(NbtOps.INSTANCE, oldBlockEntity), oldVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION).getValue();
+            return (NbtCompound) Schemas.getFixer().update(TypeReferences.BLOCK_ENTITY, new Dynamic<>(NbtOps.INSTANCE, oldBlockEntity), oldVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION).getValue();
         }
         catch (Exception e)
         {
@@ -521,7 +529,7 @@ public class SchematicConversionMaps
     {
         try
         {
-            return (NbtCompound) MinecraftClient.getInstance().getDataFixer().update(TypeReferences.ENTITY, new Dynamic<>(NbtOps.INSTANCE, oldEntity), oldVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION).getValue();
+            return (NbtCompound) Schemas.getFixer().update(TypeReferences.ENTITY, new Dynamic<>(NbtOps.INSTANCE, oldEntity), oldVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION).getValue();
         }
         catch (Exception e)
         {

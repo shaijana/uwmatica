@@ -285,7 +285,7 @@ public class GuiSchematicVerifier   extends GuiListBase<BlockMismatchEntry, Widg
                 this.verifier.toggleMismatchCategorySelected(entry.mismatchType);
             }
             // A specific mismatch pair - show only those state pairs
-            else if (entry.type == BlockMismatchEntry.Type.DATA)
+            else if (entry.type == BlockMismatchEntry.Type.DATA && entry.blockMismatch != null)
             {
                 this.verifier.toggleMismatchEntrySelected(entry.blockMismatch);
             }
@@ -324,7 +324,7 @@ public class GuiSchematicVerifier   extends GuiListBase<BlockMismatchEntry, Widg
         @Nullable
         public final String header2;
 
-        public BlockMismatchEntry(MismatchType mismatchType, String title)
+        public BlockMismatchEntry(@Nullable MismatchType mismatchType, @Nullable String title)
         {
             this.type = Type.CATEGORY_TITLE;
             this.mismatchType = mismatchType;
@@ -333,7 +333,7 @@ public class GuiSchematicVerifier   extends GuiListBase<BlockMismatchEntry, Widg
             this.header2 = null;
         }
 
-        public BlockMismatchEntry(String header1, String header2)
+        public BlockMismatchEntry(@Nullable String header1, @Nullable String header2)
         {
             this.type = Type.HEADER;
             this.mismatchType = null;
@@ -342,7 +342,7 @@ public class GuiSchematicVerifier   extends GuiListBase<BlockMismatchEntry, Widg
             this.header2 = header2;
         }
 
-        public BlockMismatchEntry(MismatchType mismatchType, BlockMismatch blockMismatch)
+        public BlockMismatchEntry(@Nullable MismatchType mismatchType, @Nullable BlockMismatch blockMismatch)
         {
             this.type = Type.DATA;
             this.mismatchType = mismatchType;

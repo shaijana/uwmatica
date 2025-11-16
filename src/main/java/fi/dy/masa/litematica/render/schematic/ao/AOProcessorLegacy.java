@@ -1,7 +1,6 @@
 package fi.dy.masa.litematica.render.schematic.ao;
 
 import java.util.BitSet;
-
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;

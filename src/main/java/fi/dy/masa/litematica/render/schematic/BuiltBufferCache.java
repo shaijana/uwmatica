@@ -2,20 +2,24 @@ package fi.dy.masa.litematica.render.schematic;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.concurrent.ConcurrentHashMap;
-
 import net.minecraft.client.render.BlockRenderLayer;
 import net.minecraft.client.render.BuiltBuffer;
 import net.minecraft.client.render.RenderLayer;
+import java.util.ArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class BuiltBufferCache implements AutoCloseable
 {
-    private final ConcurrentHashMap<BlockRenderLayer, BuiltBuffer> blockBuffers = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<RenderLayer, BuiltBuffer> layerBuffers = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<OverlayRenderType, BuiltBuffer> overlayBuffers = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<BlockRenderLayer, BuiltBuffer> blockBuffers;
+    private final ConcurrentHashMap<RenderLayer, BuiltBuffer> layerBuffers;
+    private final ConcurrentHashMap<OverlayRenderType, BuiltBuffer> overlayBuffers;
 
-    protected BuiltBufferCache() { }
+    protected BuiltBufferCache()
+    {
+	    this.blockBuffers = new ConcurrentHashMap<>();
+	    this.layerBuffers = new ConcurrentHashMap<>();
+	    this.overlayBuffers = new ConcurrentHashMap<>();
+    }
 
     protected boolean hasBuiltBufferByBlockLayer(BlockRenderLayer layer)
     {

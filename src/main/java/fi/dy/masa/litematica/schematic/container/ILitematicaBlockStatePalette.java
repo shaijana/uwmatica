@@ -2,11 +2,11 @@ package fi.dy.masa.litematica.schematic.container;
 
 import java.util.List;
 import javax.annotation.Nullable;
+import net.minecraft.block.BlockState;
+import net.minecraft.nbt.NbtList;
 import org.jetbrains.annotations.ApiStatus;
 
 import com.mojang.serialization.Codec;
-import net.minecraft.block.BlockState;
-import net.minecraft.nbt.NbtList;
 
 public interface ILitematicaBlockStatePalette
 {
@@ -36,7 +36,7 @@ public interface ILitematicaBlockStatePalette
     /**
      * Sets the current mapping of the palette.
      * This is meant for reading the palette from file.
-     * @param list
+     * @param list ()
      * @return true if the mapping was set successfully, false if it failed
      */
     boolean setMapping(List<BlockState> list);

@@ -2,14 +2,8 @@ package fi.dy.masa.litematica.schematic.container;
 
 import java.util.Arrays;
 import java.util.stream.LongStream;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-
-import com.mojang.datafixers.util.Either;
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.codecs.PrimitiveCodec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.nbt.NbtList;
@@ -18,6 +12,13 @@ import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.codec.PacketCodecs;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+
+import com.mojang.datafixers.util.Either;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.PrimitiveCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 public class LitematicaBlockStateContainer implements ILitematicaBlockStatePaletteResizer
 {
@@ -45,7 +46,7 @@ public class LitematicaBlockStateContainer implements ILitematicaBlockStatePalet
     public static final PacketCodec<ByteBuf, LitematicaBlockStateContainer> PACKET_CODEC = new PacketCodec<>()
     {
         @Override
-        public void encode(ByteBuf buf, LitematicaBlockStateContainer value)
+        public void encode(@Nonnull ByteBuf buf, LitematicaBlockStateContainer value)
         {
             LitematicaBitArray.PACKET_CODEC.encode(buf, value.storage);
             PacketCodecs.INTEGER.encode(buf, value.bits);
@@ -69,7 +70,7 @@ public class LitematicaBlockStateContainer implements ILitematicaBlockStatePalet
         }
 
         @Override
-        public LitematicaBlockStateContainer decode(ByteBuf buf)
+        public @Nonnull LitematicaBlockStateContainer decode(@Nonnull ByteBuf buf)
         {
             LitematicaBitArray storage = LitematicaBitArray.PACKET_CODEC.decode(buf);
             int bits = PacketCodecs.INTEGER.decode(buf);

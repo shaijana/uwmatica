@@ -3,17 +3,16 @@ package fi.dy.masa.litematica.materials.json;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.apache.commons.lang3.math.Fraction;
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.lang3.tuple.Triple;
-
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.recipe.Ingredient;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.ItemTags;
-
+import fi.dy.masa.malilib.data.CachedTagUtils;
+import org.apache.commons.lang3.math.Fraction;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import fi.dy.masa.litematica.data.CachedTagManager;
 
 public class MaterialListJsonOverrides
@@ -225,23 +224,23 @@ public class MaterialListJsonOverrides
         {
             return Registries.ITEM.getEntry(Items.WHITE_HARNESS);
         }
-        else if (CachedTagManager.matchItemTag(CachedTagManager.GLASS_ITEMS_KEY, firstItem))
+        else if (CachedTagUtils.matchItemTag(CachedTagManager.GLASS_ITEMS_KEY, firstItem))
         {
             return Registries.ITEM.getEntry(Items.GLASS);
         }
-        else if (CachedTagManager.matchItemTag(CachedTagManager.GLASS_PANE_ITEMS_KEY, firstItem))
+        else if (CachedTagUtils.matchItemTag(CachedTagManager.GLASS_PANE_ITEMS_KEY, firstItem))
         {
             return Registries.ITEM.getEntry(Items.GLASS_PANE);
         }
-        else if (CachedTagManager.matchItemTag(CachedTagManager.CONCRETE_POWDER_ITEMS_KEY, firstItem))
+        else if (CachedTagUtils.matchItemTag(CachedTagManager.CONCRETE_POWDER_ITEMS_KEY, firstItem))
         {
             return Registries.ITEM.getEntry(Items.WHITE_CONCRETE_POWDER);
         }
-        else if (CachedTagManager.matchItemTag(CachedTagManager.CONCRETE_ITEMS_KEY, firstItem))
+        else if (CachedTagUtils.matchItemTag(CachedTagManager.CONCRETE_ITEMS_KEY, firstItem))
         {
             return Registries.ITEM.getEntry(Items.WHITE_CONCRETE);
         }
-        else if (CachedTagManager.matchItemTag(CachedTagManager.GLAZED_TERRACOTTA_ITEMS_KEY, firstItem))
+        else if (CachedTagUtils.matchItemTag(CachedTagManager.GLAZED_TERRACOTTA_ITEMS_KEY, firstItem))
         {
             return Registries.ITEM.getEntry(Items.WHITE_GLAZED_TERRACOTTA);
         }
@@ -310,7 +309,7 @@ public class MaterialListJsonOverrides
                     return true;
                 }
             }
-            else if (CachedTagManager.matchItemTag(CachedTagManager.GLASS_ITEMS_KEY, input))
+            else if (CachedTagUtils.matchItemTag(CachedTagManager.GLASS_ITEMS_KEY, input))
             {
                 if (ing.test(Items.WHITE_STAINED_GLASS.getDefaultStack()) ||
                     ing.test(Items.BLACK_STAINED_GLASS.getDefaultStack()))
@@ -318,7 +317,7 @@ public class MaterialListJsonOverrides
                     return true;
                 }
             }
-            else if (CachedTagManager.matchItemTag(CachedTagManager.GLASS_PANE_ITEMS_KEY, input))
+            else if (CachedTagUtils.matchItemTag(CachedTagManager.GLASS_PANE_ITEMS_KEY, input))
             {
                 if (ing.test(Items.WHITE_STAINED_GLASS_PANE.getDefaultStack()) ||
                     ing.test(Items.BLACK_STAINED_GLASS_PANE.getDefaultStack()))
@@ -326,7 +325,7 @@ public class MaterialListJsonOverrides
                     return true;
                 }
             }
-            else if (CachedTagManager.matchItemTag(CachedTagManager.CONCRETE_ITEMS_KEY, input))
+            else if (CachedTagUtils.matchItemTag(CachedTagManager.CONCRETE_ITEMS_KEY, input))
             {
                 if (ing.test(Items.WHITE_CONCRETE.getDefaultStack()) ||
                     ing.test(Items.BLACK_CONCRETE.getDefaultStack()))
@@ -334,7 +333,7 @@ public class MaterialListJsonOverrides
                     return true;
                 }
             }
-            else if (CachedTagManager.matchItemTag(CachedTagManager.CONCRETE_POWDER_ITEMS_KEY, input))
+            else if (CachedTagUtils.matchItemTag(CachedTagManager.CONCRETE_POWDER_ITEMS_KEY, input))
             {
                 if (ing.test(Items.WHITE_CONCRETE_POWDER.getDefaultStack()) ||
                     ing.test(Items.BLACK_CONCRETE_POWDER.getDefaultStack()))
@@ -342,7 +341,7 @@ public class MaterialListJsonOverrides
                     return true;
                 }
             }
-            else if (CachedTagManager.matchItemTag(CachedTagManager.GLAZED_TERRACOTTA_ITEMS_KEY, input))
+            else if (CachedTagUtils.matchItemTag(CachedTagManager.GLAZED_TERRACOTTA_ITEMS_KEY, input))
             {
                 if (ing.test(Items.WHITE_GLAZED_TERRACOTTA.getDefaultStack()) ||
                     ing.test(Items.BLACK_GLAZED_TERRACOTTA.getDefaultStack()))
@@ -363,7 +362,7 @@ public class MaterialListJsonOverrides
 //        }
 //        else
         // Only count Ingots / Nuggets as base material
-        return CachedTagManager.matchItemTag(CachedTagManager.UNPACKED_BLOCK_ITEMS_KEY, input);
+        return CachedTagUtils.matchItemTag(CachedTagManager.UNPACKED_BLOCK_ITEMS_KEY, input);
     }
 
     public record ResultOverride(RegistryEntry<Item> input, RegistryEntry<Item> result, Fraction multiplier)

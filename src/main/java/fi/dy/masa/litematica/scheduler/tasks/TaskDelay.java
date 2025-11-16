@@ -1,9 +1,7 @@
 package fi.dy.masa.litematica.scheduler.tasks;
 
 import java.util.function.BooleanSupplier;
-
 import net.minecraft.util.profiler.Profiler;
-
 import fi.dy.masa.litematica.scheduler.TaskScheduler;
 
 public class TaskDelay extends TaskBase

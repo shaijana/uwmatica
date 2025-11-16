@@ -5,14 +5,12 @@ import java.util.HashMap;
 import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import com.google.gson.JsonObject;
-import org.jetbrains.annotations.ApiStatus;
-
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.BlockMirror;
 import net.minecraft.util.BlockRotation;
 import net.minecraft.util.math.BlockPos;
-
+import com.google.gson.JsonObject;
+import org.jetbrains.annotations.ApiStatus;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.interfaces.ISchematicPlacementEventListener;
 import fi.dy.masa.litematica.interfaces.ISchematicPlacementEventManager;

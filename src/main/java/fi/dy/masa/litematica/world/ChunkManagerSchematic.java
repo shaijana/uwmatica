@@ -2,6 +2,7 @@ package fi.dy.masa.litematica.world;
 
 import java.util.Iterator;
 import java.util.function.BooleanSupplier;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.ChunkManager;
@@ -30,7 +31,7 @@ public class ChunkManagerSchematic extends ChunkManager
     }
 
     @Override
-    public WorldSchematic getWorld()
+    public @Nonnull WorldSchematic getWorld()
     {
         return this.world;
     }
@@ -48,7 +49,7 @@ public class ChunkManagerSchematic extends ChunkManager
     }
 
     @Override
-    public String getDebugString()
+    public @Nonnull String getDebugString()
     {
         return "Schematic Chunk Cache: " + this.getLoadedChunkCount();
     }
@@ -65,7 +66,7 @@ public class ChunkManagerSchematic extends ChunkManager
     }
 
     @Override
-    public WorldChunk getChunk(int chunkX, int chunkZ, ChunkStatus status, boolean fallbackToEmpty)
+    public WorldChunk getChunk(int chunkX, int chunkZ, @Nonnull ChunkStatus status, boolean fallbackToEmpty)
     {
         ChunkSchematic chunk = this.getChunk(chunkX, chunkZ);
         return chunk == null && fallbackToEmpty ? this.blankChunk : chunk;
@@ -97,7 +98,7 @@ public class ChunkManagerSchematic extends ChunkManager
     }
 
     @Override
-    public LightingProvider getLightingProvider()
+    public @Nonnull LightingProvider getLightingProvider()
     {
         if (Configs.Visuals.ENABLE_SCHEMATIC_FAKE_LIGHTING.getBooleanValue())
         {
@@ -108,7 +109,7 @@ public class ChunkManagerSchematic extends ChunkManager
     }
 
     @Override
-    public void tick(BooleanSupplier shouldKeepTicking, boolean tickChunks)
+    public void tick(@Nonnull BooleanSupplier shouldKeepTicking, boolean tickChunks)
     {
         // NO-OP
     }

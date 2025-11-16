@@ -2,7 +2,6 @@ package fi.dy.masa.litematica.render.schematic;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
@@ -26,7 +25,6 @@ public class ChunkCacheSchematic implements BlockRenderView, ChunkProvider
 
     protected final World world;
     protected final ClientWorld worldClient;
-    //protected final FakeLightingProvider lightingProvider;
     protected int chunkStartX;
     protected int chunkStartZ;
     protected WorldChunk[][] chunkArray;
@@ -64,7 +62,7 @@ public class ChunkCacheSchematic implements BlockRenderView, ChunkProvider
     }
 
     @Override
-    public BlockView getWorld()
+    public @Nonnull BlockView getWorld()
     {
         return this.world;
     }
@@ -82,7 +80,7 @@ public class ChunkCacheSchematic implements BlockRenderView, ChunkProvider
     }
 
     @Override
-    public BlockState getBlockState(BlockPos pos)
+    public @Nonnull BlockState getBlockState(BlockPos pos)
     {
         int cx = (pos.getX() >> 4) - this.chunkStartX;
         int cz = (pos.getZ() >> 4) - this.chunkStartZ;
@@ -117,36 +115,28 @@ public class ChunkCacheSchematic implements BlockRenderView, ChunkProvider
         return this.chunkArray[i][j].getBlockEntity(pos, type);
     }
 
-    /*
     @Override
-    public int getLightLevel(LightType var1, BlockPos var2)
-    {
-        return 15;
-    }
-     */
-
-    @Override
-    public FluidState getFluidState(BlockPos pos)
+    public @Nonnull FluidState getFluidState(@Nonnull BlockPos pos)
     {
         // TODO change when fluids become separate
         return this.getBlockState(pos).getFluidState();
     }
 
     @Override
-    public LightingProvider getLightingProvider()
+    public @Nonnull LightingProvider getLightingProvider()
     {
         //return this.lightingProvider;
         return this.world.getLightingProvider();
     }
 
     @Override
-    public int getColor(BlockPos pos, ColorResolver colorResolver)
+    public int getColor(@Nonnull BlockPos pos, ColorResolver colorResolver)
     {
         return colorResolver.getColor(this.worldClient.getBiome(pos).value(), pos.getX(), pos.getZ());
     }
 
     @Override
-    public float getBrightness(Direction direction, boolean bl)
+    public float getBrightness(@Nonnull Direction direction, boolean bl)
     {
         return this.worldClient.getBrightness(direction, bl); // AO brightness on face
     }

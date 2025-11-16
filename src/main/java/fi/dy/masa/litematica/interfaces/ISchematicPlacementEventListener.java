@@ -1,13 +1,11 @@
 package fi.dy.masa.litematica.interfaces;
 
 import javax.annotation.Nullable;
-import com.google.gson.JsonObject;
-
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.BlockMirror;
 import net.minecraft.util.BlockRotation;
 import net.minecraft.util.math.BlockPos;
-
+import com.google.gson.JsonObject;
 import fi.dy.masa.litematica.schematic.LitematicaSchematic;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacementEventHandler;

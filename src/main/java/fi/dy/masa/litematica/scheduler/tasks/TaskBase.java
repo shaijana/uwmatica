@@ -136,11 +136,11 @@ public abstract class TaskBase implements ITask, IInfoHudRenderer
     {
         this.infoHudLines.clear();
 
-        if (pendingChunks.isEmpty() == false)
+        if (pendingChunks.isEmpty() == false && this.mc.player != null)
         {
             // TODO
             List<ChunkPos> list = new ArrayList<>(pendingChunks);
-            PositionUtils.CHUNK_POS_COMPARATOR.setReferencePosition(BlockPos.ofFloored(this.mc.player.getPos()));
+            PositionUtils.CHUNK_POS_COMPARATOR.setReferencePosition(BlockPos.ofFloored(this.mc.player.getEntityPos()));
             PositionUtils.CHUNK_POS_COMPARATOR.setClosestFirst(true);
             list.sort(PositionUtils.CHUNK_POS_COMPARATOR);
 

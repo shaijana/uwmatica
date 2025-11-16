@@ -72,16 +72,4 @@ public class GuiAreaSelectionEditorSubRegion extends GuiAreaSelectionEditorSimpl
     protected void createOrigin()
     {
     }
-
-    @Override
-    protected WidgetListSelectionSubRegions getListWidget()
-    {
-        return null;
-    }
-
-    @Override
-    protected void reCreateListWidget()
-    {
-        // NO-OP
-    }
 }

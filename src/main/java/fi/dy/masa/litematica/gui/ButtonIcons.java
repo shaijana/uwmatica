@@ -3,7 +3,6 @@ package fi.dy.masa.litematica.gui;
 import fi.dy.masa.litematica.Reference;
 import fi.dy.masa.malilib.gui.interfaces.IGuiIcon;
 import fi.dy.masa.malilib.render.RenderUtils;
-
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.util.Identifier;
 

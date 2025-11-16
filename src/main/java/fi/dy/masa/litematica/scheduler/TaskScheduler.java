@@ -2,11 +2,10 @@ package fi.dy.masa.litematica.scheduler;
 
 import java.util.ArrayList;
 import java.util.List;
-import com.google.common.collect.ImmutableList;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.profiler.Profiler;
 import net.minecraft.util.profiler.Profilers;
-
+import com.google.common.collect.ImmutableList;
 import fi.dy.masa.litematica.Reference;
 
 public class TaskScheduler

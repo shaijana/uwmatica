@@ -4,20 +4,18 @@ import java.nio.file.Path;
 import java.util.*;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import com.google.common.collect.ImmutableMap;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
-import org.apache.commons.lang3.tuple.Pair;
-
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.structure.StructurePlacementData;
 import net.minecraft.util.BlockMirror;
 import net.minecraft.util.BlockRotation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
-
+import com.google.common.collect.ImmutableMap;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+import org.apache.commons.lang3.tuple.Pair;
 import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.gui.interfaces.IMessageConsumer;
 import fi.dy.masa.malilib.interfaces.IStringConsumer;
@@ -134,9 +132,9 @@ public class SchematicPlacement
      * will be at the provided origin point.
      * Also, this placement will not affect the SchematicPlacementManager and cause
      * schematic chunk rebuilds, nor will it affect the rendering related things.
-     * @param schematic
-     * @param origin
-     * @return
+     * @param schematic ()
+     * @param origin ()
+     * @return ()
      */
     public static SchematicPlacement createForSchematicConversion(LitematicaSchematic schematic, BlockPos origin)
     {
@@ -150,9 +148,9 @@ public class SchematicPlacement
 
     /**
      * Creates a temporary placement which doesn't affect the SchematicPlacementManager
-     * @param schematic
-     * @param origin
-     * @return
+     * @param schematic ()
+     * @param origin ()
+     * @return ()
      */
     public static SchematicPlacement createTemporary(LitematicaSchematic schematic, BlockPos origin)
     {
@@ -190,9 +188,9 @@ public class SchematicPlacement
     }
 
     /**
-     * Returns whether or not this placement should be saved by the SchematicPlacementManager
+     * Returns whether this placement should be saved by the SchematicPlacementManager
      * when it saves the list of placements.
-     * @return
+     * @return ()
      */
     public boolean shouldBeSaved()
     {
@@ -206,15 +204,12 @@ public class SchematicPlacement
 
     public boolean matchesRequirement(RequiredEnabled required)
     {
-        switch (required)
-        {
-            case ANY:
-                return true;
-            case PLACEMENT_ENABLED:
-                return this.isEnabled();
-            default:
-                return this.isEnabled() && this.enableRender;
-        }
+	    return switch (required)
+	    {
+		    case ANY -> true;
+		    case PLACEMENT_ENABLED -> this.isEnabled();
+		    default -> this.isEnabled() && this.enableRender;
+	    };
     }
 
     public boolean isRegionPlacementModified()
@@ -617,8 +612,8 @@ public class SchematicPlacement
 
     /**
      * Moves the sub-region to the given <b>absolute</b> position.
-     * @param regionName
-     * @param newPos
+     * @param regionName ()
+     * @param newPos ()
      */
     public void moveSubRegionTo(String regionName, BlockPos newPos, IStringConsumer feedback)
     {

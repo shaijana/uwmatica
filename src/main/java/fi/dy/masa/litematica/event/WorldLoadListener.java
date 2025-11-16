@@ -1,18 +1,17 @@
 package fi.dy.masa.litematica.event;
 
 import javax.annotation.Nullable;
-
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.datafixer.fix.BlockStateFlattening;
 import net.minecraft.registry.DynamicRegistryManager;
-
 import fi.dy.masa.malilib.interfaces.IWorldLoadListener;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.compat.jade.JadeCompat;
 import fi.dy.masa.litematica.data.CachedTagManager;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.data.EntitiesDataStorage;
+import fi.dy.masa.litematica.render.LitematicaDebugHud;
 import fi.dy.masa.litematica.schematic.conversion.SchematicConversionMaps;
 import fi.dy.masa.litematica.world.SchematicWorldHandler;
 
@@ -55,6 +54,7 @@ public class WorldLoadListener implements IWorldLoadListener
             SchematicConversionMaps.computeMaps();
             EntitiesDataStorage.getInstance().onWorldJoin();
             CachedTagManager.startCache();
+	        LitematicaDebugHud.INSTANCE.checkConfig();
         }
         else
         {

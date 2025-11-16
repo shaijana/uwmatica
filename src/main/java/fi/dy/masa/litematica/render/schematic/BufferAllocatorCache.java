@@ -3,12 +3,11 @@ package fi.dy.masa.litematica.render.schematic;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.client.render.BlockRenderLayer;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.util.BufferAllocator;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 
 @Environment(EnvType.CLIENT)
 public class BufferAllocatorCache implements AutoCloseable
@@ -17,13 +16,16 @@ public class BufferAllocatorCache implements AutoCloseable
     protected static final List<RenderLayer> RENDER_LAYERS = ChunkRenderLayers.RENDER_LAYERS;
     protected static final List<OverlayRenderType> TYPES = ChunkRenderLayers.TYPES;
     protected static final int EXPECTED_TOTAL_SIZE;
-    private final ConcurrentHashMap<BlockRenderLayer, BufferAllocator> blockCache = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<RenderLayer, BufferAllocator> layerCache = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<OverlayRenderType, BufferAllocator> overlayCache = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<BlockRenderLayer, BufferAllocator> blockCache;
+    private final ConcurrentHashMap<RenderLayer, BufferAllocator> layerCache;
+    private final ConcurrentHashMap<OverlayRenderType, BufferAllocator> overlayCache;
     private boolean clear;
 
     protected BufferAllocatorCache()
     {
+	    this.blockCache = new ConcurrentHashMap<>();
+		this.layerCache = new ConcurrentHashMap<>();
+		this.overlayCache = new ConcurrentHashMap<>();
         this.clear = true;
     }
 

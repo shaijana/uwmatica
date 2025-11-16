@@ -7,9 +7,12 @@ import java.util.function.Predicate;
 import javax.annotation.Nullable;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.ApiStatus;
-
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.*;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.Leashable;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.decoration.LeashKnotEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -26,7 +29,7 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.world.World;
-
+import net.minecraft.world.entity.*;
 import fi.dy.masa.malilib.util.InventoryUtils;
 import fi.dy.masa.malilib.util.nbt.NbtKeys;
 import fi.dy.masa.malilib.util.nbt.NbtView;
@@ -171,7 +174,7 @@ public class EntityUtils
 
         if (mc.player == null || !entityDebugRandom) return Pair.of("", "");
 
-        String name = mc.player.getGameProfile().getName().toLowerCase();
+        String name = mc.player.getGameProfile().name().toLowerCase();
 
         switch (name)
         {
@@ -189,7 +192,7 @@ public class EntityUtils
             }
             case "rendog" ->
             {
-                return entityDebugRandom2 ? Pair.of("Dogmatica", "Gigacorp's most famous employee.") : Pair.of("Renmatica", "Docm77's single ladies' favorite magnet.");
+                return entityDebugRandom2 ? Pair.of("Dogmatica", "Gigacorp's most famous employee.") : Pair.of("Renmatica", "Docm77's single ladies' favorite.");
             }
             case "geminitay" ->
             {
@@ -219,14 +222,22 @@ public class EntityUtils
             {
                 return entityDebugRandom2 ? Pair.of("Cubmatica", "Ladies and gentlemen; Beautiful, absolutely beautiful.") : Pair.of("Cubmatica", "Definitely not the Ore Snatcher.");
             }
-            case "smajor1995" ->
-            {
-                return entityDebugRandom2 ? Pair.of("Scottmatica", "The most friendly and soothing voice in the game.") : Pair.of("", "");
-            }
-            case "shubbleyt" ->
-            {
-                return entityDebugRandom2 ? Pair.of("Starmatica", "Red Mushroom blocks are soo underrated.") : Pair.of("", "");
-            }
+	        case "smajor1995" ->
+	        {
+		        return entityDebugRandom2 ? Pair.of("Scottmatica", "The most friendly and soothing voice in the game.") : Pair.of("", "");
+	        }
+	        case "shubbleyt" ->
+	        {
+		        return entityDebugRandom2 ? Pair.of("Starmatica", "Red Mushroom blocks are soo underrated.") : Pair.of("", "");
+	        }
+	        case "goodtimewithscar" ->
+	        {
+		        return entityDebugRandom2 ? Pair.of("Scarmatica", "The Ore Snatcher.") : Pair.of("Scarmatica", "Touched Doc's redstone.");
+	        }
+	        case "joehillstsd" ->
+	        {
+		        return entityDebugRandom2 ? Pair.of("Joematica", "One of the True Hermits.") : Pair.of("", "");
+	        }
             default ->
             {
                 return Pair.of("", "");
@@ -295,7 +306,7 @@ public class EntityUtils
 
                     if (passenger != null)
                     {
-                        passenger.startRiding(entity, true);
+                        passenger.startRiding(entity, true, false);
                     }
                 }
             }
@@ -352,7 +363,7 @@ public class EntityUtils
         BlockPos regionPosAbs = regionPosRelTransformed.add(origin);
         Box bb = PositionUtils.createEnclosingAABB(regionPosAbs, posEndAbs);
 
-        return world.getOtherEntities(null, bb, EntityUtils.NOT_PLAYER);
+        return world.getOtherEntities((Entity) null, bb, EntityUtils.NOT_PLAYER);
     }
 
     public static boolean shouldPickBlock(PlayerEntity player)

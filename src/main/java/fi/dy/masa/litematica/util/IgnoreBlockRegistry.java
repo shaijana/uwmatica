@@ -3,10 +3,8 @@ package fi.dy.masa.litematica.util;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
 import net.minecraft.block.Block;
 import net.minecraft.registry.tag.TagKey;
-
 import fi.dy.masa.litematica.config.Configs;
 
 public class IgnoreBlockRegistry

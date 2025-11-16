@@ -27,7 +27,7 @@ public class MaterialListEntry
 
     /**
      * Returns the total number of required items of this type in the counted area.
-     * @return
+     * @return ()
      */
     public int getCountTotal()
     {
@@ -37,7 +37,7 @@ public class MaterialListEntry
     /**
      * Returns the number of items still missing (or having the wrong block state)
      * in the counted area for this item type.
-     * @return
+     * @return ()
      */
     public int getCountMissing()
     {

@@ -28,7 +28,7 @@ import fi.dy.masa.litematica.util.FileType;
 
 public class GuiAreaSelectionManager extends GuiListBase<DirectoryEntry, WidgetDirectoryEntry, WidgetAreaSelectionBrowser> implements ISelectionListener<DirectoryEntry>
 {
-    private SelectionManager selectionManager;
+    private final SelectionManager selectionManager;
 
     public GuiAreaSelectionManager()
     {
@@ -66,7 +66,7 @@ public class GuiAreaSelectionManager extends GuiListBase<DirectoryEntry, WidgetD
     protected void reCreateGuiElements()
     {
         this.clearButtons();
-        this.clearWidgets();
+	    this.clearWidgets();        // todo check
 
         int x = this.getScreenWidth() - 13;
         int y = 24;
@@ -117,7 +117,7 @@ public class GuiAreaSelectionManager extends GuiListBase<DirectoryEntry, WidgetD
     /**
      * This is the string the DataManager uses for saving/loading/storing the last used directory
      * for each browser GUI type/contet.
-     * @return
+     * @return ()
      */
     public String getBrowserContext()
     {
@@ -143,6 +143,7 @@ public class GuiAreaSelectionManager extends GuiListBase<DirectoryEntry, WidgetD
     @Override
     public void onSelectionChange(DirectoryEntry entry)
     {
+		if (entry == null) return;
         if (entry.getType() == DirectoryEntryType.FILE && FileType.fromFile(entry.getFullPath()) == FileType.JSON)
         {
             String selectionId = entry.getFullPath().toAbsolutePath().toString();
@@ -222,7 +223,7 @@ public class GuiAreaSelectionManager extends GuiListBase<DirectoryEntry, WidgetD
 
             private final String labelKey;
 
-            private ButtonType(String labelKey)
+            ButtonType(String labelKey)
             {
                 this.labelKey = labelKey;
             }

@@ -3,8 +3,6 @@ package fi.dy.masa.litematica.scheduler.tasks;
 import java.util.Collection;
 import java.util.Set;
 import java.util.function.Consumer;
-import com.google.common.collect.ImmutableList;
-
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
@@ -14,7 +12,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.profiler.Profiler;
 import net.minecraft.world.World;
-
+import com.google.common.collect.ImmutableList;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.render.infohud.InfoHud;
@@ -221,26 +219,22 @@ public class TaskDeleteBlocksByPlacement extends TaskProcessChunkMultiPhase
 
     protected BlockCheck getCheckFor(PlacementDeletionMode mode)
     {
-        switch (mode)
-        {
-            case MATCHING_BLOCK:
-                return (pos, sw, w) -> {
-                    BlockState stateSchematic = sw.getBlockState(pos);
-                    return stateSchematic != AIR && stateSchematic == w.getBlockState(pos);
-                };
-            case NON_MATCHING_BLOCK:
-                return (pos, sw, w) -> {
-                    BlockState stateSchematic = sw.getBlockState(pos);
-                    return stateSchematic != AIR && stateSchematic != w.getBlockState(pos);
-                };
-            case ANY_SCHEMATIC_BLOCK:
-                return (pos, sw, w) -> sw.getBlockState(pos) != Blocks.AIR.getDefaultState();
-            case NO_SCHEMATIC_BLOCK:
-                return (pos, sw, w) -> sw.getBlockState(pos) == Blocks.AIR.getDefaultState();
-            default:
-        }
-
-        return (pos, sw, w) -> true;
+	    return switch (mode)
+	    {
+		    case MATCHING_BLOCK -> (pos, sw, w) ->
+		    {
+			    BlockState stateSchematic = sw.getBlockState(pos);
+			    return stateSchematic != AIR && stateSchematic == w.getBlockState(pos);
+		    };
+		    case NON_MATCHING_BLOCK -> (pos, sw, w) ->
+		    {
+			    BlockState stateSchematic = sw.getBlockState(pos);
+			    return stateSchematic != AIR && stateSchematic != w.getBlockState(pos);
+		    };
+		    case ANY_SCHEMATIC_BLOCK -> (pos, sw, w) -> sw.getBlockState(pos) != Blocks.AIR.getDefaultState();
+		    case NO_SCHEMATIC_BLOCK -> (pos, sw, w) -> sw.getBlockState(pos) == Blocks.AIR.getDefaultState();
+		    default -> (pos, sw, w) -> true;
+	    };
     }
 
     protected interface BlockCheck

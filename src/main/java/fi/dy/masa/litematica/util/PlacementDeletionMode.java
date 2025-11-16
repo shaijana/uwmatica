@@ -1,9 +1,8 @@
 package fi.dy.masa.litematica.util;
 
-import com.google.common.collect.ImmutableList;
-
+import javax.annotation.Nonnull;
 import net.minecraft.util.StringIdentifiable;
-
+import com.google.common.collect.ImmutableList;
 import fi.dy.masa.malilib.config.IConfigOptionListEntry;
 import fi.dy.masa.malilib.util.StringUtils;
 
@@ -27,7 +26,7 @@ public enum PlacementDeletionMode implements IConfigOptionListEntry, StringIdent
     }
 
     @Override
-    public String asString()
+    public @Nonnull String asString()
     {
         return this.configString;
     }

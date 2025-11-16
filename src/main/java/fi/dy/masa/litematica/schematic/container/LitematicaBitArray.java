@@ -2,15 +2,16 @@ package fi.dy.masa.litematica.schematic.container;
 
 import java.util.Arrays;
 import java.util.stream.LongStream;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.codec.PacketCodecs;
 import io.netty.buffer.ByteBuf;
 import org.apache.commons.lang3.Validate;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.PrimitiveCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.codec.PacketCodecs;
 
 public class LitematicaBitArray
 {
@@ -25,7 +26,7 @@ public class LitematicaBitArray
     public static final PacketCodec<ByteBuf, LitematicaBitArray> PACKET_CODEC = new PacketCodec<>()
     {
         @Override
-        public void encode(ByteBuf buf, LitematicaBitArray value)
+        public void encode(@Nonnull ByteBuf buf, LitematicaBitArray value)
         {
             PacketCodecs.INTEGER.encode(buf, value.bitsPerEntry);
             PacketCodecs.LONG.encode(buf, value.arraySize);
@@ -33,7 +34,7 @@ public class LitematicaBitArray
         }
 
         @Override
-        public LitematicaBitArray decode(ByteBuf buf)
+        public @Nonnull LitematicaBitArray decode(@Nonnull ByteBuf buf)
         {
             return new LitematicaBitArray(
                     PacketCodecs.INTEGER.decode(buf),

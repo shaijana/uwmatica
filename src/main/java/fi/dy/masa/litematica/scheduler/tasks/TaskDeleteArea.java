@@ -1,10 +1,10 @@
 package fi.dy.masa.litematica.scheduler.tasks;
 
 import java.util.List;
+import net.minecraft.block.Blocks;
 import fi.dy.masa.litematica.selection.Box;
 import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.util.InfoUtils;
-import net.minecraft.block.Blocks;
 
 public class TaskDeleteArea extends TaskFillArea
 {

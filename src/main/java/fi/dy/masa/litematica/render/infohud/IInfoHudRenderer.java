@@ -1,9 +1,7 @@
 package fi.dy.masa.litematica.render.infohud;
 
 import java.util.List;
-
 import net.minecraft.client.gui.DrawContext;
-
 import fi.dy.masa.malilib.config.HudAlignment;
 
 public interface IInfoHudRenderer

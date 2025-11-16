@@ -2,7 +2,6 @@ package fi.dy.masa.litematica.scheduler.tasks;
 
 import java.util.List;
 import javax.annotation.Nullable;
-
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
@@ -14,16 +13,15 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.profiler.Profiler;
 import net.minecraft.world.World;
-
+import fi.dy.masa.malilib.gui.Message.MessageType;
+import fi.dy.masa.malilib.util.InfoUtils;
+import fi.dy.masa.malilib.util.IntBoundingBox;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.render.infohud.InfoHud;
 import fi.dy.masa.litematica.selection.Box;
 import fi.dy.masa.litematica.util.EntityUtils;
 import fi.dy.masa.litematica.util.WorldUtils;
-import fi.dy.masa.malilib.gui.Message.MessageType;
-import fi.dy.masa.malilib.util.InfoUtils;
-import fi.dy.masa.malilib.util.IntBoundingBox;
 
 public class TaskFillArea extends TaskProcessChunkMultiPhase
 {
@@ -179,7 +177,7 @@ public class TaskFillArea extends TaskProcessChunkMultiPhase
     public static void directRemoveEntities(IntBoundingBox box, World world)
     {
         net.minecraft.util.math.Box aabb = new net.minecraft.util.math.Box(box.minX, box.minY, box.minZ, box.maxX + 1, box.maxY + 1, box.maxZ + 1);
-        List<Entity> entities = world.getOtherEntities(null, aabb, EntityUtils.NOT_PLAYER);
+        List<Entity> entities = world.getOtherEntities((Entity) null, aabb, EntityUtils.NOT_PLAYER);
 
         for (Entity entity : entities)
         {

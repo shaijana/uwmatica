@@ -39,16 +39,16 @@ import net.minecraft.world.chunk.ChunkStatus;
 
 import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.interfaces.IStringConsumer;
-import fi.dy.masa.malilib.util.game.BlockUtils;
 import fi.dy.masa.malilib.util.*;
+import fi.dy.masa.malilib.util.game.BlockUtils;
 import fi.dy.masa.malilib.util.game.wrap.GameWrap;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.config.Hotkeys;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.materials.MaterialCache;
-import fi.dy.masa.litematica.mixin.entity.IMixinSignBlockEntity;
 import fi.dy.masa.litematica.mixin.block.IMixinWallMountedBlock;
+import fi.dy.masa.litematica.mixin.entity.IMixinSignBlockEntity;
 import fi.dy.masa.litematica.schematic.LitematicaSchematic;
 import fi.dy.masa.litematica.schematic.SchematicMetadata;
 import fi.dy.masa.litematica.schematic.SchematicaSchematic;
@@ -67,7 +67,15 @@ import fi.dy.masa.litematica.world.WorldSchematic;
 
 public class WorldUtils
 {
+	/**
+	 * Moved to {@link EasyPlaceUtils}
+	 */
+	@Deprecated(forRemoval = true)
     private static final List<PositionCache> EASY_PLACE_POSITIONS = new ArrayList<>();
+	/**
+	 * Moved to {@link EasyPlaceUtils}
+	 */
+	@Deprecated(forRemoval = true)
     private static long easyPlaceLastPickBlockTime = System.nanoTime();
 
     public static double getValidBlockRange(MinecraftClient mc)
@@ -405,7 +413,7 @@ public class WorldUtils
 
         if (v7LitematicaSchematic == null)
         {
-            feedback.setString("litematica.error.schematic_conversion.litematica_to_schematic.failed_to_read_schematic");
+            feedback.setString("litematica.error.schematic_conversion.litematic_to_litematica.failed_to_read_schematic");
             return false;
         }
 
@@ -418,7 +426,7 @@ public class WorldUtils
         }
         else
         {
-            feedback.setString("litematica.error.schematic_conversion.litematica_to_schematic.failed_to_downgrade_litematic");
+            feedback.setString("litematica.error.schematic_conversion.litematic_to_litematica.failed_to_downgrade_litematic");
             return false;
         }
     }
@@ -437,7 +445,7 @@ public class WorldUtils
 
         if (litematicaSchematic == null)
         {
-            feedback.setString("litematica.error.schematic_conversion.litematica_to_schematic.failed_to_read_schematic");
+            feedback.setString("litematica.error.schematic_conversion.litematic_to_structure.failed_to_read_litematic");
             return null;
         }
 
@@ -666,22 +674,24 @@ public class WorldUtils
         }
     }
 
+	@Deprecated
     public static void easyPlaceOnUseTick(MinecraftClient mc)
     {
         if (mc.player != null && DataManager.getToolMode() != ToolMode.REBUILD &&
             Configs.Generic.EASY_PLACE_MODE.getBooleanValue() &&
             Configs.Generic.EASY_PLACE_HOLD_ENABLED.getBooleanValue() &&
-            Hotkeys.EASY_PLACE_ACTIVATION.getKeybind().isKeybindHeld())
-            //&& Configs.Generic.EASY_PLACE_POST_REWRITE.getBooleanValue() == false)
+            Hotkeys.EASY_PLACE_ACTIVATION.getKeybind().isKeybindHeld() &&
+			Configs.Generic.EASY_PLACE_POST_REWRITE.getBooleanValue() == false)
         {
             WorldUtils.doEasyPlaceAction(mc);
         }
     }
 
+	@Deprecated
     public static boolean handleEasyPlace(MinecraftClient mc)
     {
         if (Configs.Generic.EASY_PLACE_MODE.getBooleanValue() &&
-            //Configs.Generic.EASY_PLACE_POST_REWRITE.getBooleanValue() == false &&
+            Configs.Generic.EASY_PLACE_POST_REWRITE.getBooleanValue() == false &&
             DataManager.getToolMode() != ToolMode.REBUILD)
         {
             ActionResult result = doEasyPlaceAction(mc);
@@ -708,6 +718,7 @@ public class WorldUtils
         return false;
     }
 
+	@Deprecated
     private static ActionResult doEasyPlaceAction(MinecraftClient mc)
     {
         RayTraceWrapper traceWrapper;
@@ -744,13 +755,13 @@ public class WorldUtils
             ItemStack stack = MaterialCache.getInstance().getRequiredBuildItemForState(stateSchematic);
 
             // Already placed to that position, possible server sync delay
-            if (easyPlaceIsPositionCached(pos))
+            if (EasyPlaceUtils.easyPlaceIsPositionCached(pos))
             {
                 return ActionResult.FAIL;
             }
 
             // Ignore action if too fast
-            if (easyPlaceIsTooFast())
+            if (EasyPlaceUtils.easyPlaceIsTooFast())
             {
                 return ActionResult.FAIL;
             }
@@ -844,7 +855,7 @@ public class WorldUtils
                 }
 
                 // Mark that this position has been handled (use the non-offset position that is checked above)
-                cacheEasyPlacePosition(pos);
+                EasyPlaceUtils.cacheEasyPlacePosition(pos);
 
                 BlockHitResult hitResult = new BlockHitResult(hitPos, side, pos, false);
 
@@ -882,6 +893,7 @@ public class WorldUtils
         return ActionResult.PASS;
     }
 
+	@Deprecated
     private static boolean easyPlaceBlockChecksCancel(BlockState stateSchematic, BlockState stateClient,
             PlayerEntity player, HitResult trace, ItemStack stack)
     {
@@ -908,6 +920,7 @@ public class WorldUtils
         return !stateClient.canReplace(ctx);
     }
 
+	// TODO --> Move to EasyPlaceUtils
     public static class PlacementProtocolData
     {
         boolean handled;
@@ -917,6 +930,7 @@ public class WorldUtils
         Vec3d hitVec;
     }
 
+	// TODO --> Move to EasyPlaceUtils
     public static PlacementProtocolData applyPlacementProtocolAll(BlockPos pos, BlockState stateSchematic, Vec3d hitVecIn)
     {
         PlacementProtocolData placementData = new PlacementProtocolData();
@@ -968,6 +982,7 @@ public class WorldUtils
     /**
      * Apply the Carpet-Extra mod accurate block placement protocol support
      */
+	// TODO --> Move to EasyPlaceUtils
     public static Vec3d applyCarpetProtocolHitVec(BlockPos pos, BlockState state, Vec3d hitVecIn)
     {
         double x = hitVecIn.x;
@@ -1025,6 +1040,7 @@ public class WorldUtils
         return new Vec3d(x, y, z);
     }
 
+	// TODO --> Move to EasyPlaceUtils
     private static double applySlabOrStairHitVecY(double origY, BlockPos pos, BlockState state)
     {
         double y = origY;
@@ -1051,12 +1067,14 @@ public class WorldUtils
         return y;
     }
 
-    private static Vec3d applyBlockSlabProtocol(BlockPos pos, BlockState state, Vec3d hitVecIn)
+	// TODO --> Move to EasyPlaceUtils
+    public static Vec3d applyBlockSlabProtocol(BlockPos pos, BlockState state, Vec3d hitVecIn)
     {
         double newY = applySlabOrStairHitVecY(hitVecIn.y, pos, state);
         return newY != hitVecIn.y ? new Vec3d(hitVecIn.x, newY, hitVecIn.z) : hitVecIn;
     }
 
+	// TODO --> Move to EasyPlaceUtils
     public static <T extends Comparable<T>> Vec3d applyPlacementProtocolV3(BlockPos pos, BlockState state, Vec3d hitVecIn)
     {
         Collection<Property<?>> props = state.getBlock().getStateManager().getProperties();
@@ -1144,7 +1162,8 @@ public class WorldUtils
         return hitVecIn;
     }
 
-    private static Direction applyPlacementFacing(BlockState stateSchematic, Direction side, BlockState stateClient)
+	// TODO --> Move to EasyPlaceUtils
+    public static Direction applyPlacementFacing(BlockState stateSchematic, Direction side, BlockState stateClient)
     {
         Block blockSchematic = stateSchematic.getBlock();
         Block blockClient = stateClient.getBlock();
@@ -1498,7 +1517,11 @@ public class WorldUtils
         return true;
     }
 
-    public static boolean easyPlaceIsPositionCached(BlockPos pos)
+	/**
+	 * Moved to {@link EasyPlaceUtils}
+	 */
+	@Deprecated(forRemoval = true)
+    private static boolean easyPlaceIsPositionCached(BlockPos pos)
     {
         long currentTime = System.nanoTime();
         boolean cached = false;
@@ -1528,11 +1551,19 @@ public class WorldUtils
         return cached;
     }
 
-    private static void cacheEasyPlacePosition(BlockPos pos)
+	/**
+	 * Moved to {@link EasyPlaceUtils}
+	 */
+	@Deprecated(forRemoval = true)
+	private static void cacheEasyPlacePosition(BlockPos pos)
     {
         EASY_PLACE_POSITIONS.add(new PositionCache(pos, System.nanoTime(), 2000000000));
     }
 
+	/**
+	 * Moved to {@link EasyPlaceUtils}
+	 */
+	@Deprecated(forRemoval = true)
     public static class PositionCache
     {
         private final BlockPos pos;
@@ -1557,11 +1588,19 @@ public class WorldUtils
         }
     }
 
+	/**
+	 * Moved to {@link EasyPlaceUtils}
+	 */
+	@Deprecated(forRemoval = true)
     private static boolean easyPlaceIsTooFast()
     {
         return System.nanoTime() - easyPlaceLastPickBlockTime < 1000000L * Configs.Generic.EASY_PLACE_SWAP_INTERVAL.getIntegerValue();
     }
 
+	/**
+	 * Moved to {@link EasyPlaceUtils}
+	 */
+	@Deprecated(forRemoval = true)
     public static void setEasyPlaceLastPickBlockTime()
     {
         easyPlaceLastPickBlockTime = System.nanoTime();
