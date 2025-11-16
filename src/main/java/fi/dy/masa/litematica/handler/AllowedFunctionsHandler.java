@@ -20,7 +20,6 @@ public class AllowedFunctionsHandler {
 			Configs.Generic.PLACEMENT_RESTRICTION_WARN,
 			Configs.Generic.CUSTOM_SCHEMATIC_BASE_DIRECTORY_ENABLED,
 			Configs.Generic.CUSTOM_SCHEMATIC_BASE_DIRECTORY,
-			Configs.Generic.BETTER_RENDER_ORDER,
 			Configs.Generic.DEBUG_LOGGING,
 			Configs.Generic.DATAFIXER_DEFAULT_SCHEMA,
 			Configs.Generic.EXECUTE_REQUIRE_TOOL,
