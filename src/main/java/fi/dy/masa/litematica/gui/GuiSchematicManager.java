@@ -184,191 +184,184 @@ public class GuiSchematicManager extends GuiSchematicBrowserBase implements ISel
         }
     }
 
-    private static class ButtonListener implements IButtonActionListener
-    {
-        private final Type type;
-        private final GuiSchematicManager gui;
-
-        public ButtonListener(Type type, GuiSchematicManager gui)
-        {
-            this.type = type;
-            this.gui = gui;
-        }
-
-        @Override
-        public void actionPerformedWithButton(ButtonBase button, int mouseButton)
-        {
-            if (this.type == Type.SET_PREVIEW && mouseButton == 1)
-            {
-                if (previewGenerator != null)
-                {
-                    previewGenerator = null;
-                    this.gui.addMessage(MessageType.SUCCESS, "litematica.message.schematic_preview_cancelled");
-                }
-
-                return;
-            }
-
-            DirectoryEntry entry = this.gui.getListWidget().getLastSelectedEntry();
-
-            if (entry == null)
-            {
-                this.gui.addMessage(MessageType.ERROR, "litematica.error.schematic_load.no_schematic_selected");
-                return;
-            }
-
-            Path file = entry.getFullPath();
-
-            if (!Files.exists(file) || !Files.isRegularFile(file) || !Files.isReadable(file))
-            {
-                this.gui.addMessage(MessageType.ERROR, "litematica.error.schematic_load.cant_read_file", file.getFileName());
-                return;
-            }
-
-            FileType fileType = FileType.fromFile(entry.getFullPath());
-
-            if (this.type == Type.EXPORT_SCHEMATIC)
-            {
-                if (fileType == FileType.LITEMATICA_SCHEMATIC)
-                {
-                    GuiSchematicSaveExported gui = new GuiSchematicSaveExported(entry.getType(), entry.getDirectory(), entry.getName(), this.gui.exportType);
-                    gui.setParent(this.gui);
-                    GuiBase.openGui(gui);
-                }
-                else
-                {
-                    this.gui.addMessage(MessageType.ERROR, "litematica.error.schematic_manager.schematic_export.unsupported_type", file.getFileName());
-                }
-            }
-            else if (this.type == Type.IMPORT_SCHEMATIC)
-            {
-                if (fileType == FileType.LITEMATICA_SCHEMATIC ||
-                    fileType == FileType.SPONGE_SCHEMATIC ||
-                    fileType == FileType.SCHEMATICA_SCHEMATIC ||
-                    fileType == FileType.VANILLA_STRUCTURE)
-                {
-                    GuiSchematicSaveImported gui = new GuiSchematicSaveImported(entry.getType(), entry.getDirectory(), entry.getName());
-                    gui.setParent(this.gui);
-                    GuiBase.openGui(gui);
-                }
-                else
-                {
-                    this.gui.addMessage(MessageType.ERROR, "litematica.error.schematic_manager.schematic_import.unsupported_type", file.getFileName());
-                }
-            }
-            else if (this.type == Type.RENAME_SCHEMATIC)
-            {
-                LitematicaSchematic schematic = LitematicaSchematic.createFromFile(entry.getDirectory(), entry.getName());
-                String oldName = schematic != null ? schematic.getMetadata().getName() : "";
-                GuiBase.openGui(new GuiTextInputFeedback(256, "litematica.gui.title.rename_schematic", oldName, this.gui, new SchematicRenamer(entry.getDirectory(), entry.getName(), this.gui)));
-            }
-			else if (this.type == Type.COPY)
+	private record ButtonListener(Type type, GuiSchematicManager gui) implements IButtonActionListener
+	{
+		@Override
+		public void actionPerformedWithButton(ButtonBase button, int mouseButton)
+		{
+			if (this.type == Type.SET_PREVIEW && mouseButton == 1)
 			{
-				FileCopier copier = new FileCopier(file, this.gui.getListWidget(), Configs.Generic.DISPLAY_FILE_OPS_FEEDBACK.getBooleanValue());
-				GuiBase.openGui(new GuiTextInputFeedback(256, "litematica.gui.title.copy_file", entry.getName(), this.gui, copier));
+				if (previewGenerator != null)
+				{
+					previewGenerator = null;
+					this.gui.addMessage(MessageType.SUCCESS, "litematica.message.schematic_preview_cancelled");
+				}
+
+				return;
 			}
-			else if (this.type == Type.RENAME_FILE)
+
+			DirectoryEntry entry = this.gui.getListWidget().getLastSelectedEntry();
+
+			if (entry == null)
 			{
-				FileRenamer renamer = new FileRenamer(file, this.gui.getListWidget(), Configs.Generic.DISPLAY_FILE_OPS_FEEDBACK.getBooleanValue());
-				GuiBase.openGui(new GuiTextInputFeedback(256, "litematica.gui.title.rename_file", entry.getName(), this.gui, renamer));
+				this.gui.addMessage(MessageType.ERROR, "litematica.error.schematic_load.no_schematic_selected");
+				return;
 			}
-            else if (this.type == Type.DELETE)
-            {
-                FileDeleter deleter = new FileDeleter(entry.getFullPath(), this.gui.getListWidget(), Configs.Generic.DISPLAY_FILE_OPS_FEEDBACK.getBooleanValue());
-                GuiBase.openGui(new GuiConfirmAction(400, "litematica.gui.title.confirm_file_deletion", deleter, this.gui, "litematica.gui.message.confirm_file_deletion", entry.getName()));
-            }
-            else if (this.type == Type.SET_PREVIEW)
-            {
-                if (GuiBase.isShiftDown() && GuiBase.isCtrlDown() && GuiBase.isAltDown() && fileType == FileType.LITEMATICA_SCHEMATIC)
-                {
-                    Path imageFile = entry.getDirectory().resolve("thumb.png");
 
-                    if (Files.exists(imageFile) && Files.isReadable(imageFile))
-                    {
-                        LitematicaSchematic schematic = LitematicaSchematic.createFromFile(entry.getDirectory(), entry.getName());
+			Path file = entry.getFullPath();
 
-                        if (schematic != null)
-                        {
-                            try
-                            {
-                                InputStream inputStream = Files.newInputStream(imageFile);
-                                NativeImage image = NativeImage.read(inputStream);
-                                int x = image.getWidth() >= image.getHeight() ? (image.getWidth() - image.getHeight()) / 2 : 0;
-                                int y = image.getHeight() >= image.getWidth() ? (image.getHeight() - image.getWidth()) / 2 : 0;
-                                int longerSide = Math.min(image.getWidth(), image.getHeight());
-                                //System.out.printf("w: %d, h: %d, x: %d, y: %d\n", screenshot.getWidth(), screenshot.getHeight(), x, y);
-                                //int previewDimensions = 140;
-                                int previewDimensions = 120;
-                                NativeImage scaled = new NativeImage(previewDimensions, previewDimensions, false);
-                                image.resizeSubRectTo(x, y, longerSide, longerSide, scaled);
-                                @SuppressWarnings("deprecation")
-                                int[] pixels = scaled.makePixelArray();
-    
-                                schematic.getMetadata().setPreviewImagePixelData(pixels);
-                                schematic.getMetadata().setTimeModifiedToNow();
-    
-                                if (schematic.writeToFile(entry.getDirectory(), entry.getName(), true))
-                                {
-                                    InfoUtils.showGuiAndInGameMessage(MessageType.SUCCESS, "Custom preview image set");
-                                }
+			if (!Files.exists(file) || !Files.isRegularFile(file) || !Files.isReadable(file))
+			{
+				this.gui.addMessage(MessageType.ERROR, "litematica.error.schematic_load.cant_read_file", file.getFileName());
+				return;
+			}
 
-                                return;
-                            }
-                            catch (Exception ignore) {}
-                        }
-                    }
-                    else
-                    {
-                        InfoUtils.showGuiAndInGameMessage(MessageType.ERROR, "Image 'thumb.png' not found");
-                        return;
-                    }
-                    InfoUtils.showGuiAndInGameMessage(MessageType.ERROR, "Failed to set custom preview image");
-                    return;
-                }
-                previewGenerator = new PreviewGenerator(entry.getDirectory(), entry.getName());
-                GuiBase.openGui(null);
-                InfoUtils.showGuiAndInGameMessage(MessageType.INFO, "litematica.info.schematic_manager.preview.set_preview_by_taking_a_screenshot");
-            }
-        }
+			FileType fileType = FileType.fromFile(entry.getFullPath());
 
-        public enum Type
-        {
-            IMPORT_SCHEMATIC            ("litematica.gui.button.import"),
-            EXPORT_SCHEMATIC            ("litematica.gui.button.schematic_manager.export_as"),
-            RENAME_SCHEMATIC            ("litematica.gui.button.rename_schematic"),
-			COPY            			("litematica.gui.button.copy"),
-			RENAME_FILE            		("litematica.gui.button.rename_file"),
-            DELETE						("litematica.gui.button.delete"),
-            SET_PREVIEW                 ("litematica.gui.button.set_preview", "litematica.info.schematic_manager.preview.right_click_to_cancel"),
-            EXPORT_TYPE                 ("");
+			if (this.type == Type.EXPORT_SCHEMATIC)
+			{
+				if (fileType == FileType.LITEMATICA_SCHEMATIC)
+				{
+					GuiSchematicSaveExported gui = new GuiSchematicSaveExported(entry.type(), entry.getDirectory(), entry.name(), this.gui.exportType);
+					gui.setParent(this.gui);
+					GuiBase.openGui(gui);
+				}
+				else
+				{
+					this.gui.addMessage(MessageType.ERROR, "litematica.error.schematic_manager.schematic_export.unsupported_type", file.getFileName());
+				}
+			}
+			else if (this.type == Type.IMPORT_SCHEMATIC)
+			{
+				if (fileType == FileType.LITEMATICA_SCHEMATIC ||
+						fileType == FileType.SPONGE_SCHEMATIC ||
+						fileType == FileType.SCHEMATICA_SCHEMATIC ||
+						fileType == FileType.VANILLA_STRUCTURE)
+				{
+					GuiSchematicSaveImported gui = new GuiSchematicSaveImported(entry.type(), entry.getDirectory(), entry.name());
+					gui.setParent(this.gui);
+					GuiBase.openGui(gui);
+				}
+				else
+				{
+					this.gui.addMessage(MessageType.ERROR, "litematica.error.schematic_manager.schematic_import.unsupported_type", file.getFileName());
+				}
+			}
+			else if (this.type == Type.RENAME_SCHEMATIC)
+			{
+				LitematicaSchematic schematic = LitematicaSchematic.createFromFile(entry.getDirectory(), entry.name());
+				String oldName = schematic != null ? schematic.getMetadata().getName() : "";
+				GuiBase.openGui(new GuiTextInputFeedback(256, "litematica.gui.title.rename_schematic", oldName, this.gui, new SchematicRenamer(entry.getDirectory(), entry.name(), this.gui)));
+			}
+				else if (this.type == Type.COPY)
+				{
+					FileCopier copier = new FileCopier(file, this.gui.getListWidget(), Configs.Generic.DISPLAY_FILE_OPS_FEEDBACK.getBooleanValue());
+					GuiBase.openGui(new GuiTextInputFeedback(256, "litematica.gui.title.copy_file", entry.name(), this.gui, copier));
+				}
+				else if (this.type == Type.RENAME_FILE)
+				{
+					FileRenamer renamer = new FileRenamer(file, this.gui.getListWidget(), Configs.Generic.DISPLAY_FILE_OPS_FEEDBACK.getBooleanValue());
+					GuiBase.openGui(new GuiTextInputFeedback(256, "litematica.gui.title.rename_file", entry.name(), this.gui, renamer));
+				}
+			else if (this.type == Type.DELETE)
+			{
+				FileDeleter deleter = new FileDeleter(entry.getFullPath(), this.gui.getListWidget(), Configs.Generic.DISPLAY_FILE_OPS_FEEDBACK.getBooleanValue());
+				GuiBase.openGui(new GuiConfirmAction(400, "litematica.gui.title.confirm_file_deletion", deleter, this.gui, "litematica.gui.message.confirm_file_deletion", entry.name()));
+			}
+			else if (this.type == Type.SET_PREVIEW)
+			{
+				if (GuiBase.isShiftDown() && GuiBase.isCtrlDown() && GuiBase.isAltDown() && fileType == FileType.LITEMATICA_SCHEMATIC)
+				{
+					Path imageFile = entry.getDirectory().resolve("thumb.png");
 
-            private final String label;
-            @Nullable
-            private final String hoverText;
+					if (Files.exists(imageFile) && Files.isReadable(imageFile))
+					{
+						LitematicaSchematic schematic = LitematicaSchematic.createFromFile(entry.getDirectory(), entry.name());
 
-            Type(String label)
-            {
-                this(label, null);
-            }
+						if (schematic != null)
+						{
+							try
+							{
+								InputStream inputStream = Files.newInputStream(imageFile);
+								NativeImage image = NativeImage.read(inputStream);
+								int x = image.getWidth() >= image.getHeight() ? (image.getWidth() - image.getHeight()) / 2 : 0;
+								int y = image.getHeight() >= image.getWidth() ? (image.getHeight() - image.getWidth()) / 2 : 0;
+								int longerSide = Math.min(image.getWidth(), image.getHeight());
+								//System.out.printf("w: %d, h: %d, x: %d, y: %d\n", screenshot.getWidth(), screenshot.getHeight(), x, y);
+								//int previewDimensions = 140;
+								int previewDimensions = 120;
+								NativeImage scaled = new NativeImage(previewDimensions, previewDimensions, false);
+								image.resizeSubRectTo(x, y, longerSide, longerSide, scaled);
+								@SuppressWarnings("deprecation")
+								int[] pixels = scaled.makePixelArray();
 
-            Type(String label, @Nullable String hoverText)
-            {
-                this.label = label;
-                this.hoverText = hoverText;
-            }
+								schematic.getMetadata().setPreviewImagePixelData(pixels);
+								schematic.getMetadata().setTimeModifiedToNow();
 
-            public String getLabel()
-            {
-                return StringUtils.translate(this.label);
-            }
+								if (schematic.writeToFile(entry.getDirectory(), entry.name(), true))
+								{
+									InfoUtils.showGuiAndInGameMessage(MessageType.SUCCESS, "Custom preview image set");
+								}
 
-            @Nullable
-            public String getHoverText()
-            {
-                return this.hoverText != null ? StringUtils.translate(this.hoverText) : null;
-            }
-        }
-    }
+								return;
+							}
+							catch (Exception ignore)
+							{
+							}
+						}
+					}
+					else
+					{
+						InfoUtils.showGuiAndInGameMessage(MessageType.ERROR, "Image 'thumb.png' not found");
+						return;
+					}
+					InfoUtils.showGuiAndInGameMessage(MessageType.ERROR, "Failed to set custom preview image");
+					return;
+				}
+				previewGenerator = new PreviewGenerator(entry.getDirectory(), entry.name());
+				GuiBase.openGui(null);
+				InfoUtils.showGuiAndInGameMessage(MessageType.INFO, "litematica.info.schematic_manager.preview.set_preview_by_taking_a_screenshot");
+			}
+		}
+
+		public enum Type
+		{
+			IMPORT_SCHEMATIC("litematica.gui.button.import"),
+			EXPORT_SCHEMATIC("litematica.gui.button.schematic_manager.export_as"),
+			RENAME_SCHEMATIC("litematica.gui.button.rename_schematic"),
+				COPY("litematica.gui.button.copy"),
+				RENAME_FILE("litematica.gui.button.rename_file"),
+			DELETE("litematica.gui.button.delete"),
+			SET_PREVIEW("litematica.gui.button.set_preview", "litematica.info.schematic_manager.preview.right_click_to_cancel"),
+			EXPORT_TYPE("");
+
+			private final String label;
+			@Nullable
+			private final String hoverText;
+
+			Type(String label)
+			{
+				this(label, null);
+			}
+
+			Type(String label, @Nullable String hoverText)
+			{
+				this.label = label;
+				this.hoverText = hoverText;
+			}
+
+			public String getLabel()
+			{
+				return StringUtils.translate(this.label);
+			}
+
+			@Nullable
+			public String getHoverText()
+			{
+				return this.hoverText != null ? StringUtils.translate(this.hoverText) : null;
+			}
+		}
+	}
 
 	private record SchematicRenamer(Path dir, String fileName, GuiSchematicManager gui)
 			implements IStringConsumerFeedback
@@ -397,38 +390,6 @@ public class GuiSchematicManager extends GuiSchematicBrowserBase implements ISel
 			return false;
 		}
 	}
-
-//    public static class FileDeleter implements IConfirmationListener
-//    {
-//        protected final Path file;
-//
-//        public FileDeleter(Path file)
-//        {
-//           this.file = file;
-//        }
-//
-//        @Override
-//        public boolean onActionCancelled()
-//        {
-//            return false;
-//        }
-//
-//        @Override
-//        public boolean onActionConfirmed()
-//        {
-//            try
-//            {
-//                Files.delete(this.file);
-//                return true;
-//            }
-//            catch (Exception e)
-//            {
-//                InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, "litematica.error.generic.failed_to_delete_file", this.file.toAbsolutePath());
-//            }
-//
-//            return false;
-//        }
-//    }
 
 	public record PreviewGenerator(Path dir, String fileName)
 	{

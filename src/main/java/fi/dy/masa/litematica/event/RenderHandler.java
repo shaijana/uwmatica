@@ -1,15 +1,17 @@
 package fi.dy.masa.litematica.event;
 
 import java.util.function.Supplier;
+import org.joml.Matrix4f;
+
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
-import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.BufferBuilderStorage;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.Frustum;
 import net.minecraft.util.profiler.Profiler;
-import org.joml.Matrix4f;
+
 import fi.dy.masa.malilib.interfaces.IRenderer;
+import fi.dy.masa.malilib.render.GuiContext;
 import fi.dy.masa.malilib.util.GuiUtils;
 import fi.dy.masa.litematica.Reference;
 import fi.dy.masa.litematica.config.Configs;
@@ -23,15 +25,15 @@ import fi.dy.masa.litematica.tool.ToolMode;
 
 public class RenderHandler implements IRenderer
 {
-    @Override
-    public void onRenderWorldPreWeather(Framebuffer fb, Matrix4f posMatrix, Matrix4f projMatrix, Frustum frustum, Camera camera, BufferBuilderStorage buffers, Profiler profiler)
-    {
+//    @Override
+//    public void onRenderWorldPreWeather(Framebuffer fb, Matrix4f posMatrix, Matrix4f projMatrix, Frustum frustum, Camera camera, BufferBuilderStorage buffers, Profiler profiler)
+//    {
 //        MinecraftClient mc = MinecraftClient.getInstance();
 //
 //        if (Configs.Visuals.ENABLE_RENDERING.getBooleanValue() && mc.player != null)
 //        {
 //        }
-    }
+//    }
 
     @Override
     public void onRenderWorldLastAdvanced(Framebuffer fb, Matrix4f posMatrix, Matrix4f projMatrix, Frustum frustum, Camera camera, BufferBuilderStorage buffers, Profiler profiler)
@@ -69,27 +71,27 @@ public class RenderHandler implements IRenderer
     }
 
     @Override
-    public void onRenderGameOverlayPostAdvanced(DrawContext drawContext, float partialTicks, Profiler profiler, MinecraftClient mc)
+    public void onRenderGameOverlayPostAdvanced(GuiContext ctx, float partialTicks, Profiler profiler)
     {
-        if (Configs.Visuals.ENABLE_RENDERING.getBooleanValue() && mc.player != null)
+        if (Configs.Visuals.ENABLE_RENDERING.getBooleanValue() && ctx.mc().player != null)
         {
             profiler.push("overlay_hud");
             // The Info HUD renderers can decide if they want to be rendered in GUIs
-            InfoHud.getInstance().renderHud(drawContext);
+            InfoHud.getInstance().renderHud(ctx);
 
             if (GuiUtils.getCurrentScreen() == null)
             {
-                if (mc.options.hudHidden == false)
+                if (ctx.mc().options.hudHidden == false)
                 {
-                    ToolHud.getInstance().renderHud(drawContext);
+                    ToolHud.getInstance().renderHud(ctx);
                     profiler.swap("overlay_hover_info");
-                    OverlayRenderer.getInstance().renderHoverInfo(drawContext, mc, profiler);
+                    OverlayRenderer.getInstance().renderHoverInfo(ctx, profiler);
                 }
 
                 if (GuiSchematicManager.hasPendingPreviewTask())
                 {
                     profiler.swap("overlay_preview_frame");
-                    OverlayRenderer.getInstance().renderPreviewFrame(drawContext, mc, profiler);
+                    OverlayRenderer.getInstance().renderPreviewFrame(ctx, profiler);
                 }
             }
 

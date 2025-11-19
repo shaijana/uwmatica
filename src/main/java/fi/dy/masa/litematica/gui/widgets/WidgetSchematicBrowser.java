@@ -5,6 +5,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
+
+import fi.dy.masa.malilib.render.GuiContext;
 import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.texture.NativeImage;
@@ -76,18 +78,18 @@ public class WidgetSchematicBrowser extends WidgetFileBrowserBase
     }
 
     @Override
-    protected void drawAdditionalContents(DrawContext drawContext, int mouseX, int mouseY)
+    protected void drawAdditionalContents(GuiContext ctx, int mouseX, int mouseY)
     {
-        this.drawSelectedSchematicInfo(drawContext, this.getLastSelectedEntry());
+        this.drawSelectedSchematicInfo(ctx, this.getLastSelectedEntry());
     }
 
-    protected void drawSelectedSchematicInfo(DrawContext drawContext, @Nullable DirectoryEntry entry)
+    protected void drawSelectedSchematicInfo(GuiContext ctx, @Nullable DirectoryEntry entry)
     {
         int x = this.posX + this.totalWidth - this.infoWidth;
         int y = this.posY;
         int height = Math.min(this.infoHeight, this.parent.getMaxInfoHeight());
 
-        RenderUtils.drawOutlinedBox(drawContext, x, y, this.infoWidth, height, 0xA0000000, COLOR_HORIZONTAL_BAR);
+        RenderUtils.drawOutlinedBox(ctx, x, y, this.infoWidth, height, 0xA0000000, COLOR_HORIZONTAL_BAR);
 
         if (entry == null)
         {
@@ -110,61 +112,59 @@ public class WidgetSchematicBrowser extends WidgetFileBrowserBase
 
         if (meta != null)
         {
-//            RenderUtils.color(1f, 1f, 1f, 1f);
-
             x += 3;
             y += 3;
             int textColor = 0xC0C0C0C0;
             int valueColor = 0xFFFFFFFF;
 
             String str = StringUtils.translate("litematica.gui.label.schematic_info.name");
-            this.drawString(drawContext, str, x, y, textColor);
+            this.drawString(ctx, str, x, y, textColor);
             y += 12;
 
-            this.drawString(drawContext, meta.getName(), x + 4, y, valueColor);
+            this.drawString(ctx, meta.getName(), x + 4, y, valueColor);
             y += 12;
 
             str = StringUtils.translate("litematica.gui.label.schematic_info.schematic_author", meta.getAuthor());
-            this.drawString(drawContext, str, x, y, textColor);
+            this.drawString(ctx, str, x, y, textColor);
             y += 12;
 
             String strDate = DATE_FORMAT.format(new Date(meta.getTimeCreated()));
             str = StringUtils.translate("litematica.gui.label.schematic_info.time_created", strDate);
-            this.drawString(drawContext, str, x, y, textColor);
+            this.drawString(ctx, str, x, y, textColor);
             y += 12;
 
             if (meta.hasBeenModified())
             {
                 strDate = DATE_FORMAT.format(new Date(meta.getTimeModified()));
                 str = StringUtils.translate("litematica.gui.label.schematic_info.time_modified", strDate);
-                this.drawString(drawContext, str, x, y, textColor);
+                this.drawString(ctx, str, x, y, textColor);
                 y += 12;
             }
 
             str = StringUtils.translate("litematica.gui.label.schematic_info.region_count", meta.getRegionCount());
-            this.drawString(drawContext, str, x, y, textColor);
+            this.drawString(ctx, str, x, y, textColor);
             y += 12;
 
             if (this.parent.getScreenHeight() >= 340)
             {
                 str = StringUtils.translate("litematica.gui.label.schematic_info.total_volume", meta.getTotalVolume());
-                this.drawString(drawContext, str, x, y, textColor);
+                this.drawString(ctx, str, x, y, textColor);
                 y += 12;
 
                 if (meta.getTotalBlocks() > 0)
                 {
                     str = StringUtils.translate("litematica.gui.label.schematic_info.total_blocks", meta.getTotalBlocks());
-                    this.drawString(drawContext, str, x, y, textColor);
+                    this.drawString(ctx, str, x, y, textColor);
                     y += 12;
                 }
 
                 str = StringUtils.translate("litematica.gui.label.schematic_info.enclosing_size");
-                this.drawString(drawContext, str, x, y, textColor);
+                this.drawString(ctx, str, x, y, textColor);
                 y += 12;
 
                 Vec3i areaSize = meta.getEnclosingSize();
                 String tmp = String.format("%d x %d x %d", areaSize.getX(), areaSize.getY(), areaSize.getZ());
-                this.drawString(drawContext, tmp, x + 4, y, valueColor);
+                this.drawString(ctx, tmp, x + 4, y, valueColor);
                 y += 12;
             }
             else
@@ -172,20 +172,20 @@ public class WidgetSchematicBrowser extends WidgetFileBrowserBase
                 if (meta.getTotalBlocks() > 0)
                 {
                     str = StringUtils.translate("litematica.gui.label.schematic_info.total_blocks_and_volume", meta.getTotalBlocks(), meta.getTotalVolume());
-                    this.drawString(drawContext, str, x, y, textColor);
+                    this.drawString(ctx, str, x, y, textColor);
                     y += 12;
                 }
                 else
                 {
                     str = StringUtils.translate("litematica.gui.label.schematic_info.total_volume", meta.getTotalVolume());
-                    this.drawString(drawContext, str, x, y, textColor);
+                    this.drawString(ctx, str, x, y, textColor);
                     y += 12;
                 }
 
                 Vec3i areaSize = meta.getEnclosingSize();
                 String tmp = String.format("%d x %d x %d", areaSize.getX(), areaSize.getY(), areaSize.getZ());
                 str = StringUtils.translate("litematica.gui.label.schematic_info.enclosing_size_value", tmp);
-                this.drawString(drawContext, str, x, y, textColor);
+                this.drawString(ctx, str, x, y, textColor);
                 y += 12;
             }
 
@@ -196,19 +196,19 @@ public class WidgetSchematicBrowser extends WidgetFileBrowserBase
                     case LITEMATICA_SCHEMATIC ->
                     {
                         str = StringUtils.translate("litematica.gui.label.schematic_info.version", version.litematicVersion());
-                        this.drawString(drawContext, str, x, y, textColor);
+                        this.drawString(ctx, str, x, y, textColor);
                         y += 12;
                     }
                     case SPONGE_SCHEMATIC ->
                     {
                         str = StringUtils.translate("litematica.gui.label.schematic_info.sponge_version", version.litematicVersion());
-                        this.drawString(drawContext, str, x, y, textColor);
+                        this.drawString(ctx, str, x, y, textColor);
                         y += 12;
                     }
                     case VANILLA_STRUCTURE ->
                     {
                         str = StringUtils.translate("litematica.gui.label.schematic_info.vanilla_version");
-                        this.drawString(drawContext, str, x, y, textColor);
+                        this.drawString(ctx, str, x, y, textColor);
                         y += 12;
                     }
                     // Not supported
@@ -227,7 +227,7 @@ public class WidgetSchematicBrowser extends WidgetFileBrowserBase
                     {
                         str = StringUtils.translate("litematica.gui.label.schematic_info.schema", schema.getString(), version.minecraftDataVersion());
                     }
-                    this.drawString(drawContext, str, x, y, textColor);
+                    this.drawString(ctx, str, x, y, textColor);
                     y += 12;
                 }
             }
@@ -248,14 +248,12 @@ public class WidgetSchematicBrowser extends WidgetFileBrowserBase
                 int iconSize = pair.getRight().getImage().getWidth();
                 boolean needsScaling = height < this.infoHeight;
 
-//                RenderUtils.color(1f, 1f, 1f, 1f);
-
                 if (needsScaling)
                 {
                     iconSize = height - y + this.posY - 6;
                 }
 
-                RenderUtils.drawOutlinedBox(drawContext, x + 4, y, iconSize, iconSize, 0xA0000000, COLOR_HORIZONTAL_BAR);
+                RenderUtils.drawOutlinedBox(ctx, x + 4, y, iconSize, iconSize, 0xA0000000, COLOR_HORIZONTAL_BAR);
 
                 drawContext.drawTexture(RenderPipelines.GUI_TEXTURED, pair.getLeft(), x + 4, y, 0.0F, 0.0F, iconSize, iconSize, iconSize, iconSize);
             }
@@ -274,14 +272,14 @@ public class WidgetSchematicBrowser extends WidgetFileBrowserBase
     @Nullable
     protected SchematicMetadata getSchematicMetadata(DirectoryEntry entry)
     {
-        Path file = entry.getDirectory().resolve(entry.getName());
+        Path file = entry.getDirectory().resolve(entry.name());
         SchematicMetadata meta = this.cachedMetadata.get(file);
 
         if (meta == null && this.cachedMetadata.containsKey(file) == false)
         {
-            if (entry.getName().endsWith(LitematicaSchematic.FILE_EXTENSION))
+            if (entry.name().endsWith(LitematicaSchematic.FILE_EXTENSION))
             {
-                meta = LitematicaSchematic.readMetadataFromFile(entry.getDirectory(), entry.getName());
+                meta = LitematicaSchematic.readMetadataFromFile(entry.getDirectory(), entry.name());
 
                 if (meta != null)
                 {
@@ -298,20 +296,20 @@ public class WidgetSchematicBrowser extends WidgetFileBrowserBase
     @Nullable
     protected Pair<SchematicSchema, SchematicMetadata> getSchematicVersionAndMetadata(DirectoryEntry entry)
     {
-        Path file = entry.getDirectory().resolve(entry.getName());
+        Path file = entry.getDirectory().resolve(entry.name());
         SchematicMetadata meta = this.cachedMetadata.get(file);
         SchematicSchema version = this.cachedVersion.get(file);
 
         if (meta == null && this.cachedMetadata.containsKey(file) == false)
         {
-            Pair<SchematicSchema, SchematicMetadata> pair = LitematicaSchematic.readMetadataAndVersionFromFile(entry.getDirectory(), entry.getName());
+            Pair<SchematicSchema, SchematicMetadata> pair = LitematicaSchematic.readMetadataAndVersionFromFile(entry.getDirectory(), entry.name());
 
             if (pair != null)
             {
                 meta = pair.getRight();
                 version = pair.getLeft();
 
-                if (entry.getName().endsWith(LitematicaSchematic.FILE_EXTENSION))
+                if (entry.name().endsWith(LitematicaSchematic.FILE_EXTENSION))
                 {
                     this.createPreviewImage(file, meta);
                 }

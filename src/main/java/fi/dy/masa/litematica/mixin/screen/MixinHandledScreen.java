@@ -11,6 +11,8 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.text.Text;
 
+import fi.dy.masa.malilib.render.GuiContext;
+
 @Mixin(HandledScreen.class)
 public abstract class MixinHandledScreen extends Screen
 {
@@ -23,12 +25,12 @@ public abstract class MixinHandledScreen extends Screen
             target = "Lnet/minecraft/client/gui/screen/Screen;render(Lnet/minecraft/client/gui/DrawContext;IIF)V"))
     private void litematica_renderSlotHighlightsPre(DrawContext drawContext, int mouseX, int mouseY, float delta, CallbackInfo ci)
     {
-        MaterialListHudRenderer.renderLookedAtBlockInInventory(drawContext, (HandledScreen<?>) (Object) this, this.client);
+        MaterialListHudRenderer.renderLookedAtBlockInInventory((GuiContext) drawContext, (HandledScreen<?>) (Object) this, this.client);
     }
 
     @Inject(method = "render", at = @At("TAIL"))
     private void litematica_renderSlotHighlightsPost(DrawContext drawContext, int mouseX, int mouseY, float delta, CallbackInfo ci)
     {
-        MaterialListHudRenderer.renderLookedAtBlockInInventory(drawContext, (HandledScreen<?>) (Object) this, this.client);
+        MaterialListHudRenderer.renderLookedAtBlockInInventory((GuiContext) drawContext, (HandledScreen<?>) (Object) this, this.client);
     }
 }

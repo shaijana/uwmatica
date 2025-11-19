@@ -2,6 +2,8 @@ package fi.dy.masa.litematica.materials;
 
 import java.util.Collections;
 import java.util.List;
+
+import fi.dy.masa.malilib.render.GuiContext;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
@@ -77,6 +79,7 @@ public class MaterialListHudRenderer implements IInfoHudRenderer
         MinecraftClient mc = MinecraftClient.getInstance();
         long currentTime = System.currentTimeMillis();
         List<MaterialListEntry> list;
+		GuiContext ctx = (GuiContext) drawContext;
 
         if (currentTime - this.lastUpdateTime > 2000)
         {
@@ -150,12 +153,10 @@ public class MaterialListHudRenderer implements IInfoHudRenderer
         posY = RenderUtils.getHudPosY(posY, yOffset, contentHeight, scale, alignment);
         posY += RenderUtils.getHudOffsetForPotions(alignment, scale, mc.player);
 
-        Matrix3x2fStack matrixStack = drawContext.getMatrices();
-
         if (scale != 1d)
         {
-            matrixStack.pushMatrix();
-            matrixStack.scale((float) scale, (float) scale);
+			ctx.getMatrices().pushMatrix();
+			ctx.getMatrices().scale((float) scale, (float) scale);
         }
 
         if (useBackground)
@@ -165,7 +166,7 @@ public class MaterialListHudRenderer implements IInfoHudRenderer
             int x2 = x1 + maxLineLength + bgMargin * 2;
             int y2 = y1 + contentHeight + bgMargin;
 
-            drawContext.fill(x1, y1, x2, y2, bgColor);
+			ctx.fill(x1, y1, x2, y2, bgColor);
         }
 
         int x = posX;
@@ -173,13 +174,13 @@ public class MaterialListHudRenderer implements IInfoHudRenderer
 
         for (int i = 0; i < size; ++i)
         {
-            drawContext.drawItem(list.get(i).getStack(), x, y);
+			ctx.drawItem(list.get(i).getStack(), x, y);
             y += lineHeight;
         }
 
         String title = GuiBase.TXT_BOLD + StringUtils.translate("litematica.gui.button.material_list") + GuiBase.TXT_RST;
 
-        drawContext.drawText(font, title, posX + 2, posY + 2, textColor, useShadow);
+		ctx.drawText(font, title, posX + 2, posY + 2, textColor, useShadow);
 
         final int itemCountTextColor = Configs.Colors.MATERIAL_LIST_HUD_ITEM_COUNTS.getIntegerValue();
         x = posX + 18;
@@ -196,15 +197,15 @@ public class MaterialListHudRenderer implements IInfoHudRenderer
             int cntLen = font.getWidth(strCount);
             int cntPosX = posX + maxLineLength - cntLen - 2;
 
-            drawContext.drawText(font, text, x, y, textColor, useShadow);
-            drawContext.drawText(font, strCount, cntPosX, y, itemCountTextColor, useShadow);
+			ctx.drawText(font, text, x, y, textColor, useShadow);
+			ctx.drawText(font, strCount, cntPosX, y, itemCountTextColor, useShadow);
 
             y += lineHeight;
         }
 
         if (scale != 1d)
         {
-            matrixStack.popMatrix();
+			ctx.getMatrices().popMatrix();
         }
 
         return contentHeight + 4;
@@ -237,7 +238,7 @@ public class MaterialListHudRenderer implements IInfoHudRenderer
         }
     }
 
-    public static void renderLookedAtBlockInInventory(DrawContext drawContext, HandledScreen<?> gui, MinecraftClient mc)
+    public static void renderLookedAtBlockInInventory(GuiContext ctx, HandledScreen<?> gui, MinecraftClient mc)
     {
         if (Configs.Generic.HIGHLIGHT_BLOCK_IN_INV.getBooleanValue())
         {
@@ -255,16 +256,14 @@ public class MaterialListHudRenderer implements IInfoHudRenderer
                 }
 
                 Color4f color = Configs.Colors.HIGHTLIGHT_BLOCK_IN_INV_COLOR.getColor();
-                highlightSlotsWithItem(drawContext, lastLookedAtBlocksItem, gui, color, mc);
+                highlightSlotsWithItem(ctx, lastLookedAtBlocksItem, gui, color, mc);
             }
         }
     }
 
-    public static void highlightSlotsWithItem(DrawContext drawContext, ItemStack referenceItem, HandledScreen<?> gui, Color4f color, MinecraftClient mc)
+    public static void highlightSlotsWithItem(GuiContext ctx, ItemStack referenceItem, HandledScreen<?> gui, Color4f color, MinecraftClient mc)
     {
         List<Slot> slots = gui.getScreenHandler().slots;
-
-//        RenderUtils.blend(true);
         int guiX = ((IMixinHandledScreen) gui).litematica_getX();
         int guiY = ((IMixinHandledScreen) gui).litematica_getY();
 
@@ -275,19 +274,17 @@ public class MaterialListHudRenderer implements IInfoHudRenderer
                  InventoryUtils.doesShulkerBoxContainItem(slot.getStack(), referenceItem) ||
                  InventoryUtils.doesBundleContainItem(slot.getStack(), referenceItem)))
             {
-                renderOutlinedBox(drawContext, guiX + slot.x, guiY + slot.y, 16, 16, color.intValue, color.intValue | 0xFF000000, 1f);
+                renderOutlinedBox(ctx, guiX + slot.x, guiY + slot.y, 16, 16, color.intValue, color.intValue | 0xFF000000, 1f);
             }
         }
-
-//        RenderUtils.color(1f, 1f, 1f, 1f);
     }
 
-    public static void renderOutlinedBox(DrawContext drawContext, int x, int y, int width, int height, int colorBg, int colorBorder, float zLevel)
+    public static void renderOutlinedBox(GuiContext ctx, int x, int y, int width, int height, int colorBg, int colorBorder, float zLevel)
     {
         // Draw the background
-        RenderUtils.drawRect(drawContext, x + 1, y + 1, width - 2, height - 2, colorBg);    // zLevel
+        RenderUtils.drawRect(ctx, x + 1, y + 1, width - 2, height - 2, colorBg);    // zLevel
 
         // Draw the border
-        RenderUtils.drawOutline(drawContext, x, y, width, height, 1, colorBorder);    // zLevel
+        RenderUtils.drawOutline(ctx, x, y, width, height, 1, colorBorder);    // zLevel
     }
 }

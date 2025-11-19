@@ -6,7 +6,6 @@ import javax.annotation.Nonnull;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.DimensionEffects;
 import net.minecraft.component.type.MapIdComponent;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.boss.dragon.EnderDragonPart;
@@ -39,6 +38,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.MutableWorldProperties;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldProperties;
+import net.minecraft.world.attribute.WorldEnvironmentAttributeAccess;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.chunk.Chunk;
@@ -71,7 +71,7 @@ public class WorldSchematic extends World
     private final HashMap<UUID, ChunkPos> entityMap;
     private final SchematicEntityLookup<Entity> entityLookup;
     protected RegistryEntry<Biome> biome;
-    private DimensionEffects dimensionEffects = new DimensionEffects.Overworld();
+//    private DimensionEffects dimensionEffects = new DimensionEffects.Overworld();
     private WorldProperties.SpawnPoint properties;
     protected int nextEntityId;
     protected int entityCount;
@@ -136,7 +136,7 @@ public class WorldSchematic extends World
             }
         });
     
-        this.dimensionEffects = DimensionEffects.byDimensionType(this.dimensionType.value());
+//        this.dimensionEffects = DimensionEffects.byDimensionType(this.dimensionType.value());
     }
 
     public ChunkManagerSchematic getChunkProvider()
@@ -526,28 +526,23 @@ public class WorldSchematic extends World
         return this.dimensionType;
     }
 
-    public DimensionEffects getDimensionEffects()
-    {
-        return this.dimensionEffects;
-    }
-
     @Override
     public float getBrightness(@Nonnull Direction direction, boolean shaded)
     {
-        boolean darkened = this.getDimensionEffects().isDarkened();
+	    DimensionType.CardinalLightType cardinalLightType = this.getDimension().cardinalLightType();
 
         if (!shaded)
         {
-            return darkened ? 0.9F : 1.0F;
+            return cardinalLightType == DimensionType.CardinalLightType.NETHER ? 0.9F : 1.0F;
         }
         else
         {
             return switch (direction)
             {
-                case DOWN -> darkened ? 0.9F : 0.5F;
-                case UP -> darkened ? 0.9F : 1.0F;
-                case NORTH, SOUTH -> 0.8F;
-                case WEST, EAST -> 0.6F;
+	            case DOWN -> cardinalLightType == DimensionType.CardinalLightType.NETHER ? 0.9F : 0.5F;
+	            case UP -> cardinalLightType == DimensionType.CardinalLightType.NETHER ? 0.9F : 1.0F;
+	            case NORTH, SOUTH -> 0.8F;
+	            case WEST, EAST -> 0.6F;
             };
         }
     }
@@ -606,7 +601,18 @@ public class WorldSchematic extends World
         }
     }
 
-    @Override
+	@Override
+	public WorldEnvironmentAttributeAccess getEnvironmentAttributes()
+	{
+		if (this.mc != null && this.mc.world != null)
+		{
+			return this.mc.world.getEnvironmentAttributes();
+		}
+
+		return null;
+	}
+
+	@Override
     public @Nonnull BrewingRecipeRegistry getBrewingRecipeRegistry()
     {
         if (this.mc != null && this.mc.world != null)
@@ -684,6 +690,6 @@ public class WorldSchematic extends World
 	@Override
 	public @Nonnull WorldBorder getWorldBorder()
 	{
-		return WorldBorder.Properties.DEFAULT.toWorldBorder();
+		return new WorldBorder();
 	}
 }

@@ -10,7 +10,6 @@ import net.minecraft.block.Blocks;
 import net.minecraft.block.ChestBlock;
 import net.minecraft.block.enums.ChestType;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.BuiltBuffer;
 import net.minecraft.entity.Entity;
@@ -26,6 +25,7 @@ import org.joml.Matrix4f;
 import fi.dy.masa.malilib.config.HudAlignment;
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.LeftRight;
+import fi.dy.masa.malilib.render.GuiContext;
 import fi.dy.masa.malilib.render.MaLiLibPipelines;
 import fi.dy.masa.malilib.render.RenderContext;
 import fi.dy.masa.malilib.util.GuiUtils;
@@ -385,6 +385,7 @@ public class OverlayRenderer
         profiler.push("batched_lines");
         RenderContext ctx = new RenderContext(() -> "litematica:schematic_mistaches/batched_lines", MaLiLibPipelines.DEBUG_LINES_MASA_SIMPLE_NO_DEPTH_NO_CULL);
         BufferBuilder buffer = ctx.getBuilder();
+		float lineWidth = 2.0f;
 
         MismatchRenderPos lookedEntry = null;
         MismatchRenderPos prevEntry = null;
@@ -396,7 +397,7 @@ public class OverlayRenderer
 
             if (entry.pos.equals(lookPos) == false)
             {
-                fi.dy.masa.malilib.render.RenderUtils.drawBlockBoundingBoxOutlinesBatchedLinesSimple(entry.pos, color, 0.002, buffer);
+                fi.dy.masa.malilib.render.RenderUtils.drawBlockBoundingBoxOutlinesBatchedLinesSimple(entry.pos, color, 0.002, lineWidth, buffer);
             }
             else
             {
@@ -405,7 +406,7 @@ public class OverlayRenderer
 
             if (connections && prevEntry != null)
             {
-                fi.dy.masa.malilib.render.RenderUtils.drawConnectingLineBatchedLines(prevEntry.pos, entry.pos, false, color, buffer);
+                fi.dy.masa.malilib.render.RenderUtils.drawConnectingLineBatchedLines(prevEntry.pos, entry.pos, false, color, lineWidth, buffer);
             }
 
             prevEntry = entry;
@@ -415,7 +416,7 @@ public class OverlayRenderer
         {
             if (connections && prevEntry != null)
             {
-                fi.dy.masa.malilib.render.RenderUtils.drawConnectingLineBatchedLines(prevEntry.pos, lookedEntry.pos, false, lookedEntry.type.getColor(), buffer);
+                fi.dy.masa.malilib.render.RenderUtils.drawConnectingLineBatchedLines(prevEntry.pos, lookedEntry.pos, false, lookedEntry.type.getColor(), lineWidth, buffer);
             }
 
             try
@@ -424,7 +425,7 @@ public class OverlayRenderer
 
                 if (meshData != null)
                 {
-                    ctx.lineWidth(2f);
+//                    ctx.lineWidth(2f);
                     ctx.draw(meshData, false, true);
                     meshData.close();
                 }
@@ -434,10 +435,10 @@ public class OverlayRenderer
             catch (Exception ignored) { }
 
             profiler.swap("outlines");
-
+	        lineWidth = 6f;
             buffer = ctx.start(() -> "litematica:schematic_mistaches/outlines", MaLiLibPipelines.DEBUG_LINES_MASA_SIMPLE_NO_DEPTH_NO_CULL);
 
-            fi.dy.masa.malilib.render.RenderUtils.drawBlockBoundingBoxOutlinesBatchedLinesSimple(lookPos, lookedEntry.type.getColor(), 0.002, buffer);
+            fi.dy.masa.malilib.render.RenderUtils.drawBlockBoundingBoxOutlinesBatchedLinesSimple(lookPos, lookedEntry.type.getColor(), 0.002, lineWidth, buffer);
         }
 
         try
@@ -446,7 +447,7 @@ public class OverlayRenderer
 
             if (meshData != null)
             {
-                ctx.lineWidth(6f);
+//                ctx.lineWidth(6f);
                 ctx.draw(meshData, false, true);
                 meshData.close();
             }
@@ -487,7 +488,7 @@ public class OverlayRenderer
         profiler.pop();
     }
 
-    public void renderHoverInfo(DrawContext drawContext, MinecraftClient mc, Profiler profiler)
+    public void renderHoverInfo(GuiContext ctx, Profiler profiler)
     {
         profiler.push("render_hover_info");
 
@@ -499,7 +500,7 @@ public class OverlayRenderer
             profiler.swap("render_verifier_overlay");
             if (infoOverlayKeyActive && Configs.InfoOverlays.VERIFIER_OVERLAY_ENABLED.getBooleanValue())
             {
-                verifierOverlayRendered = this.renderVerifierOverlay(drawContext, mc);
+                verifierOverlayRendered = this.renderVerifierOverlay(ctx);
             }
 
             boolean renderBlockInfoLines = Configs.InfoOverlays.BLOCK_INFO_LINES_ENABLED.getBooleanValue();
@@ -521,13 +522,13 @@ public class OverlayRenderer
                 profiler.swap("render_block_lines");
                 if (renderBlockInfoLines)
                 {
-                    this.renderBlockInfoLines(drawContext, traceWrapper, mc);
+                    this.renderBlockInfoLines(ctx, traceWrapper);
                 }
 
                 profiler.swap("render_block_overlay");
                 if (renderBlockInfoOverlay)
                 {
-                    this.renderBlockInfoOverlay(drawContext, traceWrapper, mc);
+                    this.renderBlockInfoOverlay(ctx, traceWrapper);
                 }
             }
         }
@@ -535,14 +536,14 @@ public class OverlayRenderer
         profiler.pop();
     }
 
-    private void renderBlockInfoLines(DrawContext drawContext, RayTraceWrapper traceWrapper, MinecraftClient mc)
+    private void renderBlockInfoLines(GuiContext ctx, RayTraceWrapper traceWrapper)
     {
         long currentTime = System.currentTimeMillis();
 
         // Only update the text once per game tick
         if (currentTime - this.infoUpdateTime >= 50)
         {
-            this.updateBlockInfoLines(traceWrapper, mc);
+            this.updateBlockInfoLines(traceWrapper);
             this.infoUpdateTime = currentTime;
         }
 
@@ -555,10 +556,10 @@ public class OverlayRenderer
         boolean useBackground = true;
         boolean useShadow = false;
 
-        fi.dy.masa.malilib.render.RenderUtils.renderText(drawContext, x, y, fontScale, textColor, bgColor, alignment, useBackground, useShadow, this.blockInfoLines);
+        fi.dy.masa.malilib.render.RenderUtils.renderText(ctx, x, y, fontScale, textColor, bgColor, alignment, useBackground, useShadow, this.blockInfoLines);
     }
 
-    private boolean renderVerifierOverlay(DrawContext drawContext, MinecraftClient mc)
+    private boolean renderVerifierOverlay(GuiContext ctx)
     {
         SchematicPlacement placement = DataManager.getSchematicPlacementManager().getSelectedSchematicPlacement();
 
@@ -586,9 +587,9 @@ public class OverlayRenderer
                     BlockMismatchInfo info = new BlockMismatchInfo(mismatch.stateExpected, mismatch.stateFound);
                     BlockInfoAlignment align = (BlockInfoAlignment) Configs.InfoOverlays.BLOCK_INFO_OVERLAY_ALIGNMENT.getOptionListValue();
                     int offY = Configs.InfoOverlays.BLOCK_INFO_OVERLAY_OFFSET_Y.getIntegerValue();
-                    int invHeight = RenderUtils.renderInventoryOverlays(drawContext, align, offY, worldSchematic, mc.world, pos, mc);
-                    this.getOverlayPosition(align, info.getTotalWidth(), info.getTotalHeight(), offY, invHeight, mc);
-                    info.render(drawContext, this.blockInfoX, this.blockInfoY, mc);
+                    int invHeight = RenderUtils.renderInventoryOverlays(ctx, align, offY, worldSchematic, ctx.mc().world, pos);
+                    this.getOverlayPosition(align, info.getTotalWidth(), info.getTotalHeight(), offY, invHeight);
+                    info.render(ctx, this.blockInfoX, this.blockInfoY);
                     return true;
                 }
             }
@@ -597,19 +598,19 @@ public class OverlayRenderer
         return false;
     }
 
-    private void renderBlockInfoOverlay(DrawContext drawContext, RayTraceWrapper traceWrapper, MinecraftClient mc)
+    private void renderBlockInfoOverlay(GuiContext ctx, RayTraceWrapper traceWrapper)
     {
         BlockState air = Blocks.AIR.getDefaultState();
         BlockState voidAir = Blocks.VOID_AIR.getDefaultState();
         World worldSchematic = SchematicWorldHandler.getSchematicWorld();
-        World worldClient = WorldUtils.getBestWorld(mc);
+        World worldClient = WorldUtils.getBestWorld(ctx.mc());
         BlockPos pos = traceWrapper.getBlockHitResult().getBlockPos();
 
-        if (mc.world == null || worldClient == null || worldSchematic == null)
+        if (ctx.mc().world == null || worldClient == null || worldSchematic == null)
         {
             return;
         }
-        BlockState stateClient = mc.world.getBlockState(pos);
+        BlockState stateClient = ctx.mc().world.getBlockState(pos);
         BlockState stateSchematic = worldSchematic.getBlockState(pos);
         boolean hasInvClient = InventoryUtils.getTargetInventory(worldClient, pos) != null;
         boolean hasInvSchematic = InventoryUtils.getTargetInventory(worldSchematic, pos) != null;
@@ -618,42 +619,42 @@ public class OverlayRenderer
         BlockInfoAlignment align = (BlockInfoAlignment) Configs.InfoOverlays.BLOCK_INFO_OVERLAY_ALIGNMENT.getOptionListValue();
 
         ItemUtils.setItemForBlock(worldSchematic, pos, stateSchematic);
-        ItemUtils.setItemForBlock(mc.world, pos, stateClient);
+        ItemUtils.setItemForBlock(ctx.mc().world, pos, stateClient);
 
         if (hasInvClient && hasInvSchematic)
         {
-            invHeight = RenderUtils.renderInventoryOverlays(drawContext, align, offY, worldSchematic, worldClient, pos, mc);
+            invHeight = RenderUtils.renderInventoryOverlays(ctx, align, offY, worldSchematic, worldClient, pos);
         }
         else if (hasInvClient)
         {
-            invHeight = RenderUtils.renderInventoryOverlay(drawContext, align, LeftRight.RIGHT, offY, worldClient, pos, mc);
+            invHeight = RenderUtils.renderInventoryOverlay(ctx, align, LeftRight.RIGHT, offY, worldClient, pos);
         }
         else if (hasInvSchematic)
         {
-            invHeight = RenderUtils.renderInventoryOverlay(drawContext, align, LeftRight.LEFT, offY, worldSchematic, pos, mc);
+            invHeight = RenderUtils.renderInventoryOverlay(ctx, align, LeftRight.LEFT, offY, worldSchematic, pos);
         }
 
         // Not just a missing block
         if (stateSchematic != stateClient && stateClient != air && stateSchematic != air && stateSchematic != voidAir)
         {
             BlockMismatchInfo info = new BlockMismatchInfo(stateSchematic, stateClient);
-            this.getOverlayPosition(align, info.getTotalWidth(), info.getTotalHeight(), offY, invHeight, mc);
+            this.getOverlayPosition(align, info.getTotalWidth(), info.getTotalHeight(), offY, invHeight);
             info.toggleUseBackgroundMask(true);
-            info.render(drawContext, this.blockInfoX, this.blockInfoY, mc);
+            info.render(ctx, this.blockInfoX, this.blockInfoY);
         }
         else if (traceWrapper.getHitType() == RayTraceWrapper.HitType.VANILLA_BLOCK)
         {
             BlockInfo info = new BlockInfo(stateClient, "litematica.gui.label.block_info.state_client");
-            this.getOverlayPosition(align, info.getTotalWidth(), info.getTotalHeight(), offY, invHeight, mc);
+            this.getOverlayPosition(align, info.getTotalWidth(), info.getTotalHeight(), offY, invHeight);
             info.toggleUseBackgroundMask(true);
-            info.render(drawContext, this.blockInfoX, this.blockInfoY, mc);
+            info.render(ctx, this.blockInfoX, this.blockInfoY);
         }
         else if (traceWrapper.getHitType() == RayTraceWrapper.HitType.SCHEMATIC_BLOCK)
         {
             BlockInfo info = new BlockInfo(stateSchematic, "litematica.gui.label.block_info.state_schematic");
-            this.getOverlayPosition(align, info.getTotalWidth(), info.getTotalHeight(), offY, invHeight, mc);
+            this.getOverlayPosition(align, info.getTotalWidth(), info.getTotalHeight(), offY, invHeight);
             info.toggleUseBackgroundMask(true);
-            info.render(drawContext, this.blockInfoX, this.blockInfoY, mc);
+            info.render(ctx, this.blockInfoX, this.blockInfoY);
         }
     }
 
@@ -688,7 +689,7 @@ public class OverlayRenderer
         return 0;
     }
 
-    protected void getOverlayPosition(BlockInfoAlignment align, int width, int height, int offY, int invHeight, MinecraftClient mc)
+    protected void getOverlayPosition(BlockInfoAlignment align, int width, int height, int offY, int invHeight)
     {
         switch (align)
         {
@@ -704,7 +705,7 @@ public class OverlayRenderer
         }
     }
 
-    private void updateBlockInfoLines(RayTraceWrapper traceWrapper, MinecraftClient mc)
+    private void updateBlockInfoLines(RayTraceWrapper traceWrapper)
     {
         this.blockInfoLines.clear();
 
@@ -800,7 +801,7 @@ public class OverlayRenderer
         profiler.pop();
     }
 
-    public void renderPreviewFrame(DrawContext drawContext, MinecraftClient mc, Profiler profiler)
+    public void renderPreviewFrame(GuiContext ctx, Profiler profiler)
     {
         profiler.push("render_preview_frame");
         int width = GuiUtils.getScaledWindowWidth();
@@ -809,7 +810,7 @@ public class OverlayRenderer
         int y = height >= width ? (height - width) / 2 : 0;
         int longerSide = Math.min(width, height);
 
-        fi.dy.masa.malilib.render.RenderUtils.drawOutline(drawContext, x, y, longerSide, longerSide, 2, 0xFFFFFFFF);
+        fi.dy.masa.malilib.render.RenderUtils.drawOutline(ctx, x, y, longerSide, longerSide, 2, 0xFFFFFFFF);
         profiler.pop();
     }
 

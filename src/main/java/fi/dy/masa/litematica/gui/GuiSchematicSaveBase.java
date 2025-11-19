@@ -1,10 +1,11 @@
 package fi.dy.masa.litematica.gui;
 
 import javax.annotation.Nullable;
+
 import net.minecraft.client.gui.Click;
-import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.input.CharInput;
 import net.minecraft.client.input.KeyInput;
+
 import fi.dy.masa.malilib.gui.GuiTextFieldGeneric;
 import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.gui.button.ButtonGeneric;
@@ -13,6 +14,7 @@ import fi.dy.masa.malilib.gui.interfaces.ISelectionListener;
 import fi.dy.masa.malilib.gui.widgets.WidgetCheckBox;
 import fi.dy.masa.malilib.gui.widgets.WidgetFileBrowserBase.DirectoryEntry;
 import fi.dy.masa.malilib.gui.widgets.WidgetFileBrowserBase.DirectoryEntryType;
+import fi.dy.masa.malilib.render.GuiContext;
 import fi.dy.masa.malilib.util.FileNameUtils;
 import fi.dy.masa.malilib.util.KeyCodes;
 import fi.dy.masa.malilib.util.StringUtils;
@@ -65,9 +67,9 @@ public abstract class GuiSchematicSaveBase extends GuiSchematicBrowserBase imple
         // This prevents overwriting any user input text when switching to a newly created directory.
         if (this.lastText.isEmpty())
         {
-            if (entry != null && entry.getType() != DirectoryEntryType.DIRECTORY && entry.getType() != DirectoryEntryType.INVALID)
+            if (entry != null && entry.type() != DirectoryEntryType.DIRECTORY && entry.type() != DirectoryEntryType.INVALID)
             {
-                this.setTextFieldText(FileNameUtils.getFileNameWithoutExtension(entry.getName()));
+                this.setTextFieldText(FileNameUtils.getFileNameWithoutExtension(entry.name()));
             }
             else if (this.schematic != null)
             {
@@ -89,7 +91,6 @@ public abstract class GuiSchematicSaveBase extends GuiSchematicBrowserBase imple
         this.checkboxSaveFromSchematicWorld.setPosition(x, y + 12);
         this.addWidget(this.checkboxSaveFromSchematicWorld);
 
-//        this.checkboxVisibleOnly = new WidgetCheckBox(x, y + 24, Icons.CHECKBOX_UNSELECTED, Icons.CHECKBOX_SELECTED, "Visible blocks only [experimental quick hax]");
         this.checkboxVisibleOnly = new WidgetCheckBox(x, y + 24, Icons.CHECKBOX_UNSELECTED, Icons.CHECKBOX_SELECTED, StringUtils.translate("litematica.gui.label.schematic_save.checkbox.visible_blocks_only"));
         this.addWidget(this.checkboxVisibleOnly);
 
@@ -141,19 +142,19 @@ public abstract class GuiSchematicSaveBase extends GuiSchematicBrowserBase imple
     }
 
     @Override
-    public void drawContents(DrawContext drawContext, int mouseX, int mouseY, float partialTicks)
+    public void drawContents(GuiContext ctx, int mouseX, int mouseY, float partialTicks)
     {
-        super.drawContents(drawContext, mouseX, mouseY, partialTicks);
+        super.drawContents(ctx, mouseX, mouseY, partialTicks);
 
-        this.textField.renderWrapper(drawContext, mouseX, mouseY, partialTicks);
+        this.textField.renderWrapper(ctx, mouseX, mouseY, partialTicks);
     }
 
     @Override
     public void onSelectionChange(@Nullable DirectoryEntry entry)
     {
-        if (entry != null && entry.getType() != DirectoryEntryType.DIRECTORY && entry.getType() != DirectoryEntryType.INVALID)
+        if (entry != null && entry.type() != DirectoryEntryType.DIRECTORY && entry.type() != DirectoryEntryType.INVALID)
         {
-            this.setTextFieldText(FileNameUtils.getFileNameWithoutExtension(entry.getName()));
+            this.setTextFieldText(FileNameUtils.getFileNameWithoutExtension(entry.name()));
         }
     }
 

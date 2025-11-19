@@ -3,6 +3,12 @@ package fi.dy.masa.litematica.data;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
+
+import fi.dy.masa.malilib.util.data.Constants;
+import fi.dy.masa.malilib.util.data.DataEntityUtils;
+import fi.dy.masa.malilib.util.data.tag.CompoundData;
+import fi.dy.masa.malilib.util.data.tag.ListData;
+import fi.dy.masa.malilib.util.data.tag.converter.DataConverterNbt;
 import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ChestBlock;
@@ -51,6 +57,7 @@ import fi.dy.masa.malilib.mixin.network.IMixinDataQueryHandler;
 import fi.dy.masa.malilib.network.ClientPlayHandler;
 import fi.dy.masa.malilib.network.IPluginClientPlayHandler;
 import fi.dy.masa.malilib.util.InventoryUtils;
+import fi.dy.masa.malilib.util.data.tag.util.DataTypeUtils;
 import fi.dy.masa.malilib.util.nbt.NbtEntityUtils;
 import fi.dy.masa.malilib.util.nbt.NbtKeys;
 import fi.dy.masa.malilib.util.nbt.NbtUtils;
@@ -87,8 +94,8 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
     private long lastOpCheck = 0L;
 
     // Data Cache
-    private final ConcurrentHashMap<BlockPos, Pair<Long, Pair<BlockEntity, NbtCompound>>> blockEntityCache = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<Integer,  Pair<Long, Pair<Entity,      NbtCompound>>> entityCache      = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<BlockPos, Pair<Long, Pair<BlockEntity, CompoundData>>> blockEntityCache = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Integer,  Pair<Long, Pair<Entity,      CompoundData>>> entityCache      = new ConcurrentHashMap<>();
     private final long cacheTimeout = 4;
     private final long longCacheTimeout = 30;
     private boolean shouldUseLongTimeout = false;
@@ -357,7 +364,7 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
 
             for (BlockPos pos : this.blockEntityCache.keySet())
             {
-                Pair<Long, Pair<BlockEntity, NbtCompound>> pair = this.blockEntityCache.get(pos);
+                Pair<Long, Pair<BlockEntity, CompoundData>> pair = this.blockEntityCache.get(pos);
 
                 if (nowTime - pair.getLeft() > blockTimeout || pair.getLeft() > nowTime)
                 {
@@ -382,7 +389,7 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
 
             for (Integer entityId : this.entityCache.keySet())
             {
-                Pair<Long, Pair<Entity, NbtCompound>> pair = this.entityCache.get(entityId);
+                Pair<Long, Pair<Entity, CompoundData>> pair = this.entityCache.get(entityId);
 
                 if (nowTime - pair.getLeft() > entityTimeout || pair.getLeft() > nowTime)
                 {
@@ -409,7 +416,7 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
     }
 
     @Override
-    public @Nullable NbtCompound getFromBlockEntityCacheNbt(BlockPos pos)
+    public @Nullable CompoundData getFromBlockEntityCacheData(BlockPos pos)
     {
         if (this.blockEntityCache.containsKey(pos))
         {
@@ -419,7 +426,13 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
         return null;
     }
 
-    @Override
+	@Override
+	public @Nullable NbtCompound getFromBlockEntityCacheNbt(BlockPos pos)
+	{
+		return DataConverterNbt.toVanillaCompound(getFromBlockEntityCacheData(pos));
+	}
+
+	@Override
     public @Nullable BlockEntity getFromBlockEntityCache(BlockPos pos)
     {
         if (this.blockEntityCache.containsKey(pos))
@@ -430,8 +443,8 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
         return null;
     }
 
-    @Override
-    public @Nullable NbtCompound getFromEntityCacheNbt(int entityId)
+	@Override
+    public @Nullable CompoundData getFromEntityCacheData(int entityId)
     {
         if (this.entityCache.containsKey(entityId))
         {
@@ -441,7 +454,13 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
         return null;
     }
 
-    @Override
+	@Override
+	public @Nullable NbtCompound getFromEntityCacheNbt(int entityId)
+	{
+		return DataConverterNbt.toVanillaCompound(getFromEntityCacheData(entityId));
+	}
+
+	@Override
     public @Nullable Entity getFromEntityCache(int entityId)
     {
         if (this.entityCache.containsKey(entityId))
@@ -539,7 +558,7 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
         // NO-OP
     }
 
-    public void requestMetadata()
+	public void requestMetadata()
     {
         if (DataManager.getInstance().hasIntegratedServer() == false &&
             Configs.Generic.ENTITY_DATA_SYNC.getBooleanValue())
@@ -581,7 +600,7 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
     }
 
     @Override
-    public @Nullable Pair<BlockEntity, NbtCompound> requestBlockEntity(World world, BlockPos pos)
+    public @Nullable Pair<BlockEntity, CompoundData> requestBlockEntity(World world, BlockPos pos)
     {
         // Don't cache/request a BE for the Schematic World
         if (world instanceof WorldSchematic)
@@ -625,7 +644,7 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
         return null;
     }
 
-    private @Nullable Pair<BlockEntity, NbtCompound> refreshBlockEntityFromWorld(World world, BlockPos pos)
+    private @Nullable Pair<BlockEntity, CompoundData> refreshBlockEntityFromWorld(World world, BlockPos pos)
     {
         if (world != null && world.getBlockState(pos).hasBlockEntity())
         {
@@ -633,8 +652,8 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
 
             if (be != null)
             {
-                NbtCompound nbt = be.createNbtWithIdentifyingData(world.getRegistryManager());
-                Pair<BlockEntity, NbtCompound> pair = Pair.of(be, nbt);
+				CompoundData nbt = DataConverterNbt.fromVanillaCompound(be.createNbtWithIdentifyingData(world.getRegistryManager()));
+                Pair<BlockEntity, CompoundData> pair = Pair.of(be, nbt);
 
                 if (!(world instanceof WorldSchematic))
                 {
@@ -652,7 +671,7 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
     }
 
     @Override
-    public @Nullable Pair<Entity, NbtCompound> requestEntity(World world, int entityId)
+    public @Nullable Pair<Entity, CompoundData> requestEntity(World world, int entityId)
     {
         // Don't cache/request for the Schematic World
         if (world instanceof WorldSchematic)
@@ -691,7 +710,7 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
         return this.refreshEntityFromWorld(this.getClientWorld(), entityId);
     }
 
-    private @Nullable Pair<Entity, NbtCompound> refreshEntityFromWorld(World world, int entityId)
+    private @Nullable Pair<Entity, CompoundData> refreshEntityFromWorld(World world, int entityId)
     {
         if (world != null)
         {
@@ -703,24 +722,24 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
                 {
                     NbtView view = NbtView.getWriter(world.getRegistryManager());
                     entity.writeData(view.getWriter());
-                    NbtCompound nbt = view.readNbt();
+					CompoundData data = view.readData();
                     Identifier id = EntityType.getId(entity.getType());
 
-                    if (nbt != null && id != null)
+                    if (data != null && id != null)
                     {
-                        nbt.putString("id", id.toString());
-                        Pair<Entity, NbtCompound> pair = Pair.of(entity, nbt.copy());
+						data.putString("id", id.toString());
+                        Pair<Entity, CompoundData> pair = Pair.of(entity, data.copy());
 
                         return pair;
                     }
                 }
                 else
                 {
-                    NbtCompound nbt = NbtEntityUtils.invokeEntityNbtDataNoPassengers(entity, entityId);
+					CompoundData data = DataEntityUtils.invokeEntityDataTagNoPassengers(entity, entityId);
 
-                    if (!nbt.isEmpty())
+                    if (!data.isEmpty())
                     {
-                        Pair<Entity, NbtCompound> pair = Pair.of(entity, nbt);
+                        Pair<Entity, CompoundData> pair = Pair.of(entity, data);
 
                         synchronized (this.entityCache)
                         {
@@ -750,7 +769,7 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
 
             if (useNbt)
             {
-                inv = InventoryUtils.getNbtInventory(this.blockEntityCache.get(pos).getRight().getRight(), -1, world.getRegistryManager());
+                inv = InventoryUtils.getDataInventory(this.blockEntityCache.get(pos).getRight().getRight(), -1, world.getRegistryManager());
             }
             else
             {
@@ -840,7 +859,7 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
 
             if (useNbt)
             {
-                inv = InventoryUtils.getNbtInventory(this.entityCache.get(entityId).getRight().getRight(), -1, this.getWorld().getRegistryManager());
+                inv = InventoryUtils.getDataInventory(this.entityCache.get(entityId).getRight().getRight(), -1, this.getWorld().getRegistryManager());
             }
             else
             {
@@ -883,7 +902,20 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
         return null;
     }
 
-    private void requestQueryBlockEntity(BlockPos pos)
+	@Override
+	public BlockEntity handleBlockEntityData(BlockPos pos, NbtCompound nbt,
+											 @Nullable Identifier type)
+	{
+		return handleBlockEntityData(pos, DataConverterNbt.fromVanillaCompound(nbt), type);
+	}
+
+	@Override
+	public Entity handleEntityData(int entityId, NbtCompound nbt)
+	{
+		return handleEntityData(entityId, DataConverterNbt.fromVanillaCompound(nbt));
+	}
+
+	private void requestQueryBlockEntity(BlockPos pos)
     {
         if (Configs.Generic.ENTITY_DATA_SYNC_BACKUP.getBooleanValue() == false)
         {
@@ -1113,31 +1145,31 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
 
     @Override
     @Nullable
-    public BlockEntity handleBlockEntityData(BlockPos pos, NbtCompound nbt, @Nullable Identifier type)
+    public BlockEntity handleBlockEntityData(BlockPos pos, CompoundData data, @Nullable Identifier type)
     {
         this.pendingBlockEntitiesQueue.remove(pos);
-        if (nbt == null || this.getClientWorld() == null) return null;
+        if (data == null || this.getClientWorld() == null) return null;
 
         BlockEntity blockEntity = this.getClientWorld().getBlockEntity(pos);
 
         if (blockEntity != null && (type == null || type.equals(BlockEntityType.getId(blockEntity.getType()))))
         {
-            if (nbt.contains(NbtKeys.ID) == false)
+            if (data.contains(NbtKeys.ID, Constants.NBT.TAG_STRING) == false)
             {
                 Identifier id = BlockEntityType.getId(blockEntity.getType());
 
                 if (id != null)
                 {
-                    nbt.putString(NbtKeys.ID, id.toString());
+					data.putString(NbtKeys.ID, id.toString());
                 }
             }
 
             synchronized (this.blockEntityCache)
             {
-                this.blockEntityCache.put(pos, Pair.of(System.currentTimeMillis(), Pair.of(blockEntity, nbt)));
+                this.blockEntityCache.put(pos, Pair.of(System.currentTimeMillis(), Pair.of(blockEntity, data)));
             }
 
-            NbtView view = NbtView.getReader(nbt, this.getClientWorld().getRegistryManager());
+            NbtView view = NbtView.getReader(data, this.getClientWorld().getRegistryManager());
             blockEntity.read(view.getReader());
             ChunkPos chunkPos = new ChunkPos(pos);
 
@@ -1161,23 +1193,23 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
 
                 if (blockEntity2 != null)
                 {
-                    if (nbt.contains(NbtKeys.ID) == false)
+                    if (data.contains(NbtKeys.ID, Constants.NBT.TAG_STRING) == false)
                     {
                         Identifier id = BlockEntityType.getId(beType);
 
                         if (id != null)
                         {
-                            nbt.putString(NbtKeys.ID, id.toString());
+							data.putString(NbtKeys.ID, id.toString());
                         }
                     }
                     synchronized (this.blockEntityCache)
                     {
-                        this.blockEntityCache.put(pos, Pair.of(System.currentTimeMillis(), Pair.of(blockEntity2, nbt)));
+                        this.blockEntityCache.put(pos, Pair.of(System.currentTimeMillis(), Pair.of(blockEntity2, data)));
                     }
 
                     if (Configs.Generic.ENTITY_DATA_LOAD_NBT.getBooleanValue())
                     {
-                        NbtView view = NbtView.getReader(nbt, this.getClientWorld().getRegistryManager());
+                        NbtView view = NbtView.getReader(data, this.getClientWorld().getRegistryManager());
                         blockEntity2.read(view.getReader());
                         this.getClientWorld().addBlockEntity(blockEntity2);
                     }
@@ -1199,31 +1231,31 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
 
     @Override
     @Nullable
-    public Entity handleEntityData(int entityId, NbtCompound nbt)
+    public Entity handleEntityData(int entityId, CompoundData data)
     {
         this.pendingEntitiesQueue.remove(entityId);
-        if (nbt == null || this.getClientWorld() == null) return null;
+        if (data == null || this.getClientWorld() == null) return null;
         Entity entity = this.getClientWorld().getEntityById(entityId);
 
         if (entity != null)
         {
-            if (nbt.contains(NbtKeys.ID) == false)
+            if (data.contains(NbtKeys.ID, Constants.NBT.TAG_STRING) == false)
             {
                 Identifier id = EntityType.getId(entity.getType());
 
                 if (id != null)
                 {
-                    nbt.putString(NbtKeys.ID, id.toString());
+					data.putString(NbtKeys.ID, id.toString());
                 }
             }
             synchronized (this.entityCache)
             {
-                this.entityCache.put(entityId, Pair.of(System.currentTimeMillis(), Pair.of(entity, nbt)));
+                this.entityCache.put(entityId, Pair.of(System.currentTimeMillis(), Pair.of(entity, data)));
             }
 
             if (Configs.Generic.ENTITY_DATA_LOAD_NBT.getBooleanValue())
             {
-                EntityUtils.loadNbtIntoEntity(entity, nbt);
+                EntityUtils.loadNbtIntoEntity(entity, DataConverterNbt.toVanillaCompound(data));
             }
 
             if (this.hasPendingChunk(entity.getChunkPos()) && this.hasServuxServer() == false)
@@ -1235,40 +1267,45 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
         return entity;
     }
 
-    @Override
+	@Override
     public void handleBulkEntityData(int transactionId, @Nullable NbtCompound nbt)
-    {
-        if (nbt == null)
-        {
-            return;
-        }
+	{
+		if (nbt == null)
+		{
+			return;
+		}
 
-        String task = nbt.getString("Task", "BulkEntityReply");
+		handleBulkEntityData(transactionId, DataConverterNbt.fromVanillaCompound(nbt));
+	}
+
+	public void handleBulkEntityData(int transactionId, @Nullable CompoundData data)
+	{
+        String task = data.getStringOrDefault("Task", "BulkEntityReply");
 
         // TODO --> Split out the task this way (I should have done this under sakura.12, etc),
         //  So we need to check if the "Task" is not included for now... (Wait for the updates to bake in)
         if (task.equals("BulkEntityReply"))
         {
-            NbtList tileList = nbt.contains("TileEntities") ? nbt.getListOrEmpty("TileEntities") : new NbtList();
-            NbtList entityList = nbt.contains("Entities") ? nbt.getListOrEmpty("Entities") : new NbtList();
-            ChunkPos chunkPos = new ChunkPos(nbt.getInt("chunkX", 0), nbt.getInt("chunkZ", 0));
+            ListData tileList = data.containsLenient("TileEntities") ? data.getList("TileEntities") : new ListData();
+			ListData entityList = data.containsLenient("Entities") ? data.getList("Entities") : new ListData();
+            ChunkPos chunkPos = new ChunkPos(data.getInt("chunkX"), data.getInt("chunkZ"));
 
             this.shouldUseLongTimeout = true;
 
             for (int i = 0; i < tileList.size(); ++i)
             {
-                NbtCompound te = tileList.getCompoundOrEmpty(i);
-                BlockPos pos = NbtUtils.readBlockPos(te);
-                Identifier type = Identifier.of(te.getString("id", ""));
+				CompoundData te = tileList.getCompoundAt(i);
+                BlockPos pos = DataTypeUtils.readBlockPos(te);
+                Identifier type = Identifier.of(te.getString("id"));
 
                 this.handleBlockEntityData(pos, te, type);
             }
 
             for (int i = 0; i < entityList.size(); ++i)
             {
-                NbtCompound ent = entityList.getCompoundOrEmpty(i);
-                Vec3d pos = NbtUtils.readEntityPositionFromTag(ent);
-                int entityId = ent.getInt("entityId", 0);
+				CompoundData ent = entityList.getCompoundAt(i);
+                Vec3d pos = DataTypeUtils.readVec3dFromListTag(ent);
+                int entityId = ent.getInt("entityId");
 
                 this.handleEntityData(entityId, ent);
             }
@@ -1281,24 +1318,30 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
         }
     }
 
-    @Override
+	@Override
+	public void handleVanillaQueryNbt(int transactionId, CompoundData data)
+	{
+		if (this.checkOpStatus)
+		{
+			this.hasOpStatus = true;
+			this.checkOpStatus = false;
+			this.lastOpCheck = System.currentTimeMillis();
+		}
+
+		Either<BlockPos, Integer> either = this.transactionToBlockPosOrEntityId.remove(transactionId);
+
+		if (either != null)
+		{
+			this.receivedBackupPackets = true;
+			either.ifLeft(pos ->     handleBlockEntityData(pos, data, null))
+				  .ifRight(entityId -> handleEntityData(entityId, data));
+		}
+	}
+
+	@Override
     public void handleVanillaQueryNbt(int transactionId, NbtCompound nbt)
     {
-        if (this.checkOpStatus)
-        {
-            this.hasOpStatus = true;
-            this.checkOpStatus = false;
-            this.lastOpCheck = System.currentTimeMillis();
-        }
-
-        Either<BlockPos, Integer> either = this.transactionToBlockPosOrEntityId.remove(transactionId);
-
-        if (either != null)
-        {
-            this.receivedBackupPackets = true;
-            either.ifLeft(pos ->     handleBlockEntityData(pos, nbt, null))
-                  .ifRight(entityId -> handleEntityData(entityId, nbt));
-        }
+		handleVanillaQueryNbt(transactionId, DataConverterNbt.fromVanillaCompound(nbt));
     }
 
     public boolean hasPendingChunk(ChunkPos pos)

@@ -1,16 +1,14 @@
 package fi.dy.masa.litematica.render.schematic.ao;
 
-import java.util.BitSet;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.BlockRenderView;
 import fi.dy.masa.litematica.config.Configs;
 
-public abstract class AOProcessor
+public abstract class AOProcessor extends AOLightmap
 {
-    public final float[] brightness = new float[4];
-    public final int[] light = new int[4];
+	public static final Direction[] DIRECTIONS = Direction.values();
 
     public static AOProcessor get()
     {
@@ -24,7 +22,7 @@ public abstract class AOProcessor
         }
     }
 
-    public void apply(BlockRenderView world, BlockState state, BlockPos pos, Direction direction, float[] box, BitSet shapeState, boolean hasShade)
+    public void apply(BlockRenderView world, BlockState state, BlockPos pos, Direction face, boolean hasShade)
     {
     }
 }

@@ -3,6 +3,11 @@ package fi.dy.masa.litematica.util;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
+
+import fi.dy.masa.malilib.render.InventoryOverlayContext;
+import fi.dy.masa.malilib.render.InventoryOverlayRefresher;
+import fi.dy.masa.malilib.util.data.tag.CompoundData;
+import fi.dy.masa.malilib.util.data.tag.converter.DataConverterNbt;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.BlockState;
@@ -37,7 +42,7 @@ public class InventoryUtils
 {
     private static final List<Integer> PICK_BLOCKABLE_SLOTS = new ArrayList<>();
     private static int nextPickSlotIndex;
-    private static Pair<BlockPos, InventoryOverlay.Context> lastBlockEntityContext = null;
+    private static Pair<BlockPos, InventoryOverlayContext> lastBlockEntityContext = null;
 
     public static void setPickBlockableSlots(String configStr)
     {
@@ -420,11 +425,11 @@ public class InventoryUtils
      * @param pos (Pos of the Tile Entity)
      * @return (The result InventoryOverlay.Context | NULL if not obtainable)
      */
-    public static @Nullable InventoryOverlay.Context getTargetInventory(World world, BlockPos pos)
+    public static @Nullable InventoryOverlayContext getTargetInventory(World world, BlockPos pos)
     {
         BlockState state = world.getBlockState(pos);
         Block blockTmp = state.getBlock();
-        NbtCompound nbt = new NbtCompound();
+        CompoundData data = new CompoundData();
         BlockEntity be = null;
 
         if (blockTmp instanceof BlockEntityProvider)
@@ -435,22 +440,22 @@ public class InventoryUtils
 
                 if (be != null)
                 {
-                    nbt = be.createNbtWithIdentifyingData(world.getRegistryManager());
+					data = DataConverterNbt.fromVanillaCompound(be.createNbtWithIdentifyingData(world.getRegistryManager()));
                 }
             }
             else
             {
-                Pair<BlockEntity, NbtCompound> pair = EntitiesDataStorage.getInstance().requestBlockEntity(world, pos);
+                Pair<BlockEntity, CompoundData> pair = EntitiesDataStorage.getInstance().requestBlockEntity(world, pos);
 
                 if (pair != null)
                 {
-                    nbt = pair.getRight();
+					data = pair.getRight();
                     be = pair.getLeft();
                 }
             }
 
 //            Litematica.LOGGER.warn("getTarget():2: pos [{}], be [{}], nbt [{}]", pos.toShortString(), be != null, nbt != null);
-            InventoryOverlay.Context ctx = getTargetInventoryFromBlock(world, pos, be, nbt);
+            InventoryOverlayContext ctx = getTargetInventoryFromBlock(world, pos, be, data);
 
             if (world instanceof WorldSchematic)
             {
@@ -476,36 +481,36 @@ public class InventoryUtils
         return null;
     }
 
-    private static @Nullable InventoryOverlay.Context getTargetInventoryFromBlock(World world, BlockPos pos, @Nullable BlockEntity be, NbtCompound nbt)
+    private static @Nullable InventoryOverlayContext getTargetInventoryFromBlock(World world, BlockPos pos, @Nullable BlockEntity be, CompoundData data)
     {
         Inventory inv;
 
         if (be != null)
         {
-            if (nbt.isEmpty())
+            if (data.isEmpty())
             {
-                nbt = be.createNbtWithIdentifyingData(world.getRegistryManager());
+				data = DataConverterNbt.fromVanillaCompound(be.createNbtWithIdentifyingData(world.getRegistryManager()));
             }
             inv = fi.dy.masa.malilib.util.InventoryUtils.getInventory(world, pos);
         }
         else
         {
-            if (nbt.isEmpty())
+            if (data.isEmpty())
             {
-                Pair<BlockEntity, NbtCompound> pair = EntitiesDataStorage.getInstance().requestBlockEntity(world, pos);
+                Pair<BlockEntity, CompoundData> pair = EntitiesDataStorage.getInstance().requestBlockEntity(world, pos);
 
                 if (pair != null)
                 {
-                    nbt = pair.getRight();
+					data = pair.getRight();
                 }
             }
 
             inv = EntitiesDataStorage.getInstance().getBlockInventory(world, pos, false);
         }
 
-        if (nbt != null && !nbt.isEmpty())
+        if (data != null && !data.isEmpty())
         {
-            Inventory inv2 = fi.dy.masa.malilib.util.InventoryUtils.getNbtInventory(nbt, inv != null ? inv.size() : -1, world.getRegistryManager());
+            Inventory inv2 = fi.dy.masa.malilib.util.InventoryUtils.getDataInventory(data, inv != null ? inv.size() : -1, world.getRegistryManager());
 
             if (inv == null)
             {
@@ -515,32 +520,32 @@ public class InventoryUtils
 
 //        Litematica.LOGGER.warn("getTarget(): [SchematicWorld? {}] pos [{}], inv [{}], be [{}], nbt [{}]", world instanceof WorldSchematic ? "YES" : "NO", pos.toShortString(), inv != null, be != null, nbt != null ? nbt.getString("id") : new NbtCompound());
 
-        if (inv == null || nbt == null)
+        if (inv == null || data == null)
         {
             return null;
         }
 
-        return new InventoryOverlay.Context(InventoryOverlay.getBestInventoryType(inv, nbt), inv, be != null ? be : world.getBlockEntity(pos), null, nbt, new Refresher());
+        return new InventoryOverlayContext(InventoryOverlay.getBestInventoryType(inv, data), inv, be != null ? be : world.getBlockEntity(pos), null, data, new Refresher());
     }
 
     // This really isn't used for this use case; but this is just here for Compat
-    public static class Refresher implements InventoryOverlay.Refresher
+    public static class Refresher implements InventoryOverlayRefresher
     {
 
         @Override
-        public InventoryOverlay.Context onContextRefresh(InventoryOverlay.Context data, World world)
+        public InventoryOverlayContext onContextRefresh(InventoryOverlayContext data, World world)
         {
             // Refresh data
             if (data.be() != null)
             {
                 getTargetInventory(world, data.be().getPos());
-                data = getTargetInventoryFromBlock(data.be().getWorld(), data.be().getPos(), data.be(), data.nbt());
+                data = getTargetInventoryFromBlock(data.be().getWorld(), data.be().getPos(), data.be(), data.data());
             }
             /*
             else if (data.entity() != null)
             {
                 EntitiesDataStorage.getInstance().requestEntity(world, data.entity().getId());
-                data = getTargetInventoryFromEntity(data.entity(), data.nbt());
+                data = getTargetInventoryFromEntity(data.entity(), data.data());
             }
              */
 

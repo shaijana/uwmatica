@@ -2,6 +2,7 @@ package fi.dy.masa.litematica.gui;
 
 import fi.dy.masa.litematica.Reference;
 import fi.dy.masa.malilib.gui.interfaces.IGuiIcon;
+import fi.dy.masa.malilib.render.GuiContext;
 import fi.dy.masa.malilib.render.RenderUtils;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.util.Identifier;
@@ -58,7 +59,7 @@ public enum ButtonIcons implements IGuiIcon
     }
 
     @Override
-    public void renderAt(DrawContext drawContext, int x, int y, float zLevel, boolean enabled, boolean selected)
+    public void renderAt(GuiContext ctx, int x, int y, float zLevel, boolean enabled, boolean selected)
     {
         int u = this.u;
 
@@ -72,7 +73,7 @@ public enum ButtonIcons implements IGuiIcon
             u += this.w;
         }
 
-        RenderUtils.drawTexturedRect(drawContext, this.getTexture(), x, y, u, this.v, this.w, this.h, zLevel);
+        RenderUtils.drawTexturedRect(ctx, this.getTexture(), x, y, u, this.v, this.w, this.h, zLevel);
     }
 
     @Override

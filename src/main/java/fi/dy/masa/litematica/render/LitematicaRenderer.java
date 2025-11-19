@@ -2,10 +2,12 @@ package fi.dy.masa.litematica.render;
 
 import javax.annotation.Nullable;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gl.GpuSampler;
 import net.minecraft.client.render.BlockRenderLayerGroup;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.Frustum;
 import net.minecraft.client.render.RenderTickCounter;
+import net.minecraft.client.render.block.BlockRenderManager;
 import net.minecraft.client.render.command.OrderedRenderCommandQueue;
 import net.minecraft.client.render.command.OrderedRenderCommandQueueImpl;
 import net.minecraft.client.render.state.WorldRenderState;
@@ -80,6 +82,14 @@ public class LitematicaRenderer
     {
         this.getWorldRenderer().setWorldAndLoadRenderers(worldClient);
     }
+
+	public void onBlockModelRendererReload(BlockRenderManager manager)
+	{
+		if (this.worldRenderer != null)
+		{
+			this.worldRenderer.reloadBlockRenderManager(manager);
+		}
+	}
 
     private void calculateFinishTime()
     {
@@ -190,12 +200,12 @@ public class LitematicaRenderer
         }
     }
 
-    public void piecewiseDrawBlockLayerGroup(BlockRenderLayerGroup group)
+    public void piecewiseDrawBlockLayerGroup(BlockRenderLayerGroup group, @Nullable GpuSampler sampler)
     {
         if (this.renderPiecewiseBlocks)
         {
             // Use Saved Profiler later
-            this.getWorldRenderer().drawBlockLayerGroup(group);
+            this.getWorldRenderer().drawBlockLayerGroup(group, sampler);
         }
     }
 
