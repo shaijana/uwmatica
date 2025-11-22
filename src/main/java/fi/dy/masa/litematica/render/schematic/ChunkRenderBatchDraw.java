@@ -5,6 +5,9 @@ import java.util.List;
 import java.util.OptionalDouble;
 import java.util.OptionalInt;
 
+import com.google.common.collect.ImmutableList;
+import org.jetbrains.annotations.NotNull;
+
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.systems.RenderPass;
@@ -25,8 +28,9 @@ public record ChunkRenderBatchDraw(
         boolean renderCollidingBlocks,
 		boolean renderTranslucent,
         int maxIndicesRequired,
-		GpuBufferSlice transformSlice,
-        GpuBufferSlice[] sectionSlices)
+//		ImmutableList<@NotNull ChunkSchematicRenderState> STATES)
+		GpuBufferSlice dynamicTransform,
+		GpuBufferSlice[] chunkSections)
 {
     public void draw(BlockRenderLayerGroup group, GpuSampler sampler, Profiler profiler)
     {
@@ -39,51 +43,57 @@ public record ChunkRenderBatchDraw(
 
         profiler.push("draw_group");
 
-        try (RenderPass pass = RenderSystem.getDevice()
-                                           .createCommandEncoder()
-                                           .createRenderPass(
-                                                   () -> "litematica:schematic_chunk/"+group.getName(),
-                                                   fb.getColorAttachmentView(),
-                                                   OptionalInt.empty(),
-                                                   fb.getDepthAttachmentView(),
-                                                   OptionalDouble.empty()
-                                           ))
-        {
-            RenderSystem.bindDefaultUniforms(pass);
-
-			if (this.transformSlice() != null && this.transformSlice().length() > 0)
+//		for (ChunkSchematicRenderState state : STATES())
+//		{
+			try (RenderPass pass = RenderSystem.getDevice()
+			                                   .createCommandEncoder()
+			                                   .createRenderPass(
+					                                   () -> "litematica:schematic_chunk/" + group.getName(),
+					                                   fb.getColorAttachmentView(),
+					                                   OptionalInt.empty(),
+					                                   fb.getDepthAttachmentView(),
+					                                   OptionalDouble.empty()
+			                                   ))
 			{
-				pass.setUniform("DynamicTransforms", this.transformSlice());
+				RenderSystem.bindDefaultUniforms(pass);
+
+				if (this.dynamicTransform() != null)
+				{
+					pass.setUniform("DynamicTransforms", this.dynamicTransform());
+				}
+
+				pass.bindTexture("Sampler2",
+				                 mc.gameRenderer.getLightmapTextureManager().getGlTextureView(),
+				                 RenderSystem.getSamplerCache().get(FilterMode.LINEAR)
+				);
+
+				for (BlockRenderLayer layer : layers)
+				{
+					List<RenderPass.RenderObject<GpuBufferSlice[]>> list = this.drawData().get(layer);
+
+					profiler.swap("draw_group_" + layer.getName());
+					if (!list.isEmpty())
+					{
+						if (layer == BlockRenderLayer.TRANSLUCENT)
+						{
+							list = list.reversed();
+						}
+
+						pass.setPipeline(
+								this.renderCollidingBlocks() ?
+								ChunkRenderLayers.PIPELINE_MAP.get(layer).getRight() :
+								ChunkRenderLayers.PIPELINE_MAP.get(layer).getLeft()
+						);
+
+						pass.bindTexture("Sampler0", this.atlasTexture(), sampler);
+						pass.drawMultipleIndexed(list, gpuBuffer, indexType, List.of("ChunkSection"), this.chunkSections());
+					}
+				}
+
+				pass.close();
 			}
-
-            pass.bindTexture("Sampler2",
-                             mc.gameRenderer.getLightmapTextureManager().getGlTextureView(),
-                             RenderSystem.getSamplerCache().get(FilterMode.LINEAR)
-            );
-
-            for (BlockRenderLayer layer : layers)
-            {
-                List<RenderPass.RenderObject<GpuBufferSlice[]>> list = this.drawData().get(layer);
-
-                profiler.swap("draw_group_"+layer.getName());
-                if (!list.isEmpty())
-                {
-                    if (layer == BlockRenderLayer.TRANSLUCENT)
-                    {
-                        list = list.reversed();
-                    }
-
-                    pass.setPipeline(
-                            this.renderCollidingBlocks() ?
-                            ChunkRenderLayers.PIPELINE_MAP.get(layer).getRight() :
-                            ChunkRenderLayers.PIPELINE_MAP.get(layer).getLeft()
-                    );
-
-                    pass.bindTexture("Sampler0", this.atlasTexture(), sampler);
-                    pass.drawMultipleIndexed(list, gpuBuffer, indexType, List.of("ChunkSection"), this.sectionSlices());
-                }
-            }
-        }
+			catch (Exception ignored) { }
+//		}
 
         profiler.pop();
     }

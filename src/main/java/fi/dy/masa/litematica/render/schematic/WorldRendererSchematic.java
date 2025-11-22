@@ -3,6 +3,8 @@ package fi.dy.masa.litematica.render.schematic;
 import java.lang.Math;
 import java.util.*;
 import javax.annotation.Nullable;
+import com.google.common.collect.ImmutableList;
+import org.jetbrains.annotations.NotNull;
 import org.joml.*;
 
 import com.mojang.blaze3d.buffers.GpuBuffer;
@@ -591,6 +593,7 @@ public class WorldRendererSchematic
         profiler.push("layer_multi_phase");
 
 //	    ArrayList<SchematicTransformUniforms.SchematicUniform> schematicUniforms = new ArrayList<>();
+//	    ImmutableList.Builder<@NotNull ChunkSchematicRenderState> BUILDER = new ImmutableList.Builder<>();
         ArrayList<DynamicUniforms.ChunkSectionsValue> chunkValues = new ArrayList<>();
         EnumMap<BlockRenderLayer, List<RenderPass.RenderObject<GpuBufferSlice[]>>> renderMap = new EnumMap<>(BlockRenderLayer.class);
 
@@ -670,13 +673,6 @@ public class WorldRendererSchematic
 
                     int pos = chunkValues.size();
 
-//	                transformValues.add(new DynamicUniforms.TransformsValue(
-//			                matrix4fc, colorMod,
-//			                new Vector3f((float) (chunkOrigin.getX() - cameraX), (float) (chunkOrigin.getY() - cameraY), (float) (chunkOrigin.getZ() - cameraZ)),
-//			                matrix4f
-//	                ));
-//
-
 	                chunkValues.add(new DynamicUniforms.ChunkSectionsValue(
 			                matrix4fc,
 			                chunkOrigin.getX(), chunkOrigin.getY(), chunkOrigin.getZ(),
@@ -706,6 +702,28 @@ public class WorldRendererSchematic
 
                 }
             }
+
+//            transformValues.add(new DynamicUniforms.TransformsValue(
+//	                matrix4fc, colorMod,
+//	                new Vector3f((float) (chunkOrigin.getX() - cameraX), (float) (chunkOrigin.getY() - cameraY), (float) (chunkOrigin.getZ() - cameraZ)),
+//	                matrix4f
+//            ));
+//
+//	        GpuBufferSlice[] sectionSlices = RenderSystem.getDynamicUniforms()
+//	                                                     .writeChunkSections(
+//			                                                     chunkValues.toArray(new DynamicUniforms.ChunkSectionsValue[0])
+//	                                                     );
+//	        BUILDER.add(
+//					new ChunkSchematicRenderState(
+//							matrix4fc, colorMod,
+//							new Vector3f((float) (lastChunkOrigin.getX() - cameraX), (float) (lastChunkOrigin.getY() - cameraY), (float) (lastChunkOrigin.getZ() - cameraZ)),
+//							matrix4f,
+//							renderMap,
+//							sectionSlices
+//			        )
+//	        );
+
+//			chunkValues.clear();
         }
 
         if (startedDrawing)
@@ -727,19 +745,10 @@ public class WorldRendererSchematic
 																 chunkValues.toArray(new DynamicUniforms.ChunkSectionsValue[0])
                                                          );
 
-//			final int size = transformSlices.length;
-//			GpuBufferSlice[] combined = new GpuBufferSlice[size * 2];
-//			int slicePos = 0;
-//
-//			for (int i = 0; i < size; i++)
-//			{
-//				combined[slicePos++] = transformSlices[i];
-//				combined[slicePos++] = sectionSlices[i];
-//			}
-
             this.batchDraw = new ChunkRenderBatchDraw(blockAtlas, renderMap,
                                                       renderCollidingBlocks, renderAsTranslucent, indexCount,
-                                                      transformSlice, sectionSlices);
+													  transformSlice, sectionSlices);
+//                                                      BUILDER.build());
             this.shouldDraw = true;
         }
 
@@ -886,7 +895,7 @@ public class WorldRendererSchematic
 
                     matrix4fStack.pushMatrix();
                     matrix4fStack.translate((float) (chunkOrigin.getX() - x), (float) (chunkOrigin.getY() - y), (float) (chunkOrigin.getZ() - z));
-                    this.drawOverlayInternal(pipeline, buffers, -1, offset, lineWidth, false, false, (type == OverlayRenderType.OUTLINE));
+                    this.drawOverlayInternal(pipeline, buffers, -1, offset, false, false);
                     matrix4fStack.popMatrix();
                 }
             }
@@ -956,15 +965,14 @@ public class WorldRendererSchematic
     // Probably not the most efficient way; but it works.
     private void drawOverlayInternal(RenderPipeline pipeline,
                                      ChunkRenderObjectBuffers buffers,
-                                     int color, float[] offset, float lineWidth,
-                                     boolean useColor, boolean useOffset, boolean setLineWidth) throws RuntimeException
+                                     int color, float[] offset,
+                                     boolean useColor, boolean useOffset) throws RuntimeException
     {
         if (RenderSystem.isOnRenderThread())
         {
             Vector4f colorMod = new Vector4f(1f, 1f, 1f, 1f);
             Vector3f modelOffset = new Vector3f();
             Matrix4f texMatrix = new Matrix4f();
-            float line = 0.0f;
 
             if (useOffset)
             {
@@ -975,11 +983,6 @@ public class WorldRendererSchematic
             {
                 float[] rgba = {ColorHelper.getRedFloat(color), ColorHelper.getGreenFloat(color), ColorHelper.getBlueFloat(color), ColorHelper.getAlphaFloat(color)};
                 colorMod.set(rgba);
-            }
-
-            if (setLineWidth)
-            {
-                line = lineWidth;
             }
 
             Framebuffer mainFb = RenderUtils.fb();
