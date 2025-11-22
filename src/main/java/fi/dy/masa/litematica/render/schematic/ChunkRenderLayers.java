@@ -39,11 +39,10 @@ public record ChunkRenderLayers()
         HashMap<BlockRenderLayer, Pair<RenderPipeline, RenderPipeline>> map = new HashMap<>();
 
         // Maps new "BlockRenderLayers" to MasaPipelines.  getLeft = regular; getRight = renderColliding
-        map.put(BlockRenderLayer.SOLID,         Pair.of(MaLiLibPipelines.SOLID_BLOCK_MASA,            MaLiLibPipelines.SOLID_BLOCK_MASA_OFFSET));
-        map.put(BlockRenderLayer.CUTOUT,        Pair.of(MaLiLibPipelines.CUTOUT_BLOCK_MASA,           MaLiLibPipelines.CUTOUT_BLOCK_MASA_OFFSET));
-//        map.put(BlockRenderLayer.CUTOUT_MIPPED, Pair.of(MaLiLibPipelines.CUTOUT_MIPPED_MASA,    MaLiLibPipelines.CUTOUT_MIPPED_MASA_OFFSET));
-        map.put(BlockRenderLayer.TRANSLUCENT,   Pair.of(MaLiLibPipelines.TRANSLUCENT_MASA,      MaLiLibPipelines.TRANSLUCENT_MASA_OFFSET));
-        map.put(BlockRenderLayer.TRIPWIRE,      Pair.of(MaLiLibPipelines.TRIPWIRE_BLOCK_MASA,         MaLiLibPipelines.TRIPWIRE_BLOCK_MASA_OFFSET));
+        map.put(BlockRenderLayer.SOLID,         Pair.of(MaLiLibPipelines.SOLID_TERRAIN_MASA,            MaLiLibPipelines.SOLID_TERRAIN_MASA_OFFSET));
+        map.put(BlockRenderLayer.CUTOUT,        Pair.of(MaLiLibPipelines.CUTOUT_TERRAIN_MASA,           MaLiLibPipelines.CUTOUT_TERRAIN_MASA_OFFSET));
+        map.put(BlockRenderLayer.TRANSLUCENT,   Pair.of(MaLiLibPipelines.TRANSLUCENT_MASA,              MaLiLibPipelines.TRANSLUCENT_MASA_OFFSET));
+        map.put(BlockRenderLayer.TRIPWIRE,      Pair.of(MaLiLibPipelines.TRIPWIRE_TERRAIN_MASA,         MaLiLibPipelines.TRIPWIRE_TERRAIN_MASA_OFFSET));
 
         return map;
     }

@@ -3,8 +3,6 @@ package fi.dy.masa.litematica.render.schematic;
 import java.lang.Math;
 import java.util.*;
 import javax.annotation.Nullable;
-import com.google.common.collect.ImmutableList;
-import org.jetbrains.annotations.NotNull;
 import org.joml.*;
 
 import com.mojang.blaze3d.buffers.GpuBuffer;
@@ -733,13 +731,13 @@ public class WorldRendererSchematic
 //																transformValues.toArray(new DynamicUniforms.TransformsValue[0])
 //			                                            );
 
-	        GpuBufferSlice transformSlice = RenderSystem.getDynamicUniforms()
-	                                                    .write(
-			                                                    matrix4fc,
-			                                                    colorMod,
-			                                                    new Vector3f((float) (lastChunkOrigin.getX() - cameraX), (float) (lastChunkOrigin.getY() - cameraY), (float) (lastChunkOrigin.getZ() - cameraZ)),
-			                                                    matrix4f
-	                                                    );
+//	        GpuBufferSlice transformSlice = RenderSystem.getDynamicUniforms()
+//	                                                    .write(
+//			                                                    matrix4fc,
+//			                                                    colorMod,
+//			                                                    new Vector3f((float) (lastChunkOrigin.getX() - cameraX), (float) (lastChunkOrigin.getY() - cameraY), (float) (lastChunkOrigin.getZ() - cameraZ)),
+//			                                                    matrix4f
+//	                                                    );
             GpuBufferSlice[] sectionSlices = RenderSystem.getDynamicUniforms()
                                                          .writeChunkSections(
 																 chunkValues.toArray(new DynamicUniforms.ChunkSectionsValue[0])
@@ -747,7 +745,7 @@ public class WorldRendererSchematic
 
             this.batchDraw = new ChunkRenderBatchDraw(blockAtlas, renderMap,
                                                       renderCollidingBlocks, renderAsTranslucent, indexCount,
-													  transformSlice, sectionSlices);
+													  null, sectionSlices);
 //                                                      BUILDER.build());
             this.shouldDraw = true;
         }
