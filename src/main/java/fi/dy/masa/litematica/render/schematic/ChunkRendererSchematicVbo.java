@@ -572,7 +572,8 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
                 this.addBlockEntity(pos, data);
             }
 
-            boolean translucent = Configs.Visuals.RENDER_BLOCKS_AS_TRANSLUCENT.getBooleanValue();
+//            boolean translucent = Configs.Visuals.RENDER_BLOCKS_AS_TRANSLUCENT.getBooleanValue();
+	        boolean translucent = false;
             // TODO change when the fluids become separate
             FluidState fluidState = stateSchematic.getFluidState();
 

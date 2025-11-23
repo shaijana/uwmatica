@@ -136,7 +136,8 @@ public class BlockModelRendererSchematic
                                    int overlay, boolean cull)
     {
 		AOLightmap lightmap = new AOLightmap();
-        boolean renderedSomething = false;
+	    BlockPos.Mutable mutablePos = posIn.mutableCopy();
+	    boolean renderedSomething = false;
 	    int i = 0;
 	    int j = 0;
 
@@ -155,10 +156,11 @@ public class BlockModelRendererSchematic
 					if (!quads.isEmpty())
 					{
 						BlockPos pos = lightmap.pos.set(posIn, side);
+						mutablePos.set(posIn, side);
 
 						if (!bl)
 						{
-							bl2 = shouldRenderModelSide(worldIn, stateIn, posIn, side, cull);
+							bl2 = shouldRenderModelSide(worldIn, stateIn, posIn, side, cull, mutablePos);
 							i |= index;
 
 							if (bl2)
@@ -199,6 +201,7 @@ public class BlockModelRendererSchematic
 	                                 int overlay, boolean cull)
 	{
 		AOProcessor ao = AOProcessor.get();
+		BlockPos.Mutable mutablePos = posIn.mutableCopy();
 		boolean renderedSomething = false;
 		int i = 0;
 		int j = 0;
@@ -217,9 +220,11 @@ public class BlockModelRendererSchematic
 
 					if (!quads.isEmpty())
 					{
+						mutablePos.set(posIn, side);
+
 						if (!bl)
 						{
-							bl2 = shouldRenderModelSide(worldIn, stateIn, posIn, side, cull);
+							bl2 = shouldRenderModelSide(worldIn, stateIn, posIn, side, cull, mutablePos);
 							i |= index;
 
 							if (bl2)
@@ -251,18 +256,15 @@ public class BlockModelRendererSchematic
 		return renderedSomething;
 	}
 
-	public static boolean shouldRenderModelSide(BlockRenderView worldIn, BlockState stateIn, BlockPos posIn, Direction side, boolean cull)
+	public static boolean shouldRenderModelSide(BlockRenderView worldIn, BlockState stateIn, BlockPos posIn,
+	                                            Direction side, boolean cull, BlockPos mutable)
     {
-        if (DataManager.getRenderLayerRange().isPositionAtRenderEdgeOnSide(posIn, side) || !cull) return true;
-		else
-        {
-	        return (Configs.Visuals.RENDER_BLOCKS_AS_TRANSLUCENT.getBooleanValue() &&
-			        Configs.Visuals.RENDER_TRANSLUCENT_INNER_SIDES.getBooleanValue()) ||
-//			        Block.shouldDrawSide(stateIn, worldIn.getBlockState(mutable), side);
-			        Block.shouldDrawSide(stateIn, worldIn.getBlockState(posIn), side);
-
-        }
-    }
+//		if (!cull) return true;
+        return (DataManager.getRenderLayerRange().isPositionAtRenderEdgeOnSide(posIn, side) ||
+		        // Configs.Visuals.RENDER_BLOCKS_AS_TRANSLUCENT.getBooleanValue() &&
+		        (Configs.Visuals.RENDER_TRANSLUCENT_INNER_SIDES.getBooleanValue())) ||
+		        Block.shouldDrawSide(stateIn, worldIn.getBlockState(mutable), side);
+	}
 
     private void renderQuadsFlat(BlockRenderView world, BlockState state, BlockPos pos,
                                  MatrixStack matrices, VertexConsumer vertexConsumer,
