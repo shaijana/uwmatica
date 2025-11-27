@@ -138,8 +138,8 @@ public class PositionUtils
 
                     if (bb != null)
                     {
-                        posMutable1.set(bb.minX, bb.minY, bb.minZ);
-                        posMutable2.set(bb.maxX, bb.maxY, bb.maxZ);
+                        posMutable1.set(bb.minX(), bb.minY(), bb.minZ());
+                        posMutable2.set(bb.maxX(), bb.maxY(), bb.maxZ());
 
                         if (arePositionsWithinWorld(world, posMutable1, posMutable2) == false)
                         {
@@ -274,15 +274,15 @@ public class PositionUtils
         int minY = world.getBottomY();
         int maxY = world.getTopYInclusive();
 
-        if (box.minY > maxY || box.maxY < minY)
+        if (box.minY() > maxY || box.maxY() < minY)
         {
             return null;
         }
 
-        if (box.minY < minY || box.maxY > maxY)
+        if (box.minY() < minY || box.maxY() > maxY)
         {
-            box = new IntBoundingBox(box.minX, Math.max(box.minY, minY), box.minZ,
-                                     box.maxX, Math.min(box.maxY, maxY), box.maxZ);
+            box = new IntBoundingBox(box.minX(), Math.max(box.minY(), minY), box.minZ(),
+                                     box.maxX(), Math.min(box.maxY(), maxY), box.maxZ());
         }
 
         return box;
@@ -512,7 +512,7 @@ public class PositionUtils
 
     public static net.minecraft.util.math.Box createAABBFrom(IntBoundingBox bb)
     {
-        return createAABB(bb.minX, bb.minY, bb.minZ, bb.maxX + 1, bb.maxY + 1, bb.maxZ + 1);
+        return createAABB(bb.minX(), bb.minY(), bb.minZ(), bb.maxX() + 1, bb.maxY() + 1, bb.maxZ() + 1);
     }
 
     /**
@@ -1082,7 +1082,7 @@ public class PositionUtils
     @Nullable
     public static IntBoundingBox getClampedBox(IntBoundingBox box, LayerRange range)
     {
-        return getClampedArea(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ, range);
+        return getClampedArea(box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ(), range);
     }
 
     /**

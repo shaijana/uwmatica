@@ -149,8 +149,8 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
         }
         else
         {
-            this.positionIterator = BlockPos.iterate(box.minX, box.minY, box.minZ,
-                                                     box.maxX, box.maxY, box.maxZ).iterator();
+            this.positionIterator = BlockPos.iterate(box.minX(), box.minY(), box.minZ(),
+                                                     box.maxX(), box.maxY(), box.maxZ()).iterator();
         }
 
         this.phase = TaskPhase.PROCESS_BOX_BLOCKS;
@@ -158,7 +158,7 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
 
     protected void prepareSummoningEntities(IntBoundingBox box)
     {
-        net.minecraft.util.math.Box bb = new net.minecraft.util.math.Box(box.minX, box.minY, box.minZ, box.maxX + 1, box.maxY + 1, box.maxZ + 1);
+        net.minecraft.util.math.Box bb = new net.minecraft.util.math.Box(box.minX(), box.minY(), box.minZ(), box.maxX() + 1, box.maxY() + 1, box.maxZ() + 1);
         this.entityIterator = this.schematicWorld.getOtherEntities((Entity) null, bb, (e) -> true).iterator();
         this.phase = TaskPhase.PROCESS_BOX_ENTITIES;
     }
@@ -617,7 +617,7 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
 
     protected void generateFillVolumes(IntBoundingBox box)
     {
-        ChunkSchematic chunk = this.schematicWorld.getChunkProvider().getChunk(box.minX >> 4, box.minZ >> 4);
+        ChunkSchematic chunk = this.schematicWorld.getChunkProvider().getChunk(box.minX() >> 4, box.minZ() >> 4);
         boolean ignoreBeFromFill = Configs.Generic.PASTE_IGNORE_BE_IN_FILL.getBooleanValue() &&
                                    Configs.Generic.PASTE_NBT_BEHAVIOR.getOptionListValue() != PasteNbtBehavior.NONE;
         
@@ -669,13 +669,13 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
         boolean ignoreBeEntirely = Configs.Generic.PASTE_IGNORE_BE_ENTIRELY.getBooleanValue();
         BlockPos.Mutable mutablePos = this.mutablePos;
         ReplaceBehavior replace = this.replace;
-        final int startX = box.minX & 0xF;
-        final int startZ = box.minZ & 0xF;
-        final int endX = box.maxX & 0xF;
-        final int endZ = box.maxZ & 0xF;
+        final int startX = box.minX() & 0xF;
+        final int startZ = box.minZ() & 0xF;
+        final int endX = box.maxX() & 0xF;
+        final int endZ = box.maxZ() & 0xF;
         final int worldMinY = chunk.getBottomY();
 
-        for (int y = box.minY; y <= box.maxY; ++y)
+        for (int y = box.minY(); y <= box.maxY(); ++y)
         {
             for (int z = startZ; z <= endZ; ++z)
             {
@@ -731,13 +731,13 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
         final int lcOffX = layerCombineDirection.getOffsetX();
         final int lcOffY = layerCombineDirection.getOffsetY();
         final int lcOffZ = layerCombineDirection.getOffsetZ();
-        final int startX = box.minX & 0xF;
-        final int startZ = box.minZ & 0xF;
-        final int endX = box.maxX & 0xF;
-        final int endZ = box.maxZ & 0xF;
+        final int startX = box.minX() & 0xF;
+        final int startZ = box.minZ() & 0xF;
+        final int endX = box.maxX() & 0xF;
+        final int endZ = box.maxZ() & 0xF;
         final int worldMinY = chunk.getBottomY();
 
-        for (int y = box.minY; y <= box.maxY; ++y)
+        for (int y = box.minY(); y <= box.maxY(); ++y)
         {
             for (int x = startX; x <= endX; ++x)
             {
@@ -759,7 +759,7 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
                         {
                             // Find identical adjacent strips, and set their data in the array to zero,
                             // since they are being combined into one layer starting from the first position.
-                            while (nextX <= 15 && nextY <= box.maxY && nextZ <= 15 &&
+                            while (nextX <= 15 && nextY <= box.maxY() && nextZ <= 15 &&
                                    workArr[nextX][nextY - worldMinY][nextZ] == length &&
                                    chunk.getBlockState(mutablePos.set(nextX, nextY, nextZ)) == state)
                             {
@@ -798,7 +798,7 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
         {
             for (int z = startZ; z <= endZ; ++z)
             {
-                for (int y = box.minY; y <= box.maxY; ++y)
+                for (int y = box.minY(); y <= box.maxY(); ++y)
                 {
                     int packedSize = workArr[x][y - worldMinY][z];
 
@@ -815,7 +815,7 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
                         if (ignoreBe == false || state.hasBlockEntity() == false)
                         {
                             // Find identical adjacent layers
-                            while (nextX <= 15 && nextY <= box.maxY && nextZ <= 15 &&
+                            while (nextX <= 15 && nextY <= box.maxY() && nextZ <= 15 &&
                                    workArr[nextX][nextY - worldMinY][nextZ] == packedSize &&
                                    chunk.getBlockState(mutablePos.set(nextX, nextY, nextZ)) == state)
                             {

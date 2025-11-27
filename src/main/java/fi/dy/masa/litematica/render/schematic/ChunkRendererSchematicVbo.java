@@ -398,8 +398,8 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
                         continue;
                     }
 
-                    BlockPos posFrom = new BlockPos(box.minX, box.minY, box.minZ);
-                    BlockPos posTo   = new BlockPos(box.maxX, box.maxY, box.maxZ);
+                    BlockPos posFrom = new BlockPos(box.minX(), box.minY(), box.minZ());
+                    BlockPos posTo   = new BlockPos(box.maxX(), box.maxY(), box.maxZ());
 
 					BlockModelRendererSchematic.enableCache();
 
@@ -1215,7 +1215,7 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
         }
         else
         {
-            Supplier<String> name = () -> layer.getName();
+            Supplier<String> name = layer::getName;
 //            LOGGER.warn("[VBO] uploadBuffersByLayer() Layer [{}], NEW VERTEX BUFFER", ChunkRenderLayers.getFriendlyName(layer));
             GpuBuffer vertexBuffer =
                     RenderSystem.getDevice()

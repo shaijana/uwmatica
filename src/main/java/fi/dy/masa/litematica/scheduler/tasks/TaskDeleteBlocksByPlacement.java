@@ -13,6 +13,8 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.profiler.Profiler;
 import net.minecraft.world.World;
 import com.google.common.collect.ImmutableList;
+import org.jetbrains.annotations.NotNull;
+
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.render.infohud.InfoHud;
@@ -28,7 +30,7 @@ public class TaskDeleteBlocksByPlacement extends TaskProcessChunkMultiPhase
 {
     protected static final BlockState AIR = Blocks.AIR.getDefaultState();
 
-    protected final ImmutableList<SchematicPlacement> placements;
+    protected final ImmutableList<@NotNull SchematicPlacement> placements;
     protected final LayerRange layerRange;
     protected final PlacementDeletionMode mode;
     protected final String setBlockCommand;
@@ -157,11 +159,11 @@ public class TaskDeleteBlocksByPlacement extends TaskProcessChunkMultiPhase
         BlockCheck check = this.getCheckFor(mode);
         BlockPos.Mutable posMutable = new BlockPos.Mutable();
 
-        for (int y = box.maxY; y >= box.minY; --y)
+        for (int y = box.maxY(); y >= box.minY(); --y)
         {
-            for (int x = box.minX; x <= box.maxX; ++x)
+            for (int x = box.minX(); x <= box.maxX(); ++x)
             {
-                for (int z = box.minZ; z <= box.maxZ; ++z)
+                for (int z = box.minZ(); z <= box.maxZ(); ++z)
                 {
                     posMutable.set(x, y, z);
 
@@ -193,8 +195,8 @@ public class TaskDeleteBlocksByPlacement extends TaskProcessChunkMultiPhase
     protected void removeEntitiesByCommand(IntBoundingBox box)
     {
         String killCmd = String.format("kill @e[type=!player,x=%d,y=%d,z=%d,dx=%d,dy=%d,dz=%d]",
-                                       box.minX               , box.minY               , box.minZ,
-                                       box.maxX - box.minX + 1, box.maxY - box.minY + 1, box.maxZ - box.minZ + 1);
+                                       box.minX()               , box.minY()               , box.minZ(),
+                                       box.maxX() - box.minX() + 1, box.maxY() - box.minY() + 1, box.maxZ() - box.minZ() + 1);
 
         this.queuedCommands.offer(killCmd);
     }

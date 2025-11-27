@@ -7,6 +7,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import com.google.common.collect.ImmutableMap;
+import org.jetbrains.annotations.NotNull;
+
 import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.util.InfoUtils;
 import fi.dy.masa.malilib.util.IntBoundingBox;
@@ -22,7 +24,7 @@ public class TaskSaveSchematic extends TaskProcessChunkBase
 {
     private final LitematicaSchematic schematic;
     private final BlockPos origin;
-    private final ImmutableMap<String, Box> subRegions;
+    private final ImmutableMap<@NotNull String, @NotNull Box> subRegions;
     private final Set<UUID> existingEntities = new HashSet<>();
     @Nullable private final Path dir;
     @Nullable private final String fileName;
@@ -70,7 +72,7 @@ public class TaskSaveSchematic extends TaskProcessChunkBase
             }
             else if (EntitiesDataStorage.getInstance().hasPendingChunk(pos) == false)
             {
-                ImmutableMap<String, IntBoundingBox> volumes = PositionUtils.getBoxesWithinChunk(pos.x, pos.z, this.subRegions);
+                ImmutableMap<@NotNull String, @NotNull IntBoundingBox> volumes = PositionUtils.getBoxesWithinChunk(pos.x, pos.z, this.subRegions);
                 int minY = 319;         // Invert Values
                 int maxY = -60;
 
@@ -78,8 +80,8 @@ public class TaskSaveSchematic extends TaskProcessChunkBase
                 {
                     IntBoundingBox bb = volumeEntry.getValue();
 
-                    minY = Math.min(bb.minY, minY);
-                    maxY = Math.max(bb.maxY, maxY);
+                    minY = Math.min(bb.minY(), minY);
+                    maxY = Math.max(bb.maxY(), maxY);
                 }
 
                 if (EntitiesDataStorage.getInstance().hasServuxServer())
@@ -102,7 +104,7 @@ public class TaskSaveSchematic extends TaskProcessChunkBase
     protected boolean processChunk(ChunkPos pos)
     {
         World world = this.fromSchematicWorld ? this.schematicWorld : this.world;
-        ImmutableMap<String, IntBoundingBox> volumes = PositionUtils.getBoxesWithinChunk(pos.x, pos.z, this.subRegions);
+        ImmutableMap<@NotNull String, @NotNull IntBoundingBox> volumes = PositionUtils.getBoxesWithinChunk(pos.x, pos.z, this.subRegions);
         this.schematic.takeBlocksFromWorldWithinChunk(world, volumes, this.subRegions, this.info);
 
         if (this.info.ignoreEntities == false)

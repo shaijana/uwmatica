@@ -61,12 +61,12 @@ public abstract class TaskCountBlocksBase extends TaskProcessChunkBase
 
         for (IntBoundingBox bb : this.getBoxesInChunk(pos))
         {
-            final int startX = axis == Direction.Axis.X ? Math.max(bb.minX, range.getLayerMin()) : bb.minX;
-            final int startY = axis == Direction.Axis.Y ? Math.max(bb.minY, range.getLayerMin()) : bb.minY;
-            final int startZ = axis == Direction.Axis.Z ? Math.max(bb.minZ, range.getLayerMin()) : bb.minZ;
-            final int endX = axis == Direction.Axis.X ? Math.min(bb.maxX, range.getLayerMax()) : bb.maxX;
-            final int endY = axis == Direction.Axis.Y ? Math.min(bb.maxY, range.getLayerMax()) : bb.maxY;
-            final int endZ = axis == Direction.Axis.Z ? Math.min(bb.maxZ, range.getLayerMax()) : bb.maxZ;
+            final int startX = axis == Direction.Axis.X ? Math.max(bb.minX(), range.getLayerMin()) : bb.minX();
+            final int startY = axis == Direction.Axis.Y ? Math.max(bb.minY(), range.getLayerMin()) : bb.minY();
+            final int startZ = axis == Direction.Axis.Z ? Math.max(bb.minZ(), range.getLayerMin()) : bb.minZ();
+            final int endX = axis == Direction.Axis.X ? Math.min(bb.maxX(), range.getLayerMax()) : bb.maxX();
+            final int endY = axis == Direction.Axis.Y ? Math.min(bb.maxY(), range.getLayerMax()) : bb.maxY();
+            final int endZ = axis == Direction.Axis.Z ? Math.min(bb.maxZ(), range.getLayerMax()) : bb.maxZ();
 
             for (int y = startY; y <= endY; ++y)
             {

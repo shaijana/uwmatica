@@ -1378,9 +1378,9 @@ public class WorldUtils
                 {
                     IntBoundingBox box = part.bb;
 
-                    if (x >= box.minX - range && x <= box.maxX + range &&
-                        y >= box.minY - range && y <= box.maxY + range &&
-                        z >= box.minZ - range && z <= box.maxZ + range)
+                    if (x >= box.minX() - range && x <= box.maxX() + range &&
+                        y >= box.minY() - range && y <= box.maxY() + range &&
+                        z >= box.minZ() - range && z <= box.maxZ() + range)
                     {
                         return true;
                     }

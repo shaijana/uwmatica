@@ -891,10 +891,10 @@ public class LitematicaSchematic
                                            BlockPos minCorner,
                                            final long currentTick)
     {
-        int minCX = ChunkSectionPos.getSectionCoord(box.minX);
-        int minCZ = ChunkSectionPos.getSectionCoord(box.minZ);
-        int maxCX = ChunkSectionPos.getSectionCoord(box.maxX);
-        int maxCZ = ChunkSectionPos.getSectionCoord(box.maxZ);
+        int minCX = ChunkSectionPos.getSectionCoord(box.minX());
+        int minCZ = ChunkSectionPos.getSectionCoord(box.minZ());
+        int maxCX = ChunkSectionPos.getSectionCoord(box.maxX());
+        int maxCZ = ChunkSectionPos.getSectionCoord(box.maxZ());
 
         for (int cx = minCX; cx <= maxCX; ++cx)
         {
@@ -1059,12 +1059,12 @@ public class LitematicaSchematic
             final int offsetY = minCorner.getY();
             final int offsetZ = minCorner.getZ();
             // Relative coordinates within the sub-region container:
-            final int startX = bb.minX - minCorner.getX();
-            final int startY = bb.minY - minCorner.getY();
-            final int startZ = bb.minZ - minCorner.getZ();
-            final int endX = startX + (bb.maxX - bb.minX);
-            final int endY = startY + (bb.maxY - bb.minY);
-            final int endZ = startZ + (bb.maxZ - bb.minZ);
+            final int startX = bb.minX() - minCorner.getX();
+            final int startY = bb.minY() - minCorner.getY();
+            final int startZ = bb.minZ() - minCorner.getZ();
+            final int endX = startX + (bb.maxX() - bb.minX());
+            final int endY = startY + (bb.maxY() - bb.minY());
+            final int endZ = startZ + (bb.maxZ() - bb.minZ());
             final boolean visibleOnly = info.visibleOnly;
             final boolean includeSupport = info.includeSupportBlocks;
 

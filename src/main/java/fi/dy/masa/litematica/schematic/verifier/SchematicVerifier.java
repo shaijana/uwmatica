@@ -658,12 +658,12 @@ public class SchematicVerifier extends TaskBase implements IInfoHudRenderer
         Direction.Axis axis = range.getAxis();
         boolean ranged = this.schematicPlacement.getSchematicVerifierType() == BlockInfoListType.RENDER_LAYERS;
 
-        final int startX = ranged && axis == Direction.Axis.X ? Math.max(box.minX, range.getLayerMin()) : box.minX;
-        final int startY = ranged && axis == Direction.Axis.Y ? Math.max(box.minY, range.getLayerMin()) : box.minY;
-        final int startZ = ranged && axis == Direction.Axis.Z ? Math.max(box.minZ, range.getLayerMin()) : box.minZ;
-        final int endX = ranged && axis == Direction.Axis.X ? Math.min(box.maxX, range.getLayerMax()) : box.maxX;
-        final int endY = ranged && axis == Direction.Axis.Y ? Math.min(box.maxY, range.getLayerMax()) : box.maxY;
-        final int endZ = ranged && axis == Direction.Axis.Z ? Math.min(box.maxZ, range.getLayerMax()) : box.maxZ;
+        final int startX = ranged && axis == Direction.Axis.X ? Math.max(box.minX(), range.getLayerMin()) : box.minX();
+        final int startY = ranged && axis == Direction.Axis.Y ? Math.max(box.minY(), range.getLayerMin()) : box.minY();
+        final int startZ = ranged && axis == Direction.Axis.Z ? Math.max(box.minZ(), range.getLayerMin()) : box.minZ();
+        final int endX = ranged && axis == Direction.Axis.X ? Math.min(box.maxX(), range.getLayerMax()) : box.maxX();
+        final int endY = ranged && axis == Direction.Axis.Y ? Math.min(box.maxY(), range.getLayerMax()) : box.maxY();
+        final int endZ = ranged && axis == Direction.Axis.Z ? Math.min(box.maxZ(), range.getLayerMax()) : box.maxZ();
 
         for (int y = startY; y <= endY; ++y)
         {

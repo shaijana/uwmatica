@@ -146,11 +146,11 @@ public class TaskFillArea extends TaskProcessChunkMultiPhase
         BlockState barrier = Blocks.BARRIER.getDefaultState();
         BlockPos.Mutable posMutable = new BlockPos.Mutable();
 
-        for (int z = box.minZ; z <= box.maxZ; ++z)
+        for (int z = box.minZ(); z <= box.maxZ(); ++z)
         {
-            for (int x = box.minX; x <= box.maxX; ++x)
+            for (int x = box.minX(); x <= box.maxX(); ++x)
             {
-                for (int y = box.maxY; y >= box.minY; --y)
+                for (int y = box.maxY(); y >= box.minY(); --y)
                 {
                     posMutable.set(x, y, z);
                     BlockState oldState = this.world.getBlockState(posMutable);
@@ -176,7 +176,7 @@ public class TaskFillArea extends TaskProcessChunkMultiPhase
 
     public static void directRemoveEntities(IntBoundingBox box, World world)
     {
-        net.minecraft.util.math.Box aabb = new net.minecraft.util.math.Box(box.minX, box.minY, box.minZ, box.maxX + 1, box.maxY + 1, box.maxZ + 1);
+        net.minecraft.util.math.Box aabb = new net.minecraft.util.math.Box(box.minX(), box.minY(), box.minZ(), box.maxX() + 1, box.maxY() + 1, box.maxZ() + 1);
         List<Entity> entities = world.getOtherEntities((Entity) null, aabb, EntityUtils.NOT_PLAYER);
 
         for (Entity entity : entities)
@@ -192,27 +192,27 @@ public class TaskFillArea extends TaskProcessChunkMultiPhase
     {
         if (removeEntities)
         {
-            net.minecraft.util.math.Box aabb = new net.minecraft.util.math.Box(box.minX, box.minY, box.minZ, box.maxX + 1, box.maxY + 1, box.maxZ + 1);
+            net.minecraft.util.math.Box aabb = new net.minecraft.util.math.Box(box.minX(), box.minY(), box.minZ(), box.maxX() + 1, box.maxY() + 1, box.maxZ() + 1);
 
             if (this.world.getOtherEntities(this.mc.player, aabb, EntityUtils.NOT_PLAYER).size() > 0)
             {
                 String killCmd = String.format("kill @e[type=!player,x=%d,y=%d,z=%d,dx=%d,dy=%d,dz=%d]",
-                        box.minX               , box.minY               , box.minZ,
-                        box.maxX - box.minX + 1, box.maxY - box.minY + 1, box.maxZ - box.minZ + 1);
+                        box.minX()               , box.minY()               , box.minZ(),
+                        box.maxX() - box.minX() + 1, box.maxY() - box.minY() + 1, box.maxZ() - box.minZ() + 1);
 
                 this.queuedCommands.offer(killCmd);
             }
         }
 
-        int totalVolume = (box.maxX - box.minX + 1) * (box.maxY - box.minY + 1) * (box.maxZ - box.minZ + 1);
+        int totalVolume = (box.maxX() - box.minX() + 1) * (box.maxY() - box.minY() + 1) * (box.maxZ() - box.minZ() + 1);
 
         if (totalVolume <= this.maxBoxVolume || this.useWorldEdit)
         {
-            this.queueFillCommandForBox(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ);
+            this.queueFillCommandForBox(box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ());
         }
         else
         {
-            int singleLayerVolume = (box.maxX - box.minX + 1) * (box.maxZ - box.minZ + 1);
+            int singleLayerVolume = (box.maxX() - box.minX() + 1) * (box.maxZ() - box.minZ() + 1);
             int singleBoxHeight = this.maxBoxVolume / singleLayerVolume;
 
             if (singleBoxHeight < 1)
@@ -221,10 +221,10 @@ public class TaskFillArea extends TaskProcessChunkMultiPhase
                 return;
             }
 
-            for (int y = box.minY; y <= box.maxY; y += singleBoxHeight)
+            for (int y = box.minY(); y <= box.maxY(); y += singleBoxHeight)
             {
-                int maxY = Math.min(y + singleBoxHeight - 1, box.maxY);
-                this.queueFillCommandForBox(box.minX, y, box.minZ, box.maxX, maxY, box.maxZ);
+                int maxY = Math.min(y + singleBoxHeight - 1, box.maxY());
+                this.queueFillCommandForBox(box.minX(), y, box.minZ(), box.maxX(), maxY, box.maxZ());
             }
         }
     }
