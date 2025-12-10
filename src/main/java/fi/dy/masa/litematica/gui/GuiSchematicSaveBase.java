@@ -1,11 +1,9 @@
 package fi.dy.masa.litematica.gui;
 
 import javax.annotation.Nullable;
-
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.client.input.KeyInput;
-
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import fi.dy.masa.malilib.gui.GuiTextFieldGeneric;
 import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.gui.button.ButtonGeneric;
@@ -37,7 +35,7 @@ public abstract class GuiSchematicSaveBase extends GuiSchematicBrowserBase imple
 
         this.schematic = schematic;
 
-        this.textField = new GuiTextFieldGeneric(10, 32, 160, 20, this.textRenderer);
+        this.textField = new GuiTextFieldGeneric(10, 32, 160, 20, this.font);
         this.textField.setMaxLengthWrapper(256);
         this.textField.setFocusedWrapper(true);
 
@@ -57,7 +55,7 @@ public abstract class GuiSchematicSaveBase extends GuiSchematicBrowserBase imple
 
         boolean focused = this.textField.isFocusedWrapper();
         String text = this.textField.getTextWrapper();
-        this.textField = new GuiTextFieldGeneric(10, 32, this.getScreenWidth() - 260, 18, this.textRenderer);
+        this.textField = new GuiTextFieldGeneric(10, 32, this.getScreenWidth() - 260, 18, this.font);
         this.textField.setTextWrapper(text);
         this.textField.setFocusedWrapper(focused);
 
@@ -165,7 +163,7 @@ public abstract class GuiSchematicSaveBase extends GuiSchematicBrowserBase imple
     }
 
     @Override
-    public boolean onMouseClicked(Click click, boolean doubleClick)
+    public boolean onMouseClicked(MouseButtonEvent click, boolean doubleClick)
     {
         if (this.textField.mouseClickedWrapper(click, doubleClick))
         {
@@ -176,7 +174,7 @@ public abstract class GuiSchematicSaveBase extends GuiSchematicBrowserBase imple
     }
 
     @Override
-    public boolean onKeyTyped(KeyInput input)
+    public boolean onKeyTyped(KeyEvent input)
     {
         if (this.textField.keyPressedWrapper(input))
         {
@@ -193,7 +191,7 @@ public abstract class GuiSchematicSaveBase extends GuiSchematicBrowserBase imple
     }
 
     @Override
-    public boolean onCharTyped(CharInput input)
+    public boolean onCharTyped(CharacterEvent input)
     {
         if (this.textField.charTypedWrapper(input))
         {
@@ -210,7 +208,7 @@ public abstract class GuiSchematicSaveBase extends GuiSchematicBrowserBase imple
 
         private final String labelKey;
 
-        private ButtonType(String labelKey)
+        ButtonType(String labelKey)
         {
             this.labelKey = labelKey;
         }

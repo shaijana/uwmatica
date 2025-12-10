@@ -1,9 +1,9 @@
 package fi.dy.masa.litematica.render.schematic.ao;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.BlockRenderView;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.BlockAndTintGetter;
+import net.minecraft.world.level.block.state.BlockState;
 
 /**
  * AO Legacy AO Processor from Masa (2018)
@@ -14,7 +14,7 @@ public class AOProcessorLegacy extends AOProcessor
 	public final float[] shapeCache = new float[AOOrientation.values().length];     // field_58158
 
 	@Override
-	public void apply(BlockRenderView world, BlockState state, BlockPos pos, Direction face, boolean hasShade)
+	public void apply(BlockAndTintGetter world, BlockState state, BlockPos pos, Direction face, boolean hasShade)
 	{
 		AONeighborInfo neighborInfo = AONeighborInfo.getNeighbourInfo(face);
 		AOTranslations vertexTranslations = AOTranslations.getVertexTranslations(face);
@@ -68,7 +68,7 @@ public class AOProcessorLegacy extends AOProcessor
 			this.fs[vertexTranslations.vert3] = b4;
 		}
 
-		float b = world.getBrightness(face, hasShade);
+		float b = world.getShade(face, hasShade);
 
 		for (int index = 0; index < this.fs.length; ++index)
 		{

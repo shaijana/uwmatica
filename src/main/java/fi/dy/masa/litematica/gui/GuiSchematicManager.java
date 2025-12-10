@@ -4,12 +4,10 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import javax.annotation.Nullable;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.Screenshot;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.malilib.util.*;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.util.ScreenshotRecorder;
 import fi.dy.masa.malilib.config.IConfigOptionList;
 import fi.dy.masa.malilib.config.IConfigOptionListEntry;
 import fi.dy.masa.malilib.gui.GuiBase;
@@ -23,6 +21,7 @@ import fi.dy.masa.malilib.gui.button.IButtonActionListener;
 import fi.dy.masa.malilib.gui.interfaces.ISelectionListener;
 import fi.dy.masa.malilib.gui.widgets.WidgetFileBrowserBase.DirectoryEntry;
 import fi.dy.masa.malilib.interfaces.IStringConsumerFeedback;
+import com.mojang.blaze3d.platform.NativeImage;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.gui.GuiMainMenu.ButtonListenerChangeMenu;
@@ -401,8 +400,8 @@ public class GuiSchematicManager extends GuiSchematicBrowserBase implements ISel
 			{
 				try
 				{
-					MinecraftClient mc = MinecraftClient.getInstance();
-					ScreenshotRecorder.takeScreenshot(mc.getFramebuffer(), (screenshot) ->
+					Minecraft mc = Minecraft.getInstance();
+					Screenshot.takeScreenshot(mc.getMainRenderTarget(), (screenshot) ->
 					{
 						int x = screenshot.getWidth() >= screenshot.getHeight()
 								? (screenshot.getWidth() - screenshot.getHeight()) / 2 : 0;

@@ -26,11 +26,10 @@ import fi.dy.masa.malilib.util.FileRenamer;
 import fi.dy.masa.malilib.util.GuiUtils;
 import fi.dy.masa.malilib.util.InfoUtils;
 import fi.dy.masa.malilib.util.StringUtils;
-import net.minecraft.util.math.BlockPos;
-
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
+import net.minecraft.core.BlockPos;
 
 public class GuiSchematicLoad extends GuiSchematicBrowserBase
 {
@@ -197,7 +196,7 @@ public class GuiSchematicLoad extends GuiSchematicBrowserBase
 
 							if (DataManager.getCreatePlacementOnLoad() && this.gui.mc.player != null)
 							{
-								BlockPos pos = BlockPos.ofFloored(this.gui.mc.player.getEntityPos());
+								BlockPos pos = BlockPos.containing(this.gui.mc.player.position());
 								String name = schematic.getMetadata().getName();
 								boolean enabled = GuiBase.isShiftDown() == false;
 

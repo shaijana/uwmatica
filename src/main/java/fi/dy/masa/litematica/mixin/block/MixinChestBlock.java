@@ -6,18 +6,18 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.util.BlockUtils;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.ChestBlock;
-import net.minecraft.block.enums.ChestType;
-import net.minecraft.util.BlockMirror;
+import net.minecraft.world.level.block.ChestBlock;
+import net.minecraft.world.level.block.Mirror;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.ChestType;
 
 @Mixin(ChestBlock.class)
 public class MixinChestBlock
 {
     @Inject(method = "mirror", at = @At("HEAD"), cancellable = true)
-    private void litematica_fixChestMirror(BlockState state, BlockMirror mirror, CallbackInfoReturnable<BlockState> cir)
+    private void litematica_fixChestMirror(BlockState state, Mirror mirror, CallbackInfoReturnable<BlockState> cir)
     {
-        ChestType type = state.get(ChestBlock.CHEST_TYPE);
+        ChestType type = state.getValue(ChestBlock.TYPE);
 
         if (Configs.Generic.FIX_CHEST_MIRROR.getBooleanValue() && type != ChestType.SINGLE)
         {

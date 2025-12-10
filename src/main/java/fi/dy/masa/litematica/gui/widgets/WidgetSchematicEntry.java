@@ -1,8 +1,7 @@
 package fi.dy.masa.litematica.gui.widgets;
 
 import javax.annotation.Nullable;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -156,7 +155,7 @@ public class WidgetSchematicEntry extends WidgetListEntryBase<LitematicaSchemati
 		{
 			if (this.type == Type.CREATE_PLACEMENT && this.widget.mc.player != null)
 			{
-				BlockPos pos = BlockPos.ofFloored(this.widget.mc.player.getEntityPos());
+				BlockPos pos = BlockPos.containing(this.widget.mc.player.position());
 				LitematicaSchematic entry = this.widget.schematic;
 				String name = entry.getMetadata().getName();
 				boolean enabled = GuiBase.isShiftDown() == false;

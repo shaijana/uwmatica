@@ -2,10 +2,8 @@ package fi.dy.masa.litematica.gui.widgets;
 
 import java.util.Collection;
 import java.util.List;
+import net.minecraft.core.BlockPos;
 import com.google.common.collect.ImmutableList;
-
-import net.minecraft.util.math.BlockPos;
-
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.LeftRight;
 import fi.dy.masa.malilib.gui.widgets.WidgetListBase;

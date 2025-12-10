@@ -3,11 +3,10 @@ package fi.dy.masa.litematica.gui.widgets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
 import fi.dy.masa.malilib.render.GuiContext;
-import net.minecraft.client.gui.Click;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3i;
 import com.google.common.collect.ImmutableList;
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.Message.MessageType;
@@ -66,7 +65,7 @@ public class WidgetSchematicPlacement extends WidgetListEntryBase<SchematicPlace
     }
 
     @Override
-    public boolean canSelectAt(Click click)
+    public boolean canSelectAt(MouseButtonEvent click)
     {
         return click.x() < this.buttonsStartX && super.canSelectAt(click);
     }

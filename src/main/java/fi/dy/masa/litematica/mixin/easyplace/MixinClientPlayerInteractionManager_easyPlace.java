@@ -7,20 +7,20 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.util.EasyPlaceUtils;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.network.ClientPlayerInteractionManager;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.client.multiplayer.MultiPlayerGameMode;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.phys.BlockHitResult;
 
 /**
  * Post Re-Write code
  */
-@Mixin(value = ClientPlayerInteractionManager.class)
+@Mixin(value = MultiPlayerGameMode.class)
 public class MixinClientPlayerInteractionManager_easyPlace
 {
-    @Inject(method = "interactBlock", at = @At("HEAD"), cancellable = true)
-    private void onInteractBlock(ClientPlayerEntity player, Hand hand, BlockHitResult hitResult, CallbackInfoReturnable<ActionResult> cir)
+    @Inject(method = "useItemOn", at = @At("HEAD"), cancellable = true)
+    private void onInteractBlock(LocalPlayer player, InteractionHand hand, BlockHitResult hitResult, CallbackInfoReturnable<InteractionResult> cir)
     {
         if (Configs.Generic.EASY_PLACE_MODE.getBooleanValue() &&
             Configs.Generic.EASY_PLACE_POST_REWRITE.getBooleanValue())
@@ -32,7 +32,7 @@ public class MixinClientPlayerInteractionManager_easyPlace
                 {
                     if (EasyPlaceUtils.handleEasyPlaceWithMessage())
                     {
-                        cir.setReturnValue(ActionResult.FAIL);
+                        cir.setReturnValue(InteractionResult.FAIL);
                     }
                 }
                 else
@@ -41,7 +41,7 @@ public class MixinClientPlayerInteractionManager_easyPlace
                     {
                         if (EasyPlaceUtils.handlePlacementRestriction())
                         {
-                            cir.setReturnValue(ActionResult.FAIL);
+                            cir.setReturnValue(InteractionResult.FAIL);
                         }
                     }
                 }

@@ -3,12 +3,10 @@ package fi.dy.masa.litematica.gui.widgets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
 import fi.dy.masa.malilib.render.GuiContext;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3i;
 import com.google.common.collect.ImmutableList;
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.button.ButtonBase;
@@ -74,7 +72,7 @@ public class WidgetPlacementSubRegion extends WidgetListEntryBase<SubRegionPlace
     }
 
     @Override
-    public boolean canSelectAt(Click click)
+    public boolean canSelectAt(MouseButtonEvent click)
     {
         return click.x() < this.buttonsStartX && super.canSelectAt(click);
     }
@@ -151,7 +149,7 @@ public class WidgetPlacementSubRegion extends WidgetListEntryBase<SubRegionPlace
 
             BlockPos o = this.placement.getPos();
             o = PositionUtils.getTransformedBlockPos(o, this.schematicPlacement.getMirror(), this.schematicPlacement.getRotation());
-            o = o.add(this.schematicPlacement.getOrigin());
+            o = o.offset(this.schematicPlacement.getOrigin());
             String strOrigin = String.format("x: %d, y: %d, z: %d", o.getX(), o.getY(), o.getZ());
             text.add(StringUtils.translate("litematica.gui.label.schematic_placement.origin", strOrigin));
 

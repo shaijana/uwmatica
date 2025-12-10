@@ -2,10 +2,9 @@ package fi.dy.masa.litematica.gui.widgets;
 
 import java.util.List;
 import javax.annotation.Nullable;
-
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.world.item.ItemStack;
 import fi.dy.masa.malilib.render.GuiContext;
-import net.minecraft.client.gui.Click;
-import net.minecraft.item.ItemStack;
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.button.ButtonBase;
 import fi.dy.masa.malilib.gui.button.ButtonGeneric;
@@ -94,7 +93,7 @@ public class WidgetMaterialListEntry extends WidgetListEntrySortable<MaterialLis
             int countTotal = entry.getCountTotal() * multiplier;
             int countMissing = multiplier == 1 ? entry.getCountMissing() : countTotal;
 
-            maxNameLength   = Math.max(maxNameLength,   StringUtils.getStringWidth(entry.getStack().getName().getString()));
+            maxNameLength   = Math.max(maxNameLength,   StringUtils.getStringWidth(entry.getStack().getHoverName().getString()));
             maxCountLength1 = Math.max(maxCountLength1, StringUtils.getStringWidth(String.valueOf(countTotal)));
             maxCountLength2 = Math.max(maxCountLength2, StringUtils.getStringWidth(String.valueOf(countMissing)));
             maxCountLength3 = Math.max(maxCountLength3, StringUtils.getStringWidth(String.valueOf(entry.getCountAvailable())));
@@ -102,7 +101,7 @@ public class WidgetMaterialListEntry extends WidgetListEntrySortable<MaterialLis
     }
 
     @Override
-    public boolean canSelectAt(Click click)
+    public boolean canSelectAt(MouseButtonEvent click)
     {
         return false;
     }
@@ -139,7 +138,7 @@ public class WidgetMaterialListEntry extends WidgetListEntrySortable<MaterialLis
     }
 
     @Override
-    protected boolean onMouseClickedImpl(Click click, boolean doubleClick)
+    protected boolean onMouseClickedImpl(MouseButtonEvent click, boolean doubleClick)
     {
         if (super.onMouseClickedImpl(click, doubleClick))
         {
@@ -224,7 +223,7 @@ public class WidgetMaterialListEntry extends WidgetListEntrySortable<MaterialLis
             String gold = GuiBase.TXT_GOLD;
             String red = GuiBase.TXT_RED;
             String pre;
-            this.drawString(ctx, x1 + 20, y, color, this.entry.getStack().getName().getString());
+            this.drawString(ctx, x1 + 20, y, color, this.entry.getStack().getHoverName().getString());
 
             this.drawString(ctx, x2, y, color, String.valueOf(countTotal));
 
@@ -237,7 +236,7 @@ public class WidgetMaterialListEntry extends WidgetListEntrySortable<MaterialLis
             //mc.getRenderItem().zLevel -= 110;
             y = this.y + 3;
             RenderUtils.drawRect(ctx, x1, y, 16, 16, 0x20FFFFFF); // light background for the item
-			ctx.drawItem(this.entry.getStack(), x1, y);
+			ctx.renderItem(this.entry.getStack(), x1, y);
             //mc.getRenderItem().renderItemOverlayIntoGUI(mc.fontRenderer, this.entry.getStack(), x1, y, null);
             //mc.getRenderItem().zLevel += 110;
 
@@ -251,19 +250,19 @@ public class WidgetMaterialListEntry extends WidgetListEntrySortable<MaterialLis
         if (this.entry != null)
         {
 //            ctx.getMatrices().push();
-			ctx.getMatrices().translate(0, 0);    // , 200
+			ctx.pose().translate(0, 0);    // , 200
 
             String header1 = GuiBase.TXT_BOLD + StringUtils.translate(HEADERS[0]);
             String header2 = GuiBase.TXT_BOLD + StringUtils.translate(HEADERS[1]);
             String header3 = GuiBase.TXT_BOLD + StringUtils.translate(HEADERS[2]);
 
             ItemStack stack = this.entry.getStack();
-            String stackName = stack.getName().getString();
+            String stackName = stack.getHoverName().getString();
             int multiplier = this.materialList.getMultiplier();
             int total = this.entry.getCountTotal() * multiplier;
             int missing = multiplier == 1 ? this.entry.getCountMissing() : total;
-            String strCountTotal = this.getFormattedCountString(total, stack.getMaxCount());
-            String strCountMissing = this.getFormattedCountString(missing, stack.getMaxCount());
+            String strCountTotal = this.getFormattedCountString(total, stack.getMaxStackSize());
+            String strCountMissing = this.getFormattedCountString(missing, stack.getMaxStackSize());
 
             int w1 = Math.max(this.getStringWidth(header1)       , Math.max(this.getStringWidth(header2)      , this.getStringWidth(header3)));
             int w2 = Math.max(this.getStringWidth(stackName) + 20, Math.max(this.getStringWidth(strCountTotal), this.getStringWidth(strCountMissing)));
@@ -301,7 +300,7 @@ public class WidgetMaterialListEntry extends WidgetListEntrySortable<MaterialLis
             RenderUtils.drawRect(ctx, x2, y1, 16, 16, 0x20FFFFFF); // light background for the item
 
             //mc.getRenderItem().zLevel += 100;
-			ctx.drawItem(stack, x2, y1);
+			ctx.renderItem(stack, x2, y1);
             //mc.getRenderItem().renderItemOverlayIntoGUI(mc.fontRenderer, stack, x1, y, null);
             //mc.getRenderItem().zLevel -= 100;
 

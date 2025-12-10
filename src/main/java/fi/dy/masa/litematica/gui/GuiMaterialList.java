@@ -2,7 +2,7 @@ package fi.dy.masa.litematica.gui;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import fi.dy.masa.malilib.data.DataDump;
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.GuiListBase;
@@ -84,7 +84,7 @@ public class GuiMaterialList extends GuiListBase<MaterialListEntry, WidgetMateri
         int w = this.getStringWidth(str);
         this.addLabel(this.getScreenWidth() - w - 56, y + 5, w, 12, 0xFFFFFFFF, str);
 
-        GuiTextFieldInteger tf = new GuiTextFieldInteger(this.getScreenWidth() - 52, y + 2, 40, 16, this.textRenderer);
+        GuiTextFieldInteger tf = new GuiTextFieldInteger(this.getScreenWidth() - 52, y + 2, 40, 16, this.font);
         tf.setTextWrapper(String.valueOf(this.materialList.getMultiplier()));
         MultiplierListener listener = new MultiplierListener(this.materialList, this);
         this.addTextField(tf, listener);
@@ -315,7 +315,7 @@ public class GuiMaterialList extends GuiListBase<MaterialListEntry, WidgetMateri
                     break;
 
                 case WRITE_TO_JSON:
-                    MinecraftClient mc = MinecraftClient.getInstance();
+                    Minecraft mc = Minecraft.getInstance();
                     Path jsonDir = FileUtils.getConfigDirectoryAsPath().resolve(Reference.MOD_ID);
                     boolean missingOnly = GuiBase.isShiftDown();
                     boolean craftingOnly = GuiBase.isAltDown();
@@ -395,7 +395,7 @@ public class GuiMaterialList extends GuiListBase<MaterialListEntry, WidgetMateri
                 int total = entry.getCountTotal() * multiplier;
                 int missing = multiplier > 1 ? total : entry.getCountMissing();
                 int available = entry.getCountAvailable();
-                dump.addData(entry.getStack().getName().getString(), String.valueOf(total), String.valueOf(missing), String.valueOf(available));
+                dump.addData(entry.getStack().getHoverName().getString(), String.valueOf(total), String.valueOf(missing), String.valueOf(available));
             }
 
             String titleTotal = multiplier > 1 ? String.format("Total (x%d)", multiplier) : "Total";

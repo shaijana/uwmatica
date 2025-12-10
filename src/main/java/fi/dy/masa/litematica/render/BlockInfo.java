@@ -2,10 +2,10 @@ package fi.dy.masa.litematica.render;
 
 import java.util.List;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.state.BlockState;
 
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.render.GuiContext;
@@ -33,10 +33,10 @@ public class BlockInfo
         this.state = state;
         this.stack = ItemUtils.getItemForState(this.state);
 
-        Identifier rl = Registries.BLOCK.getId(this.state.getBlock());
+        Identifier rl = BuiltInRegistries.BLOCK.getKey(this.state.getBlock());
         this.blockRegistryName = rl.toString();
 
-        this.stackName = this.stack.getName().getString();
+        this.stackName = this.stack.getHoverName().getString();
 
         int w = StringUtils.getStringWidth(this.stackName) + 20;
         w = Math.max(w, StringUtils.getStringWidth(this.blockRegistryName));
@@ -75,20 +75,20 @@ public class BlockInfo
             int x1 = x + 10;
             y += 4;
 
-	        ctx.drawText(ctx.textRenderer(), this.title, x1, y, 0xFFFFFFFF, false);
+	        ctx.drawString(ctx.fontRenderer(), this.title, x1, y, 0xFFFFFFFF, false);
             y += 12;
 
             //mc.getRenderItem().zLevel += 100;
             RenderUtils.drawRect(ctx, x1, y, 16, 16, 0x20FFFFFF); // light background for the item
-	        ctx.drawItem(this.stack, x1, y);
-	        ctx.drawStackOverlay(ctx.textRenderer(), this.stack, x1, y);
+	        ctx.renderItem(this.stack, x1, y);
+	        ctx.renderItemDecorations(ctx.fontRenderer(), this.stack, x1, y);
             //mc.getRenderItem().zLevel -= 100;
 
-	        ctx.drawText(ctx.textRenderer(), this.stackName, x1 + 20, y + 4, 0xFFFFFFFF, false);
+	        ctx.drawString(ctx.fontRenderer(), this.stackName, x1 + 20, y + 4, 0xFFFFFFFF, false);
 
             y += 20;
-	        ctx.drawText(ctx.textRenderer(), this.blockRegistryName, x1, y, 0xFF4060FF, false);
-            y += ctx.textRenderer().fontHeight + 4;
+	        ctx.drawString(ctx.fontRenderer(), this.blockRegistryName, x1, y, 0xFF4060FF, false);
+            y += ctx.fontRenderer().lineHeight + 4;
 
             RenderUtils.renderText(ctx, x1, y, 0xFFB0B0B0, this.props);
         }

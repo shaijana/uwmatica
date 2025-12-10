@@ -2,12 +2,10 @@ package fi.dy.masa.litematica.render.schematic.ao;
 
 import it.unimi.dsi.fastutil.longs.Long2FloatLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2IntLinkedOpenHashMap;
-
-import net.minecraft.block.BlockState;
+import net.minecraft.core.BlockPos;
 import net.minecraft.util.Util;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.BlockRenderView;
-
+import net.minecraft.world.level.BlockAndTintGetter;
+import net.minecraft.world.level.block.state.BlockState;
 import fi.dy.masa.litematica.render.schematic.WorldRendererSchematic;
 
 public class AOBrightness
@@ -78,7 +76,7 @@ public class AOBrightness
 		this.floatCache.clear();
 	}
 
-	public int getInt(BlockState state, BlockRenderView world, BlockPos pos)
+	public int getInt(BlockState state, BlockAndTintGetter world, BlockPos pos)
 	{
 //		long l = pos.asLong();
 //		int i;
@@ -112,7 +110,7 @@ public class AOBrightness
 		                                          : WorldRendererSchematic.LightGetter.DEFAULT, world, state, pos);
 	}
 
-	public float getFloat(BlockState state, BlockRenderView blockView, BlockPos pos)
+	public float getFloat(BlockState state, BlockAndTintGetter blockView, BlockPos pos)
 	{
 		long l = pos.asLong();
 
@@ -126,7 +124,7 @@ public class AOBrightness
 			}
 		}
 
-		float f = state.getAmbientOcclusionLightLevel(blockView, pos);
+		float f = state.getShadeBrightness(blockView, pos);
 
 		if (this.enabled)
 		{

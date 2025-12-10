@@ -1,12 +1,12 @@
 package fi.dy.masa.litematica.render.schematic.blocks;
 
 import java.util.HashMap;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.HorizontalConnectingBlock;
-import net.minecraft.state.StateManager;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.CrossCollisionBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.Reference;
 
@@ -17,7 +17,7 @@ public class FallbackBlocks
 {
 	public static HashMap<Block, Identifier> BLOCK_TO_ID = new HashMap<>();
 	public static HashMap<Identifier, Block> ID_TO_BLOCK = new HashMap<>();
-	public static HashMap<Identifier, StateManager<Block, BlockState>> ID_TO_STATE_MANAGER = new HashMap<>();
+	public static HashMap<Identifier, StateDefinition<Block, BlockState>> ID_TO_STATE_MANAGER = new HashMap<>();
 
 	// Glass Blocks
 	public static Identifier BLACK_GLASS = registerBasic("black_glass_fallback", Blocks.BLACK_STAINED_GLASS);
@@ -60,42 +60,42 @@ public class FallbackBlocks
 
 	private static Identifier registerBasic(String name, Block block)
 	{
-		Identifier id = Identifier.of(Reference.MOD_ID, name);
+		Identifier id = Identifier.fromNamespaceAndPath(Reference.MOD_ID, name);
 
 		BLOCK_TO_ID.put(block, id);
 		ID_TO_BLOCK.put(id, block);
-		ID_TO_STATE_MANAGER.put(id, new StateManager.Builder<Block, BlockState>(block).build(Block::getDefaultState, BlockState::new));
+		ID_TO_STATE_MANAGER.put(id, new StateDefinition.Builder<Block, BlockState>(block).create(Block::defaultBlockState, BlockState::new));
 
 		return id;
 	}
 
 	private static Identifier registerHorizontalConnecting(String name, Block block)
 	{
-		StateManager.Builder<Block, BlockState> builder = new StateManager.Builder<>(block);
-		Identifier id = Identifier.of(Reference.MOD_ID, name);
+		StateDefinition.Builder<Block, BlockState> builder = new StateDefinition.Builder<>(block);
+		Identifier id = Identifier.fromNamespaceAndPath(Reference.MOD_ID, name);
 
 		BLOCK_TO_ID.put(block, id);
 		ID_TO_BLOCK.put(id, block);
 
 		// Add vanilla properties to State Manager; since Fusion removes them.
-		builder.add(HorizontalConnectingBlock.NORTH);
-		builder.add(HorizontalConnectingBlock.EAST);
-		builder.add(HorizontalConnectingBlock.SOUTH);
-		builder.add(HorizontalConnectingBlock.WEST);
-		builder.add(HorizontalConnectingBlock.WATERLOGGED);
-		ID_TO_STATE_MANAGER.put(id, builder.build(FallbackBlocks::defaultHorizontalConnectingBlockState, BlockState::new));
+		builder.add(CrossCollisionBlock.NORTH);
+		builder.add(CrossCollisionBlock.EAST);
+		builder.add(CrossCollisionBlock.SOUTH);
+		builder.add(CrossCollisionBlock.WEST);
+		builder.add(CrossCollisionBlock.WATERLOGGED);
+		ID_TO_STATE_MANAGER.put(id, builder.create(FallbackBlocks::defaultHorizontalConnectingBlockState, BlockState::new));
 
 		return id;
 	}
 
 	public static BlockState defaultHorizontalConnectingBlockState(Block block)
 	{
-		return block.getDefaultState()
-		            .with(HorizontalConnectingBlock.NORTH, false)
-		            .with(HorizontalConnectingBlock.EAST, false)
-		            .with(HorizontalConnectingBlock.SOUTH, false)
-		            .with(HorizontalConnectingBlock.WEST, false)
-		            .with(HorizontalConnectingBlock.WATERLOGGED, false);
+		return block.defaultBlockState()
+		            .setValue(CrossCollisionBlock.NORTH, false)
+		            .setValue(CrossCollisionBlock.EAST, false)
+		            .setValue(CrossCollisionBlock.SOUTH, false)
+		            .setValue(CrossCollisionBlock.WEST, false)
+		            .setValue(CrossCollisionBlock.WATERLOGGED, false);
 	}
 
 	public static void register()

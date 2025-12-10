@@ -1,12 +1,12 @@
 package fi.dy.masa.litematica.mixin;
 
-import net.minecraft.util.profiler.ProfilerSystem;
+import net.minecraft.util.profiling.ActiveProfiler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(ProfilerSystem.class)
+@Mixin(ActiveProfiler.class)
 public interface IMixinProfilerSystem
 {
-    @Accessor("tickStarted")
+    @Accessor("started")
     boolean litematica_isStarted();
 }

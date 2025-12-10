@@ -5,28 +5,25 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import javax.annotation.Nonnull;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.renderer.block.model.BlockModelPart;
+import net.minecraft.client.renderer.block.model.BlockStateModel;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.Vec3i;
+import net.minecraft.world.Container;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.CrafterBlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.SingleThreadedRandomSource;
+import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3fc;
 
 import fi.dy.masa.malilib.render.GuiContext;
 import fi.dy.masa.malilib.render.InventoryOverlayContext;
 import fi.dy.masa.malilib.render.InventoryOverlayType;
 import fi.dy.masa.malilib.util.data.DataBlockUtils;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.CrafterBlockEntity;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.model.BakedQuad;
-import net.minecraft.client.render.model.BlockModelPart;
-import net.minecraft.client.render.model.BlockStateModel;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.Vec3i;
-import net.minecraft.util.math.random.LocalRandom;
-import net.minecraft.world.World;
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.LeftRight;
 import fi.dy.masa.malilib.render.InventoryOverlay.InventoryProperties;
@@ -34,6 +31,8 @@ import fi.dy.masa.malilib.util.GuiUtils;
 import fi.dy.masa.malilib.util.StringUtils;
 import fi.dy.masa.malilib.util.data.Color4f;
 import fi.dy.masa.malilib.util.game.BlockUtils;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
 import fi.dy.masa.litematica.util.BlockInfoAlignment;
 import fi.dy.masa.litematica.util.InventoryUtils;
 import fi.dy.masa.litematica.util.PositionUtils;
@@ -112,29 +111,29 @@ public class RenderUtils
 //            fy[index] = y + Float.intBitsToFloat(vertexData[index * vertexSize + 1]);
 //            fz[index] = z + Float.intBitsToFloat(vertexData[index * vertexSize + 2]);
 
-	        Vector3fc v3fc = quad.getPosition(index);
+	        Vector3fc v3fc = quad.position(index);
 
 	        fx[index] = x + v3fc.x();
 	        fy[index] = y + v3fc.y();
 	        fz[index] = z + v3fc.z();
         }
 
-        buffer.vertex(fx[0], fy[0], fz[0]).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
-        buffer.vertex(fx[1], fy[1], fz[1]).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
+        buffer.addVertex(fx[0], fy[0], fz[0]).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
+        buffer.addVertex(fx[1], fy[1], fz[1]).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
 
-        buffer.vertex(fx[1], fy[1], fz[1]).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
-        buffer.vertex(fx[2], fy[2], fz[2]).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
+        buffer.addVertex(fx[1], fy[1], fz[1]).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
+        buffer.addVertex(fx[2], fy[2], fz[2]).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
 
-        buffer.vertex(fx[2], fy[2], fz[2]).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
-        buffer.vertex(fx[3], fy[3], fz[3]).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
+        buffer.addVertex(fx[2], fy[2], fz[2]).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
+        buffer.addVertex(fx[3], fy[3], fz[3]).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
 
-        buffer.vertex(fx[3], fy[3], fz[3]).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
-        buffer.vertex(fx[0], fy[0], fz[0]).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
+        buffer.addVertex(fx[3], fy[3], fz[3]).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
+        buffer.addVertex(fx[0], fy[0], fz[0]).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
     }
 
     public static void drawBlockModelOutlinesBatched(List<BlockModelPart> modelParts, BlockState state, BlockPos pos,
                                                      Color4f color, double expand, float lineWidth,
-                                                     BufferBuilder buffer, MatrixStack matrices)
+                                                     BufferBuilder buffer, PoseStack matrices)
     {
         for (final BlockModelPart part : modelParts)
         {
@@ -144,7 +143,7 @@ public class RenderUtils
 
     public static void drawBlockModelOutlinesBatched(BlockModelPart modelPart, BlockState state, BlockPos pos,
                                                      Color4f color, double expand, float lineWidth,
-                                                     BufferBuilder buffer, MatrixStack matrices)
+                                                     BufferBuilder buffer, PoseStack matrices)
     {
         for (final Direction side : fi.dy.masa.malilib.util.position.PositionUtils.ALL_DIRECTIONS)
         {
@@ -158,7 +157,7 @@ public class RenderUtils
                                                BlockPos pos, Direction side,
                                                Color4f color, double expand, float lineWidth,
                                                BufferBuilder buffer,
-                                               MatrixStack matrices)
+                                               PoseStack matrices)
     {
         try
         {
@@ -170,7 +169,7 @@ public class RenderUtils
     public static void renderModelQuadOutlines(BlockPos pos, BufferBuilder buffer,
                                                Color4f color, float lineWidth,
                                                List<BakedQuad> quads,
-                                               MatrixStack matrices)
+                                               PoseStack matrices)
     {
 	    for (BakedQuad quad : quads)
 	    {
@@ -181,7 +180,7 @@ public class RenderUtils
     public static void renderQuadOutlinesBatched(BlockPos pos, BufferBuilder buffer,
                                                  Color4f color, float lineWidth,
                                                  BakedQuad quad,
-                                                 MatrixStack matrices)
+                                                 PoseStack matrices)
     {
         final int x = pos.getX();
         final int y = pos.getY();
@@ -193,7 +192,7 @@ public class RenderUtils
 
         for (int index = 0; index < 4; index++)
         {
-			Vector3fc v3fc = quad.getPosition(index);
+			Vector3fc v3fc = quad.position(index);
 //            fx[index] = x + Float.intBitsToFloat(vertexData[index * vertexSize    ]);
 //            fy[index] = y + Float.intBitsToFloat(vertexData[index * vertexSize + 1]);
 //            fz[index] = z + Float.intBitsToFloat(vertexData[index * vertexSize + 2]);
@@ -203,29 +202,29 @@ public class RenderUtils
             fz[index] = z + v3fc.z();
         }
 
-        MatrixStack.Entry e = matrices.peek();
+        PoseStack.Pose e = matrices.last();
 
-        buffer.vertex(e, fx[0], fy[0], fz[0]).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
-        buffer.vertex(e, fx[1], fy[1], fz[1]).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
+        buffer.addVertex(e, fx[0], fy[0], fz[0]).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
+        buffer.addVertex(e, fx[1], fy[1], fz[1]).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
 
-        buffer.vertex(e, fx[1], fy[1], fz[1]).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
-        buffer.vertex(e, fx[2], fy[2], fz[2]).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
+        buffer.addVertex(e, fx[1], fy[1], fz[1]).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
+        buffer.addVertex(e, fx[2], fy[2], fz[2]).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
 
-        buffer.vertex(e, fx[2], fy[2], fz[2]).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
-        buffer.vertex(e, fx[3], fy[3], fz[3]).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
+        buffer.addVertex(e, fx[2], fy[2], fz[2]).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
+        buffer.addVertex(e, fx[3], fy[3], fz[3]).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
 
-        buffer.vertex(e, fx[3], fy[3], fz[3]).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
-        buffer.vertex(e, fx[0], fy[0], fz[0]).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
+        buffer.addVertex(e, fx[3], fy[3], fz[3]).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
+        buffer.addVertex(e, fx[0], fy[0], fz[0]).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
     }
 
     public static boolean stateModelHasQuads(BlockState state)
     {
-        return modelHasQuads(Objects.requireNonNull(MinecraftClient.getInstance().getBlockRenderManager().getModel(state)));
+        return modelHasQuads(Objects.requireNonNull(Minecraft.getInstance().getBlockRenderer().getBlockModel(state)));
     }
 
     public static boolean modelHasQuads(@Nonnull BlockStateModel model)
     {
-        return hasQuads(model.getParts(new LocalRandom(0)));
+        return hasQuads(model.collectParts(new SingleThreadedRandomSource(0)));
     }
 
     public static boolean hasQuads(List<BlockModelPart> modelParts)
@@ -308,13 +307,13 @@ public class RenderUtils
 //            fy = y + Float.intBitsToFloat(vertexData[index * vertexSize + 1]);
 //            fz = z + Float.intBitsToFloat(vertexData[index * vertexSize + 2]);
 
-	        Vector3fc v3fc = quad.getPosition(index);
+	        Vector3fc v3fc = quad.position(index);
 
             fx = x + v3fc.x();
             fy = y + v3fc.y();
             fz = z + v3fc.z();
 
-            buffer.vertex(fx, fy, fz).color(color.r, color.g, color.b, color.a);
+            buffer.addVertex(fx, fy, fz).setColor(color.r, color.g, color.b, color.a);
         }
     }
 
@@ -341,45 +340,45 @@ public class RenderUtils
         switch (side)
         {
             case DOWN:
-                buffer.vertex(maxX, minY, maxZ).color(color.r, color.g, color.b, color.a);
-                buffer.vertex(minX, minY, maxZ).color(color.r, color.g, color.b, color.a);
-                buffer.vertex(minX, minY, minZ).color(color.r, color.g, color.b, color.a);
-                buffer.vertex(maxX, minY, minZ).color(color.r, color.g, color.b, color.a);
+                buffer.addVertex(maxX, minY, maxZ).setColor(color.r, color.g, color.b, color.a);
+                buffer.addVertex(minX, minY, maxZ).setColor(color.r, color.g, color.b, color.a);
+                buffer.addVertex(minX, minY, minZ).setColor(color.r, color.g, color.b, color.a);
+                buffer.addVertex(maxX, minY, minZ).setColor(color.r, color.g, color.b, color.a);
                 break;
 
             case UP:
-                buffer.vertex(minX, maxY, maxZ).color(color.r, color.g, color.b, color.a);
-                buffer.vertex(maxX, maxY, maxZ).color(color.r, color.g, color.b, color.a);
-                buffer.vertex(maxX, maxY, minZ).color(color.r, color.g, color.b, color.a);
-                buffer.vertex(minX, maxY, minZ).color(color.r, color.g, color.b, color.a);
+                buffer.addVertex(minX, maxY, maxZ).setColor(color.r, color.g, color.b, color.a);
+                buffer.addVertex(maxX, maxY, maxZ).setColor(color.r, color.g, color.b, color.a);
+                buffer.addVertex(maxX, maxY, minZ).setColor(color.r, color.g, color.b, color.a);
+                buffer.addVertex(minX, maxY, minZ).setColor(color.r, color.g, color.b, color.a);
                 break;
 
             case NORTH:
-                buffer.vertex(maxX, minY, minZ).color(color.r, color.g, color.b, color.a);
-                buffer.vertex(minX, minY, minZ).color(color.r, color.g, color.b, color.a);
-                buffer.vertex(minX, maxY, minZ).color(color.r, color.g, color.b, color.a);
-                buffer.vertex(maxX, maxY, minZ).color(color.r, color.g, color.b, color.a);
+                buffer.addVertex(maxX, minY, minZ).setColor(color.r, color.g, color.b, color.a);
+                buffer.addVertex(minX, minY, minZ).setColor(color.r, color.g, color.b, color.a);
+                buffer.addVertex(minX, maxY, minZ).setColor(color.r, color.g, color.b, color.a);
+                buffer.addVertex(maxX, maxY, minZ).setColor(color.r, color.g, color.b, color.a);
                 break;
 
             case SOUTH:
-                buffer.vertex(minX, minY, maxZ).color(color.r, color.g, color.b, color.a);
-                buffer.vertex(maxX, minY, maxZ).color(color.r, color.g, color.b, color.a);
-                buffer.vertex(maxX, maxY, maxZ).color(color.r, color.g, color.b, color.a);
-                buffer.vertex(minX, maxY, maxZ).color(color.r, color.g, color.b, color.a);
+                buffer.addVertex(minX, minY, maxZ).setColor(color.r, color.g, color.b, color.a);
+                buffer.addVertex(maxX, minY, maxZ).setColor(color.r, color.g, color.b, color.a);
+                buffer.addVertex(maxX, maxY, maxZ).setColor(color.r, color.g, color.b, color.a);
+                buffer.addVertex(minX, maxY, maxZ).setColor(color.r, color.g, color.b, color.a);
                 break;
 
             case WEST:
-                buffer.vertex(minX, minY, minZ).color(color.r, color.g, color.b, color.a);
-                buffer.vertex(minX, minY, maxZ).color(color.r, color.g, color.b, color.a);
-                buffer.vertex(minX, maxY, maxZ).color(color.r, color.g, color.b, color.a);
-                buffer.vertex(minX, maxY, minZ).color(color.r, color.g, color.b, color.a);
+                buffer.addVertex(minX, minY, minZ).setColor(color.r, color.g, color.b, color.a);
+                buffer.addVertex(minX, minY, maxZ).setColor(color.r, color.g, color.b, color.a);
+                buffer.addVertex(minX, maxY, maxZ).setColor(color.r, color.g, color.b, color.a);
+                buffer.addVertex(minX, maxY, minZ).setColor(color.r, color.g, color.b, color.a);
                 break;
 
             case EAST:
-                buffer.vertex(maxX, minY, maxZ).color(color.r, color.g, color.b, color.a);
-                buffer.vertex(maxX, minY, minZ).color(color.r, color.g, color.b, color.a);
-                buffer.vertex(maxX, maxY, minZ).color(color.r, color.g, color.b, color.a);
-                buffer.vertex(maxX, maxY, maxZ).color(color.r, color.g, color.b, color.a);
+                buffer.addVertex(maxX, minY, maxZ).setColor(color.r, color.g, color.b, color.a);
+                buffer.addVertex(maxX, minY, minZ).setColor(color.r, color.g, color.b, color.a);
+                buffer.addVertex(maxX, maxY, minZ).setColor(color.r, color.g, color.b, color.a);
+                buffer.addVertex(maxX, maxY, maxZ).setColor(color.r, color.g, color.b, color.a);
                 break;
         }
     }
@@ -395,8 +394,8 @@ public class RenderUtils
         double maxY = pos.getY() + offset.getY() + (axis == Direction.Axis.Y ? 1 : 0);
         double maxZ = pos.getZ() + offset.getZ() + (axis == Direction.Axis.Z ? 1 : 0);
 
-        buffer.vertex((float) minX, (float) minY, (float) minZ).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
-        buffer.vertex((float) maxX, (float) maxY, (float) maxZ).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
+        buffer.addVertex((float) minX, (float) minY, (float) minZ).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
+        buffer.addVertex((float) maxX, (float) maxY, (float) maxZ).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
 
         //System.out.printf("pos: %s, axis: %s, ind: %d\n", pos, axis, cornerIndex);
     }
@@ -413,11 +412,11 @@ public class RenderUtils
         double maxZ = pos.getZ() + offset.getZ() + (axis == Direction.Axis.Z ? 1 : 0);
 
         //System.out.printf("pos: %s, axis: %s, ind: %d\n", pos, axis, cornerIndex);
-        buffer.vertex((float) minX, (float) minY, (float) minZ).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
-        buffer.vertex((float) maxX, (float) maxY, (float) maxZ).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
+        buffer.addVertex((float) minX, (float) minY, (float) minZ).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
+        buffer.addVertex((float) maxX, (float) maxY, (float) maxZ).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
     }
 
-    public static int renderInventoryOverlays(GuiContext ctx, BlockInfoAlignment align, int offY, World worldSchematic, World worldClient, BlockPos pos)
+    public static int renderInventoryOverlays(GuiContext ctx, BlockInfoAlignment align, int offY, Level worldSchematic, Level worldClient, BlockPos pos)
     {
         int heightSch = renderInventoryOverlay(ctx, align, LeftRight.LEFT, offY, worldSchematic, pos);
         int heightCli = renderInventoryOverlay(ctx, align, LeftRight.RIGHT, offY, worldClient, pos);
@@ -425,13 +424,13 @@ public class RenderUtils
         return Math.max(heightSch, heightCli);
     }
 
-    public static int renderInventoryOverlay(GuiContext guiCtx, BlockInfoAlignment align, LeftRight side, int offY, World world, BlockPos pos)
+    public static int renderInventoryOverlay(GuiContext guiCtx, BlockInfoAlignment align, LeftRight side, int offY, Level world, BlockPos pos)
     {
         InventoryOverlayContext ctx = InventoryUtils.getTargetInventory(world, pos);
 
         if (ctx != null && ctx.inv() != null)
         {
-            final InventoryProperties props = fi.dy.masa.malilib.render.InventoryOverlay.getInventoryPropsTemp(ctx.type(), ctx.inv().size());
+            final InventoryProperties props = fi.dy.masa.malilib.render.InventoryOverlay.getInventoryPropsTemp(ctx.type(), ctx.inv().getContainerSize());
 
 //            Litematica.LOGGER.error("render(): type [{}], inv [{}], be [{}], nbt [{}]", ctx.type().name(), ctx.inv().size(), ctx.be() != null, ctx.nbt() != null ? ctx.nbt().getString("id") : new NbtCompound());
 
@@ -461,13 +460,13 @@ public class RenderUtils
     }
 
     public static int renderInventoryOverlay(GuiContext ctx, BlockInfoAlignment align, LeftRight side, int offY,
-                                             Inventory inv, InventoryOverlayType type, InventoryProperties props)
+                                             Container inv, InventoryOverlayType type, InventoryProperties props)
     {
         return renderInventoryOverlay(ctx, align, side, offY, inv, type, props, Set.of());
     }
 
     public static int renderInventoryOverlay(GuiContext ctx, BlockInfoAlignment align, LeftRight side, int offY,
-											 Inventory inv, InventoryOverlayType type, InventoryProperties props, Set<Integer> disabledSlots)
+											 Container inv, InventoryOverlayType type, InventoryProperties props, Set<Integer> disabledSlots)
     {
         int xInv = 0;
         int yInv = 0;
@@ -489,7 +488,7 @@ public class RenderUtils
         else if (side == LeftRight.RIGHT) { xInv += (props.width / 2 + 4); }
 
         fi.dy.masa.malilib.render.InventoryOverlay.renderInventoryBackground(ctx, type, xInv, yInv, props.slotsPerRow, props.totalSlots);
-        fi.dy.masa.malilib.render.InventoryOverlay.renderInventoryStacks(ctx, type, inv, xInv + props.slotOffsetX, yInv + props.slotOffsetY, props.slotsPerRow, 0, inv.size(), disabledSlots);
+        fi.dy.masa.malilib.render.InventoryOverlay.renderInventoryStacks(ctx, type, inv, xInv + props.slotOffsetX, yInv + props.slotOffsetY, props.slotsPerRow, 0, inv.getContainerSize(), disabledSlots);
 
         return props.height + compatShift;
     }
@@ -650,10 +649,10 @@ public class RenderUtils
 
     public static void drawBlockBoundingBoxOutlinesBatchedDebugLines(BlockPos pos, Color4f color, double expand, float lineWidth, BufferBuilder buffer)
     {
-        drawBoxAllEdgesBatchedDebugLines(pos, Vec3d.ZERO, color, expand, lineWidth, buffer);
+        drawBoxAllEdgesBatchedDebugLines(pos, Vec3.ZERO, color, expand, lineWidth, buffer);
     }
 
-    public static void drawBoxAllEdgesBatchedDebugLines(BlockPos pos, Vec3d cameraPos, Color4f color, double expand, float lineWidth, BufferBuilder buffer)
+    public static void drawBoxAllEdgesBatchedDebugLines(BlockPos pos, Vec3 cameraPos, Color4f color, double expand, float lineWidth, BufferBuilder buffer)
     {
         float minX = (float) (pos.getX() - expand - cameraPos.x);
         float minY = (float) (pos.getY() - expand - cameraPos.y);
@@ -668,43 +667,43 @@ public class RenderUtils
     public static void drawBoxAllEdgesBatchedDebugLines(float minX, float minY, float minZ, float maxX, float maxY, float maxZ, Color4f color, float lineWidth, BufferBuilder buffer)
     {
         // West side
-        buffer.vertex(minX, minY, minZ).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
-        buffer.vertex(minX, minY, maxZ).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
+        buffer.addVertex(minX, minY, minZ).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
+        buffer.addVertex(minX, minY, maxZ).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
 
-        buffer.vertex(minX, minY, maxZ).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
-        buffer.vertex(minX, maxY, maxZ).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
+        buffer.addVertex(minX, minY, maxZ).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
+        buffer.addVertex(minX, maxY, maxZ).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
 
-        buffer.vertex(minX, maxY, maxZ).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
-        buffer.vertex(minX, maxY, minZ).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
+        buffer.addVertex(minX, maxY, maxZ).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
+        buffer.addVertex(minX, maxY, minZ).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
 
-        buffer.vertex(minX, maxY, minZ).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
-        buffer.vertex(minX, minY, minZ).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
+        buffer.addVertex(minX, maxY, minZ).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
+        buffer.addVertex(minX, minY, minZ).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
 
         // East side
-        buffer.vertex(maxX, minY, maxZ).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
-        buffer.vertex(maxX, minY, minZ).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
+        buffer.addVertex(maxX, minY, maxZ).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
+        buffer.addVertex(maxX, minY, minZ).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
 
-        buffer.vertex(maxX, minY, minZ).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
-        buffer.vertex(maxX, maxY, minZ).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
+        buffer.addVertex(maxX, minY, minZ).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
+        buffer.addVertex(maxX, maxY, minZ).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
 
-        buffer.vertex(maxX, maxY, minZ).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
-        buffer.vertex(maxX, maxY, maxZ).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
+        buffer.addVertex(maxX, maxY, minZ).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
+        buffer.addVertex(maxX, maxY, maxZ).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
 
-        buffer.vertex(maxX, maxY, maxZ).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
-        buffer.vertex(maxX, minY, maxZ).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
+        buffer.addVertex(maxX, maxY, maxZ).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
+        buffer.addVertex(maxX, minY, maxZ).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
 
         // North side (don't repeat the vertical lines that are done by the east/west sides)
-        buffer.vertex(maxX, minY, minZ).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
-        buffer.vertex(minX, minY, minZ).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
+        buffer.addVertex(maxX, minY, minZ).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
+        buffer.addVertex(minX, minY, minZ).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
 
-        buffer.vertex(minX, maxY, minZ).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
-        buffer.vertex(maxX, maxY, minZ).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
+        buffer.addVertex(minX, maxY, minZ).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
+        buffer.addVertex(maxX, maxY, minZ).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
 
         // South side (don't repeat the vertical lines that are done by the east/west sides)
-        buffer.vertex(minX, minY, maxZ).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
-        buffer.vertex(maxX, minY, maxZ).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
+        buffer.addVertex(minX, minY, maxZ).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
+        buffer.addVertex(maxX, minY, maxZ).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
 
-        buffer.vertex(maxX, maxY, maxZ).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
-        buffer.vertex(minX, maxY, maxZ).color(color.r, color.g, color.b, color.a).lineWidth(lineWidth);
+        buffer.addVertex(maxX, maxY, maxZ).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
+        buffer.addVertex(minX, maxY, maxZ).setColor(color.r, color.g, color.b, color.a).setLineWidth(lineWidth);
     }
 }

@@ -44,6 +44,7 @@
         "render.MixinBufferBuilder",
         "render.MixinEntityRenderManager",
         "render.MixinGameRenderer",
+        "render.MixinRenderPipelines",
         "render.MixinWorldRenderer",
         "screen.IMixinHandledScreen",
         "screen.MixinHandledScreen",

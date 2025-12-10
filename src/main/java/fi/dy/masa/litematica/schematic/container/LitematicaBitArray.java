@@ -4,8 +4,8 @@ import java.util.Arrays;
 import java.util.stream.LongStream;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.codec.PacketCodecs;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import io.netty.buffer.ByteBuf;
 import org.apache.commons.lang3.Validate;
 
@@ -23,23 +23,23 @@ public class LitematicaBitArray
                             get -> Arrays.stream(get.longArray))
             ).apply(inst, LitematicaBitArray::new)
     );
-    public static final PacketCodec<ByteBuf, LitematicaBitArray> PACKET_CODEC = new PacketCodec<>()
+    public static final StreamCodec<ByteBuf, LitematicaBitArray> PACKET_CODEC = new StreamCodec<>()
     {
         @Override
         public void encode(@Nonnull ByteBuf buf, LitematicaBitArray value)
         {
-            PacketCodecs.INTEGER.encode(buf, value.bitsPerEntry);
-            PacketCodecs.LONG.encode(buf, value.arraySize);
-            PacketCodecs.LONG_ARRAY.encode(buf, value.longArray);
+            ByteBufCodecs.INT.encode(buf, value.bitsPerEntry);
+            ByteBufCodecs.LONG.encode(buf, value.arraySize);
+            ByteBufCodecs.LONG_ARRAY.encode(buf, value.longArray);
         }
 
         @Override
         public @Nonnull LitematicaBitArray decode(@Nonnull ByteBuf buf)
         {
             return new LitematicaBitArray(
-                    PacketCodecs.INTEGER.decode(buf),
-                    PacketCodecs.LONG.decode(buf),
-                    PacketCodecs.LONG_ARRAY.decode(buf)
+                    ByteBufCodecs.INT.decode(buf),
+                    ByteBufCodecs.LONG.decode(buf),
+                    ByteBufCodecs.LONG_ARRAY.decode(buf)
             );
         }
     };

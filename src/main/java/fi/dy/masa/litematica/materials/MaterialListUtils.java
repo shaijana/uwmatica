@@ -3,17 +3,17 @@ package fi.dy.masa.litematica.materials;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.ShulkerBoxBlock;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.BundleItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.collection.DefaultedList;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.NonNullList;
+import net.minecraft.core.Vec3i;
+import net.minecraft.world.Container;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.BundleItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.ShulkerBoxBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import fi.dy.masa.litematica.schematic.LitematicaSchematic;
 import fi.dy.masa.litematica.schematic.container.LitematicaBlockStateContainer;
@@ -56,7 +56,7 @@ public class MaterialListUtils
             }
         }
 
-        MinecraftClient mc = MinecraftClient.getInstance();
+        Minecraft mc = Minecraft.getInstance();
 
         return getMaterialList(countsTotal, countsTotal.clone(), new Object2IntOpenHashMap<>(), mc.player);
     }
@@ -65,7 +65,7 @@ public class MaterialListUtils
             Object2IntOpenHashMap<BlockState> countsTotal,
             Object2IntOpenHashMap<BlockState> countsMissing,
             Object2IntOpenHashMap<BlockState> countsMismatch,
-            PlayerEntity player)
+            Player player)
     {
         List<MaterialListEntry> list = new ArrayList<>();
 
@@ -122,7 +122,7 @@ public class MaterialListUtils
             // Add water bucket for waterlogged blocks
             if (isWaterloggedBlock(state))
             {
-                itemTypesOut.addTo(new ItemType(new ItemStack(net.minecraft.item.Items.WATER_BUCKET), false, false), count);
+                itemTypesOut.addTo(new ItemType(new ItemStack(net.minecraft.world.item.Items.WATER_BUCKET), false, false), count);
             }
 
             // Convert block to items
@@ -147,7 +147,7 @@ public class MaterialListUtils
         }
     }
 
-    public static void updateAvailableCounts(List<MaterialListEntry> list, PlayerEntity player)
+    public static void updateAvailableCounts(List<MaterialListEntry> list, Player player)
     {
         if (player == null) return;
         Object2IntOpenHashMap<ItemType> playerInvItems = getInventoryItemCounts(player.getInventory());
@@ -160,14 +160,14 @@ public class MaterialListUtils
         }
     }
 
-    public static Object2IntOpenHashMap<ItemType> getInventoryItemCounts(Inventory inv)
+    public static Object2IntOpenHashMap<ItemType> getInventoryItemCounts(Container inv)
     {
         Object2IntOpenHashMap<ItemType> map = new Object2IntOpenHashMap<>();
-        final int slots = inv.size();
+        final int slots = inv.getContainerSize();
 
         for (int slot = 0; slot < slots; ++slot)
         {
-            ItemStack stack = inv.getStack(slot);
+            ItemStack stack = inv.getItem(slot);
 
             if (stack.isEmpty() == false)
             {
@@ -210,7 +210,7 @@ public class MaterialListUtils
     public static Object2IntOpenHashMap<ItemType> getStoredItemCounts(ItemStack stackShulkerBox)
     {
         Object2IntOpenHashMap<ItemType> map = new Object2IntOpenHashMap<>();
-        DefaultedList<ItemStack> items = InventoryUtils.getStoredItems(stackShulkerBox);
+        NonNullList<ItemStack> items = InventoryUtils.getStoredItems(stackShulkerBox);
 
         for (ItemStack boxStack : items)
         {
@@ -237,7 +237,7 @@ public class MaterialListUtils
     public static Object2IntOpenHashMap<ItemType> getBundleItemCounts(ItemStack stackBundle)
     {
         Object2IntOpenHashMap<ItemType> map = new Object2IntOpenHashMap<>();
-        DefaultedList<ItemStack> items = InventoryUtils.getBundleItems(stackBundle);
+        NonNullList<ItemStack> items = InventoryUtils.getBundleItems(stackBundle);
 
         for (ItemStack bundleStack : items)
         {
@@ -263,15 +263,15 @@ public class MaterialListUtils
 
     private static boolean isWaterloggedBlock(BlockState state)
     {
-        return state.contains(net.minecraft.state.property.Properties.WATERLOGGED) &&
-               state.get(net.minecraft.state.property.Properties.WATERLOGGED);
+        return state.hasProperty(net.minecraft.world.level.block.state.properties.BlockStateProperties.WATERLOGGED) &&
+               state.getValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.WATERLOGGED);
     }
 
     private static BlockState getBaseBlockState(BlockState state)
     {
-        if (state.contains(net.minecraft.state.property.Properties.WATERLOGGED))
+        if (state.hasProperty(net.minecraft.world.level.block.state.properties.BlockStateProperties.WATERLOGGED))
         {
-            return state.with(net.minecraft.state.property.Properties.WATERLOGGED, false);
+            return state.setValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.WATERLOGGED, false);
         }
         return state;
     }

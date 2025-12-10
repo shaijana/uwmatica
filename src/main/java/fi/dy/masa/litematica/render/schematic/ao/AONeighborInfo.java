@@ -1,7 +1,7 @@
 package fi.dy.masa.litematica.render.schematic.ao;
 
+import net.minecraft.core.Direction;
 import net.minecraft.util.Util;
-import net.minecraft.util.math.Direction;
 
 public enum AONeighborInfo
 {
@@ -45,12 +45,12 @@ public enum AONeighborInfo
 	final AOOrientation[] vert3Weights;
 	private static final AONeighborInfo[] VALUES = Util.make(new AONeighborInfo[6], (values) ->
 	{
-		values[Direction.DOWN.getIndex()] = DOWN;
-		values[Direction.UP.getIndex()] = UP;
-		values[Direction.NORTH.getIndex()] = NORTH;
-		values[Direction.SOUTH.getIndex()] = SOUTH;
-		values[Direction.WEST.getIndex()] = WEST;
-		values[Direction.EAST.getIndex()] = EAST;
+		values[Direction.DOWN.get3DDataValue()] = DOWN;
+		values[Direction.UP.get3DDataValue()] = UP;
+		values[Direction.NORTH.get3DDataValue()] = NORTH;
+		values[Direction.SOUTH.get3DDataValue()] = SOUTH;
+		values[Direction.WEST.get3DDataValue()] = WEST;
+		values[Direction.EAST.get3DDataValue()] = EAST;
 	});
 
 	AONeighborInfo(final Direction[] corners, final float f, final boolean nonCubicWeight, final AOOrientation[] neighbor1, final AOOrientation[] neighbor2, final AOOrientation[] neighbor3, final AOOrientation[] neighbor4)
@@ -65,6 +65,6 @@ public enum AONeighborInfo
 
 	public static AONeighborInfo getNeighbourInfo(Direction direction)
 	{
-		return VALUES[direction.getIndex()];
+		return VALUES[direction.get3DDataValue()];
 	}
 }

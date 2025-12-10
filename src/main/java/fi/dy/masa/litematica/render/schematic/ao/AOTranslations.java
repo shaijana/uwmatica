@@ -1,7 +1,7 @@
 package fi.dy.masa.litematica.render.schematic.ao;
 
+import net.minecraft.core.Direction;
 import net.minecraft.util.Util;
-import net.minecraft.util.math.Direction;
 
 public enum AOTranslations
 {
@@ -19,12 +19,12 @@ public enum AOTranslations
 
 	private static final AOTranslations[] VALUES = Util.make(new AOTranslations[6], (values) ->
 	{
-		values[Direction.DOWN.getIndex()] = DOWN;
-		values[Direction.UP.getIndex()] = UP;
-		values[Direction.NORTH.getIndex()] = NORTH;
-		values[Direction.SOUTH.getIndex()] = SOUTH;
-		values[Direction.WEST.getIndex()] = WEST;
-		values[Direction.EAST.getIndex()] = EAST;
+		values[Direction.DOWN.get3DDataValue()] = DOWN;
+		values[Direction.UP.get3DDataValue()] = UP;
+		values[Direction.NORTH.get3DDataValue()] = NORTH;
+		values[Direction.SOUTH.get3DDataValue()] = SOUTH;
+		values[Direction.WEST.get3DDataValue()] = WEST;
+		values[Direction.EAST.get3DDataValue()] = EAST;
 	});
 
 	AOTranslations(final int vert0, final int vert1, final int vert2, final int vert3)
@@ -37,6 +37,6 @@ public enum AOTranslations
 
 	public static AOTranslations getVertexTranslations(Direction face)
 	{
-		return VALUES[face.getIndex()];
+		return VALUES[face.get3DDataValue()];
 	}
 }

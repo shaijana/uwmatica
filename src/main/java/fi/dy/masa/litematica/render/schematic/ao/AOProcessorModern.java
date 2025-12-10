@@ -1,9 +1,9 @@
 package fi.dy.masa.litematica.render.schematic.ao;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.BlockRenderView;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.BlockAndTintGetter;
+import net.minecraft.world.level.block.state.BlockState;
 
 /**
  * A "Modern" AO Processor based upon 24w36a through 1.21.11+ that utilizes the "brightness cache"
@@ -13,37 +13,37 @@ public class AOProcessorModern extends AOProcessor
 	public final float[] shapeCache = new float[AOOrientation.values().length];     // field_58158
 
     @Override
-    public void apply(BlockRenderView world, BlockState state, BlockPos pos, Direction face, boolean hasShade)
+    public void apply(BlockAndTintGetter world, BlockState state, BlockPos pos, Direction face, boolean hasShade)
     {
         // 1.21.11-pre1
-        BlockPos blockPos = this.hasOffset ? pos.offset(face) : pos;
+        BlockPos blockPos = this.hasOffset ? pos.relative(face) : pos;
         AONeighborInfo nd = AONeighborInfo.getNeighbourInfo(face);
-        BlockPos.Mutable mutable = this.pos;
-        mutable.set(blockPos, nd.corners[0]);
+        BlockPos.MutableBlockPos mutable = this.pos;
+        mutable.setWithOffset(blockPos, nd.corners[0]);
 
         BlockState bs1 = world.getBlockState(mutable);
         int i = this.brightnessCache.getInt(bs1, world, mutable);
         float f = this.brightnessCache.getFloat(bs1, world, mutable);
-        mutable.set(blockPos, nd.corners[1]);
+        mutable.setWithOffset(blockPos, nd.corners[1]);
         BlockState bs2 = world.getBlockState(mutable);
         int j = this.brightnessCache.getInt(bs2, world, mutable);
         float g = this.brightnessCache.getFloat(bs2, world, mutable);
-        mutable.set(blockPos, nd.corners[2]);
+        mutable.setWithOffset(blockPos, nd.corners[2]);
         BlockState bs3 = world.getBlockState(mutable);
         int k = this.brightnessCache.getInt(bs3, world, mutable);
         float h = this.brightnessCache.getFloat(bs3, world, mutable);
-        mutable.set(blockPos, nd.corners[3]);
+        mutable.setWithOffset(blockPos, nd.corners[3]);
         BlockState bs4 = world.getBlockState(mutable);
         int l = this.brightnessCache.getInt(bs4, world, mutable);
         float m = this.brightnessCache.getFloat(bs4, world, mutable);
-        BlockState bs5 = world.getBlockState(mutable.set(blockPos, nd.corners[0]).move(face));
-        boolean bl2 = !bs5.shouldBlockVision(world, mutable) || bs5.getOpacity() == 0;
-        BlockState bs6 = world.getBlockState(mutable.set(blockPos, nd.corners[1]).move(face));
-        boolean bl3 = !bs6.shouldBlockVision(world, mutable) || bs6.getOpacity() == 0;
-        BlockState bs7 = world.getBlockState(mutable.set(blockPos, nd.corners[2]).move(face));
-        boolean bl4 = !bs7.shouldBlockVision(world, mutable) || bs7.getOpacity() == 0;
-        BlockState bs8 = world.getBlockState(mutable.set(blockPos, nd.corners[3]).move(face));
-        boolean bl5 = !bs8.shouldBlockVision(world, mutable) || bs8.getOpacity() == 0;
+        BlockState bs5 = world.getBlockState(mutable.setWithOffset(blockPos, nd.corners[0]).move(face));
+        boolean bl2 = !bs5.isViewBlocking(world, mutable) || bs5.getLightBlock() == 0;
+        BlockState bs6 = world.getBlockState(mutable.setWithOffset(blockPos, nd.corners[1]).move(face));
+        boolean bl3 = !bs6.isViewBlocking(world, mutable) || bs6.getLightBlock() == 0;
+        BlockState bs7 = world.getBlockState(mutable.setWithOffset(blockPos, nd.corners[2]).move(face));
+        boolean bl4 = !bs7.isViewBlocking(world, mutable) || bs7.getLightBlock() == 0;
+        BlockState bs8 = world.getBlockState(mutable.setWithOffset(blockPos, nd.corners[3]).move(face));
+        boolean bl5 = !bs8.isViewBlocking(world, mutable) || bs8.getLightBlock() == 0;
 
         float n;
         int o;
@@ -56,7 +56,7 @@ public class AOProcessorModern extends AOProcessor
         }
         else
         {
-            mutable.set(blockPos, nd.corners[0]).move(nd.corners[2]);
+            mutable.setWithOffset(blockPos, nd.corners[0]).move(nd.corners[2]);
             bs9 = world.getBlockState(mutable);
             n = this.brightnessCache.getFloat(bs9, world, mutable);
             o = this.brightnessCache.getInt(bs9, world, mutable);
@@ -71,7 +71,7 @@ public class AOProcessorModern extends AOProcessor
         }
         else
         {
-            mutable.set(blockPos, nd.corners[0]).move(nd.corners[3]);
+            mutable.setWithOffset(blockPos, nd.corners[0]).move(nd.corners[3]);
             bs9 = world.getBlockState(mutable);
             p = this.brightnessCache.getFloat(bs9, world, mutable);
             q = this.brightnessCache.getInt(bs9, world, mutable);
@@ -86,7 +86,7 @@ public class AOProcessorModern extends AOProcessor
         }
         else
         {
-            mutable.set(blockPos, nd.corners[1]).move(nd.corners[2]);
+            mutable.setWithOffset(blockPos, nd.corners[1]).move(nd.corners[2]);
             bs9 = world.getBlockState(mutable);
             r = this.brightnessCache.getFloat(bs9, world, mutable);
             s = this.brightnessCache.getInt(bs9, world, mutable);
@@ -101,17 +101,17 @@ public class AOProcessorModern extends AOProcessor
         }
         else
         {
-            mutable.set(blockPos, nd.corners[1]).move(nd.corners[3]);
+            mutable.setWithOffset(blockPos, nd.corners[1]).move(nd.corners[3]);
             bs9 = world.getBlockState(mutable);
             t = this.brightnessCache.getFloat(bs9, world, mutable);
             u = this.brightnessCache.getInt(bs9, world, mutable);
         }
 
         int v = this.brightnessCache.getInt(state, world, pos);
-        mutable.set(pos, face);
+        mutable.setWithOffset(pos, face);
         BlockState bs10 = world.getBlockState(mutable);
 
-        if (this.hasOffset || !bs10.isOpaqueFullCube())
+        if (this.hasOffset || !bs10.isSolidRender())
         {
             v = this.brightnessCache.getInt(bs10, world, mutable);
         }
@@ -173,7 +173,7 @@ public class AOProcessorModern extends AOProcessor
             this.fs[translation.vert3] = aa;
         }
 
-	    float x = world.getBrightness(face, hasShade);
+	    float x = world.getShade(face, hasShade);
 
         for (int av = 0; av < this.fs.length; av++)
         {

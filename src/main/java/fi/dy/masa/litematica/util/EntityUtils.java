@@ -7,29 +7,24 @@ import java.util.function.Predicate;
 import javax.annotation.Nullable;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.ApiStatus;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.Leashable;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.decoration.LeashKnotEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtList;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.UUIDUtil;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtOps;
-import net.minecraft.text.TextCodecs;
-import net.minecraft.util.Hand;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.Uuids;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.random.Random;
-import net.minecraft.world.World;
+import net.minecraft.network.chat.ComponentSerialization;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.decoration.LeashFenceKnotEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import fi.dy.masa.malilib.util.InventoryUtils;
 import fi.dy.masa.malilib.util.nbt.NbtKeys;
 import fi.dy.masa.malilib.util.nbt.NbtView;
@@ -43,26 +38,26 @@ import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement;
 
 public class EntityUtils
 {
-    public static final Predicate<Entity> NOT_PLAYER = entity -> (entity instanceof PlayerEntity) == false;
+    public static final Predicate<Entity> NOT_PLAYER = entity -> (entity instanceof Player) == false;
 
-    public static boolean isCreativeMode(PlayerEntity player)
+    public static boolean isCreativeMode(Player player)
     {
-        return player.getAbilities().creativeMode;
+        return player.getAbilities().instabuild;
     }
 
     public static boolean hasToolItem(LivingEntity entity)
     {
-        return hasToolItemInHand(entity, Hand.MAIN_HAND) ||
-               hasToolItemInHand(entity, Hand.OFF_HAND);
+        return hasToolItemInHand(entity, InteractionHand.MAIN_HAND) ||
+               hasToolItemInHand(entity, InteractionHand.OFF_HAND);
     }
 
-    public static boolean hasToolItemInHand(LivingEntity entity, Hand hand)
+    public static boolean hasToolItemInHand(LivingEntity entity, InteractionHand hand)
     {
         // Data Component-aware toolItem Code (aka NBT)
         if (DataManager.getInstance().hasToolItemComponents())
         {
             ItemStack toolItem = DataManager.getInstance().getToolItemComponents();
-            ItemStack stackHand = entity.getStackInHand(hand);
+            ItemStack stackHand = entity.getItemInHand(hand);
 
             if (toolItem != null)
             {
@@ -77,10 +72,10 @@ public class EntityUtils
 
         if (toolItem.isEmpty())
         {
-            return entity.getMainHandStack().isEmpty();
+            return entity.getMainHandItem().isEmpty();
         }
 
-        ItemStack stackHand = entity.getStackInHand(hand);
+        ItemStack stackHand = entity.getItemInHand(hand);
 
         return InventoryUtils.areStacksEqualIgnoreNbt(toolItem, stackHand);
     }
@@ -93,18 +88,18 @@ public class EntityUtils
      * @return ()
      */
     @Nullable
-    public static Hand getUsedHandForItem(PlayerEntity player, ItemStack stack)
+    public static InteractionHand getUsedHandForItem(Player player, ItemStack stack)
     {
-        Hand hand = null;
+        InteractionHand hand = null;
 
-        if (InventoryUtils.areStacksEqualIgnoreNbt(player.getMainHandStack(), stack))
+        if (InventoryUtils.areStacksEqualIgnoreNbt(player.getMainHandItem(), stack))
         {
-            hand = Hand.MAIN_HAND;
+            hand = InteractionHand.MAIN_HAND;
         }
-        else if (player.getMainHandStack().isEmpty() &&
-                InventoryUtils.areStacksEqualIgnoreNbt(player.getOffHandStack(), stack))
+        else if (player.getMainHandItem().isEmpty() &&
+                InventoryUtils.areStacksEqualIgnoreNbt(player.getOffhandItem(), stack))
         {
-            hand = Hand.OFF_HAND;
+            hand = InteractionHand.OFF_HAND;
         }
 
         return hand;
@@ -117,21 +112,21 @@ public class EntityUtils
 
     public static Direction getHorizontalLookingDirection(Entity entity)
     {
-        return Direction.fromHorizontalDegrees(entity.getYaw());
+        return Direction.fromYRot(entity.getYRot());
     }
 
     public static Direction getVerticalLookingDirection(Entity entity)
     {
-        return entity.getPitch() > 0 ? Direction.DOWN : Direction.UP;
+        return entity.getXRot() > 0 ? Direction.DOWN : Direction.UP;
     }
 
     public static Direction getClosestLookingDirection(Entity entity)
     {
-        if (entity.getPitch() > 60.0f)
+        if (entity.getXRot() > 60.0f)
         {
             return Direction.DOWN;
         }
-        else if (-entity.getPitch() > 60.0f)
+        else if (-entity.getXRot() > 60.0f)
         {
             return Direction.UP;
         }
@@ -149,7 +144,7 @@ public class EntityUtils
 
         for (T entity : list)
         {
-            if (entity.getUuid().equals(uuid))
+            if (entity.getUUID().equals(uuid))
             {
                 return entity;
             }
@@ -163,14 +158,14 @@ public class EntityUtils
 
     public static void initEntityUtils()
     {
-        Random rand = Random.create();
+        RandomSource rand = RandomSource.create();
         entityDebugRandom = rand.nextBoolean();
         entityDebugRandom2 = rand.nextBoolean();
     }
 
     public static Pair<String, String> getEntityDebug()
     {
-        MinecraftClient mc = MinecraftClient.getInstance();
+        Minecraft mc = Minecraft.getInstance();
 
         if (mc.player == null || !entityDebugRandom) return Pair.of("", "");
 
@@ -249,22 +244,22 @@ public class EntityUtils
     public static String getEntityId(Entity entity)
     {
         EntityType<?> entitytype = entity.getType();
-        Identifier resourcelocation = EntityType.getId(entitytype);
-        return entitytype.isSaveable() && resourcelocation != null ? resourcelocation.toString() : null;
+        Identifier resourcelocation = EntityType.getKey(entitytype);
+        return entitytype.canSerialize() && resourcelocation != null ? resourcelocation.toString() : null;
     }
 
     @Nullable
-    private static Entity createEntityFromNBTSingle(NbtCompound nbt, World world)
+    private static Entity createEntityFromNBTSingle(CompoundTag nbt, Level world)
     {
         try
         {
-            NbtView view = NbtView.getReader(nbt, world.getRegistryManager());
-            Optional<Entity> optional = EntityType.getEntityFromData(view.getReader(), world, SpawnReason.LOAD);
+            NbtView view = NbtView.getReader(nbt, world.registryAccess());
+            Optional<Entity> optional = EntityType.create(view.getReader(), world, EntitySpawnReason.LOAD);
 
             if (optional.isPresent())
             {
                 Entity entity = optional.get();
-                entity.setUuid(UUID.randomUUID());
+                entity.setUUID(UUID.randomUUID());
 
 //                Litematica.LOGGER.warn("[EntityUtils] createEntityFromNBTSingle() successful; type: [{}]", entity.getType().getName().getString());
 
@@ -286,7 +281,7 @@ public class EntityUtils
      * @return ()
      */
     @Nullable
-    public static Entity createEntityAndPassengersFromNBT(NbtCompound nbt, World world)
+    public static Entity createEntityAndPassengersFromNBT(CompoundTag nbt, Level world)
     {
         Entity entity = createEntityFromNBTSingle(nbt, world);
 
@@ -298,7 +293,7 @@ public class EntityUtils
         {
             if (nbt.contains("Passengers"))
             {
-                NbtList taglist = nbt.getListOrEmpty("Passengers");
+                ListTag taglist = nbt.getListOrEmpty("Passengers");
 
                 for (int i = 0; i < taglist.size(); ++i)
                 {
@@ -315,58 +310,58 @@ public class EntityUtils
         }
     }
 
-    public static void spawnEntityAndPassengersInWorld(Entity entity, World world)
+    public static void spawnEntityAndPassengersInWorld(Entity entity, Level world)
     {
-        if (world.spawnEntity(entity) && entity.hasPassengers())
+        if (world.addFreshEntity(entity) && entity.isVehicle())
         {
-            for (Entity passenger : entity.getPassengerList())
+            for (Entity passenger : entity.getPassengers())
             {
-                Vec3d adjPos = entity.getPassengerRidingPos(passenger);
+                Vec3 adjPos = entity.getPassengerRidingPosition(passenger);
 
-                passenger.refreshPositionAndAngles(
-                        adjPos.getX(),
-                        adjPos.getY(),
-                        adjPos.getZ(),
-                        passenger.getYaw(), passenger.getPitch());
-                setEntityRotations(passenger, passenger.getYaw(), passenger.getPitch());
+                passenger.snapTo(
+                        adjPos.x(),
+                        adjPos.y(),
+                        adjPos.z(),
+                        passenger.getYRot(), passenger.getXRot());
+                setEntityRotations(passenger, passenger.getYRot(), passenger.getXRot());
                 spawnEntityAndPassengersInWorld(passenger, world);
-                entity.updatePassengerPosition(passenger);
+                entity.positionRider(passenger);
             }
         }
     }
 
     public static void setEntityRotations(Entity entity, float yaw, float pitch)
     {
-        entity.setYaw(yaw);
-        entity.lastYaw = yaw;
+        entity.setYRot(yaw);
+        entity.yRotO = yaw;
 
-        entity.setPitch(pitch);
-        entity.lastPitch = pitch;
+        entity.setXRot(pitch);
+        entity.xRotO = pitch;
 
         if (entity instanceof LivingEntity livingBase)
         {
-            livingBase.headYaw = yaw;
-            livingBase.bodyYaw = yaw;
-            livingBase.lastHeadYaw = yaw;
-            livingBase.lastBodyYaw = yaw;
+            livingBase.yHeadRot = yaw;
+            livingBase.yBodyRot = yaw;
+            livingBase.yHeadRotO = yaw;
+            livingBase.yBodyRotO = yaw;
             //livingBase.renderYawOffset = yaw;
             //livingBase.prevRenderYawOffset = yaw;
         }
     }
 
-    public static List<Entity> getEntitiesWithinSubRegion(World world, BlockPos origin, BlockPos regionPos, BlockPos regionSize,
+    public static List<Entity> getEntitiesWithinSubRegion(Level world, BlockPos origin, BlockPos regionPos, BlockPos regionSize,
             SchematicPlacement schematicPlacement, SubRegionPlacement placement)
     {
         // These are the untransformed relative positions
         BlockPos regionPosRelTransformed = PositionUtils.getTransformedBlockPos(regionPos, schematicPlacement.getMirror(), schematicPlacement.getRotation());
-        BlockPos posEndAbs = PositionUtils.getTransformedPlacementPosition(regionSize.add(-1, -1, -1), schematicPlacement, placement).add(regionPosRelTransformed).add(origin);
-        BlockPos regionPosAbs = regionPosRelTransformed.add(origin);
-        Box bb = PositionUtils.createEnclosingAABB(regionPosAbs, posEndAbs);
+        BlockPos posEndAbs = PositionUtils.getTransformedPlacementPosition(regionSize.offset(-1, -1, -1), schematicPlacement, placement).offset(regionPosRelTransformed).offset(origin);
+        BlockPos regionPosAbs = regionPosRelTransformed.offset(origin);
+        AABB bb = PositionUtils.createEnclosingAABB(regionPosAbs, posEndAbs);
 
-        return world.getOtherEntities((Entity) null, bb, EntityUtils.NOT_PLAYER);
+        return world.getEntities((Entity) null, bb, EntityUtils.NOT_PLAYER);
     }
 
-    public static boolean shouldPickBlock(PlayerEntity player)
+    public static boolean shouldPickBlock(Player player)
     {
         return Configs.Generic.PICK_BLOCK_ENABLED.getBooleanValue() &&
                 (Configs.Generic.TOOL_ITEM_ENABLED.getBooleanValue() == false ||
@@ -377,17 +372,17 @@ public class EntityUtils
 
     // entity.readNbt(nbt);
     @Deprecated
-    public static void loadNbtIntoEntity(Entity entity, NbtCompound nbt)
+    public static void loadNbtIntoEntity(Entity entity, CompoundTag nbt)
     {
-        entity.fallDistance = nbt.getFloat("FallDistance", 0f);
-        entity.setFireTicks(nbt.getShort("Fire", (short) 0));
+        entity.fallDistance = nbt.getFloatOr("FallDistance", 0f);
+        entity.setRemainingFireTicks(nbt.getShortOr("Fire", (short) 0));
         if (nbt.contains("Air")) {
-            entity.setAir(nbt.getShort("Air", (short) 0));
+            entity.setAirSupply(nbt.getShortOr("Air", (short) 0));
         }
 
-        entity.setOnGround(nbt.getBoolean("OnGround", true));
-        entity.setInvulnerable(nbt.getBoolean("Invulnerable", false));
-        entity.setPortalCooldown(nbt.getInt("PortalCooldown", 0));
+        entity.setOnGround(nbt.getBooleanOr("OnGround", true));
+        entity.setInvulnerable(nbt.getBooleanOr("Invulnerable", false));
+        entity.setPortalCooldown(nbt.getIntOr("PortalCooldown", 0));
         /*
         if (nbt.containsUuid("UUID")) {
             entity.setUuid(nbt.getUuid("UUID"));
@@ -395,26 +390,26 @@ public class EntityUtils
          */
         if (nbt.contains("UUID"))
         {
-            entity.setUuid(nbt.get("UUID", Uuids.CODEC, entity.getRegistryManager().getOps(NbtOps.INSTANCE)).orElse(UUID.randomUUID()));
+            entity.setUUID(nbt.read("UUID", UUIDUtil.AUTHLIB_CODEC, entity.registryAccess().createSerializationContext(NbtOps.INSTANCE)).orElse(UUID.randomUUID()));
         }
 
         if (nbt.contains("CustomName"))
         {
-            nbt.get("CustomName", TextCodecs.CODEC).ifPresent(entity::setCustomName);
+            nbt.read("CustomName", ComponentSerialization.CODEC).ifPresent(entity::setCustomName);
         }
 
-        entity.setCustomNameVisible(nbt.getBoolean("CustomNameVisible", false));
-        entity.setSilent(nbt.getBoolean("Silent", false));
-        entity.setNoGravity(nbt.getBoolean("NoGravity", false));
-        entity.setGlowing(nbt.getBoolean("Glowing", false));
-        entity.setFrozenTicks(nbt.getInt("TicksFrozen", 0));
+        entity.setCustomNameVisible(nbt.getBooleanOr("CustomNameVisible", false));
+        entity.setSilent(nbt.getBooleanOr("Silent", false));
+        entity.setNoGravity(nbt.getBooleanOr("NoGravity", false));
+        entity.setGlowingTag(nbt.getBooleanOr("Glowing", false));
+        entity.setTicksFrozen(nbt.getIntOr("TicksFrozen", 0));
         if (nbt.contains("Tags")) {
-            entity.getCommandTags().clear();
-            NbtList nbtList4 = nbt.getListOrEmpty("Tags");
+            entity.getTags().clear();
+            ListTag nbtList4 = nbt.getListOrEmpty("Tags");
             int max = Math.min(nbtList4.size(), 1024);
 
             for(int i = 0; i < max; ++i) {
-                entity.getCommandTags().add(nbtList4.getString(i, ""));
+                entity.getTags().add(nbtList4.getStringOr(i, ""));
             }
         }
 
@@ -424,28 +419,28 @@ public class EntityUtils
         }
         else
         {
-            NbtView view = NbtView.getReader(nbt, entity.getRegistryManager());
+            NbtView view = NbtView.getReader(nbt, entity.registryAccess());
             ((IMixinEntity) entity).litematica_readCustomData(view.getReader());
         }
     }
 
     @Deprecated
-    private static void readLeashableEntityCustomData(Entity entity, NbtCompound nbt)
+    private static void readLeashableEntityCustomData(Entity entity, CompoundTag nbt)
     {
-        MinecraftClient mc = MinecraftClient.getInstance();
-        if (mc.world == null) return;
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.level == null) return;
         assert entity instanceof Leashable;
         Leashable leashable = (Leashable) entity;
-        NbtView view = NbtView.getReader(nbt, mc.world.getRegistryManager());
+        NbtView view = NbtView.getReader(nbt, mc.level.registryAccess());
         ((IMixinEntity) entity).litematica_readCustomData(view.getReader());
-        if (leashable.getLeashData() != null && leashable.getLeashData().unresolvedLeashData != null)
+        if (leashable.getLeashData() != null && leashable.getLeashData().delayedLeashInfo != null)
         {
-            leashable.getLeashData().unresolvedLeashData
+            leashable.getLeashData().delayedLeashInfo
                     .ifLeft(uuid ->
                             // We MUST use client-side world here.
-                            leashable.attachLeash(((IMixinWorld) mc.world).litematica_getEntityLookup().get(uuid), false))
+                            leashable.setLeashedTo(((IMixinWorld) mc.level).litematica_getEntityLookup().get(uuid), false))
                     .ifRight(pos ->
-                            leashable.attachLeash(LeashKnotEntity.getOrCreate(mc.world, pos), false));
+                            leashable.setLeashedTo(LeashFenceKnotEntity.getOrCreateKnot(mc.level, pos), false));
         }
     }
 
@@ -455,16 +450,16 @@ public class EntityUtils
     @ApiStatus.Experimental
     public static boolean setFakedSneakingState(boolean sneaking)
     {
-        MinecraftClient mc = MinecraftClient.getInstance();
-        PlayerEntity player = mc.player;
+        Minecraft mc = Minecraft.getInstance();
+        Player player = mc.player;
 
-        if (player != null && player.isSneaking() != sneaking)
+        if (player != null && player.isShiftKeyDown() != sneaking)
         {
             //CPacketEntityAction.Action action = sneaking ? CPacketEntityAction.Action.START_SNEAKING : CPacketEntityAction.Action.STOP_SNEAKING;
             //player.connection.sendPacket(new CPacketEntityAction(player, action));
             //player.movementInput.sneak = sneaking;
 
-            player.setSneaking(sneaking);
+            player.setShiftKeyDown(sneaking);
 
             return true;
         }
@@ -479,13 +474,13 @@ public class EntityUtils
      */
     @ApiStatus.Experimental
     @Nullable
-    public static Hand getUsedHandForItem(LivingEntity entity, ItemStack stack, boolean lenient)
+    public static InteractionHand getUsedHandForItem(LivingEntity entity, ItemStack stack, boolean lenient)
     {
-        Hand hand = null;
+        InteractionHand hand = null;
         //Hand tmpHand = ItemWrap.isEmpty(getMainHandItem(entity)) ? EnumHand.OFF_HAND : EnumHand.MAIN_HAND;
         //ItemStack handStack = getHeldItem(entity, tmpHand);
-        Hand tmpHand = entity.getMainHandStack().isEmpty() ? Hand.OFF_HAND : Hand.MAIN_HAND;
-        ItemStack handStack = entity.getStackInHand(tmpHand);
+        InteractionHand tmpHand = entity.getMainHandItem().isEmpty() ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND;
+        ItemStack handStack = entity.getItemInHand(tmpHand);
 
 
         if ((lenient && fi.dy.masa.malilib.util.InventoryUtils.areStacksEqualIgnoreDurability(handStack, stack)) ||
@@ -497,22 +492,22 @@ public class EntityUtils
         return hand;
     }
 
-    public static NbtList updatePassengersToRelativeRegionPos(NbtList passengers, BlockPos relPos)
+    public static ListTag updatePassengersToRelativeRegionPos(ListTag passengers, BlockPos relPos)
     {
-        NbtList newList = new NbtList();
+        ListTag newList = new ListTag();
 
         for (int i = 0; i < passengers.size(); i++)
         {
-            NbtCompound entry = passengers.getCompoundOrEmpty(i);
+            CompoundTag entry = passengers.getCompoundOrEmpty(i);
 
             if (!entry.isEmpty())
             {
                 if (entry.contains(NbtKeys.POS))
                 {
-                    Vec3d pos = entry.get(NbtKeys.POS, Vec3d.CODEC).orElse(Vec3d.ZERO);
-                    Vec3d adjPos = new Vec3d(pos.getX() - relPos.getX(), pos.getY() - relPos.getY(), pos.getZ() - relPos.getZ());
+                    Vec3 pos = entry.read(NbtKeys.POS, Vec3.CODEC).orElse(Vec3.ZERO);
+                    Vec3 adjPos = new Vec3(pos.x() - relPos.getX(), pos.y() - relPos.getY(), pos.z() - relPos.getZ());
 
-                    entry.put(NbtKeys.POS, Vec3d.CODEC, adjPos);
+                    entry.store(NbtKeys.POS, Vec3.CODEC, adjPos);
                     newList.add(entry);
                 }
                 else

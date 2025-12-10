@@ -3,19 +3,19 @@ package fi.dy.masa.litematica.util;
 import java.util.Iterator;
 import java.util.Optional;
 import javax.annotation.Nullable;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.ChestBlock;
-import net.minecraft.block.enums.ChestType;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.registry.tag.TagKey;
-import net.minecraft.state.StateManager;
-import net.minecraft.state.property.Property;
-import net.minecraft.util.BlockMirror;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Direction;
+import net.minecraft.core.Direction;
+import net.minecraft.core.Holder;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.ChestBlock;
+import net.minecraft.world.level.block.Mirror;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.ChestType;
+import net.minecraft.world.level.block.state.properties.Property;
 import com.google.common.base.Splitter;
 import fi.dy.masa.litematica.schematic.conversion.SchematicConversionMaps;
 
@@ -24,27 +24,27 @@ public class BlockUtils
     private static final Splitter COMMA_SPLITTER = Splitter.on(',');
     private static final Splitter EQUAL_SPLITTER = Splitter.on('=').limit(2);
 
-    public static BlockState fixMirrorDoubleChest(BlockState state, BlockMirror mirror, ChestType type)
+    public static BlockState fixMirrorDoubleChest(BlockState state, Mirror mirror, ChestType type)
     {
-        Direction facing = state.get(ChestBlock.FACING);
+        Direction facing = state.getValue(ChestBlock.FACING);
         Direction.Axis axis = facing.getAxis();
 
-        if (mirror == BlockMirror.FRONT_BACK) // x
+        if (mirror == Mirror.FRONT_BACK) // x
         {
-            state = state.with(ChestBlock.CHEST_TYPE, type.getOpposite());
+            state = state.setValue(ChestBlock.TYPE, type.getOpposite());
 
             if (axis == Direction.Axis.X)
             {
-                state = state.with(ChestBlock.FACING, facing.getOpposite());
+                state = state.setValue(ChestBlock.FACING, facing.getOpposite());
             }
         }
-        else if (mirror == BlockMirror.LEFT_RIGHT) // z
+        else if (mirror == Mirror.LEFT_RIGHT) // z
         {
-            state = state.with(ChestBlock.CHEST_TYPE, type.getOpposite());
+            state = state.setValue(ChestBlock.TYPE, type.getOpposite());
 
             if (axis == Direction.Axis.Z)
             {
-                state = state.with(ChestBlock.FACING, facing.getOpposite());
+                state = state.setValue(ChestBlock.FACING, facing.getOpposite());
             }
         }
 
@@ -67,19 +67,19 @@ public class BlockUtils
 	        blockName = SchematicConversionMaps.updateBlockName(blockName, minecraftDataVersion);
             Identifier id = Identifier.tryParse(blockName);
 
-            if (id != null && Registries.BLOCK.containsId(id))
+            if (id != null && BuiltInRegistries.BLOCK.containsKey(id))
             {
-                Optional<RegistryEntry.Reference<Block>> opt = Registries.BLOCK.getEntry(id);
+                Optional<Holder.Reference<Block>> opt = BuiltInRegistries.BLOCK.get(id);
                 Block block;
 
                 if (opt.isPresent())
                 {
                     block = opt.get().value();
-                    BlockState state = block.getDefaultState();
+                    BlockState state = block.defaultBlockState();
 
                     if (index != -1 && str.length() > (index + 4) && str.charAt(str.length() - 1) == ']')
                     {
-                        StateManager<Block, BlockState> stateManager = block.getStateManager();
+                        StateDefinition<Block, BlockState> stateManager = block.getStateDefinition();
                         String propStr = str.substring(index + 1, str.length() - 1);
 
                         for (String propAndVal : COMMA_SPLITTER.split(propStr))
@@ -122,19 +122,19 @@ public class BlockUtils
     @SuppressWarnings("unchecked")
     public static <T extends Comparable<T>> BlockState getBlockStateWithProperty(BlockState state, Property<T> prop, Comparable<?> value)
     {
-        return state.with(prop, (T) value);
+        return state.setValue(prop, (T) value);
     }
 
     @Nullable
     public static <T extends Comparable<T>> T getPropertyValueByName(Property<T> prop, String valStr)
     {
-        return prop.parse(valStr).orElse(null);
+        return prop.getValue(valStr).orElse(null);
     }
 
     public static boolean blocksHaveSameProperties(BlockState state1, BlockState state2)
     {
-        StateManager<Block, BlockState> stateManager1 = state1.getBlock().getStateManager();
-        StateManager<Block, BlockState> stateManager2 = state2.getBlock().getStateManager();
+        StateDefinition<Block, BlockState> stateManager1 = state1.getBlock().getStateDefinition();
+        StateDefinition<Block, BlockState> stateManager2 = state2.getBlock().getStateDefinition();
         return stateManager1.getProperties().equals(stateManager2.getProperties());
     }
 
@@ -147,9 +147,9 @@ public class BlockUtils
         {
             Identifier id = Identifier.tryParse(blockName);
 
-            if (id != null && Registries.BLOCK.containsId(id))
+            if (id != null && BuiltInRegistries.BLOCK.containsKey(id))
             {
-                Block block = Registries.BLOCK.get(id);
+                Block block = BuiltInRegistries.BLOCK.getValue(id);
 
                 return Optional.of(block);
             }
@@ -173,7 +173,7 @@ public class BlockUtils
 
 				if (id != null)
 				{
-					TagKey<Block> blockTag = TagKey.of(RegistryKeys.BLOCK, id);
+					TagKey<Block> blockTag = TagKey.create(Registries.BLOCK, id);
 					return Optional.of(blockTag);
 				}
             }

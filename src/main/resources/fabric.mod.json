@@ -33,11 +33,17 @@
 	],
     "accessWidener": "litematica.accesswidener",
 
-    "depends": {
-        "minecraft": ">=1.21.11-beta.3 <1.21.12",
-        "malilib": ">0.26.90 <0.27.0-"
-    },
-    "breaks": {
-        "malilib": "<0.26.99-"
-    }
+	"depends": {
+		"minecraft": "1.21.11",
+		"malilib": ">=0.27.0- <0.28.0-"
+	},
+	"suggests": {
+		"sodium": ">=0.8.0-",
+		"iris": ">=1.10.0-"
+	},
+	"breaks": {
+		"malilib": "<0.27.0-",
+		"sodium": "<0.8.0-",
+		"iris": "<1.10.0-"
+	}
 }

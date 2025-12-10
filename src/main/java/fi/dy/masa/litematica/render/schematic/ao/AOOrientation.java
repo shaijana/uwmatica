@@ -1,6 +1,6 @@
 package fi.dy.masa.litematica.render.schematic.ao;
 
-import net.minecraft.util.math.Direction;
+import net.minecraft.core.Direction;
 
 public enum AOOrientation
 {
@@ -21,6 +21,6 @@ public enum AOOrientation
 
 	AOOrientation(final Direction face, final boolean flip)
 	{
-		this.shape = face.getIndex() + (flip ? Direction.values().length : 0);
+		this.shape = face.get3DDataValue() + (flip ? Direction.values().length : 0);
 	}
 }
