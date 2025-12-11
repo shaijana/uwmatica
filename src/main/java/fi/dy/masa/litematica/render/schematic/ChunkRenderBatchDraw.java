@@ -26,6 +26,7 @@ public record ChunkRenderBatchDraw(
 		boolean renderTranslucent,
         int maxIndicesRequired,
 		@Nullable GpuBufferSlice dynamicTransform,
+		@Nullable GpuBufferSlice[] dynamicTransforms,       // fixme?
 		GpuBufferSlice[] chunkSections)
 {
     public void draw(ChunkSectionLayerGroup group, GpuSampler sampler, ProfilerFiller profiler)
@@ -90,7 +91,7 @@ public record ChunkRenderBatchDraw(
 
 					pass.bindTexture("Sampler0", this.atlasTexture(), sampler);
 					pass.drawMultipleIndexed(list, gpuBuffer, indexType, List.of("ChunkSection"), this.chunkSections());
-//					pass.drawMultipleIndexed(list, gpuBuffer, indexType, List.of("DynamicTransforms"), this.chunkSections());
+//					pass.drawMultipleIndexed(list, gpuBuffer, indexType, List.of("DynamicTransforms"), this.dynamicTransforms());
 				}
 			}
 		}

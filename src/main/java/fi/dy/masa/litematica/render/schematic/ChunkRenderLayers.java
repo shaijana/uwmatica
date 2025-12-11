@@ -4,14 +4,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-
-import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
-import net.minecraft.client.renderer.rendertype.RenderType;
-import net.minecraft.client.renderer.rendertype.RenderTypes;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.mojang.blaze3d.pipeline.RenderPipeline;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
+import net.minecraft.client.renderer.rendertype.RenderType;
+import net.minecraft.client.renderer.rendertype.RenderTypes;
+
 import fi.dy.masa.malilib.render.MaLiLibPipelines;
 
 public record ChunkRenderLayers()
@@ -40,16 +39,16 @@ public record ChunkRenderLayers()
         HashMap<ChunkSectionLayer, Pair<RenderPipeline, RenderPipeline>> map = new HashMap<>();
 
         // Maps new "BlockRenderLayers" to MasaPipelines.  getLeft = regular; getRight = renderColliding
-//        map.put(ChunkSectionLayer.SOLID,         Pair.of(MaLiLibPipelines.SOLID_TERRAIN_MASA,       MaLiLibPipelines.SOLID_TERRAIN_MASA_OFFSET));
-//        map.put(ChunkSectionLayer.CUTOUT,        Pair.of(MaLiLibPipelines.CUTOUT_TERRAIN_MASA,      MaLiLibPipelines.CUTOUT_TERRAIN_MASA_OFFSET));
-//        map.put(ChunkSectionLayer.TRANSLUCENT,   Pair.of(MaLiLibPipelines.TRANSLUCENT_MASA,         MaLiLibPipelines.TRANSLUCENT_MASA_OFFSET));
-//        map.put(ChunkSectionLayer.TRIPWIRE,      Pair.of(MaLiLibPipelines.TRIPWIRE_TERRAIN_MASA,    MaLiLibPipelines.TRIPWIRE_TERRAIN_MASA_OFFSET));
+        map.put(ChunkSectionLayer.SOLID,         Pair.of(MaLiLibPipelines.SOLID_TERRAIN_MASA,       MaLiLibPipelines.SOLID_TERRAIN_MASA_OFFSET));
+        map.put(ChunkSectionLayer.CUTOUT,        Pair.of(MaLiLibPipelines.CUTOUT_TERRAIN_MASA,      MaLiLibPipelines.CUTOUT_TERRAIN_MASA_OFFSET));
+        map.put(ChunkSectionLayer.TRANSLUCENT,   Pair.of(MaLiLibPipelines.TRANSLUCENT_MASA,         MaLiLibPipelines.TRANSLUCENT_MASA_OFFSET));
+        map.put(ChunkSectionLayer.TRIPWIRE,      Pair.of(MaLiLibPipelines.TRIPWIRE_TERRAIN_MASA,    MaLiLibPipelines.TRIPWIRE_TERRAIN_MASA_OFFSET));
 
-        // todo -- Doesn't really "work" with shaders, but at least you can see colorless blocks; unless `renderColliding` is enabled.
-        map.put(ChunkSectionLayer.SOLID,         Pair.of(RenderPipelines.SOLID_TERRAIN,            MaLiLibPipelines.SOLID_TERRAIN_MASA_OFFSET));
-        map.put(ChunkSectionLayer.CUTOUT,        Pair.of(RenderPipelines.CUTOUT_TERRAIN,           MaLiLibPipelines.CUTOUT_TERRAIN_MASA_OFFSET));
-        map.put(ChunkSectionLayer.TRANSLUCENT,   Pair.of(RenderPipelines.TRANSLUCENT_TERRAIN,      MaLiLibPipelines.TRANSLUCENT_MASA_OFFSET));
-        map.put(ChunkSectionLayer.TRIPWIRE,      Pair.of(RenderPipelines.TRIPWIRE_TERRAIN,         MaLiLibPipelines.TRIPWIRE_TERRAIN_MASA_OFFSET));
+//         todo -- Doesn't really "work" with shaders, but at least you can see colorless blocks; unless `renderColliding` is enabled.
+//        map.put(ChunkSectionLayer.SOLID,         Pair.of(RenderPipelines.SOLID_TERRAIN,            MaLiLibPipelines.SOLID_TERRAIN_MASA_OFFSET));
+//        map.put(ChunkSectionLayer.CUTOUT,        Pair.of(RenderPipelines.CUTOUT_TERRAIN,           MaLiLibPipelines.CUTOUT_TERRAIN_MASA_OFFSET));
+//        map.put(ChunkSectionLayer.TRANSLUCENT,   Pair.of(RenderPipelines.TRANSLUCENT_TERRAIN,      MaLiLibPipelines.TRANSLUCENT_MASA_OFFSET));
+//        map.put(ChunkSectionLayer.TRIPWIRE,      Pair.of(RenderPipelines.TRIPWIRE_TERRAIN,         MaLiLibPipelines.TRIPWIRE_TERRAIN_MASA_OFFSET));
 
         return map;
     }

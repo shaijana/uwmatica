@@ -741,10 +741,10 @@ public class WorldRendererSchematic
 																 chunkValues.toArray(new DynamicUniforms.ChunkSectionInfo[0])
                                                          );
 
-//            GpuBufferSlice[] sectionSlices = RenderSystem.getDynamicUniforms()
-//                                                         .writeTransforms(
-//                                                                 transformValues.toArray(new DynamicUniforms.Transform[0])
-//                                                         );
+//            GpuBufferSlice[] transformSlices = RenderSystem.getDynamicUniforms()
+//                                                           .writeTransforms(
+//                                                                   transformValues.toArray(new DynamicUniforms.Transform[0])
+//                                                           );
 
             this.batchDraw = new ChunkRenderBatchDraw(blockAtlas,
                                                       renderMap,
@@ -752,6 +752,7 @@ public class WorldRendererSchematic
                                                       renderAsTranslucent,
                                                       indexCount,
                                                       transformSlice,
+                                                      null,
                                                       sectionSlices);
             this.shouldDraw = true;
         }
