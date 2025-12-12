@@ -623,20 +623,20 @@ public class WorldRendererSchematic
         int indexCount = 0;
         int count = 0;
 
-//        boolean renderAsTranslucent = Configs.Visuals.RENDER_BLOCKS_AS_TRANSLUCENT.getBooleanValue();
-	    boolean renderAsTranslucent = false;
+        boolean renderAsTranslucent = Configs.Visuals.RENDER_BLOCKS_AS_TRANSLUCENT.getBooleanValue();
+//	    boolean renderAsTranslucent = false;
         boolean renderCollidingBlocks = Configs.Visuals.RENDER_COLLIDING_SCHEMATIC_BLOCKS.getBooleanValue();
 	    GpuTextureView blockAtlas = this.mc.getTextureManager().getTexture(TextureAtlas.LOCATION_BLOCKS).getTextureView();
-		int atlasWidth = blockAtlas.getWidth(0);
-	    int atlasHeight = blockAtlas.getHeight(0);
+//		int atlasWidth = blockAtlas.getWidth(0);
+//	    int atlasHeight = blockAtlas.getHeight(0);
         Vector4f colorMod = new Vector4f(1.0F, 1.0F, 1.0F, 1.0F);
 	    Vector3f modelOffset = new Vector3f(0f, 0f, 0f);
 	    Matrix4f texMatrix = new Matrix4f();
 
-//        if (renderAsTranslucent)
-//        {
-//            colorMod = new Vector4f(1.0F, 1.0F, 1.0F, (float) Configs.Visuals.GHOST_BLOCK_ALPHA.getDoubleValue());
-//        }
+        if (renderAsTranslucent)
+        {
+            colorMod = new Vector4f(1.0F, 1.0F, 1.0F, (float) Configs.Visuals.GHOST_BLOCK_ALPHA.getDoubleValue());
+        }
 
         boolean startedDrawing = false;
 
@@ -681,38 +681,40 @@ public class WorldRendererSchematic
                         indexType = buffers.getIndexType();
                     }
 
-                    int pos = chunkValues.size();
+                    int pos = transformValues.size();
 
-//                    transformValues.add(new DynamicUniforms.Transform(
-//                            matrix4fc,
-//                            colorMod,
-//                            new Vector3f((float) (chunkOrigin.getX() - cameraX), (float) (chunkOrigin.getY() - cameraY), (float) (chunkOrigin.getZ() - cameraZ)),
-//                            texMatrix
-//                    ));
+                    transformValues.add(new DynamicUniforms.Transform(
+                            matrix4fc,
+                            colorMod,
+                            new Vector3f((float) (chunkOrigin.getX() - cameraX), (float) (chunkOrigin.getY() - cameraY), (float) (chunkOrigin.getZ() - cameraZ)),
+                            texMatrix
+                    ));
 
-	                chunkValues.add(new DynamicUniforms.ChunkSectionInfo(
-			                matrix4fc,
-			                chunkOrigin.getX(), chunkOrigin.getY(), chunkOrigin.getZ(),
-			                1.0f, atlasWidth, atlasHeight
-	                ));
+                    renderMap.get(layer)
+                             .add(new RenderPass.Draw<>(
+                                     0, buffers.getVertexBuffer(),
+                                     vertexBuffer, indexType,
+                                     0, buffers.getIndexCount(),
+                                     (slices, uploader) ->
+                                             uploader.upload("DynamicTransforms", ((GpuBufferSlice[]) slices)[pos])
+                             ));
 
-	                renderMap.get(layer)
-                            .add(new RenderPass.Draw<>(
-                                    0, buffers.getVertexBuffer(),
-                                    vertexBuffer, indexType,
-                                    0, buffers.getIndexCount(),
-                                    (slices, uploader) ->
-                                            uploader.upload("ChunkSection", ((GpuBufferSlice[]) slices)[pos])
-                            ));
+//                    int pos = chunkValues.size();
 
-//                    renderMap.get(layer)
-//                             .add(new RenderPass.Draw<>(
-//                                     0, buffers.getVertexBuffer(),
-//                                     vertexBuffer, indexType,
-//                                     0, buffers.getIndexCount(),
-//                                     (slices, uploader) ->
-//                                             uploader.upload("DynamicTransforms", ((GpuBufferSlice[]) slices)[pos])
-//                             ));
+//	                chunkValues.add(new DynamicUniforms.ChunkSectionInfo(
+//			                matrix4fc,
+//			                chunkOrigin.getX(), chunkOrigin.getY(), chunkOrigin.getZ(),
+//			                1.0f, atlasWidth, atlasHeight
+//	                ));
+//
+//	                renderMap.get(layer)
+//                            .add(new RenderPass.Draw<>(
+//                                    0, buffers.getVertexBuffer(),
+//                                    vertexBuffer, indexType,
+//                                    0, buffers.getIndexCount(),
+//                                    (slices, uploader) ->
+//                                            uploader.upload("ChunkSection", ((GpuBufferSlice[]) slices)[pos])
+//                            ));
 
                     startedDrawing = true;
                     ++count;
@@ -725,35 +727,35 @@ public class WorldRendererSchematic
         {
 	        GpuBufferSlice transformSlice = null;
 
-			if (renderAsTranslucent)
-			{
-				transformSlice = RenderSystem.getDynamicUniforms()
-				                                            .writeTransform(
-						                                            matrix4fc,
-						                                            colorMod,
-						                                            modelOffset,
-						                                            texMatrix
-				                                            );
-			}
+//			if (renderAsTranslucent)
+//			{
+//				transformSlice = RenderSystem.getDynamicUniforms()
+//				                                            .writeTransform(
+//						                                            matrix4fc,
+//						                                            colorMod,
+//						                                            modelOffset,
+//						                                            texMatrix
+//				                                            );
+//			}
 
-            GpuBufferSlice[] sectionSlices = RenderSystem.getDynamicUniforms()
-                                                         .writeChunkSections(
-																 chunkValues.toArray(new DynamicUniforms.ChunkSectionInfo[0])
-                                                         );
+//            GpuBufferSlice[] sectionSlices = RenderSystem.getDynamicUniforms()
+//                                                         .writeChunkSections(
+//																 chunkValues.toArray(new DynamicUniforms.ChunkSectionInfo[0])
+//                                                         );
 
-//            GpuBufferSlice[] transformSlices = RenderSystem.getDynamicUniforms()
-//                                                           .writeTransforms(
-//                                                                   transformValues.toArray(new DynamicUniforms.Transform[0])
-//                                                           );
+            GpuBufferSlice[] transformSlices = RenderSystem.getDynamicUniforms()
+                                                           .writeTransforms(
+                                                                   transformValues.toArray(new DynamicUniforms.Transform[0])
+                                                           );
 
             this.batchDraw = new ChunkRenderBatchDraw(blockAtlas,
                                                       renderMap,
                                                       renderCollidingBlocks,
                                                       renderAsTranslucent,
                                                       indexCount,
-                                                      transformSlice,
-                                                      null,
-                                                      sectionSlices);
+													  null,
+                                                      transformSlices,
+                                                      null);
             this.shouldDraw = true;
         }
 

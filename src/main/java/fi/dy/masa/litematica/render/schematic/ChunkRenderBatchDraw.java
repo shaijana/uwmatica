@@ -26,8 +26,8 @@ public record ChunkRenderBatchDraw(
 		boolean renderTranslucent,
         int maxIndicesRequired,
 		@Nullable GpuBufferSlice dynamicTransform,
-		@Nullable GpuBufferSlice[] dynamicTransforms,       // fixme?
-		GpuBufferSlice[] chunkSections)
+		GpuBufferSlice[] dynamicTransforms,       // fixme? :)
+		@Nullable GpuBufferSlice[] chunkSections)
 {
     public void draw(ChunkSectionLayerGroup group, GpuSampler sampler, ProfilerFiller profiler)
     {
@@ -52,10 +52,10 @@ public record ChunkRenderBatchDraw(
 		{
 			RenderSystem.bindDefaultUniforms(pass);
 
-			if (renderTranslucent() && this.dynamicTransform() != null)
-			{
-				pass.setUniform("DynamicTransforms", this.dynamicTransform());
-			}
+//			if (renderTranslucent() && this.dynamicTransform() != null)
+//			{
+//				pass.setUniform("DynamicTransforms", this.dynamicTransform());
+//			}
 
 			pass.bindTexture("Sampler2",
 			                 mc.gameRenderer.lightTexture().getTextureView(),
@@ -90,8 +90,8 @@ public record ChunkRenderBatchDraw(
 					}
 
 					pass.bindTexture("Sampler0", this.atlasTexture(), sampler);
-					pass.drawMultipleIndexed(list, gpuBuffer, indexType, List.of("ChunkSection"), this.chunkSections());
-//					pass.drawMultipleIndexed(list, gpuBuffer, indexType, List.of("DynamicTransforms"), this.dynamicTransforms());
+//					pass.drawMultipleIndexed(list, gpuBuffer, indexType, List.of("ChunkSection"), this.chunkSections());
+					pass.drawMultipleIndexed(list, gpuBuffer, indexType, List.of("DynamicTransforms"), this.dynamicTransforms());
 				}
 			}
 		}

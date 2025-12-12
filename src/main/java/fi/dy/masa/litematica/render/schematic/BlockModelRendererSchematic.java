@@ -259,7 +259,7 @@ public class BlockModelRendererSchematic
     {
 //		if (!cull) return true;
         return (DataManager.getRenderLayerRange().isPositionAtRenderEdgeOnSide(posIn, side) ||
-		        // Configs.Visuals.RENDER_BLOCKS_AS_TRANSLUCENT.getBooleanValue() &&
+		        Configs.Visuals.RENDER_BLOCKS_AS_TRANSLUCENT.getBooleanValue() &&
 		        (Configs.Visuals.RENDER_TRANSLUCENT_INNER_SIDES.getBooleanValue())) ||
 		        Block.shouldRenderFace(stateIn, worldIn.getBlockState(mutable), side);
 	}

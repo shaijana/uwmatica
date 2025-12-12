@@ -27,7 +27,6 @@ public record ChunkRenderLayers()
         // I know that there is the BlockRenderLayer.values(), but this is to customize this.
         list.add(ChunkSectionLayer.SOLID);
         list.add(ChunkSectionLayer.CUTOUT);
-//        list.add(BlockRenderLayer.CUTOUT_MIPPED);
         list.add(ChunkSectionLayer.TRANSLUCENT);
         list.add(ChunkSectionLayer.TRIPWIRE);
 
@@ -38,17 +37,10 @@ public record ChunkRenderLayers()
     {
         HashMap<ChunkSectionLayer, Pair<RenderPipeline, RenderPipeline>> map = new HashMap<>();
 
-        // Maps new "BlockRenderLayers" to MasaPipelines.  getLeft = regular; getRight = renderColliding
-        map.put(ChunkSectionLayer.SOLID,         Pair.of(MaLiLibPipelines.SOLID_TERRAIN_MASA,       MaLiLibPipelines.SOLID_TERRAIN_MASA_OFFSET));
-        map.put(ChunkSectionLayer.CUTOUT,        Pair.of(MaLiLibPipelines.CUTOUT_TERRAIN_MASA,      MaLiLibPipelines.CUTOUT_TERRAIN_MASA_OFFSET));
-        map.put(ChunkSectionLayer.TRANSLUCENT,   Pair.of(MaLiLibPipelines.TRANSLUCENT_MASA,         MaLiLibPipelines.TRANSLUCENT_MASA_OFFSET));
-        map.put(ChunkSectionLayer.TRIPWIRE,      Pair.of(MaLiLibPipelines.TRIPWIRE_TERRAIN_MASA,    MaLiLibPipelines.TRIPWIRE_TERRAIN_MASA_OFFSET));
-
-//         todo -- Doesn't really "work" with shaders, but at least you can see colorless blocks; unless `renderColliding` is enabled.
-//        map.put(ChunkSectionLayer.SOLID,         Pair.of(RenderPipelines.SOLID_TERRAIN,            MaLiLibPipelines.SOLID_TERRAIN_MASA_OFFSET));
-//        map.put(ChunkSectionLayer.CUTOUT,        Pair.of(RenderPipelines.CUTOUT_TERRAIN,           MaLiLibPipelines.CUTOUT_TERRAIN_MASA_OFFSET));
-//        map.put(ChunkSectionLayer.TRANSLUCENT,   Pair.of(RenderPipelines.TRANSLUCENT_TERRAIN,      MaLiLibPipelines.TRANSLUCENT_MASA_OFFSET));
-//        map.put(ChunkSectionLayer.TRIPWIRE,      Pair.of(RenderPipelines.TRIPWIRE_TERRAIN,         MaLiLibPipelines.TRIPWIRE_TERRAIN_MASA_OFFSET));
+        map.put(ChunkSectionLayer.SOLID,         Pair.of(MaLiLibPipelines.LEGACY_SOLID_TERRAIN_MASA,       MaLiLibPipelines.LEGACY_SOLID_TERRAIN_MASA_OFFSET));
+        map.put(ChunkSectionLayer.CUTOUT,        Pair.of(MaLiLibPipelines.LEGACY_CUTOUT_TERRAIN_MASA,      MaLiLibPipelines.LEGACY_CUTOUT_TERRAIN_MASA_OFFSET));
+        map.put(ChunkSectionLayer.TRANSLUCENT,   Pair.of(MaLiLibPipelines.LEGACY_TRANSLUCENT_MASA,         MaLiLibPipelines.LEGACY_TRANSLUCENT_MASA_OFFSET));
+        map.put(ChunkSectionLayer.TRIPWIRE,      Pair.of(MaLiLibPipelines.LEGACY_TRIPWIRE_TERRAIN_MASA,    MaLiLibPipelines.LEGACY_TRIPWIRE_TERRAIN_MASA_OFFSET));
 
         return map;
     }
@@ -67,25 +59,6 @@ public record ChunkRenderLayers()
 
         // Water Rendering
         list.add(RenderTypes.waterMask());
-
-        // Experimental
-        /*
-        list.add(RenderLayer.getSecondaryBlockOutline());
-        list.add(RenderLayer.getArmorEntityGlint());
-        list.add(RenderLayer.getEntityGlint());
-        list.add(TexturedRenderLayers.getArmorTrims(true));
-        list.add(TexturedRenderLayers.getArmorTrims(false));
-        list.add(TexturedRenderLayers.getBeds());
-        list.add(TexturedRenderLayers.getBannerPatterns());
-        list.add(TexturedRenderLayers.getChest());
-        list.add(TexturedRenderLayers.getEntitySolid());
-        list.add(TexturedRenderLayers.getEntityCutout());
-        list.add(TexturedRenderLayers.getHangingSign());
-        list.add(TexturedRenderLayers.getItemEntityTranslucentCull());
-        list.add(TexturedRenderLayers.getShieldPatterns());
-        list.add(TexturedRenderLayers.getShulkerBoxes());
-        list.add(TexturedRenderLayers.getSign());
-         */
 
         return list;
     }
