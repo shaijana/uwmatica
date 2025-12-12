@@ -35,14 +35,14 @@
 
 	"depends": {
 		"minecraft": "1.21.11",
-		"malilib": ">=0.27.0- <0.28.0-"
+		"malilib": ">=0.27.1- <0.28.0-"
 	},
 	"suggests": {
 		"sodium": ">=0.8.0-",
 		"iris": ">=1.10.2-"
 	},
 	"breaks": {
-		"malilib": "<0.27.0-",
+		"malilib": "<0.27.1-",
 		"sodium": "<0.8.0-",
 		"iris": "<1.10.2-"
 	}
