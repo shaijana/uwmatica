@@ -213,4 +213,16 @@ public abstract class MixinWorldRenderer
         this.litematica$prepareProfiler();
         LitematicaRenderer.getInstance().piecewiseRenderBlockEntities(matrices, worldRenderState, this.submitNodeStorage, this.profiler);
     }
+
+	@Inject(method = "endFrame", at = @At("TAIL"))
+	private void litematica_onEndFrame(CallbackInfo ci)
+	{
+		LitematicaRenderer.getInstance().onEndFrame();
+	}
+
+	@Inject(method = "close", at = @At("TAIL"))
+	private void litematica_onClose(CallbackInfo ci)
+	{
+		LitematicaRenderer.getInstance().onClose();
+	}
 }

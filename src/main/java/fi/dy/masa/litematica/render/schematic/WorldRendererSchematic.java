@@ -70,6 +70,7 @@ import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.Vec3;
 
 import fi.dy.masa.malilib.render.RenderUtils;
+import fi.dy.masa.malilib.render.uniform.ChunkFixUniform;
 import fi.dy.masa.malilib.util.EntityUtils;
 import fi.dy.masa.malilib.util.LayerRange;
 import fi.dy.masa.litematica.Litematica;
@@ -99,6 +100,7 @@ public class WorldRendererSchematic
     private WorldSchematic world;
     private ChunkRenderDispatcherSchematic chunkRendererDispatcher;
     private FogRenderer fogRenderer;
+    private ChunkFixUniform chunkFixUniform;
     private ChunkRenderBatchDraw batchDraw;
     private GpuBufferSlice vanillaFogBuffer;
     private ProfilerFiller profiler;
@@ -144,6 +146,7 @@ public class WorldRendererSchematic
         this.profiler = null;
         this.vanillaFogBuffer = null;
         this.batchDraw = null;
+        this.chunkFixUniform = new ChunkFixUniform();
         this.shouldDraw = false;
 	    this.lastCameraChunkUpdateX = Double.MIN_VALUE;
 	    this.lastCameraChunkUpdateY = Double.MIN_VALUE;
@@ -270,6 +273,11 @@ public class WorldRendererSchematic
         return this.fogRenderer.getBuffer(FogRenderer.FogMode.NONE);
     }
 
+    public ChunkFixUniform getChunkFixUniform()
+    {
+        return this.chunkFixUniform;
+    }
+
     public void setWorldAndLoadRenderers(@Nullable WorldSchematic worldSchematic)
     {
         // Litematica.LOGGER.error("setWorldAndLoadRenderers()");
@@ -306,6 +314,7 @@ public class WorldRendererSchematic
 
             this.clearBlockBatchDraw();
 			this.clearWorldRenderStates();
+            this.clearChunkFixUniform();
 
             if (this.vanillaFogBuffer != null)
             {
@@ -607,7 +616,7 @@ public class WorldRendererSchematic
         profiler.push("layer_multi_phase");
 
 	    ArrayList<DynamicUniforms.Transform> transformValues = new ArrayList<>();
-        ArrayList<DynamicUniforms.ChunkSectionInfo> chunkValues = new ArrayList<>();
+//        ArrayList<DynamicUniforms.ChunkSectionInfo> chunkValues = new ArrayList<>();
         EnumMap<ChunkSectionLayer, List<RenderPass.Draw<GpuBufferSlice[]>>> renderMap = new EnumMap<>(ChunkSectionLayer.class);
 
         for (ChunkSectionLayer layer : ChunkSectionLayer.values())
@@ -627,10 +636,10 @@ public class WorldRendererSchematic
 //	    boolean renderAsTranslucent = false;
         boolean renderCollidingBlocks = Configs.Visuals.RENDER_COLLIDING_SCHEMATIC_BLOCKS.getBooleanValue();
 	    GpuTextureView blockAtlas = this.mc.getTextureManager().getTexture(TextureAtlas.LOCATION_BLOCKS).getTextureView();
-//		int atlasWidth = blockAtlas.getWidth(0);        // todo 2048
-//	    int atlasHeight = blockAtlas.getHeight(0);      // todo 2048
+		int atlasWidth = blockAtlas.getWidth(0);        // todo 2048
+	    int atlasHeight = blockAtlas.getHeight(0);      // todo 2048
         Vector4f colorMod = new Vector4f(1.0F, 1.0F, 1.0F, 1.0F);
-	    Vector3f modelOffset = new Vector3f(0f, 0f, 0f);
+//	    Vector3f modelOffset = new Vector3f(0f, 0f, 0f);
 	    Matrix4f texMatrix = new Matrix4f();
 
         if (renderAsTranslucent)
@@ -725,7 +734,7 @@ public class WorldRendererSchematic
 
         if (startedDrawing)
         {
-	        GpuBufferSlice transformSlice = null;
+//	        GpuBufferSlice transformSlice = null;
 
 //			if (renderAsTranslucent)
 //			{
@@ -743,19 +752,17 @@ public class WorldRendererSchematic
 //																 chunkValues.toArray(new DynamicUniforms.ChunkSectionInfo[0])
 //                                                         );
 
+            this.chunkFixUniform.fillBuffer(atlasWidth, atlasHeight, 1.0f);
             GpuBufferSlice[] transformSlices = RenderSystem.getDynamicUniforms()
                                                            .writeTransforms(
                                                                    transformValues.toArray(new DynamicUniforms.Transform[0])
                                                            );
 
-            this.batchDraw = new ChunkRenderBatchDraw(blockAtlas,
-                                                      renderMap,
-                                                      renderCollidingBlocks,
-                                                      renderAsTranslucent,
-                                                      indexCount,
-													  null,
+            this.batchDraw = new ChunkRenderBatchDraw(blockAtlas, renderMap,
+                                                      renderCollidingBlocks, renderAsTranslucent, indexCount,
                                                       transformSlices,
-                                                      null);
+                                                      this.chunkFixUniform.getCurrentBuffer()
+            );
             this.shouldDraw = true;
         }
 
@@ -788,6 +795,20 @@ public class WorldRendererSchematic
         }
 
         this.shouldDraw = false;
+    }
+
+    public void clearChunkFixUniform()
+    {
+        if (this.chunkFixUniform != null)
+        {
+            try
+            {
+                this.chunkFixUniform.close();
+            }
+            catch (Exception ignored) { }
+        }
+
+        this.chunkFixUniform = new ChunkFixUniform();
     }
 
 	public void clearWorldRenderStates()

@@ -1,6 +1,12 @@
 package fi.dy.masa.litematica.render;
 
 import javax.annotation.Nullable;
+import org.joml.Matrix4f;
+import org.joml.Matrix4fc;
+
+import com.mojang.blaze3d.buffers.GpuBufferSlice;
+import com.mojang.blaze3d.textures.GpuSampler;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -12,14 +18,9 @@ import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.state.LevelRenderState;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.phys.Vec3;
-import org.joml.Matrix4f;
-import org.joml.Matrix4fc;
 
-import com.mojang.blaze3d.buffers.GpuBufferSlice;
-import com.mojang.blaze3d.textures.GpuSampler;
-import com.mojang.blaze3d.vertex.PoseStack;
+import fi.dy.masa.malilib.compat.iris.IrisCompat;
 import fi.dy.masa.litematica.Reference;
-import fi.dy.masa.litematica.compat.iris.IrisCompat;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.config.Hotkeys;
 import fi.dy.masa.litematica.render.schematic.WorldRendererSchematic;
@@ -104,6 +105,16 @@ public class LitematicaRenderer
         {
             this.finishTimeNano = System.nanoTime() + 1000000000L / fpsTarget / 2L;
         }
+    }
+
+    public void onEndFrame()
+    {
+        this.getWorldRenderer().getChunkFixUniform().endFrame();
+    }
+
+    public void onClose()
+    {
+        this.getWorldRenderer().clearChunkFixUniform();
     }
 
     public void renderSchematicOverlays(Camera camera, ProfilerFiller profiler)

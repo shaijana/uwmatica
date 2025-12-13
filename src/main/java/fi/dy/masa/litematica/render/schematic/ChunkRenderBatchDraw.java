@@ -4,7 +4,6 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.OptionalDouble;
 import java.util.OptionalInt;
-import javax.annotation.Nullable;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayerGroup;
@@ -25,9 +24,8 @@ public record ChunkRenderBatchDraw(
         boolean renderCollidingBlocks,
 		boolean renderTranslucent,
         int maxIndicesRequired,
-		@Nullable GpuBufferSlice dynamicTransform,
-		GpuBufferSlice[] dynamicTransforms,       // fixme? :)
-		@Nullable GpuBufferSlice[] chunkSections)
+		GpuBufferSlice[] dynamicTransforms,
+		GpuBuffer chunkFixUBO)
 {
     public void draw(ChunkSectionLayerGroup group, GpuSampler sampler, ProfilerFiller profiler)
     {
@@ -57,6 +55,7 @@ public record ChunkRenderBatchDraw(
 //				pass.setUniform("DynamicTransforms", this.dynamicTransform());
 //			}
 
+			pass.setUniform("ChunkFix", this.chunkFixUBO);
 			pass.bindTexture("Sampler2",
 			                 mc.gameRenderer.lightTexture().getTextureView(),
 			                 RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR)
