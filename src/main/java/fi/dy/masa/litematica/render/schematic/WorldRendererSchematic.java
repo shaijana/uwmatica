@@ -627,8 +627,8 @@ public class WorldRendererSchematic
 //	    boolean renderAsTranslucent = false;
         boolean renderCollidingBlocks = Configs.Visuals.RENDER_COLLIDING_SCHEMATIC_BLOCKS.getBooleanValue();
 	    GpuTextureView blockAtlas = this.mc.getTextureManager().getTexture(TextureAtlas.LOCATION_BLOCKS).getTextureView();
-//		int atlasWidth = blockAtlas.getWidth(0);
-//	    int atlasHeight = blockAtlas.getHeight(0);
+//		int atlasWidth = blockAtlas.getWidth(0);        // todo 2048
+//	    int atlasHeight = blockAtlas.getHeight(0);      // todo 2048
         Vector4f colorMod = new Vector4f(1.0F, 1.0F, 1.0F, 1.0F);
 	    Vector3f modelOffset = new Vector3f(0f, 0f, 0f);
 	    Matrix4f texMatrix = new Matrix4f();
