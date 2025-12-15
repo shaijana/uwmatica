@@ -253,7 +253,7 @@ public class WidgetSchematicBrowser extends WidgetFileBrowserBase
 
                 RenderUtils.drawOutlinedBox(ctx, x + 4, y, iconSize, iconSize, 0xA0000000, COLOR_HORIZONTAL_BAR);
 
-                drawContext.blit(RenderPipelines.GUI_TEXTURED, pair.getLeft(), x + 4, y, 0.0F, 0.0F, iconSize, iconSize, iconSize, iconSize);
+                ctx.blit(RenderPipelines.GUI_TEXTURED, pair.getLeft(), x + 4, y, 0.0F, 0.0F, iconSize, iconSize, iconSize, iconSize);
             }
         }
     }
