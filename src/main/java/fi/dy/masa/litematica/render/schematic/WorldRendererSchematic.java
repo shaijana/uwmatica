@@ -635,6 +635,7 @@ public class WorldRendererSchematic
         boolean renderAsTranslucent = Configs.Visuals.RENDER_BLOCKS_AS_TRANSLUCENT.getBooleanValue();
 //	    boolean renderAsTranslucent = false;
         boolean renderCollidingBlocks = Configs.Visuals.RENDER_COLLIDING_SCHEMATIC_BLOCKS.getBooleanValue();
+        @SuppressWarnings("deprecation")
 	    GpuTextureView blockAtlas = this.mc.getTextureManager().getTexture(TextureAtlas.LOCATION_BLOCKS).getTextureView();
 		int atlasWidth = blockAtlas.getWidth(0);        // todo 2048
 	    int atlasHeight = blockAtlas.getHeight(0);      // todo 2048
