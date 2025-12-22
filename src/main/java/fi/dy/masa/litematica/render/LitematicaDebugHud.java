@@ -3,12 +3,12 @@ package fi.dy.masa.litematica.render;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.hud.debug.DebugHudEntry;
-import net.minecraft.client.gui.hud.debug.DebugHudLines;
-import net.minecraft.util.Identifier;
-import net.minecraft.world.World;
-import net.minecraft.world.chunk.WorldChunk;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.debug.DebugScreenDisplayer;
+import net.minecraft.client.gui.components.debug.DebugScreenEntry;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.chunk.LevelChunk;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 import fi.dy.masa.malilib.gui.GuiBase;
@@ -23,10 +23,10 @@ import fi.dy.masa.litematica.util.EntityUtils;
 import fi.dy.masa.litematica.world.SchematicWorldHandler;
 import fi.dy.masa.litematica.world.WorldSchematic;
 
-public class LitematicaDebugHud implements DebugHudEntry
+public class LitematicaDebugHud implements DebugScreenEntry
 {
-	public static final Identifier LITEMATICA_DEBUG = Identifier.of(Reference.MOD_ID, "litematica_renderer");
-	public static final Identifier SECTION_ID = Identifier.ofVanilla(Reference.MOD_ID);
+	public static final Identifier LITEMATICA_DEBUG = Identifier.fromNamespaceAndPath(Reference.MOD_ID, "litematica_renderer");
+	public static final Identifier SECTION_ID = Identifier.withDefaultNamespace(Reference.MOD_ID);
 	public static final LitematicaDebugHud INSTANCE = new LitematicaDebugHud();
 	private boolean left;
 
@@ -42,8 +42,8 @@ public class LitematicaDebugHud implements DebugHudEntry
 
 	public void checkConfig()
 	{
-		MinecraftClient mc = MinecraftClient.getInstance();
-		if (mc.debugHudEntryList == null) return;
+		Minecraft mc = Minecraft.getInstance();
+		if (mc.debugEntries == null) return;
 
 		if (this.getMode() == DebugHudMode.VANILLA)
 		{
@@ -87,7 +87,7 @@ public class LitematicaDebugHud implements DebugHudEntry
 //	}
 
 	@Override
-	public void render(@Nonnull DebugHudLines lines, @Nullable World world, @Nullable WorldChunk clientChunk, @Nullable WorldChunk chunk)
+	public void display(@Nonnull DebugScreenDisplayer lines, @Nullable Level world, @Nullable LevelChunk clientChunk, @Nullable LevelChunk chunk)
 	{
 		if (this.getMode() == DebugHudMode.NONE)
 		{
@@ -98,12 +98,12 @@ public class LitematicaDebugHud implements DebugHudEntry
 
 		if (!list.isEmpty())
 		{
-			lines.addLinesToSection(SECTION_ID, list);
+			lines.addToGroup(SECTION_ID, list);
 		}
 	}
 
 	@Override
-	public boolean canShow(boolean reducedDebugInfo)
+	public boolean isAllowed(boolean reducedDebugInfo)
 	{
 		return true;
 	}
@@ -126,7 +126,7 @@ public class LitematicaDebugHud implements DebugHudEntry
 			String str = String.format("E: %02d TE: %02d C: %02d, CT: %02d, CV: %02d",
 			                           worldSchematic.getRegularEntityCount(),
 			                           worldSchematic.getChunkProvider().getTileEntityCount(),
-			                           worldSchematic.getChunkProvider().getLoadedChunkCount(),
+			                           worldSchematic.getChunkProvider().getLoadedChunksCount(),
 			                           DataManager.getSchematicPlacementManager().getTouchedChunksCount(),
 			                           DataManager.getSchematicPlacementManager().getLastVisibleChunksCount()
 			);

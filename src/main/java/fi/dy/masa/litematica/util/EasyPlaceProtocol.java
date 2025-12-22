@@ -1,12 +1,12 @@
 package fi.dy.masa.litematica.util;
 
 import javax.annotation.Nonnull;
-import net.minecraft.util.StringIdentifiable;
+import net.minecraft.util.StringRepresentable;
 import com.google.common.collect.ImmutableList;
 import fi.dy.masa.malilib.config.IConfigOptionListEntry;
 import fi.dy.masa.malilib.util.StringUtils;
 
-public enum EasyPlaceProtocol implements IConfigOptionListEntry, StringIdentifiable
+public enum EasyPlaceProtocol implements IConfigOptionListEntry, StringRepresentable
 {
     AUTO                ("auto",                  "litematica.gui.label.easy_place_protocol.auto"),
     V3                  ("v3",                    "litematica.gui.label.easy_place_protocol.v3"),
@@ -14,7 +14,7 @@ public enum EasyPlaceProtocol implements IConfigOptionListEntry, StringIdentifia
     SLAB_ONLY           ("slabs_only",            "litematica.gui.label.easy_place_protocol.slabs_only"),
     NONE                ("none",                  "litematica.gui.label.easy_place_protocol.none");
 
-    public static final StringIdentifiable.EnumCodec<EasyPlaceProtocol> CODEC = StringIdentifiable.createCodec(EasyPlaceProtocol::values);
+    public static final StringRepresentable.EnumCodec<EasyPlaceProtocol> CODEC = StringRepresentable.fromEnum(EasyPlaceProtocol::values);
     public static final ImmutableList<EasyPlaceProtocol> VALUES = ImmutableList.copyOf(values());
 
     private final String configString;
@@ -27,7 +27,7 @@ public enum EasyPlaceProtocol implements IConfigOptionListEntry, StringIdentifia
     }
 
     @Override
-    public @Nonnull String asString()
+    public @Nonnull String getSerializedName()
     {
         return this.configString;
     }

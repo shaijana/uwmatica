@@ -6,12 +6,12 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import fi.dy.masa.litematica.render.LitematicaDebugHud;
-import net.minecraft.client.gui.hud.debug.DebugHudProfile;
+import net.minecraft.client.gui.components.debug.DebugScreenEntryList;
 
-@Mixin(DebugHudProfile.class)
+@Mixin(DebugScreenEntryList.class)
 public abstract class MixinDebugHudProfile
 {
-	@Inject(method = "updateVisibleEntries", at = @At("TAIL"))
+	@Inject(method = "rebuildCurrentList", at = @At("TAIL"))
 	private void litematica_updateVisibleEntries(CallbackInfo ci)
 	{
 		LitematicaDebugHud.INSTANCE.checkConfig();

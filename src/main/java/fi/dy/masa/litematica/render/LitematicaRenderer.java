@@ -1,23 +1,26 @@
 package fi.dy.masa.litematica.render;
 
 import javax.annotation.Nullable;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.BlockRenderLayerGroup;
-import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.Frustum;
-import net.minecraft.client.render.RenderTickCounter;
-import net.minecraft.client.render.command.OrderedRenderCommandQueue;
-import net.minecraft.client.render.command.OrderedRenderCommandQueueImpl;
-import net.minecraft.client.render.state.WorldRenderState;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.profiler.Profiler;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
+import com.mojang.blaze3d.textures.GpuSampler;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.Camera;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.SubmitNodeStorage;
+import net.minecraft.client.renderer.block.BlockRenderDispatcher;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayerGroup;
+import net.minecraft.client.renderer.culling.Frustum;
+import net.minecraft.client.renderer.state.LevelRenderState;
+import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.phys.Vec3;
+
+import fi.dy.masa.malilib.compat.iris.IrisCompat;
 import fi.dy.masa.litematica.Reference;
-import fi.dy.masa.litematica.compat.iris.IrisCompat;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.config.Hotkeys;
 import fi.dy.masa.litematica.render.schematic.WorldRendererSchematic;
@@ -27,7 +30,7 @@ public class LitematicaRenderer
 {
     private static final LitematicaRenderer INSTANCE = new LitematicaRenderer();
 
-    private MinecraftClient mc;
+    private Minecraft mc;
     private WorldRendererSchematic worldRenderer;
     private Frustum frustum;
     private int frameCount;
@@ -53,7 +56,7 @@ public class LitematicaRenderer
     {
         if (this.worldRenderer == null)
         {
-            this.mc = MinecraftClient.getInstance();
+            this.mc = Minecraft.getInstance();
             this.worldRenderer = new WorldRendererSchematic(this.mc);
         }
 
@@ -71,7 +74,7 @@ public class LitematicaRenderer
         return this.getWorldRenderer();
     }
 
-    public void loadRenderers(@Nullable Profiler profiler)
+    public void loadRenderers(@Nullable ProfilerFiller profiler)
     {
         this.getWorldRenderer().loadRenderers(profiler);
     }
@@ -80,6 +83,14 @@ public class LitematicaRenderer
     {
         this.getWorldRenderer().setWorldAndLoadRenderers(worldClient);
     }
+
+	public void onBlockModelRendererReload(BlockRenderDispatcher manager)
+	{
+		if (this.worldRenderer != null)
+		{
+			this.worldRenderer.reloadBlockRenderManager(manager);
+		}
+	}
 
     private void calculateFinishTime()
     {
@@ -96,7 +107,17 @@ public class LitematicaRenderer
         }
     }
 
-    public void renderSchematicOverlays(Camera camera, Profiler profiler)
+    public void onEndFrame()
+    {
+        this.getWorldRenderer().getChunkFixUniform().endFrame();
+    }
+
+    public void onClose()
+    {
+        this.getWorldRenderer().clearChunkFixUniform();
+    }
+
+    public void renderSchematicOverlays(Camera camera, ProfilerFiller profiler)
     {
         boolean invert = Hotkeys.INVERT_OVERLAY_RENDER_STATE.getKeybind().isKeybindHeld();
 
@@ -122,7 +143,7 @@ public class LitematicaRenderer
 		this.getWorldRenderer().updateCameraState(camera, tickProgress);
 	}
 
-    public void piecewisePrepareAndUpdate(Frustum frustum, Profiler profiler)
+    public void piecewisePrepareAndUpdate(Frustum frustum, ProfilerFiller profiler)
     {
 		// Configs.Generic.BETTER_RENDER_ORDER.getBooleanValue() &&
         boolean render = Configs.Visuals.ENABLE_RENDERING.getBooleanValue() &&
@@ -147,10 +168,10 @@ public class LitematicaRenderer
                 profiler.push(Reference.MOD_ID+"_culling");
                 this.calculateFinishTime();
 
-                profiler.swap(Reference.MOD_ID+"_terrain_setup");
+                profiler.popPush(Reference.MOD_ID+"_terrain_setup");
                 worldRenderer.setupTerrain(this.getCamera(), frustum, this.frameCount++, this.mc.player.isSpectator(), profiler);
 
-                profiler.swap(Reference.MOD_ID+"_update_chunks");
+                profiler.popPush(Reference.MOD_ID+"_update_chunks");
                 worldRenderer.updateChunks(this.finishTimeNano, profiler);
 
                 profiler.pop();
@@ -160,7 +181,7 @@ public class LitematicaRenderer
         }
     }
 
-    public void scheduleTranslucentSorting(Vec3d camera, Profiler profiler)
+    public void scheduleTranslucentSorting(Vec3 camera, ProfilerFiller profiler)
     {
         if (this.renderPiecewiseBlocks)
         {
@@ -170,7 +191,7 @@ public class LitematicaRenderer
         }
     }
 
-    public void capturePreMainValues(Camera camera, GpuBufferSlice fogBuffer, Profiler profiler)
+    public void capturePreMainValues(Camera camera, GpuBufferSlice fogBuffer, ProfilerFiller profiler)
     {
         if (this.renderPiecewiseBlocks)
         {
@@ -180,7 +201,7 @@ public class LitematicaRenderer
         }
     }
 
-    public void piecewisePrepareBlockLayers(Matrix4fc matrix4fc, double cameraX, double cameraY, double cameraZ, Profiler profiler)
+    public void piecewisePrepareBlockLayers(Matrix4fc matrix4fc, double cameraX, double cameraY, double cameraZ, ProfilerFiller profiler)
     {
         if (this.renderPiecewiseBlocks)
         {
@@ -190,16 +211,16 @@ public class LitematicaRenderer
         }
     }
 
-    public void piecewiseDrawBlockLayerGroup(BlockRenderLayerGroup group)
+    public void piecewiseDrawBlockLayerGroup(ChunkSectionLayerGroup group, @Nullable GpuSampler sampler)
     {
         if (this.renderPiecewiseBlocks)
         {
             // Use Saved Profiler later
-            this.getWorldRenderer().drawBlockLayerGroup(group);
+            this.getWorldRenderer().drawBlockLayerGroup(group, sampler);
         }
     }
 
-    public void piecewisePrepareEntities(Camera camera, Frustum frustum, WorldRenderState renderStates, RenderTickCounter tickCounter, Profiler profiler)
+    public void piecewisePrepareEntities(Camera camera, Frustum frustum, LevelRenderState renderStates, DeltaTracker tickCounter, ProfilerFiller profiler)
     {
         if (this.renderPiecewiseEntities)
         {
@@ -209,7 +230,7 @@ public class LitematicaRenderer
         }
     }
 
-	public void piecewiseRenderEntities(MatrixStack matrices, WorldRenderState renderStates, OrderedRenderCommandQueue queue, Profiler profiler)
+	public void piecewiseRenderEntities(PoseStack matrices, LevelRenderState renderStates, SubmitNodeCollector queue, ProfilerFiller profiler)
 	{
 		if (this.renderPiecewiseEntities)
 		{
@@ -219,18 +240,18 @@ public class LitematicaRenderer
 		}
 	}
 
-	public void piecewisePrepareBlockEntities(Camera camera, Frustum frustum, WorldRenderState renderStates, float tickProgress, Profiler profiler)
+	public void piecewisePrepareBlockEntities(Camera camera, Frustum frustum, LevelRenderState renderStates, float tickProgress, ProfilerFiller profiler)
     {
         if (this.renderPiecewiseTileEntities)
         {
             profiler.push(Reference.MOD_ID+"_prepare_block_entities");
-			MatrixStack matrices = new MatrixStack();
+			PoseStack matrices = new PoseStack();
             this.getWorldRenderer().prepareBlockEntities(this.getCamera(), this.frustum, renderStates, matrices, tickProgress, profiler);
             profiler.pop();
         }
     }
 
-	public void piecewiseRenderBlockEntities(MatrixStack matrices, WorldRenderState renderStates, OrderedRenderCommandQueueImpl queue, Profiler profiler)
+	public void piecewiseRenderBlockEntities(PoseStack matrices, LevelRenderState renderStates, SubmitNodeStorage queue, ProfilerFiller profiler)
 	{
 		if (this.renderPiecewiseTileEntities)
 		{
@@ -240,7 +261,7 @@ public class LitematicaRenderer
 		}
 	}
 
-	public void piecewiseRenderOverlay(Matrix4f posMatrix, Matrix4f projMatrix, Profiler profiler)
+	public void piecewiseRenderOverlay(Matrix4f posMatrix, Matrix4f projMatrix, ProfilerFiller profiler)
     {
         if (this.renderPiecewiseSchematic)
         {
@@ -256,7 +277,7 @@ public class LitematicaRenderer
 
     private Camera getCamera()
     {
-        return this.mc.gameRenderer.getCamera();
+        return this.mc.gameRenderer.getMainCamera();
     }
 
     private void cleanup()

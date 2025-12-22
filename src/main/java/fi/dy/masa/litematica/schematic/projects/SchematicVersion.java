@@ -1,7 +1,7 @@
 package fi.dy.masa.litematica.schematic.projects;
 
 import javax.annotation.Nullable;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 

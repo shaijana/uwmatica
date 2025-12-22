@@ -1,7 +1,7 @@
 package fi.dy.masa.litematica.gui;
 
 import javax.annotation.Nullable;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.GuiConfirmAction;
 import fi.dy.masa.malilib.gui.GuiListBase;
@@ -248,7 +248,7 @@ public class GuiSchematicProjectManager extends GuiListBase<SchematicVersion, Wi
         @Override
         public boolean onActionConfirmed()
         {
-            DataManager.getSchematicProjectsManager().deleteLastSeenArea(MinecraftClient.getInstance());
+            DataManager.getSchematicProjectsManager().deleteLastSeenArea(Minecraft.getInstance());
             return true;
         }
 

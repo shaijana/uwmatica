@@ -9,21 +9,21 @@ import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.data.EntitiesDataStorage;
 import fi.dy.masa.litematica.util.SchematicWorldRefresher;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.network.packet.CustomPayload;
-import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
-import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket;
-import net.minecraft.network.packet.s2c.play.NbtQueryResponseS2CPacket;
-import net.minecraft.network.packet.s2c.play.UnloadChunkS2CPacket;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.network.protocol.game.ClientboundForgetLevelChunkPacket;
+import net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket;
+import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
+import net.minecraft.network.protocol.game.ClientboundTagQueryPacket;
 
-@Mixin(ClientPlayNetworkHandler.class)
+@Mixin(ClientPacketListener.class)
 public abstract class MixinClientPlayNetworkHandler
 {
-    @Inject(method = "onChunkData", at = @At("RETURN"))
-    private void litematica_onUpdateChunk(ChunkDataS2CPacket packet, CallbackInfo ci)
+    @Inject(method = "handleLevelChunkWithLight", at = @At("RETURN"))
+    private void litematica_onUpdateChunk(ClientboundLevelChunkWithLightPacket packet, CallbackInfo ci)
     {
-        int chunkX = packet.getChunkX();
-        int chunkZ = packet.getChunkZ();
+        int chunkX = packet.getX();
+        int chunkZ = packet.getZ();
         //Litematica.debugLog("MixinClientPlayNetworkHandler#litematica_onUpdateChunk({}, {})", chunkX, chunkZ);
 
         if (Configs.Visuals.ENABLE_RENDERING.getBooleanValue() &&
@@ -36,8 +36,8 @@ public abstract class MixinClientPlayNetworkHandler
         // TODO verifier updates?
     }
 
-    @Inject(method = "onUnloadChunk", at = @At("RETURN"))
-    private void litematica_onChunkUnload(UnloadChunkS2CPacket packet, CallbackInfo ci)
+    @Inject(method = "handleForgetLevelChunk", at = @At("RETURN"))
+    private void litematica_onChunkUnload(ClientboundForgetLevelChunkPacket packet, CallbackInfo ci)
     {
         if (Configs.Generic.LOAD_ENTIRE_SCHEMATICS.getBooleanValue() == false)
         {
@@ -46,9 +46,9 @@ public abstract class MixinClientPlayNetworkHandler
         }
     }
 
-    @Inject(method = "onGameMessage", cancellable = true, at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/client/network/message/MessageHandler;onGameMessage(Lnet/minecraft/text/Text;Z)V"))
-    private void litematica_onGameMessage(GameMessageS2CPacket packet, CallbackInfo ci)
+    @Inject(method = "handleSystemChat", cancellable = true, at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/client/multiplayer/chat/ChatListener;handleSystemMessage(Lnet/minecraft/network/chat/Component;Z)V"))
+    private void litematica_onGameMessage(ClientboundSystemChatPacket packet, CallbackInfo ci)
     {
         if (DataManager.onChatMessage(packet.content()))
         {
@@ -59,26 +59,26 @@ public abstract class MixinClientPlayNetworkHandler
     /**
      * They keep moving where the effective onCustomPayload handling is... keeping them both
      */
-    @Inject(method = "onCustomPayload", at = @At("HEAD"))
-    private void litematica_onCustomPayload(CustomPayload payload, CallbackInfo ci)
+    @Inject(method = "handleCustomPayload", at = @At("HEAD"))
+    private void litematica_onCustomPayload(CustomPacketPayload payload, CallbackInfo ci)
     {
-        if (payload.getId().id().equals(DataManager.CARPET_HELLO))
+        if (payload.type().id().equals(DataManager.CARPET_HELLO))
         {
             Litematica.debugLog("MixinClientPlayNetworkHandler#litematica_onCustomPayload(): received carpet hello packet");
             DataManager.setIsCarpetServer(true);
         }
     }
 
-    @Inject(method = "onNbtQueryResponse", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/DataQueryHandler;handleQueryResponse(ILnet/minecraft/nbt/NbtCompound;)Z"))
-    private void litematica_onQueryResponse(NbtQueryResponseS2CPacket packet, CallbackInfo ci)
+    @Inject(method = "handleTagQueryPacket", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/DebugQueryHandler;handleResponse(ILnet/minecraft/nbt/CompoundTag;)Z"))
+    private void litematica_onQueryResponse(ClientboundTagQueryPacket packet, CallbackInfo ci)
     {
         if (Configs.Generic.ENTITY_DATA_SYNC_BACKUP.getBooleanValue())
         {
-            EntitiesDataStorage.getInstance().handleVanillaQueryNbt(packet.getTransactionId(), packet.getNbt());
+            EntitiesDataStorage.getInstance().handleVanillaQueryNbt(packet.getTransactionId(), packet.getTag());
         }
     }
 
-    @Inject(method = "onCommandTree", at = @At("RETURN"))
+    @Inject(method = "handleCommands", at = @At("RETURN"))
     private void minihud_onCommandTree(CallbackInfo ci)
     {
         if (Configs.Generic.ENTITY_DATA_SYNC_BACKUP.getBooleanValue())
