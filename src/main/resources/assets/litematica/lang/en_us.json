@@ -652,7 +652,7 @@
     "litematica.gui.button.hover.schematic_projects.place_to_world_warning": "§6Warning: This will delete/overwrite the current blocks\n§6in the world within the area that was previously\n§6placed from a version, or saved as a version\n§6(basically the last seen \"effective area selection\")",
     "litematica.gui.button.hover.schematic_projects.save_new_version": "Saves a new schematic/version to the current project",
     "litematica.gui.button.import": "Import",
-    "litematica.gui.button.import.hover": "Click to import this file to a new Litematic file\n§dThis can be used to import any older litematic files",
+    "litematica.gui.button.import.hover": "Click to import the selected file to a new Litematic to save as\n§dThis can be used to import any older litematic files as well",
     "litematica.gui.button.load_schematic_to_memory": "Load Schematic",
     "litematica.gui.button.material_list": "Material List",
     "litematica.gui.button.material_list.clear_cache": "Clear cache",
