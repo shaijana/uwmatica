@@ -89,7 +89,7 @@ public class SchematicDowngradeConverter
 
     private static CompoundTag processEntityDropChances(Tag nbtElement)
     {
-        CompoundTag oldTags = (CompoundTag) nbtElement;
+        CompoundTag oldTags = nbtElement.asCompound().orElse(new CompoundTag());
         CompoundTag newTags = new CompoundTag();
         ListTag handDrops = new ListTag();
         ListTag armorDrops = new ListTag();
@@ -129,7 +129,7 @@ public class SchematicDowngradeConverter
 
     private static CompoundTag processEntityEquipment(Tag equipmentEntries, int minecraftDataVersion, @Nonnull RegistryAccess registryManager)
     {
-        CompoundTag oldTags = (CompoundTag) equipmentEntries;
+        CompoundTag oldTags = equipmentEntries.asCompound().orElse(new CompoundTag());
         CompoundTag newTags = new CompoundTag();
         ListTag newHandItems = new ListTag();
         ListTag newArmorItems = new ListTag();
@@ -174,7 +174,7 @@ public class SchematicDowngradeConverter
 
     private static Tag processEntityItem(Tag itemEntry, int minecraftDataVersion, @Nonnull RegistryAccess registryManager)
     {
-        CompoundTag oldItem = (CompoundTag) itemEntry;
+        CompoundTag oldItem = itemEntry.asCompound().orElse(new CompoundTag());;
         CompoundTag newItem = new CompoundTag();
 
         if (!oldItem.contains("id"))
@@ -259,7 +259,28 @@ public class SchematicDowngradeConverter
 
     private static Tag processAttributes(Tag attrib, int minecraftDataVersion, RegistryAccess registryManager)
     {
-        ListTag oldAttr = (ListTag) attrib;
+        ListTag oldAttr = attrib.asList().orElse(new ListTag());
+
+        if (oldAttr.isEmpty())
+        {
+            CompoundTag oldTag = attrib.asCompound().orElse(new CompoundTag());
+
+            if (oldTag.isEmpty()) return attrib;
+
+            for (String key : oldTag.keySet())
+            {
+                if (key.equals("modifiers"))
+                {
+                    return processAttributeModifiers(oldTag.getListOrEmpty(key), minecraftDataVersion, registryManager);
+                }
+            }
+        }
+
+        return processAttributeBase(oldAttr, minecraftDataVersion, registryManager);
+    }
+
+    private static Tag processAttributeBase(ListTag oldAttr, int minecraftDataVersion, RegistryAccess registryManager)
+    {
         ListTag newAttr = new ListTag();
 
         for (int i = 0; i < oldAttr.size(); i++)
@@ -267,33 +288,59 @@ public class SchematicDowngradeConverter
             CompoundTag attrEntry = oldAttr.getCompoundOrEmpty(i);
             CompoundTag newEntry = new CompoundTag();
 
-            newEntry.putString("Name", attributeRename(attrEntry.getStringOr("id", "")));
-            newEntry.putDouble("Base", attrEntry.getDoubleOr("base", 0D));
+            if (attrEntry.contains("type"))
+            {
+                newEntry.putString("Name", attributeRename(attrEntry.getStringOr("type", "")));
+                newEntry.putDouble("Base", attrEntry.getDoubleOr("amount", 0D));
+            }
+            else
+            {
+                newEntry.putString("Name", attributeRename(attrEntry.getStringOr("id", "")));
+                newEntry.putDouble("Base", attrEntry.getDoubleOr("base", 0D));
+            }
 
             ListTag listEntry = attrEntry.getListOrEmpty("modifiers");
-            ListTag newMods = new ListTag();
+            ListTag newMods = processAttributeModifiers(listEntry, minecraftDataVersion, registryManager);
 
-            for (int y = 0; y < listEntry.size(); y++)
-            {
-                CompoundTag modEntry = listEntry.getCompoundOrEmpty(y);
-                CompoundTag newMod = new CompoundTag();
-
-                newMod.putDouble("Amount", modEntry.getDoubleOr("amount", 0D));
-                newMod.putString("Name", modifierIdToName(modEntry.getStringOr("id", "")));
-                newMod.putInt("Operation", modifierOperationToInt(modEntry.getStringOr("operation", "")));
-                //newMod.putUuid("UUID", modEntry.contains("UUID") ? modEntry.getUuid("UUID") : UUID.randomUUID());
-                newMod.store("UUID", UUIDUtil.AUTHLIB_CODEC, modEntry.read("UUID", UUIDUtil.AUTHLIB_CODEC, registryManager.createSerializationContext(NbtOps.INSTANCE)).orElse(UUID.randomUUID()));
-                newMods.add(newMod);
-            }
             if (!newMods.isEmpty())
             {
                 newEntry.put("Modifiers", newMods);
             }
-
             newAttr.add(newEntry);
         }
 
         return newAttr;
+    }
+
+    private static ListTag processAttributeModifiers(ListTag modifiers, int minecraftDataVersion, RegistryAccess registryManager)
+    {
+        ListTag newMods = new ListTag();
+
+        if (modifiers.isEmpty()) return modifiers;
+
+        for (int y = 0; y < modifiers.size(); y++)
+        {
+            CompoundTag modEntry = modifiers.getCompoundOrEmpty(y);
+            CompoundTag newMod = new CompoundTag();
+
+            if (modEntry.contains("type"))
+            {
+                newMod.putString("Name", attributeRename(modEntry.getStringOr("type", "")));
+                newMod.putDouble("Base", modEntry.getDoubleOr("amount", 0D));
+            }
+            else
+            {
+                newMod.putDouble("Amount", modEntry.getDoubleOr("amount", 0D));
+                newMod.putString("Name", modifierIdToName(modEntry.getStringOr("id", "")));
+            }
+
+            newMod.putInt("Operation", modifierOperationToInt(modEntry.getStringOr("operation", "")));
+            //newMod.putUuid("UUID", modEntry.contains("UUID") ? modEntry.getUuid("UUID") : UUID.randomUUID());
+            newMod.store("UUID", UUIDUtil.AUTHLIB_CODEC, modEntry.read("UUID", UUIDUtil.AUTHLIB_CODEC, registryManager.createSerializationContext(NbtOps.INSTANCE)).orElse(UUID.randomUUID()));
+            newMods.add(newMod);
+        }
+
+        return newMods;
     }
 
     private static String attributeRename(String idIn)
@@ -509,7 +556,7 @@ public class SchematicDowngradeConverter
     // 1.21.5+ Only ?  Might not even be needed
     private static CompoundTag processRecipesUsedTag(Tag nbtIn)
     {
-        CompoundTag oldNbt = (CompoundTag) nbtIn;
+        CompoundTag oldNbt = nbtIn.asCompound().orElse(new CompoundTag());
         CompoundTag newNbt = new CompoundTag();
         Codec<Map<ResourceKey<Recipe<?>>, Integer>> CODEC = Codec.unboundedMap(Recipe.KEY_CODEC, Codec.INT);
         Reference2IntOpenHashMap<ResourceKey<Recipe<?>>> recipesUsed = new Reference2IntOpenHashMap<>();
@@ -789,7 +836,7 @@ public class SchematicDowngradeConverter
 
     private static void processCustomData(Tag oldNbt, CompoundTag outNbt)
     {
-        CompoundTag origData = (CompoundTag) oldNbt;
+        CompoundTag origData = oldNbt.asCompound().orElse(new CompoundTag());;
 
         for (String keyData : origData.keySet())
         {
@@ -799,7 +846,7 @@ public class SchematicDowngradeConverter
 
     private static void processLodestoneTracker(Tag oldEle, CompoundTag outNbt)
     {
-        CompoundTag oldNbt = (CompoundTag) oldEle;
+        CompoundTag oldNbt = oldEle.asCompound().orElse(new CompoundTag());;
 
         if (oldNbt.contains("tracked"))
         {
@@ -816,7 +863,7 @@ public class SchematicDowngradeConverter
 
     private static void processBucketEntityData(Tag oldTags, CompoundTag beNbt, int minecraftDataVersion, @Nonnull RegistryAccess registryManager)
     {
-        CompoundTag oldNbt = (CompoundTag) oldTags;
+        CompoundTag oldNbt = oldTags.asCompound().orElse(new CompoundTag());;
 
 //        NbtCompound newNbt = downgradeEntity_to_1_20_4(oldNbt, minecraftDataVersion, registryManager);
 //        beNbt.copyFrom(newNbt);
@@ -829,7 +876,7 @@ public class SchematicDowngradeConverter
 
     private static void processPotions(Tag oldPots, CompoundTag outNbt)
     {
-        CompoundTag oldNbt = (CompoundTag) oldPots;
+        CompoundTag oldNbt = oldPots.asCompound().orElse(new CompoundTag());;
 
         if (oldNbt.contains("potion"))
         {
@@ -847,7 +894,7 @@ public class SchematicDowngradeConverter
 
     private static Tag processMapDecorations(Tag oldDeco)
     {
-        CompoundTag oldTag = (CompoundTag) oldDeco;
+        CompoundTag oldTag = oldDeco.asCompound().orElse(new CompoundTag());;
         ListTag newTags = new ListTag();
 
         for (String key : oldTag.keySet())
@@ -916,7 +963,7 @@ public class SchematicDowngradeConverter
 
     private static Tag processLootTable(Tag oldLoot)
     {
-        CompoundTag oldTable = (CompoundTag) oldLoot;
+        CompoundTag oldTable = oldLoot.asCompound().orElse(new CompoundTag());;
         CompoundTag newTable = new CompoundTag();
 
         if (oldTable.contains("loot_table"))
@@ -944,7 +991,7 @@ public class SchematicDowngradeConverter
 
     private static int processDyedColor(Tag oldDye)
     {
-        CompoundTag oldColor = (CompoundTag) oldDye;
+        CompoundTag oldColor = oldDye.asCompound().orElse(new CompoundTag());;
 
         if (oldColor.contains("rgb"))
         {
@@ -982,7 +1029,7 @@ public class SchematicDowngradeConverter
 
     private static ListTag processChargedProjectile(Tag oldProjectiles, int minecraftDataVersion, @Nonnull RegistryAccess registryManager)
     {
-        ListTag oldNbt = (ListTag) oldProjectiles;
+        ListTag oldNbt = oldProjectiles.asList().orElse(new ListTag());
         ListTag newNbt = new ListTag();
 
         for (int i = 0; i < oldNbt.size(); i++)
@@ -1010,7 +1057,7 @@ public class SchematicDowngradeConverter
 
     private static boolean processUnbreakable(Tag oldNbt)
     {
-        CompoundTag oldUnbr = (CompoundTag) oldNbt;
+        CompoundTag oldUnbr = oldNbt.asCompound().orElse(new CompoundTag());;
 
         if (oldUnbr.contains("show_in_tooltip"))
         {
@@ -1032,7 +1079,7 @@ public class SchematicDowngradeConverter
 
     private static Tag processDecoratedPot(Tag oldPot, int minecraftDataVersion, @Nonnull RegistryAccess registryManager)
     {
-        CompoundTag oldNbt = (CompoundTag) oldPot;
+        CompoundTag oldNbt = oldPot.asCompound().orElse(new CompoundTag());;
         CompoundTag newNbt = new CompoundTag();
 
         for (String key : oldNbt.keySet())
@@ -1057,7 +1104,7 @@ public class SchematicDowngradeConverter
 
     private static Tag processEnchantments(Tag oldNbt, boolean fullId, boolean shortInt)
     {
-        CompoundTag oldEnchants = (CompoundTag) oldNbt;
+        CompoundTag oldEnchants = oldNbt.asCompound().orElse(new CompoundTag());;
         CompoundTag oldLevels = oldEnchants.getCompoundOrEmpty("levels");
         ListTag newEnchants = new ListTag();
         boolean showTooltip = false;
@@ -1132,7 +1179,7 @@ public class SchematicDowngradeConverter
 
     private static Tag processBlockState(Tag bsTag)
     {
-        CompoundTag oldBS = (CompoundTag) bsTag;
+        CompoundTag oldBS = bsTag.asCompound().orElse(new CompoundTag());;
         CompoundTag newBS = new CompoundTag();
 
         for (String key : oldBS.keySet())
@@ -1145,7 +1192,7 @@ public class SchematicDowngradeConverter
 
     private static Tag processFireworks(Tag rocket)
     {
-        CompoundTag oldRocket = (CompoundTag) rocket;
+        CompoundTag oldRocket = rocket.asCompound().orElse(new CompoundTag());;
         CompoundTag newRocket = new CompoundTag();
 
         if (oldRocket.contains("flight_duration"))
@@ -1170,7 +1217,7 @@ public class SchematicDowngradeConverter
 
     private static Tag processFireworkExplosion(Tag explosion)
     {
-        CompoundTag oldExplosion = (CompoundTag) explosion;
+        CompoundTag oldExplosion = explosion.asCompound().orElse(new CompoundTag());;
         CompoundTag newExplosion = new CompoundTag();
 
         if (oldExplosion.contains("shape"))
@@ -1212,7 +1259,7 @@ public class SchematicDowngradeConverter
 
     private static Tag processRecordItem(Tag itemIn, int minecraftDataVersion, @Nonnull RegistryAccess registryManager)
     {
-        CompoundTag oldRecord = (CompoundTag) itemIn;
+        CompoundTag oldRecord = itemIn.asCompound().orElse(new CompoundTag());;
         CompoundTag recordOut = new CompoundTag();
 
         recordOut.putString("id", oldRecord.getStringOr("id", ""));
@@ -1228,7 +1275,7 @@ public class SchematicDowngradeConverter
 
     private static Tag processBookTag(Tag bookNbt, int minecraftDataVersion, RegistryAccess registryManager)
     {
-        CompoundTag oldBook = (CompoundTag) bookNbt;
+        CompoundTag oldBook = bookNbt.asCompound().orElse(new CompoundTag());;
         CompoundTag newBook = new CompoundTag();
 
         newBook.putString("id", oldBook.getStringOr("id", ""));
@@ -1360,8 +1407,8 @@ public class SchematicDowngradeConverter
 
     private static Tag processBannerPatterns(Tag oldPatterns)
     {
+        ListTag oldList = oldPatterns.asList().orElse(new ListTag());
         ListTag newList = new ListTag();
-        ListTag oldList = (ListTag) oldPatterns;
 
         for (int i = 0; i < oldList.size(); i++)
         {
@@ -1434,7 +1481,7 @@ public class SchematicDowngradeConverter
 
     private static Tag processSkullProfile(Tag oldProfile, CompoundTag dispNbt, int minecraftDataVersion, @Nonnull RegistryAccess registry)
     {
-        CompoundTag profile = (CompoundTag) oldProfile;
+        CompoundTag profile = oldProfile.asCompound().orElse(new CompoundTag());
         CompoundTag newProfile = new CompoundTag();
         String customName1 = dispNbt.getStringOr("Name", "");         // Can be either an Item Name or Custom Name Data Component
         String customName2 = dispNbt.getStringOr("CustomName", "");   // Only if invoked without it being stored in a Chest
@@ -1545,7 +1592,7 @@ public class SchematicDowngradeConverter
 
     private static Tag processBeesTag(Tag beesTag, int minecraftDataVersion, @Nonnull RegistryAccess registryManager)
     {
-        ListTag oldBees = (ListTag) beesTag;
+        ListTag oldBees = beesTag.asList().orElse(new ListTag());
         ListTag newBees = new ListTag();
 
         for (int i = 0; i < oldBees.size(); i++)
