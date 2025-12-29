@@ -652,6 +652,7 @@
     "litematica.gui.button.hover.schematic_projects.place_to_world_warning": "§6Предупреждение: Это приведёт к замене блоков\n§6в пределах региона, сохранённой как версия проекта\n§6или размещённой из неё.",
     "litematica.gui.button.hover.schematic_projects.save_new_version": "Сохранить новую версию проекта (в виде схемы)",
     "litematica.gui.button.import": "Импортировать",
+    "litematica.gui.button.import.hover": "Click to import the selected file to save as a new Litematic\n§dThis can be used to import any supported\n§dschematic formats; including old litematic files",
     "litematica.gui.button.load_schematic_to_memory": "Загрузить схему",
     "litematica.gui.button.material_list": "Список материалов",
     "litematica.gui.button.material_list.clear_cache": "Очистить кэш",

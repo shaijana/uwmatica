@@ -652,6 +652,7 @@
     "litematica.gui.button.hover.schematic_projects.place_to_world_warning": "§6警告: 以前にバージョンから設置された，\n§6またはバージョンとして保存された\n§6領域内にある現在のブロックが削除/上書きされる",
     "litematica.gui.button.hover.schematic_projects.save_new_version": "現在のプロジェクトに新しい図面/バージョンを保存",
     "litematica.gui.button.import": "インポート",
+    "litematica.gui.button.import.hover": "Click to import the selected file to save as a new Litematic\n§dThis can be used to import any supported\n§dschematic formats; including old litematic files",
     "litematica.gui.button.load_schematic_to_memory": "図面を読み込み",
     "litematica.gui.button.material_list": "建材リスト",
     "litematica.gui.button.material_list.clear_cache": "キャッシュ消去",

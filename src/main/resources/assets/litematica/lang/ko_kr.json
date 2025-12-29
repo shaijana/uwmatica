@@ -652,6 +652,7 @@
     "litematica.gui.button.hover.schematic_projects.place_to_world_warning": "§6경고: 이렇게 하면 이전에 버전에서 배치되었거나\n§6버전으로 저장된 영역 내의 월드에 있는 현재 블록들이\n§6삭제되거나 덮어쓰여집니다.\n§6(기본적으로 마지막으로 본 \"효과적인 영역 선택\")",
     "litematica.gui.button.hover.schematic_projects.save_new_version": "현재 프로젝트에 새 스키매틱/버전을 저장합니다.",
     "litematica.gui.button.import": "가져오기",
+    "litematica.gui.button.import.hover": "Click to import the selected file to save as a new Litematic\n§dThis can be used to import any supported\n§dschematic formats; including old litematic files",
     "litematica.gui.button.load_schematic_to_memory": "스키매틱 불러오기",
     "litematica.gui.button.material_list": "재료 목록",
     "litematica.gui.button.material_list.clear_cache": "캐시 지우기",

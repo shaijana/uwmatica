@@ -652,6 +652,7 @@
     "litematica.gui.button.hover.schematic_projects.place_to_world_warning": "§6警告：這將在一個之前放置或者儲存的\n§6一個版本的區域裡，刪除/覆蓋目前世界裡的方塊\n§6（基本上是最後一次看到的「有效區域選擇」）",
     "litematica.gui.button.hover.schematic_projects.save_new_version": "將新的原理圖/版本儲存到目前項目",
     "litematica.gui.button.import": "匯入",
+    "litematica.gui.button.import.hover": "Click to import the selected file to save as a new Litematic\n§dThis can be used to import any supported\n§dschematic formats; including old litematic files",
     "litematica.gui.button.load_schematic_to_memory": "載入原理圖",
     "litematica.gui.button.material_list": "材料清單",
     "litematica.gui.button.material_list.clear_cache": "清除快取",

@@ -652,6 +652,7 @@
     "litematica.gui.button.hover.schematic_projects.place_to_world_warning": "§6Varning: Detta kommer att radera/skriva över de nuvarande blocken\ni världen inom det område som tidigare var\n§6placerat från en version, eller sparades som en version\n§6(i princip det senast sedda \"effektiva områdesvalet\")",
     "litematica.gui.button.hover.schematic_projects.save_new_version": "Sparar en ny schema/version till det aktuella projektet",
     "litematica.gui.button.import": "Importera",
+    "litematica.gui.button.import.hover": "Click to import the selected file to save as a new Litematic\n§dThis can be used to import any supported\n§dschematic formats; including old litematic files",
     "litematica.gui.button.load_schematic_to_memory": "Ladda Schematisk",
     "litematica.gui.button.material_list": "Lista över material",
     "litematica.gui.button.material_list.clear_cache": "Rensa cache",
