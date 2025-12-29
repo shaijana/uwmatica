@@ -652,7 +652,6 @@
     "litematica.gui.button.hover.schematic_projects.place_to_world_warning": "§6Attenzione: Questo eliminerà/sovrascriverà i blocchi attuali\n§6nel mondo all'interno dell'area che è stata precedentemente\n§6posizionata da una versione, o salvata come versione\n§6(praticamente l'ultima \"selezione dell'area effettiva\" vista)",
     "litematica.gui.button.hover.schematic_projects.save_new_version": "Salva una nuova schematica/versione al progetto corrente",
     "litematica.gui.button.import": "Importa",
-    "litematica.gui.button.import.hover": "Click to import the selected file to a new Litematic to save as\n§dThis can be used to import any older litematic files as well",
     "litematica.gui.button.load_schematic_to_memory": "Carica Schema",
     "litematica.gui.button.material_list": "Lista Materiali",
     "litematica.gui.button.material_list.clear_cache": "Svuota cache",
