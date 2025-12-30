@@ -1,7 +1,6 @@
 package fi.dy.masa.litematica.mixin.render;
 
 import com.llamalad7.mixinextras.sugar.Local;
-import fi.dy.masa.litematica.compat.sodium.SodiumCompat;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
@@ -13,18 +12,6 @@ import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
 import com.mojang.blaze3d.resource.ResourceHandle;
 import com.mojang.blaze3d.textures.GpuSampler;
 import com.mojang.blaze3d.vertex.PoseStack;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import fi.dy.masa.litematica.mixin.IMixinProfilerSystem;
-import fi.dy.masa.litematica.render.LitematicaRenderer;
-import fi.dy.masa.litematica.util.SchematicWorldRefresher;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -38,6 +25,19 @@ import net.minecraft.client.renderer.state.LevelRenderState;
 import net.minecraft.util.profiling.ActiveProfiler;
 import net.minecraft.util.profiling.Profiler;
 import net.minecraft.util.profiling.ProfilerFiller;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import fi.dy.masa.malilib.compat.iris.IrisCompat;
+import fi.dy.masa.litematica.mixin.client.IMixinProfilerSystem;
+import fi.dy.masa.litematica.render.LitematicaRenderer;
+import fi.dy.masa.litematica.util.SchematicWorldRefresher;
 
 @Mixin(LevelRenderer.class)
 public abstract class MixinWorldRenderer
@@ -98,16 +98,7 @@ public abstract class MixinWorldRenderer
 //    @Inject(method = "translucencySort", at = @At("TAIL"))
 //    private void litematica_onScheduleTranslucentSort(Vec3d cameraPos, CallbackInfo ci)
 //    {
-//        if (this.profiler == null)
-//        {
-//            this.profiler = Profilers.get();
-//        }
-//
-//        if (this.profiler instanceof ProfilerSystem ps && !((IMixinProfilerSystem) ps).litematica_isStarted())
-//        {
-//            this.profiler.startTick();
-//        }
-//
+//        this.litematica$prepareProfiler();
 //        if (!SodiumCompat.hasSodium())
 //        {
 //            LitematicaRenderer.getInstance().scheduleTranslucentSorting(cameraPos, this.profiler);
@@ -179,7 +170,7 @@ public abstract class MixinWorldRenderer
         LitematicaRenderer.getInstance().piecewisePrepareEntities(camera, frustum, renderStates, tickCounter, this.profiler);
 
 		// Why Sodium?
-		if (SodiumCompat.hasSodium())
+		if (IrisCompat.hasSodium())
 		{
 			LitematicaRenderer.getInstance().piecewisePrepareBlockEntities(camera, frustum, renderStates, tickCounter.getGameTimeDeltaPartialTick(false), this.profiler);
 		}
@@ -198,7 +189,7 @@ public abstract class MixinWorldRenderer
                                                        CallbackInfo ci)
     {
 		// Why Sodium?
-		if (!SodiumCompat.hasSodium())
+		if (!IrisCompat.hasSodium())
 		{
 			this.litematica$prepareProfiler();
 			LitematicaRenderer.getInstance().piecewisePrepareBlockEntities(camera, this.capturedFrustum, renderStates, tickProgress, this.profiler);

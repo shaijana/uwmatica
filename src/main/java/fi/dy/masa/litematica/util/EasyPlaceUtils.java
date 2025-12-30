@@ -452,6 +452,7 @@ public class EasyPlaceUtils
 		// The block is correct already, or it was recently placed, or some of the checks failed
 		if (stateSchematic == stateClient || requiredStack.isEmpty() ||
 			easyPlaceIsPositionCached(targetBlockPos) ||
+			easyPlaceIsTooFast() ||
 			canPlaceBlock(targetBlockPos, world, stateSchematic, stateClient) == false)
 		{
 			return InteractionResult.FAIL;
@@ -473,17 +474,17 @@ public class EasyPlaceUtils
 
 		// *** ADDED Easy Place Code from Pre-Rewrite ***
 		// Already placed to that position, possible server sync delay
-		if (EasyPlaceUtils.easyPlaceIsPositionCached(targetBlockPos))
-		{
-			return InteractionResult.FAIL;
-		}
-
-		// *** ADDED Easy Place Code from Pre-Rewrite ***
-		// Ignore action if too fast
-		if (EasyPlaceUtils.easyPlaceIsTooFast())
-		{
-			return InteractionResult.FAIL;
-		}
+//		if (EasyPlaceUtils.easyPlaceIsPositionCached(targetBlockPos))
+//		{
+//			return InteractionResult.FAIL;
+//		}
+//
+//		// *** ADDED Easy Place Code from Pre-Rewrite ***
+//		// Ignore action if too fast
+//		if (EasyPlaceUtils.easyPlaceIsTooFast())
+//		{
+//			return InteractionResult.FAIL;
+//		}
 
 		boolean isSlab = stateSchematic.getBlock() instanceof SlabBlock;
 		boolean usingAdjacentClickPosition = clickPosition.getBlockPos().equals(targetBlockPos) == false;

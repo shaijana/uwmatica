@@ -23,5 +23,9 @@ public class MixinClientCommonNetworkHandler
             Litematica.debugLog("ClientCommonNetworkHandler#litematica_onCustomPayload(): received carpet hello packet");
             DataManager.setIsCarpetServer(true);
         }
+        else if (packet.payload().type().id().getNamespace().equals("servux"))
+        {
+            DataManager.setHasServuxServer(true);
+        }
     }
 }
