@@ -25,6 +25,7 @@ import net.minecraft.client.renderer.state.LevelRenderState;
 import net.minecraft.util.profiling.ActiveProfiler;
 import net.minecraft.util.profiling.Profiler;
 import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -81,7 +82,7 @@ public abstract class MixinWorldRenderer
             Camera camera, Frustum frustum, boolean bl, CallbackInfo ci)
     {
         this.litematica$prepareProfiler();
-        LitematicaRenderer.getInstance().piecewisePrepareAndUpdate(frustum, this.profiler);
+        LitematicaRenderer.getInstance().piecewisePrepare(frustum, this.profiler);
     }
 
     @Inject(method = "compileSections",
@@ -92,18 +93,23 @@ public abstract class MixinWorldRenderer
     private void litematica_onPostUpdateChunks(Camera camera, CallbackInfo ci)
     {
         this.litematica$prepareProfiler();
-        LitematicaRenderer.getInstance().scheduleTranslucentSorting(camera.position(), this.profiler);
+	    LitematicaRenderer.getInstance().piecewiseUpdate(camera, this.profiler);
+
+		if (IrisCompat.hasSodium())
+		{
+			LitematicaRenderer.getInstance().scheduleTranslucentSorting(camera.position(), this.profiler);
+		}
     }
 
-//    @Inject(method = "translucencySort", at = @At("TAIL"))
-//    private void litematica_onScheduleTranslucentSort(Vec3d cameraPos, CallbackInfo ci)
-//    {
-//        this.litematica$prepareProfiler();
-//        if (!SodiumCompat.hasSodium())
-//        {
-//            LitematicaRenderer.getInstance().scheduleTranslucentSorting(cameraPos, this.profiler);
-//        }
-//    }
+    @Inject(method = "scheduleTranslucentSectionResort", at = @At("TAIL"))
+    private void litematica_onScheduleTranslucentSort(Vec3 vec3, CallbackInfo ci)
+    {
+        if (!IrisCompat.hasSodium())
+        {
+	        this.litematica$prepareProfiler();
+            LitematicaRenderer.getInstance().scheduleTranslucentSorting(vec3, this.profiler);
+        }
+    }
 
     @Inject(method = "renderLevel",
             at = @At(value = "INVOKE",
@@ -117,8 +123,6 @@ public abstract class MixinWorldRenderer
     {
         this.profiler = profiler;
         LitematicaRenderer.getInstance().capturePreMainValues(camera, gpuBufferSlice, profiler);
-//		LitematicaRenderer.getInstance().piecewisePrepareEntities(camera, this.capturedFrustum, tickCounter, this.profiler);
-//		LitematicaRenderer.getInstance().piecewisePrepareBlockEntities(camera, this.capturedFrustum, tickCounter.getTickProgress(false), this.profiler);
     }
 
     @Inject(method = "prepareChunkRenders", at = @At("TAIL"))
