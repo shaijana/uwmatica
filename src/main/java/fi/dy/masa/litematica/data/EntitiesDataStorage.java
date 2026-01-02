@@ -428,7 +428,14 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
 	@Override
 	public @Nullable CompoundTag getFromBlockEntityCacheNbt(BlockPos pos)
 	{
-		return DataConverterNbt.toVanillaCompound(getFromBlockEntityCacheData(pos));
+        CompoundData data =this.getFromBlockEntityCacheData(pos);
+
+        if (data != null)
+        {
+            return DataConverterNbt.toVanillaCompound(data);
+        }
+
+        return null;
 	}
 
 	@Override
@@ -456,7 +463,14 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
 	@Override
 	public @Nullable CompoundTag getFromEntityCacheNbt(int entityId)
 	{
-		return DataConverterNbt.toVanillaCompound(getFromEntityCacheData(entityId));
+        CompoundData data = this.getFromEntityCacheData(entityId);
+
+        if (data != null)
+        {
+            return DataConverterNbt.toVanillaCompound(data);
+        }
+
+        return null;
 	}
 
 	@Override
@@ -931,13 +945,13 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
 	public BlockEntity handleBlockEntityData(BlockPos pos, CompoundTag nbt,
 											 @Nullable Identifier type)
 	{
-		return handleBlockEntityData(pos, DataConverterNbt.fromVanillaCompound(nbt), type);
+		return this.handleBlockEntityData(pos, DataConverterNbt.fromVanillaCompound(nbt), type);
 	}
 
 	@Override
 	public Entity handleEntityData(int entityId, CompoundTag nbt)
 	{
-		return handleEntityData(entityId, DataConverterNbt.fromVanillaCompound(nbt));
+		return this.handleEntityData(entityId, DataConverterNbt.fromVanillaCompound(nbt));
 	}
 
 	private void requestQueryBlockEntity(BlockPos pos)
@@ -954,7 +968,7 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
             this.sentBackupPackets = true;
             handler.getDebugQueryHandler().queryBlockEntityTag(pos, nbtCompound ->
             {
-                handleBlockEntityData(pos, nbtCompound, null);
+                this.handleBlockEntityData(pos, nbtCompound, null);
             });
             this.transactionToBlockPosOrEntityId.put(((IMixinDataQueryHandler) handler.getDebugQueryHandler()).malilib_currentTransactionId(), Either.left(pos));
         }
@@ -974,7 +988,7 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
             this.sentBackupPackets = true;
             handler.getDebugQueryHandler().queryEntityTag(entityId, nbtCompound ->
             {
-                handleEntityData(entityId, nbtCompound);
+                this.handleEntityData(entityId, nbtCompound);
             });
             this.transactionToBlockPosOrEntityId.put(((IMixinDataQueryHandler) handler.getDebugQueryHandler()).malilib_currentTransactionId(), Either.right(entityId));
         }
@@ -1300,7 +1314,7 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
 			return;
 		}
 
-		handleBulkEntityData(transactionId, DataConverterNbt.fromVanillaCompound(nbt));
+		this.handleBulkEntityData(transactionId, DataConverterNbt.fromVanillaCompound(nbt));
 	}
 
 	public void handleBulkEntityData(int transactionId, @Nullable CompoundData data)
@@ -1366,7 +1380,7 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
 	@Override
     public void handleVanillaQueryNbt(int transactionId, CompoundTag nbt)
     {
-		handleVanillaQueryNbt(transactionId, DataConverterNbt.fromVanillaCompound(nbt));
+		this.handleVanillaQueryNbt(transactionId, DataConverterNbt.fromVanillaCompound(nbt));
     }
 
     public boolean hasPendingChunk(ChunkPos pos)
