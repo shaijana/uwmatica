@@ -6,6 +6,8 @@ import java.nio.file.Path;
 import java.util.*;
 import javax.annotation.Nullable;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientChunkCache;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -56,6 +58,8 @@ import fi.dy.masa.litematica.schematic.pickblock.SchematicPickBlockEventHandler;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacementManager;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacementManager.PlacementPart;
+import fi.dy.masa.litematica.schematic.placement.TemporaryWorldHolder;
+import fi.dy.masa.litematica.schematic.placement.TemporaryWorldManager;
 import fi.dy.masa.litematica.selection.AreaSelection;
 import fi.dy.masa.litematica.selection.Box;
 import fi.dy.masa.litematica.tool.ToolMode;
@@ -114,11 +118,12 @@ public class WorldUtils
             return false;
         }
 
-        WorldSchematic world = SchematicWorldHandler.createSchematicWorld(null);
+//        WorldSchematic world = SchematicWorldHandler.createSchematicWorld(null);
         BlockPos size = new BlockPos(origSchematic.getTotalSize());
-        loadChunksSchematicWorld(world, BlockPos.ZERO, size);
+        TemporaryWorldHolder holder = TemporaryWorldManager.INSTANCE.getTemporaryWorld("sponge_to_litematica", BlockPos.ZERO, size);
+//        List<Pair<Integer, Integer>> tempChunks = loadChunksSchematicWorld(world, BlockPos.ZERO, size);
         SchematicPlacement schematicPlacement = SchematicPlacement.createForSchematicConversion(origSchematic, BlockPos.ZERO);
-        origSchematic.placeToWorld(world, schematicPlacement, false); // TODO use a per-chunk version for a bit more speed
+        origSchematic.placeToWorld(holder.world(), schematicPlacement, false);      // TODO FIXME
 
         String subRegionName = FileUtils.getNameWithoutExtension(inputFileName);
         AreaSelection area = new AreaSelection();
@@ -130,7 +135,7 @@ public class WorldUtils
         area.setSubRegionCornerPos(box, Corner.CORNER_2, size.offset(-1, -1, -1));
         LitematicaSchematic.SchematicSaveInfo info = new LitematicaSchematic.SchematicSaveInfo(false, false);
 
-        LitematicaSchematic newSchem = LitematicaSchematic.createFromWorld(world, area, info, "?", feedback);
+        LitematicaSchematic newSchem = LitematicaSchematic.createFromWorld(holder.world(), area, info, "?", feedback);
 
         if (newSchem == null)
         {
@@ -163,7 +168,8 @@ public class WorldUtils
         newSchem.getMetadata().setTimeCreated(origMetadata.getTimeCreated());
         newSchem.getMetadata().setTimeModifiedToNow();
 
-        world.clearEntities();
+//        world.clearEntities();
+        TemporaryWorldManager.INSTANCE.removeTemporaryWorld("sponge_to_litematica");
         Configs.Generic.DATAFIXER_MODE.setOptionListValue(oldMode);
         return newSchem.writeToFile(outputDir, outputFileName, override);
     }
@@ -234,12 +240,13 @@ public class WorldUtils
             return null;
         }
 
-        WorldSchematic world = SchematicWorldHandler.createSchematicWorld(null);
+//        WorldSchematic world = SchematicWorldHandler.createSchematicWorld(null);
 
-        loadChunksSchematicWorld(world, BlockPos.ZERO, schematic.getSize());
+        TemporaryWorldHolder holder = TemporaryWorldManager.INSTANCE.getTemporaryWorld("schematic_to_litematica", BlockPos.ZERO, schematic.getSize());
+//        List<Pair<Integer, Integer>> tempChunks = loadChunksSchematicWorld(world, BlockPos.ZERO, schematic.getSize());
         StructurePlaceSettings placementSettings = new StructurePlaceSettings();
         placementSettings.setIgnoreEntities(ignoreEntities);
-        schematic.placeSchematicDirectlyToChunks(world, BlockPos.ZERO, placementSettings);
+        schematic.placeSchematicDirectlyToChunks(holder.world(), BlockPos.ZERO, placementSettings);      // TODO FIXME
 
         String subRegionName = FileUtils.getNameWithoutExtension(inputFileName) + " (Converted Schematic)";
         AreaSelection area = new AreaSelection();
@@ -251,7 +258,7 @@ public class WorldUtils
         area.setSubRegionCornerPos(box, Corner.CORNER_2, (new BlockPos(schematic.getSize())).offset(-1, -1, -1));
         LitematicaSchematic.SchematicSaveInfo info = new LitematicaSchematic.SchematicSaveInfo(false, false);
 
-        LitematicaSchematic newSchematic = LitematicaSchematic.createFromWorld(world, area, info, "?", feedback);
+        LitematicaSchematic newSchematic = LitematicaSchematic.createFromWorld(holder.world(), area, info, "?", feedback);
 
         if (newSchematic != null && ignoreEntities == false)
         {
@@ -268,7 +275,8 @@ public class WorldUtils
         newSchematic.getMetadata().setTimeCreated(System.currentTimeMillis());
         newSchematic.getMetadata().setTimeModifiedToNow();
 
-        world.clearEntities();
+//        world.clearEntities();
+        TemporaryWorldManager.INSTANCE.removeTemporaryWorld("schematic_to_litematica");
         Configs.Generic.DATAFIXER_MODE.setOptionListValue(oldMode);
         return newSchematic;
     }
@@ -294,11 +302,12 @@ public class WorldUtils
             return false;
         }
 
-        WorldSchematic world = SchematicWorldHandler.createSchematicWorld(null);
+//        WorldSchematic world = SchematicWorldHandler.createSchematicWorld(null);
         BlockPos size = new BlockPos(origStructure.getTotalSize());
-        loadChunksSchematicWorld(world, BlockPos.ZERO, size);
+//        List<Pair<Integer, Integer>> tempChunks = loadChunksSchematicWorld(world, BlockPos.ZERO, size);
+        TemporaryWorldHolder holder = TemporaryWorldManager.INSTANCE.getTemporaryWorld("structure_to_litematica", BlockPos.ZERO, size);
         SchematicPlacement schematicPlacement = SchematicPlacement.createForSchematicConversion(origStructure, BlockPos.ZERO);
-        origStructure.placeToWorld(world, schematicPlacement, false); // TODO use a per-chunk version for a bit more speed
+        origStructure.placeToWorld(holder.world(), schematicPlacement, false);             // TODO FIXME
 
         String subRegionName = FileUtils.getNameWithoutExtension(structureFileName);
         AreaSelection area = new AreaSelection();
@@ -310,7 +319,7 @@ public class WorldUtils
         area.setSubRegionCornerPos(box, Corner.CORNER_2, size.offset(-1, -1, -1));
         LitematicaSchematic.SchematicSaveInfo info = new LitematicaSchematic.SchematicSaveInfo(false, false);
 
-        LitematicaSchematic newSchem = LitematicaSchematic.createFromWorld(world, area, info, "?", feedback);
+        LitematicaSchematic newSchem = LitematicaSchematic.createFromWorld(holder.world(), area, info, "?", feedback);
 
         if (newSchem == null)
         {
@@ -346,7 +355,8 @@ public class WorldUtils
         boolean result = newSchem.writeToFile(outputDir, outputFileName, override);
 //        System.out.printf("Vanilla IMPORT DUMP (OUT-2) -->\n%s\n", newSchem.toString());
 
-        world.clearEntities();
+        TemporaryWorldManager.INSTANCE.removeTemporaryWorld("structure_to_litematica");
+//        world.clearEntities();
         return result;
     }
 
@@ -449,17 +459,19 @@ public class WorldUtils
             return null;
         }
 
-        WorldSchematic world = SchematicWorldHandler.createSchematicWorld(null);
+//        WorldSchematic world = SchematicWorldHandler.createSchematicWorld(null);
 
         BlockPos size = new BlockPos(litematicaSchematic.getTotalSize());
-        loadChunksSchematicWorld(world, BlockPos.ZERO, size);
+//        List<Pair<Integer, Integer>> tempChunks = loadChunksSchematicWorld(world, BlockPos.ZERO, size);
         SchematicPlacement schematicPlacement = SchematicPlacement.createForSchematicConversion(litematicaSchematic, BlockPos.ZERO);
-        litematicaSchematic.placeToWorld(world, schematicPlacement, false); // TODO use a per-chunk version for a bit more speed
+        TemporaryWorldHolder holder = TemporaryWorldManager.INSTANCE.getTemporaryWorld("litematic_to_structure", BlockPos.ZERO, size);
+        litematicaSchematic.placeToWorld(holder.world(), schematicPlacement, false);         // TODO FIXME
 
         StructureTemplate template = new StructureTemplate();
-        template.fillFromWorld(world, BlockPos.ZERO, size, ignoreEntities == false, List.of(Blocks.STRUCTURE_VOID));
+        template.fillFromWorld(holder.world(), BlockPos.ZERO, size, ignoreEntities == false, List.of(Blocks.STRUCTURE_VOID));
 
-        world.clearEntities();
+//        world.clearEntities();
+        TemporaryWorldManager.INSTANCE.removeTemporaryWorld("litematic_to_structure");
         return template;
     }
 
@@ -523,8 +535,10 @@ public class WorldUtils
         return test;
     }
 
-    public static void loadChunksSchematicWorld(WorldSchematic world, BlockPos origin, Vec3i areaSize)
+    @Deprecated
+    public static List<Pair<Integer, Integer>> loadChunksSchematicWorld(WorldSchematic world, BlockPos origin, Vec3i areaSize)
     {
+        List<Pair<Integer, Integer>> chunks = new ArrayList<>();
         BlockPos posEnd = origin.offset(PositionUtils.getRelativeEndPositionFromAreaSize(areaSize));
         BlockPos posMin = PositionUtils.getMinCorner(origin, posEnd);
         BlockPos posMax = PositionUtils.getMaxCorner(origin, posEnd);
@@ -537,9 +551,12 @@ public class WorldUtils
         {
             for (int cx = cxMin; cx <= cxMax; ++cx)
             {
-                world.getChunkProvider().loadChunk(cx, cz);
+                world.getChunkSource().loadChunk(cx, cz);         // TODO FIXME
+                chunks.add(Pair.of(cx, cz));
             }
         }
+
+        return chunks;
     }
 
     public static void setToolModeBlockState(ToolMode mode, boolean primary, Minecraft mc)
@@ -761,7 +778,7 @@ public class WorldUtils
             BlockPos pos = trace.getBlockPos();
             Level world = SchematicWorldHandler.getSchematicWorld();
             BlockState stateSchematic = world.getBlockState(pos);
-            ItemStack stack = MaterialCache.getInstance().getRequiredBuildItemForState(stateSchematic);
+            ItemStack stack = MaterialCache.getInstance().getRequiredBuildItemForState(stateSchematic, world, pos);
 
             // Already placed to that position, possible server sync delay
             if (EasyPlaceUtils.easyPlaceIsPositionCached(pos))
@@ -1322,7 +1339,7 @@ public class WorldUtils
             }
 
             BlockState stateSchematic = worldSchematic.getBlockState(pos);
-            stack = MaterialCache.getInstance().getRequiredBuildItemForState(stateSchematic);
+            stack = MaterialCache.getInstance().getRequiredBuildItemForState(stateSchematic, worldSchematic, pos);
 
             // The player is holding the wrong item for the targeted position
             if (stack.isEmpty() == false && EntityUtils.getUsedHandForItem(mc.player, stack) == null)

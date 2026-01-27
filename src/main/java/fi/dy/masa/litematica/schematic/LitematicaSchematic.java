@@ -36,6 +36,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.ticks.LevelChunkTicks;
 import net.minecraft.world.ticks.ScheduledTick;
@@ -58,6 +59,9 @@ import fi.dy.masa.litematica.data.EntitiesDataStorage;
 import fi.dy.masa.litematica.mixin.world.IMixinWorldTickScheduler;
 import fi.dy.masa.litematica.network.ServuxLitematicaHandler;
 import fi.dy.masa.litematica.network.ServuxLitematicaPacket;
+import fi.dy.masa.litematica.scheduler.tasks.TaskPasteSchematicPerChunkDirect;
+import fi.dy.masa.litematica.scheduler.tasks.TaskProcessChunkBase;
+import fi.dy.masa.litematica.scheduler.tasks.TaskSaveSchematic;
 import fi.dy.masa.litematica.schematic.container.ILitematicaBlockStatePalette;
 import fi.dy.masa.litematica.schematic.container.LitematicaBlockStateContainer;
 import fi.dy.masa.litematica.schematic.conversion.SchematicConversionFixers;
@@ -71,7 +75,9 @@ import fi.dy.masa.litematica.schematic.transmit.SchematicBufferManager;
 import fi.dy.masa.litematica.selection.AreaSelection;
 import fi.dy.masa.litematica.selection.Box;
 import fi.dy.masa.litematica.util.*;
+import fi.dy.masa.litematica.world.ChunkSchematic;
 import fi.dy.masa.litematica.world.SchematicWorldHandler;
+import fi.dy.masa.litematica.world.WorldSchematic;
 
 public class LitematicaSchematic
 {
@@ -204,6 +210,9 @@ public class LitematicaSchematic
         return builder.build();
     }
 
+    /**
+     * This version is not Chunk-Specific.  It is only used by {@link WorldUtils} during conversions.
+     */
     @Nullable
     public static LitematicaSchematic createFromWorld(Level world, AreaSelection area, SchematicSaveInfo info,
                                                       String author, IStringConsumer feedback)
@@ -368,11 +377,17 @@ public class LitematicaSchematic
         this.entities.put(subRegionName, schematic.getEntities());
     }
 
+    /**
+     * This version is not Chunk-Specific.  It is only used by {@link WorldUtils} during conversions.
+     */
     public boolean placeToWorld(Level world, SchematicPlacement schematicPlacement, boolean notifyNeighbors)
     {
         return this.placeToWorld(world, schematicPlacement, notifyNeighbors, false);
     }
 
+    /**
+     * This version is not Chunk-Specific.  It is only used by {@link WorldUtils} during conversions.
+     */
     public boolean placeToWorld(Level world, SchematicPlacement schematicPlacement, boolean notifyNeighbors, boolean ignoreEntities)
     {
         WorldUtils.setShouldPreventBlockUpdates(world, true);
@@ -425,6 +440,9 @@ public class LitematicaSchematic
         return true;
     }
 
+    /**
+     * This version is not Chunk-Specific.  It is only used by {@link WorldUtils} during conversions.
+     */
     private boolean placeBlocksToWorld(Level world, BlockPos origin, BlockPos regionPos, BlockPos regionSize,
             SchematicPlacement schematicPlacement, SubRegionPlacement placement,
             LitematicaBlockStateContainer container, Map<BlockPos, CompoundTag> tileMap,
@@ -623,6 +641,9 @@ public class LitematicaSchematic
         return true;
     }
 
+    /**
+     * This version is not Chunk-Specific.  It is only used by {@link WorldUtils} during conversions.
+     */
     private void placeEntitiesToWorld(Level world, BlockPos origin, BlockPos regionPos, BlockPos regionSize, SchematicPlacement schematicPlacement, SubRegionPlacement placement, List<EntityInfo> entityList)
     {
         BlockPos regionPosRelTransformed = PositionUtils.getTransformedBlockPos(regionPos, schematicPlacement.getMirror(), schematicPlacement.getRotation());
@@ -668,11 +689,14 @@ public class LitematicaSchematic
         }
     }
 
+    /**
+     * This version is not Chunk-Specific.  It is only used by {@link WorldUtils} during conversions.
+     */
     private void takeEntitiesFromWorld(Level world, List<Box> boxes, BlockPos origin)
     {
         for (Box box : boxes)
         {
-            net.minecraft.world.phys.AABB bb = PositionUtils.createEnclosingAABB(box.getPos1(), box.getPos2());
+            AABB bb = PositionUtils.createEnclosingAABB(box.getPos1(), box.getPos2());
             BlockPos regionPosAbs = box.getPos1();
             List<EntityInfo> list = new ArrayList<>();
             List<Entity> entities = world.getEntities((Entity) null, bb, EntityUtils.NOT_PLAYER);
@@ -700,6 +724,9 @@ public class LitematicaSchematic
         }
     }
 
+    /**
+     * This is used by {@link TaskSaveSchematic}
+     */
     public void takeEntitiesFromWorldWithinChunk(Level world, int chunkX, int chunkZ,
             ImmutableMap<String, IntBoundingBox> volumes, ImmutableMap<String, Box> boxes,
             Set<UUID> existingEntities, BlockPos origin)
@@ -715,7 +742,7 @@ public class LitematicaSchematic
                 continue;
             }
 
-            net.minecraft.world.phys.AABB bb = PositionUtils.createAABBFrom(entry.getValue());
+            AABB bb = PositionUtils.createAABBFrom(entry.getValue());
             List<Entity> entities = world.getEntities((Entity) null, bb, EntityUtils.NOT_PLAYER);
             BlockPos regionPosAbs = box.getPos1();
 
@@ -750,6 +777,7 @@ public class LitematicaSchematic
                             tag = view.readNbt() != null ? view.readNbt() : new CompoundTag();
                             Identifier id = EntityType.getKey(entity.getType());
                             tag.putString("id", id.toString());
+                            tag.putInt("LastEntityID", entity.getId());
                         }
                     }
 
@@ -794,6 +822,9 @@ public class LitematicaSchematic
         }
     }
 
+    /**
+     * This version is not Chunk-Specific.  It is only used by {@link WorldUtils} during conversions.
+     */
     @SuppressWarnings("unchecked")
     private void takeBlocksFromWorld(Level world, List<Box> boxes, SchematicSaveInfo info)
     {
@@ -1018,6 +1049,9 @@ public class LitematicaSchematic
                (isExposed(world, posUp) || supportsExposedBlocks(world, posUp));
     }
 
+    /**
+     * This is used by both {@link TaskProcessChunkBase} and {@link TaskPasteSchematicPerChunkDirect}
+     */
     @SuppressWarnings("unchecked")
     public void takeBlocksFromWorldWithinChunk(Level world, ImmutableMap<String, IntBoundingBox> volumes,
                                                ImmutableMap<String, Box> boxes, SchematicSaveInfo info)
@@ -1892,7 +1926,7 @@ public class LitematicaSchematic
         for (int i = 0; i < size; ++i)
         {
             CompoundTag entityEntry = tagList.getCompoundOrEmpty(i);
-//            Vec3d pos = NbtUtils.readVec3dFromListTag(entityEntry);
+            // pos = NbtUtils.readVec3dFromListTag(entityEntry);
             Vec3 pos = NbtUtils.getVec3dCodec(entityEntry, "Pos");
 
             if (pos != null && entityEntry.isEmpty() == false)
@@ -1911,11 +1945,13 @@ public class LitematicaSchematic
                         entityData.putString("id", entityEntry.getStringOr("id", ""));
                     }
                     entities.add(new EntityInfo(pos, entityData));
+//                    Litematica.LOGGER.error("[SPONGE-V3] Pos[{}] / entity: {}", pos.toString(), entityData.toString());
                 }
                 else
                 {
                     pos = new Vec3(pos.x - offset.getX(), pos.y - offset.getY(), pos.z - offset.getZ());
                     entities.add(new EntityInfo(pos, entityEntry));
+//                    Litematica.LOGGER.error("[SPONGE-V2] Pos[{}] / entity: {}", pos.toString(), entityEntry.toString());
                 }
             }
         }
@@ -2114,6 +2150,7 @@ public class LitematicaSchematic
             {
                 Litematica.LOGGER.warn("readFromVanillaStructure(): Effective Schema has been bypassed.  Not applying Vanilla Data Fixer for Block State Palette DataVersion {}", minecraftDataVersion);
             }
+
             for (int id = 0; id < paletteSize; ++id)
             {
                 CompoundTag t = paletteTag.getCompoundOrEmpty(id);
@@ -2122,6 +2159,7 @@ public class LitematicaSchematic
 					// Also updates Block Names
                     t = SchematicConversionMaps.updateBlockStates(t, minecraftDataVersion);
                 }
+
                 BlockState state = net.minecraft.nbt.NbtUtils.readBlockState(lookup, t);
                 list.add(state);
             }
@@ -2267,15 +2305,17 @@ public class LitematicaSchematic
         for (int i = 0; i < size; ++i)
         {
             CompoundTag entityData = tagList.getCompoundOrEmpty(i);
+            CompoundTag nbtData = entityData.getCompoundOrEmpty("nbt");
             if (minecraftDataVersion < LitematicaSchematic.MINECRAFT_DATA_VERSION && effective != null)
             {
-                entityData = SchematicConversionMaps.updateEntity(entityData, minecraftDataVersion);
+                nbtData = SchematicConversionMaps.updateEntity(nbtData, minecraftDataVersion);
             }
-            Vec3 pos = readVec3dFromNbtList(entityData, "pos");
+//            Vec3 pos = readVec3dFromNbtList(entityData, "pos");
+            Vec3 pos = NbtUtils.getVec3dCodec(entityData, "pos");
 
-            if (pos != null && entityData.contains("nbt"))
+            if (pos != null && !nbtData.isEmpty())
             {
-                entities.add(new EntityInfo(pos, entityData.getCompoundOrEmpty("nbt")));
+                entities.add(new EntityInfo(pos, nbtData));
             }
         }
 
@@ -3087,7 +3127,7 @@ public class LitematicaSchematic
             this.nbt = nbt;
         }
 
-        public net.minecraft.world.phys.Vec3 toVanilla()
+        public Vec3 toVanilla()
         {
             return this.posVec;
         }

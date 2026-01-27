@@ -29,6 +29,7 @@ import fi.dy.masa.malilib.util.InventoryUtils;
 import fi.dy.masa.malilib.util.nbt.NbtKeys;
 import fi.dy.masa.malilib.util.nbt.NbtView;
 import fi.dy.masa.litematica.Litematica;
+import fi.dy.masa.litematica.Reference;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.mixin.entity.IMixinEntity;
@@ -38,7 +39,7 @@ import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement;
 
 public class EntityUtils
 {
-    public static final Predicate<Entity> NOT_PLAYER = entity -> (entity instanceof Player) == false;
+    public static final Predicate<Entity> NOT_PLAYER = entity -> !(entity instanceof Player);
 
     public static boolean isCreativeMode(Player player)
     {
@@ -244,8 +245,8 @@ public class EntityUtils
     public static String getEntityId(Entity entity)
     {
         EntityType<?> entitytype = entity.getType();
-        Identifier resourcelocation = EntityType.getKey(entitytype);
-        return entitytype.canSerialize() && resourcelocation != null ? resourcelocation.toString() : null;
+        Identifier id = EntityType.getKey(entitytype);
+        return entitytype.canSerialize() && id != null ? id.toString() : null;
     }
 
     @Nullable
@@ -259,9 +260,24 @@ public class EntityUtils
             if (optional.isPresent())
             {
                 Entity entity = optional.get();
-                entity.setUUID(UUID.randomUUID());
 
-//                Litematica.LOGGER.warn("[EntityUtils] createEntityFromNBTSingle() successful; type: [{}]", entity.getType().getName().getString());
+                if (!nbt.contains("UUID"))
+                {
+                    entity.setUUID(UUID.randomUUID());
+                }
+
+                if (nbt.contains("LastEntityID"))
+                {
+                    entity.setId(nbt.getIntOr("LastEntityID", -1));
+                }
+
+                if (Reference.DEBUG_MODE)
+                {
+                    Litematica.LOGGER.warn("[EntityUtils] createEntityFromNBTSingle() successful; type({}): [{}/{}]",
+                                           entity.getId(),
+                                           entity.getStringUUID(),
+                                           entity.getType().getDescription().getString());
+                }
 
                 return entity;
             }
@@ -483,8 +499,9 @@ public class EntityUtils
         ItemStack handStack = entity.getItemInHand(tmpHand);
 
 
-        if ((lenient && fi.dy.masa.malilib.util.InventoryUtils.areStacksEqualIgnoreDurability(handStack, stack)) ||
-            (lenient == false && fi.dy.masa.malilib.util.InventoryUtils.areStacksEqual(handStack, stack)))
+        if ((lenient && InventoryUtils.areStacksEqualIgnoreDurability(handStack, stack)) ||
+            (lenient && InventoryUtils.areStacksEqualIgnoreNbt(handStack, stack)) ||
+            (lenient == false && InventoryUtils.areStacksEqual(handStack, stack)))
         {
             hand = tmpHand;
         }

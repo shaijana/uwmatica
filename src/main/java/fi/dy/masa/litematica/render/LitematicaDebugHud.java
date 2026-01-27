@@ -3,21 +3,24 @@ package fi.dy.masa.litematica.render;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
+import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.debug.DebugScreenDisplayer;
 import net.minecraft.client.gui.components.debug.DebugScreenEntry;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
-import org.apache.commons.lang3.tuple.Pair;
-import org.jetbrains.annotations.Nullable;
+
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.util.StringUtils;
 import fi.dy.masa.malilib.util.game.DebugHudUtils;
 import fi.dy.masa.litematica.Reference;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
-import fi.dy.masa.litematica.render.schematic.WorldRendererSchematic;
+import fi.dy.masa.litematica.schematic.placement.PlacementManagerDaemonHandler;
 import fi.dy.masa.litematica.util.DebugHudMode;
 import fi.dy.masa.litematica.util.EntityUtils;
 import fi.dy.masa.litematica.world.SchematicWorldHandler;
@@ -121,15 +124,9 @@ public class LitematicaDebugHud implements DebugScreenEntry
 			// Loaded
 			Pair<String, String> pair = EntityUtils.getEntityDebug();
 
-			WorldRendererSchematic renderer = LitematicaRenderer.getInstance().getWorldRenderer();
-
-			String str = String.format("E: %02d TE: %02d C: %02d, CT: %02d, CV: %02d",
-			                           worldSchematic.getRegularEntityCount(),
-			                           worldSchematic.getChunkProvider().getTileEntityCount(),
-			                           worldSchematic.getChunkProvider().getLoadedChunksCount(),
-			                           DataManager.getSchematicPlacementManager().getTouchedChunksCount(),
-			                           DataManager.getSchematicPlacementManager().getLastVisibleChunksCount()
-			);
+			IWorldSchematicRenderer renderer = LitematicaRenderer.getInstance().getWorldRenderer();
+			String str = this.getWorldDebug(worldSchematic);
+			String pmStr = PlacementManagerDaemonHandler.INSTANCE.getDebugString();
 
 			if (this.isLeft())
 			{
@@ -143,6 +140,14 @@ public class LitematicaDebugHud implements DebugScreenEntry
 				                       renderer.getDebugInfoEntities(),
 				                       str
 				));
+
+//				if (Reference.DEBUG_MODE)
+//				{
+					list.add(String.format("%s[Litematica]%s %s",
+					                       pre, rst,
+					                       pmStr
+					));
+//				}
 
 				if (!pair.getLeft().isEmpty())
 				{
@@ -160,10 +165,18 @@ public class LitematicaDebugHud implements DebugScreenEntry
 				));
 
 				list.add(String.format("%s %s %s[Litematica]%s",
-				                       str,
 				                       renderer.getDebugInfoEntities(),
+				                       str,
 				                       rst+pre, rst
 				));
+
+//				if (Reference.DEBUG_MODE)
+//				{
+					list.add(String.format("%s %s[Litematica]%s",
+					                       pmStr,
+					                       pre, rst
+					));
+//				}
 
 				if (!pair.getLeft().isEmpty())
 				{
@@ -197,5 +210,33 @@ public class LitematicaDebugHud implements DebugScreenEntry
 		}
 
 		return list;
+	}
+
+	private @NonNull String getWorldDebug(WorldSchematic worldSchematic)
+	{
+		String str;
+
+		if (Reference.DEBUG_MODE)
+		{
+			str = String.format("[%s] // TE: %02d C: %02d, CT: %02d, CV: %02d",
+			                    worldSchematic.getEntityDebug(),
+			                    worldSchematic.getChunkSource().getTileEntityCount(),
+			                    worldSchematic.getChunkSource().getLoadedChunksCount(),
+			                    DataManager.getSchematicPlacementManager().getTouchedChunksCount(),
+			                    DataManager.getSchematicPlacementManager().getLastVisibleChunksCount()
+			);
+		}
+		else
+		{
+			str = String.format("E: %02d TE: %02d C: %02d, CT: %02d, CV: %02d",
+			                    worldSchematic.getRegularEntityCount(),
+			                    worldSchematic.getChunkSource().getTileEntityCount(),
+			                    worldSchematic.getChunkSource().getLoadedChunksCount(),
+			                    DataManager.getSchematicPlacementManager().getTouchedChunksCount(),
+			                    DataManager.getSchematicPlacementManager().getLastVisibleChunksCount()
+			);
+		}
+
+		return str;
 	}
 }
