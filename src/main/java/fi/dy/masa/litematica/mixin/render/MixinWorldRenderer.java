@@ -47,8 +47,7 @@ public abstract class MixinWorldRenderer
     @Shadow @Final private Minecraft minecraft;
 	@Shadow @Final private SubmitNodeStorage submitNodeStorage;
     @Shadow private @Nullable Frustum capturedFrustum;
-	@Shadow
-	private @org.jspecify.annotations.Nullable GpuSampler chunkLayerSampler;
+	@Shadow private @Nullable GpuSampler chunkLayerSampler;
 	@Unique private ProfilerFiller profiler;
 
     @Unique

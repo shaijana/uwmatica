@@ -1228,7 +1228,6 @@ public class WorldRendererSchematic implements IWorldSchematicRenderer
             LayerRange layerRange = DataManager.getRenderLayerRange();
 
             profiler.popPush("entities_iterate");
-            this.profiler = profiler;
             this.schematicRenderState.entityStates.clear();
 
             for (ChunkRendererSchematicVbo chunkRenderer : this.renderInfos)
@@ -1320,6 +1319,8 @@ public class WorldRendererSchematic implements IWorldSchematicRenderer
 //                    }
                 }
             }
+
+            profiler.pop();
         }
     }
 
@@ -1489,13 +1490,13 @@ public class WorldRendererSchematic implements IWorldSchematicRenderer
     public void scheduleChunkRenders(int chunkX, int chunkZ, boolean immediate)
     {
         // LOGGER.warn("[WorldRenderer] scheduleChunkRenders()");
-        this.getProfiler().push("schedule_render");
+//        this.getProfiler().push("schedule_render");
         if (Configs.Visuals.ENABLE_RENDERING.getBooleanValue() &&
             Configs.Visuals.ENABLE_SCHEMATIC_RENDERING.getBooleanValue())
         {
             this.chunkRendererDispatcher.scheduleChunkRender(chunkX, chunkZ, immediate);
         }
-        this.getProfiler().pop();
+//        this.getProfiler().pop();
     }
 
     @Override

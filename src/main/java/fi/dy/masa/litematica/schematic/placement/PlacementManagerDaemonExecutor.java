@@ -42,9 +42,9 @@ public class PlacementManagerDaemonExecutor implements IThreadDaemonExecutor<Pla
 				}
 				catch (Exception err)
 				{
-					Litematica.LOGGER.error("PlacementManagerDaemonExecutor: Exception: {}", err.getLocalizedMessage());
+					Litematica.LOGGER.error("PlacementManagerDaemonExecutor: Caught exception: {}", err.getLocalizedMessage());
 
-					// Reschedule it
+					// Reschedule it (Don't)
 //					PlacementManagerDaemonHandler.INSTANCE.addTask(task);
 				}
 			}
@@ -54,6 +54,7 @@ public class PlacementManagerDaemonExecutor implements IThreadDaemonExecutor<Pla
 	@Override
 	public void processTask(PlacementManagerTask task)
 	{
+		// InterruptedException handling? ;-/
 		task.run();
 	}
 }
