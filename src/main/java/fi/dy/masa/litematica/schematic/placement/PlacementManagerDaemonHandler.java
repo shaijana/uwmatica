@@ -156,8 +156,11 @@ public class PlacementManagerDaemonHandler implements IThreadDaemonHandler<Place
 
 	private synchronized boolean checkIfTasksAreFull()
 	{
-		return (this.queueUnload.size() + this.queueRebuild.size() + this.queueOther.size())
-				>= ((this.threadMap.size() / 3) * 1000);
+		final int threadCount = this.threadMap.size();
+		final int total = this.queueUnload.size() + this.queueRebuild.size() + this.queueOther.size();
+		final int calc = MathUtils.clamp((threadCount / 3), 1, threadCount) * 1000;
+
+		return total >= calc && total > 0;
 	}
 
 	protected boolean allDone()

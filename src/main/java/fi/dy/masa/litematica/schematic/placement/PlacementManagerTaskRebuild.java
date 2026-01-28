@@ -52,8 +52,6 @@ public class PlacementManagerTaskRebuild extends PlacementManagerTask
 				return;
 			}
 
-//			boolean shouldLoad = false;
-
 			if (manager.canHandleChunk(level, this.cx(), this.cz()))
 			{
 				if (worldSchematic.getChunkSource().hasChunk(this.cx(), this.cz()))
@@ -65,10 +63,8 @@ public class PlacementManagerTaskRebuild extends PlacementManagerTask
 
 				worldSchematic.getChunkSource().loadChunk(this.cx(), this.cz());
 				manager.setVisibleSubChunksNeedsUpdate();
-//				shouldLoad = true;
 			}
 
-//			if (shouldLoad)
 			if (worldSchematic.getChunkSource().hasChunk(this.cx(), this.cz()))
 			{
 				ProtoChunkSchematic protoChunk = new ProtoChunkSchematic(new ChunkSchematic(worldSchematic, this.pos()));
@@ -94,21 +90,12 @@ public class PlacementManagerTaskRebuild extends PlacementManagerTask
 
 				protoChunk.clear();
 
-//				else
-//				{
-//					worldSchematic.getChunkSource().loadChunk(this.cx(), this.cz());
-//				}
+				PlacementManagerDaemonHandler.INSTANCE.removeUnloadTasksFor(this.cx(), this.cz());
+				PlacementManagerDaemonHandler.INSTANCE.removeRebuildTasksFor(this.cx(), this.cz());
 
-//				if (worldSchematic.getChunkSource().hasChunk(this.cx(), this.cz()))
-//				{
-//				      manager.removePendingRebuildFor(this.pos());
-					worldSchematic.scheduleChunkRenders(this.cx(), this.cz());
-//					manager.setVisibleSubChunksNeedsUpdate();
-
-					PlacementManagerDaemonHandler.INSTANCE.removeUnloadTasksFor(this.cx(), this.cz());
-					PlacementManagerDaemonHandler.INSTANCE.removeRebuildTasksFor(this.cx(), this.cz());
-				}
-//			}
+				worldSchematic.scheduleChunkRenders(this.cx(), this.cz());
+				manager.setVisibleSubChunksNeedsUpdate();
+			}
 		};
 	}
 }

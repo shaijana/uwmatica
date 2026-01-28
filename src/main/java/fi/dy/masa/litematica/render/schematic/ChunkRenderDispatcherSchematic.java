@@ -25,7 +25,7 @@ public class ChunkRenderDispatcherSchematic
                                              IWorldSchematicRenderer worldRenderer, IChunkRendererFactory factory)
     {
         this.chunkRendererFactory = factory;
-		this.chunkRenderers = new Long2ObjectOpenHashMap<>();
+		this.chunkRenderers = new Long2ObjectOpenHashMap<>(4096);
         this.renderer = worldRenderer;
         this.world = world;
         this.setViewDistanceChunks(viewDistanceChunks);
@@ -106,19 +106,19 @@ public class ChunkRenderDispatcherSchematic
                     }
                     catch (Exception e)
                     {
-                        if (Reference.DEBUG_MODE)
-                        {
-                            Litematica.LOGGER.error("removeOutOfRangeRenderers: get() threw an exception; {}", e.getMessage());
-                        }
+//                        if (Reference.DEBUG_MODE)
+//                        {
+                            Litematica.debugLogError("removeOutOfRangeRenderers: get() threw an exception; {}", e.getMessage());
+//                        }
                     }
                 }
             }
             catch (Exception e)
             {
-                if (Reference.DEBUG_MODE)
-                {
-                    Litematica.LOGGER.error("removeOutOfRangeRenderers: keySet() threw an exception; {}", e.getMessage());
-                }
+//                if (Reference.DEBUG_MODE)
+//                {
+                    Litematica.debugLogError("removeOutOfRangeRenderers: keySet() threw an exception; {}", e.getMessage());
+//                }
             }
 
             if (Reference.DEBUG_MODE && prevCount != newList.size())
@@ -163,10 +163,10 @@ public class ChunkRenderDispatcherSchematic
         }
         catch (Exception e)
         {
-            if (Reference.DEBUG_MODE)
-            {
-                Litematica.LOGGER.error("getOrCreateChunkRenderer: Exception obtaining a Chunk Renderer; {}", e.getMessage());
-            }
+//            if (Reference.DEBUG_MODE)
+//            {
+                Litematica.debugLogError("getOrCreateChunkRenderer: Exception obtaining a Chunk Renderer; {}", e.getMessage());
+//            }
         }
 
         return Optional.empty();

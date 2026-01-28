@@ -135,11 +135,14 @@ public class LitematicaDebugHud implements DebugScreenEntry
 				                       renderer.getDebugInfoRenders()
 				));
 
-				list.add(String.format("%s[Litematica]%s %s %s",
-				                       pre, rst,
-				                       renderer.getDebugInfoEntities(),
-				                       str
-				));
+				if (Configs.Generic.DEBUG_HUD_WORLD.getBooleanValue())
+				{
+					list.add(String.format("%s[Litematica]%s %s %s",
+					                       pre, rst,
+					                       renderer.getDebugInfoEntities(),
+					                       str
+					));
+				}
 
 				if (Configs.Generic.DEBUG_HUD_PM_THREADS.getBooleanValue())
 				{
@@ -164,11 +167,14 @@ public class LitematicaDebugHud implements DebugScreenEntry
 				                       rst+pre, rst
 				));
 
-				list.add(String.format("%s %s %s[Litematica]%s",
-				                       renderer.getDebugInfoEntities(),
-				                       str,
-				                       rst+pre, rst
-				));
+				if (Configs.Generic.DEBUG_HUD_WORLD.getBooleanValue())
+				{
+					list.add(String.format("%s %s %s[Litematica]%s",
+					                       renderer.getDebugInfoEntities(),
+					                       str,
+					                       rst + pre, rst
+					));
+				}
 
 				if (Configs.Generic.DEBUG_HUD_PM_THREADS.getBooleanValue())
 				{

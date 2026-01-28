@@ -60,6 +60,7 @@ public class Configs implements IConfigHandler
         public static final ConfigBoolean       COMMAND_USE_WORLDEDIT       = new ConfigBoolean("commandUseWorldEdit", false).apply(GENERIC_KEY);
         public static final ConfigBoolean       COMMAND_USE_STRICT          = new ConfigBoolean("commandUseStrict", true).apply(GENERIC_KEY);
         public static final ConfigBoolean       DEBUG_HUD_PM_THREADS        = new ConfigBoolean("debugHudPMThreads", false).apply(GENERIC_KEY);
+        public static final ConfigBoolean       DEBUG_HUD_WORLD             = new ConfigBoolean("debugHudWorld", true).apply(GENERIC_KEY);
         public static final ConfigBoolean       DEBUG_LOGGING               = new ConfigBoolean("debugLogging", false).apply(GENERIC_KEY);
         public static final ConfigOptionList    DATAFIXER_MODE              = new ConfigOptionList("datafixerMode", DataFixerMode.ALWAYS).apply(GENERIC_KEY);
         public static final ConfigInteger       DATAFIXER_DEFAULT_SCHEMA    = new ConfigInteger("datafixerDefaultSchema", 1139, 99, 2724, true).apply(GENERIC_KEY);
@@ -128,6 +129,7 @@ public class Configs implements IConfigHandler
                 COMMAND_USE_STRICT,
                 CUSTOM_SCHEMATIC_BASE_DIRECTORY_ENABLED,
                 DEBUG_HUD_MODE,
+                DEBUG_HUD_WORLD,
                 DEBUG_HUD_PM_THREADS,
                 DEBUG_LOGGING,
 				DISPLAY_FILE_OPS_FEEDBACK,

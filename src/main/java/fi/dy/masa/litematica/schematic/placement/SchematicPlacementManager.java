@@ -72,7 +72,7 @@ public class SchematicPlacementManager
     protected final Supplier<WorldSchematic> worldSupplier;
     protected ChunkPos lastVisibleChunksSortPos;
     protected boolean visibleChunksNeedsUpdate;
-    private final int tickRate = 6;      // in seconds
+    private final int tickRate = 5;      // in seconds
     private long lastTick;
 
     public SchematicPlacementManager()
@@ -177,7 +177,7 @@ public class SchematicPlacementManager
                         for (int cz = startcz; cz < endcz; cz++)
                         {
                             final ChunkPos cp = new ChunkPos(cx, cz);
-                            final boolean isFar = cp.getChessboardDistance(cc) > 3;
+//                            final boolean isFar = cp.getChessboardDistance(cc) > 3;
                             // Don't unload nearby 9 chunks for Verifier
 
                             if (!this.worldSupplier.get().getChunkSource().hasChunk(cx, cz) &&
@@ -187,38 +187,35 @@ public class SchematicPlacementManager
                             }
                             else if (this.worldSupplier.get().getChunkSource().hasChunk(cx, cz))
                             {
-                                if (this.worldSupplier.get().getChunkSource().getChunkState(cx, cz).atLeast(ChunkSchematicState.LOADED))
-                                {
-                                    if (isFar)
-                                    {
-                                        loaded.add(cp);
-                                    }
-                                }
-                                else
-                                {
+//                                if (this.worldSupplier.get().getChunkSource().getChunkState(cx, cz).atLeast(ChunkSchematicState.LOADED))
+//                                {
+//                                    if (isFar)
+//                                    {
+//                                        loaded.add(cp);
+//                                    }
+//                                }
+//                                else
+//                                {
                                     notLoaded.add(cp);
-                                }
+//                                }
                             }
                         }
                     }
 
                     if (!loaded.isEmpty())
                     {
-                        if (Reference.DEBUG_MODE)
-                        {
-                            Litematica.LOGGER.warn("FIXER: checking [{}] loaded chunks", loaded.size());
-                        }
-
+                        Litematica.debugLog("SchematicPlacementManager//FIXER: checking [{}] loaded chunks", loaded.size());
                         loaded.forEach(c ->
                                        {
                                            PlacementManagerDaemonHandler.INSTANCE.addTask(
                                                    new PlacementManagerTaskOther(this.worldSupplier, c.x, c.z, () ->
                                                    {
                                                        List<SchematicPlacement> placements = DataManager.getSchematicPlacementManager().getAllSchematicsTouchingChunk(c);
-                                                       final boolean isFar = c.getChessboardDistance(cc) > 3;
+//                                                       final boolean isFar = c.getChessboardDistance(cc) > 3;
                                                        // Don't unload nearby 9 chunks for Verifier
 
-                                                       if (placements.isEmpty() && isFar)
+                                                       if (placements.isEmpty())
+//                                                               && isFar)
                                                        {
                                                            DataManager.getSchematicPlacementManager().markChunkForUnload(c.x, c.z);
                                                        }
@@ -234,7 +231,8 @@ public class SchematicPlacementManager
                                                                }
                                                            }
 
-                                                           if (unload && isFar)
+                                                           if (unload)
+//                                                                   && isFar)
                                                            {
                                                                DataManager.getSchematicPlacementManager().markChunkForUnload(c.x, c.z);
                                                            }
@@ -245,11 +243,7 @@ public class SchematicPlacementManager
 
                     if (!notLoaded.isEmpty())
                     {
-                        if (Reference.DEBUG_MODE)
-                        {
-                            Litematica.LOGGER.warn("FIXER: checking [{}] unloaded chunks", notLoaded.size());
-                        }
-
+                        Litematica.debugLog("SchematicPlacementManager//FIXER: checking [{}] unloaded chunks", notLoaded.size());
                         notLoaded.forEach(c ->
                                           {
                                               PlacementManagerDaemonHandler.INSTANCE.addTask(
