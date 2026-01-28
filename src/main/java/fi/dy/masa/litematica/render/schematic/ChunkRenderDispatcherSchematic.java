@@ -2,6 +2,7 @@ package fi.dy.masa.litematica.render.schematic;
 
 import java.util.Optional;
 import javax.annotation.Nullable;
+import com.trivago.fastutilconcurrentwrapper.longkey.ConcurrentLongObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongSet;
 
@@ -15,6 +16,8 @@ import fi.dy.masa.litematica.world.WorldSchematic;
 public class ChunkRenderDispatcherSchematic
 {
     protected final Long2ObjectOpenHashMap<ChunkRendererSchematicVbo> chunkRenderers;
+    protected final ConcurrentLongObjectMap<Object> chunkRenderersTestA;     // ^_~ :/
+//    protected final ConcurrentHashMap<Long, ChunkRendererSchematicVbo> chunkRenderersTestB;
     protected final IWorldSchematicRenderer renderer;
     protected final IChunkRendererFactory chunkRendererFactory;
     protected final WorldSchematic world;
@@ -22,10 +25,19 @@ public class ChunkRenderDispatcherSchematic
     protected int viewDistanceBlocksSq;
 
     protected ChunkRenderDispatcherSchematic(WorldSchematic world, int viewDistanceChunks,
-                                             IWorldSchematicRenderer worldRenderer, IChunkRendererFactory factory)
+                                             IWorldSchematicRenderer worldRenderer,
+                                             IChunkRendererFactory factory)
     {
         this.chunkRendererFactory = factory;
 		this.chunkRenderers = new Long2ObjectOpenHashMap<>(4096);
+        // TODO (See if Viable)
+        this.chunkRenderersTestA = ConcurrentLongObjectMap.newBuilder()
+                                                         .withBuckets(2)
+                                                         .withDefaultValue(null)
+                                                         .withInitialCapacity(4096)
+                                                         .withLoadFactor(0.9f)
+                                                         .build();
+//        this.chunkRenderersTestB = new ConcurrentHashMap<>(4096, 0.9f, 2);
         this.renderer = worldRenderer;
         this.world = world;
         this.setViewDistanceChunks(viewDistanceChunks);
