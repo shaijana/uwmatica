@@ -42,7 +42,7 @@ public class PlacementManagerDaemonHandler implements IThreadDaemonHandler<Place
 
 	private ConcurrentHashMap<String, Pair<Thread, PlacementManagerDaemonExecutor>> builder()
 	{
-		ConcurrentHashMap<String, Pair<Thread, PlacementManagerDaemonExecutor>> threads = new ConcurrentHashMap<>();
+		ConcurrentHashMap<String, Pair<Thread, PlacementManagerDaemonExecutor>> threads = new ConcurrentHashMap<>(Reference.MAX_PLATFORM_THREADS, 0.9f, 1);
 		String prefix = Reference.MOD_NAME+" Placement Manager ";
 
 		for (int i = 0; i < this.threadCount; i++)

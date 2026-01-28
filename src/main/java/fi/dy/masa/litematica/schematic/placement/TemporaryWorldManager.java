@@ -19,7 +19,7 @@ public class TemporaryWorldManager implements AutoCloseable
 
 	private TemporaryWorldManager()
 	{
-		this.tempWorlds = new ConcurrentHashMap<>();
+		this.tempWorlds = new ConcurrentHashMap<>(2, 0.9f, 1);
 	}
 
 	protected synchronized TemporaryWorldHolder getTemporaryWorld(String worldName)

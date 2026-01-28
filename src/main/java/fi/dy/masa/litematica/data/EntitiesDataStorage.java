@@ -3,12 +3,10 @@ package fi.dy.masa.litematica.data;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
+import com.google.gson.JsonObject;
+import org.apache.commons.lang3.tuple.Pair;
 
-import fi.dy.masa.malilib.util.data.Constants;
-import fi.dy.masa.malilib.util.data.DataEntityUtils;
-import fi.dy.masa.malilib.util.data.tag.CompoundData;
-import fi.dy.masa.malilib.util.data.tag.ListData;
-import fi.dy.masa.malilib.util.data.tag.converter.DataConverterNbt;
+import com.mojang.datafixers.util.Either;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ClientPacketListener;
@@ -44,10 +42,7 @@ import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import com.google.gson.JsonObject;
-import org.apache.commons.lang3.tuple.Pair;
 
-import com.mojang.datafixers.util.Either;
 import fi.dy.masa.malilib.interfaces.IClientTickHandler;
 import fi.dy.masa.malilib.interfaces.IDataSyncer;
 import fi.dy.masa.malilib.mixin.entity.IMixinAbstractHorseEntity;
@@ -56,10 +51,13 @@ import fi.dy.masa.malilib.mixin.network.IMixinDataQueryHandler;
 import fi.dy.masa.malilib.network.ClientPlayHandler;
 import fi.dy.masa.malilib.network.IPluginClientPlayHandler;
 import fi.dy.masa.malilib.util.InventoryUtils;
+import fi.dy.masa.malilib.util.data.Constants;
+import fi.dy.masa.malilib.util.data.DataEntityUtils;
+import fi.dy.masa.malilib.util.data.tag.CompoundData;
+import fi.dy.masa.malilib.util.data.tag.ListData;
+import fi.dy.masa.malilib.util.data.tag.converter.DataConverterNbt;
 import fi.dy.masa.malilib.util.data.tag.util.DataTypeUtils;
-import fi.dy.masa.malilib.util.nbt.NbtEntityUtils;
 import fi.dy.masa.malilib.util.nbt.NbtKeys;
-import fi.dy.masa.malilib.util.nbt.NbtUtils;
 import fi.dy.masa.malilib.util.nbt.NbtView;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.Reference;
@@ -93,8 +91,8 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
     private long lastOpCheck = 0L;
 
     // Data Cache
-    private final ConcurrentHashMap<BlockPos, Pair<Long, Pair<BlockEntity, CompoundData>>> blockEntityCache = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<Integer,  Pair<Long, Pair<Entity,      CompoundData>>> entityCache      = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<BlockPos, Pair<Long, Pair<BlockEntity, CompoundData>>> blockEntityCache = new ConcurrentHashMap<>(16, 0.9f, 1);
+    private final ConcurrentHashMap<Integer,  Pair<Long, Pair<Entity,      CompoundData>>> entityCache      = new ConcurrentHashMap<>(16, 0.9f, 1);
     private final long cacheTimeout = 4;
     private final long longCacheTimeout = 30;
     private boolean shouldUseLongTimeout = false;

@@ -23,9 +23,9 @@ public class BufferAllocatorCache implements AutoCloseable
 
     protected BufferAllocatorCache()
     {
-	    this.blockCache = new ConcurrentHashMap<>();
-		this.layerCache = new ConcurrentHashMap<>();
-		this.overlayCache = new ConcurrentHashMap<>();
+	    this.blockCache = new ConcurrentHashMap<>(BLOCK_LAYERS.size(), 0.9f, 1);
+		this.layerCache = new ConcurrentHashMap<>(RENDER_LAYERS.size(), 0.9f, 1);
+		this.overlayCache = new ConcurrentHashMap<>(TYPES.size(), 0.9f, 1);
         this.clear = true;
     }
 

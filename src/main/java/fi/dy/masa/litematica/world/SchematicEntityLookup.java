@@ -29,9 +29,9 @@ public class SchematicEntityLookup<T extends EntityAccess> implements LevelEntit
 
     protected SchematicEntityLookup()
     {
-        this.entityMap = new ConcurrentHashMap<>();
-        this.uuidMap = new ConcurrentHashMap<>();
-        this.chunkMap = new ConcurrentHashMap<>();
+        this.entityMap = new ConcurrentHashMap<>(128, 0.9f, 1);
+        this.uuidMap = new ConcurrentHashMap<>(128, 0.9f, 1);
+        this.chunkMap = new ConcurrentHashMap<>(128, 0.9f, 1);
     }
 
     protected String getDebugString()

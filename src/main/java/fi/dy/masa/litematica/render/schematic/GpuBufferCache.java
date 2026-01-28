@@ -14,9 +14,9 @@ public class GpuBufferCache implements AutoCloseable
 
     protected GpuBufferCache()
     {
-	    this.blockBuffers = new ConcurrentHashMap<>();
-	    this.layerBuffers = new ConcurrentHashMap<>();
-	    this.overlayBuffers = new ConcurrentHashMap<>();
+	    this.blockBuffers = new ConcurrentHashMap<>(BufferAllocatorCache.BLOCK_LAYERS.size(), 0.9f, 1);
+	    this.layerBuffers = new ConcurrentHashMap<>(BufferAllocatorCache.RENDER_LAYERS.size(), 0.9f, 1);
+	    this.overlayBuffers = new ConcurrentHashMap<>(BufferAllocatorCache.TYPES.size(), 0.9f, 1);
     }
 
     protected boolean hasBuffersByBlockLayer(ChunkSectionLayer layer)

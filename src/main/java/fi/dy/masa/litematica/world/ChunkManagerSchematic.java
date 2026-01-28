@@ -27,7 +27,7 @@ public class ChunkManagerSchematic extends ChunkSource
     public ChunkManagerSchematic(WorldSchematic world)
     {
         this.world = world;
-        this.loadedChunks = new ConcurrentHashMap<>();
+        this.loadedChunks = new ConcurrentHashMap<>(4096, 0.9f, 2);
         this.blankChunk = new ChunkSchematic(world, new ChunkPos(0, 0));
         this.blankChunk.setState(ChunkSchematicState.EMPTY);
         this.lightingProvider = new LevelLightEngine(this, true, world.dimensionType().hasSkyLight());

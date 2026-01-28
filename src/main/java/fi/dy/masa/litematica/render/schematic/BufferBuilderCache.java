@@ -17,9 +17,9 @@ public class BufferBuilderCache implements AutoCloseable
 
     protected BufferBuilderCache()
     {
-		this.blockBufferBuilders = new ConcurrentHashMap<>();
-		this.layerBufferBuilders = new ConcurrentHashMap<>();
-		this.overlayBufferBuilders = new ConcurrentHashMap<>();
+		this.blockBufferBuilders = new ConcurrentHashMap<>(BufferAllocatorCache.BLOCK_LAYERS.size(), 0.9f, 1);
+		this.layerBufferBuilders = new ConcurrentHashMap<>(BufferAllocatorCache.RENDER_LAYERS.size(), 0.9f, 1);
+		this.overlayBufferBuilders = new ConcurrentHashMap<>(BufferAllocatorCache.TYPES.size(), 0.9f, 1);
     }
 
     protected boolean hasBufferByBlockLayer(ChunkSectionLayer layer)
