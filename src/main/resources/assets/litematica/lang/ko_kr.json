@@ -161,7 +161,7 @@
     "litematica.config.generic.name.datafixerMode": "데이터 수정 모드",
     "litematica.config.generic.name.debugHudMode": "디버그 HUD 모드",
     "litematica.config.generic.name.debugHudPMThreads": "디버그 HUD PM 스레드",
-    "litematica.config.generic.name.debugHudWorld": "debugHudWorld",
+    "litematica.config.generic.name.debugHudWorld": "디버그 HUD 월드",
     "litematica.config.generic.name.debugLogging": "디버그 로그 기록",
     "litematica.config.generic.name.displayFileOpsFeedback": "파일 작업 피드백 표시",
     "litematica.config.generic.name.easyPlaceClickAdjacent": "쉬운 설치 인접 클릭",
