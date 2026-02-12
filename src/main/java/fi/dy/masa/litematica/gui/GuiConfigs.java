@@ -1,5 +1,6 @@
 package fi.dy.masa.litematica.gui;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -15,9 +16,10 @@ import fi.dy.masa.malilib.gui.GuiConfigsBase;
 import fi.dy.masa.malilib.gui.button.ButtonBase;
 import fi.dy.masa.malilib.gui.button.ButtonGeneric;
 import fi.dy.masa.malilib.gui.button.IButtonActionListener;
+import fi.dy.masa.malilib.gui.interfaces.IConfigGuiAllTab;
 import fi.dy.masa.malilib.util.StringUtils;
 
-public class GuiConfigs extends GuiConfigsBase
+public class GuiConfigs extends GuiConfigsBase implements IConfigGuiAllTab
 {
     public GuiConfigs()
     {
@@ -39,13 +41,19 @@ public class GuiConfigs extends GuiConfigsBase
         int x = 10;
         int y = 26;
 
-        x += this.createButton(x, y, -1, ConfigGuiTab.GENERIC);
-        x += this.createButton(x, y, -1, ConfigGuiTab.INFO_OVERLAYS);
-        x += this.createButton(x, y, -1, ConfigGuiTab.VISUALS);
-        x += this.createButton(x, y, -1, ConfigGuiTab.COLORS);
-        x += this.createButton(x, y, -1, ConfigGuiTab.HOTKEYS);
-        x += this.createButton(x, y, -1, ConfigGuiTab.RENDER_LAYERS);
-        //x += this.createButton(x, y, -1, ConfigGuiTab.TEST);
+        for (ConfigGuiTab tab : ConfigGuiTab.values())
+        {
+            if (!this.useAllTab() && tab == ConfigGuiTab.ALL) continue;
+            x += this.createButton(x, y, -1, tab);
+        }
+
+//        x += this.createButton(x, y, -1, ConfigGuiTab.GENERIC);
+//        x += this.createButton(x, y, -1, ConfigGuiTab.INFO_OVERLAYS);
+//        x += this.createButton(x, y, -1, ConfigGuiTab.VISUALS);
+//        x += this.createButton(x, y, -1, ConfigGuiTab.COLORS);
+//        x += this.createButton(x, y, -1, ConfigGuiTab.HOTKEYS);
+//        x += this.createButton(x, y, -1, ConfigGuiTab.RENDER_LAYERS);
+//        x += this.createButton(x, y, -1, ConfigGuiTab.TEST);
     }
 
     private int createButton(int x, int y, int width, ConfigGuiTab tab)
@@ -77,7 +85,11 @@ public class GuiConfigs extends GuiConfigsBase
     @Override
     protected boolean useKeybindSearch()
     {
-        return DataManager.getConfigGuiTab() == ConfigGuiTab.HOTKEYS;
+        ConfigGuiTab tab = DataManager.getConfigGuiTab();
+
+        return  tab == ConfigGuiTab.ALL ||
+                tab == ConfigGuiTab.GENERIC ||
+                tab == ConfigGuiTab.HOTKEYS;
     }
 
     @Override
@@ -85,16 +97,65 @@ public class GuiConfigs extends GuiConfigsBase
     {
         List<? extends IConfigBase> configs;
         ConfigGuiTab tab = DataManager.getConfigGuiTab();
-        configs = switch (tab) {
-            case GENERIC -> Configs.Generic.OPTIONS;
-            case INFO_OVERLAYS -> Configs.InfoOverlays.OPTIONS;
-            case VISUALS -> Configs.Visuals.OPTIONS;
-            case COLORS -> Configs.Colors.OPTIONS;
-            case HOTKEYS -> Hotkeys.HOTKEY_LIST;
-            case RENDER_LAYERS -> Collections.emptyList();
-            //case TEST -> Configs.Test.OPTIONS;
-        };
+
+        if (tab == ConfigGuiTab.ALL && this.useAllTab())
+        {
+            return this.getAllConfigs();
+        }
+        else if (tab == ConfigGuiTab.GENERIC)
+        {
+            configs = Configs.Generic.OPTIONS;
+        }
+        else if (tab == ConfigGuiTab.INFO_OVERLAYS)
+        {
+            configs = Configs.InfoOverlays.OPTIONS;
+        }
+        else if (tab == ConfigGuiTab.VISUALS)
+        {
+            configs = Configs.Visuals.OPTIONS;
+        }
+        else if (tab == ConfigGuiTab.COLORS)
+        {
+            configs = Configs.Colors.OPTIONS;
+        }
+        else if (tab == ConfigGuiTab.HOTKEYS)
+        {
+            configs = Hotkeys.HOTKEY_LIST;
+        }
+        else if (tab == ConfigGuiTab.RENDER_LAYERS)
+        {
+            configs = Collections.emptyList();
+        }
+//        else if (tab == ConfigGuiTab.TEST)
+//        {
+//            configs = Configs.Test.OPTIONS;
+//        }
+        else
+        {
+            configs = Collections.emptyList();
+        }
+
         return ConfigOptionWrapper.createFor(configs);
+    }
+
+    @Override
+    public boolean useAllTab()
+    {
+        return true;
+    }
+
+    @Override
+    public List<ConfigOptionWrapper> getAllConfigs()
+    {
+        List<ConfigOptionWrapper> configs = new ArrayList<>();
+
+        configs.addAll(ConfigOptionWrapper.createFor(Configs.Generic.OPTIONS));
+        configs.addAll(ConfigOptionWrapper.createFor(Configs.InfoOverlays.OPTIONS));
+        configs.addAll(ConfigOptionWrapper.createFor(Configs.Visuals.OPTIONS));
+        configs.addAll(ConfigOptionWrapper.createFor(Configs.Colors.OPTIONS));
+        configs.addAll(ConfigOptionWrapper.createFor(Hotkeys.HOTKEY_LIST));
+
+        return configs;
     }
 
     @Override
@@ -127,6 +188,7 @@ public class GuiConfigs extends GuiConfigsBase
 
     public enum ConfigGuiTab
     {
+        ALL             (IConfigGuiAllTab.getTranslationKey()),
         GENERIC         ("litematica.gui.button.config_gui.generic"),
         INFO_OVERLAYS   ("litematica.gui.button.config_gui.info_overlays"),
         VISUALS         ("litematica.gui.button.config_gui.visuals"),

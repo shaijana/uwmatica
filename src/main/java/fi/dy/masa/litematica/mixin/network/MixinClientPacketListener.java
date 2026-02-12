@@ -17,7 +17,7 @@ import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
 import net.minecraft.network.protocol.game.ClientboundTagQueryPacket;
 
 @Mixin(ClientPacketListener.class)
-public abstract class MixinClientPlayNetworkHandler
+public abstract class MixinClientPacketListener
 {
     @Inject(method = "handleLevelChunkWithLight", at = @At("RETURN"))
     private void litematica_onUpdateChunk(ClientboundLevelChunkWithLightPacket packet, CallbackInfo ci)

@@ -13,9 +13,9 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 
 @Mixin(AbstractContainerScreen.class)
-public abstract class MixinHandledScreen extends Screen
+public abstract class MixinAbstractContainerScreen extends Screen
 {
-    private MixinHandledScreen(Component title)
+    private MixinAbstractContainerScreen(Component title)
     {
         super(title);
     }

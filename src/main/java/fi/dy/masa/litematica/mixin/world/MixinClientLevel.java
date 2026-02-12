@@ -19,9 +19,9 @@ import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.storage.WritableLevelData;
 
 @Mixin(ClientLevel.class)
-public abstract class MixinClientWorld extends Level
+public abstract class MixinClientLevel extends Level
 {
-    private MixinClientWorld(WritableLevelData properties,
+    private MixinClientLevel(WritableLevelData properties,
                              ResourceKey<Level> registryRef,
                              RegistryAccess manager,
                              Holder<DimensionType> dimension,

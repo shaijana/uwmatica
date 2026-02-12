@@ -202,8 +202,8 @@ public class PlacementHandler
     {
         int protocolValue = (int) (context.hitVec().x - (double) context.pos().getX()) - 2;
         BlockState oldState = state;
-        //System.out.printf("[PHv3] hit vec.x %s, pos.x: %s\n", context.getHitVec().getX(), context.getPos().getX());
-        //System.out.printf("[PHv3] raw protocol value in: 0x%08X\n", protocolValue);
+        System.out.printf("[PHv3] hit vec.x %s, pos.x: %s\n", context.hitVec().x(), context.pos().getX());
+        System.out.printf("[PHv3] raw protocol value in: 0x%08X\n", protocolValue);
 
         if (protocolValue < 0)
         {
@@ -215,7 +215,7 @@ public class PlacementHandler
         // DirectionProperty - allow all except: VERTICAL_DIRECTION (PointedDripstone)
         if (property.isPresent() && property.get() != BlockStateProperties.VERTICAL_DIRECTION)
         {
-            //System.out.printf("[PHv3] applying: 0x%08X (getFirstDirectionProperty() -> %s)\n", protocolValue, property.get().getName());
+            System.out.printf("[PHv3] applying: 0x%08X (getFirstDirectionProperty() -> %s)\n", protocolValue, property.get().getName());
             state = applyDirectionProperty(state, context, property.get(), protocolValue);
 
             if (state == null)
@@ -227,12 +227,12 @@ public class PlacementHandler
             {
                 if (state.canSurvive(context.world(), context.pos()))
                 {
-                    //System.out.printf("[PHv3] validator passed for \"%s\"\n", property.get().getName());
+                    System.out.printf("[PHv3] validator passed for \"%s\"\n", property.get().getName());
                     oldState = state;
                 }
                 else
                 {
-                    //System.out.printf("[PHv3] validator failed for \"%s\"\n", property.get().getName());
+                    System.out.printf("[PHv3] validator failed for \"%s\"\n", property.get().getName());
                     state = oldState;
                 }
             }
@@ -255,11 +255,11 @@ public class PlacementHandler
         {
             for (Property<?> p : propList)
             {
-                //System.out.printf("[PHv3] check property [%s], whitelisted [%s], blacklisted [%s]\n", p.getName(), WHITELISTED_PROPERTIES.contains(p), BLACKLISTED_PROPERTIES.contains(p));
+                System.out.printf("[PHv3] check property [%s], whitelisted [%s], blacklisted [%s]\n", p.getName(), WHITELISTED_PROPERTIES.contains(p), BLACKLISTED_PROPERTIES.contains(p));
 
                 if (property.isPresent() && property.get().equals(p))
                 {
-                    //System.out.printf("[PHv3] skipping prot val: 0x%08X [Property %s]\n", protocolValue, p.getName());
+                    System.out.printf("[PHv3] skipping prot val: 0x%08X [Property %s]\n", protocolValue, p.getName());
                     continue;
                 }
                 else if (WHITELISTED_PROPERTIES.contains(p) &&
@@ -274,7 +274,7 @@ public class PlacementHandler
                     int bitMask = ~(0xFFFFFFFF << requiredBits);
                     int valueIndex = protocolValue & bitMask;
 
-                    //System.out.printf("[PHv3] trying to apply valInd: %d, bits: %d, prot val: 0x%08X [Property %s]\n", valueIndex, requiredBits, protocolValue, prop.getName());
+                    System.out.printf("[PHv3] trying to apply valInd: %d, bits: %d, prot val: 0x%08X [Property %s]\n", valueIndex, requiredBits, protocolValue, prop.getName());
 
                     if (valueIndex >= 0 && valueIndex < list.size())
                     {
@@ -283,19 +283,19 @@ public class PlacementHandler
                         if (state.getValue(prop).equals(value) == false &&
                             value != SlabType.DOUBLE) // don't allow duping slabs by forcing a double slab via the protocol
                         {
-                            //System.out.printf("[PHv3] applying \"%s\": %s\n", prop.getName(), value);
+                            System.out.printf("[PHv3] applying \"%s\": %s\n", prop.getName(), value);
                             state = state.setValue(prop, value);
 
                             if (Configs.Generic.EASY_PLACE_SP_VALIDATION.getBooleanValue())
                             {
                                 if (state.canSurvive(context.world(), context.pos()))
                                 {
-                                    //System.out.printf("[PHv3] validator passed for \"%s\"\n", prop.getName());
+                                    System.out.printf("[PHv3] validator passed for \"%s\"\n", prop.getName());
                                     oldState = state;
                                 }
                                 else
                                 {
-                                    //System.out.printf("[PHv3] validator failed for \"%s\"\n", prop.getName());
+                                    System.out.printf("[PHv3] validator failed for \"%s\"\n", prop.getName());
                                     state = oldState;
                                 }
                             }
@@ -308,12 +308,10 @@ public class PlacementHandler
                         protocolValue >>>= requiredBits;
                     }
                 }
-                /*
                 else
                 {
                     System.out.printf("[PHv3] skipping prot val: 0x%08X [Property %s]\n", protocolValue, p.getName());
                 }
-                 */
             }
         }
         catch (Exception e)
@@ -331,7 +329,7 @@ public class PlacementHandler
                 Property<T> prop = (Property<T>) p;
                 BlockState def = state.getBlock().defaultBlockState();
                 state = state.setValue(prop, def.getValue(prop));
-                //System.out.printf("[PHv3] blacklisted state [%s] found, setting default value\n", prop.getName());
+                System.out.printf("[PHv3] blacklisted state [%s] found, setting default value\n", prop.getName());
             }
         }
 
@@ -348,12 +346,12 @@ public class PlacementHandler
         {
             if (state.canSurvive(context.world(), context.pos()))
             {
-                //System.out.printf("[PHv3] validator passed for \"%s\"\n", state);
+                System.out.printf("[PHv3] validator passed for \"%s\"\n", state);
                 return state;
             }
             else
             {
-                //System.out.printf("[PHv3] validator failed for \"%s\"\n", state);
+                System.out.printf("[PHv3] validator failed for \"%s\"\n", state);
                 return null;
             }
         }
@@ -382,7 +380,7 @@ public class PlacementHandler
             }
         }
 
-        //System.out.printf("plop facing: %s -> %s (raw: %d, dec: %d)\n", facingOrig, facing, protocolValue, decodedFacingIndex);
+        System.out.printf("plop facing: %s -> %s (raw: %d, dec: %d)\n", facingOrig, facing, protocolValue, decodedFacingIndex);
 
         if (facing != facingOrig && property.getPossibleValues().contains(facing))
         {

@@ -20,7 +20,7 @@ import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.util.IEntityRendererInvoker;
 
 @Mixin(EntityRenderDispatcher.class)
-public abstract class MixinEntityRenderManager implements IEntityRendererInvoker
+public abstract class MixinEntityRenderDispatcher implements IEntityRendererInvoker
 {
 	@Shadow private Map<PlayerModelType, AvatarRenderer<ClientMannequin>> mannequinRenderers;
 	@Shadow private Map<PlayerModelType, AvatarRenderer<AbstractClientPlayer>> playerRenderers;

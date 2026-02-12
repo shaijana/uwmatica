@@ -14,6 +14,7 @@ import fi.dy.masa.malilib.gui.button.ButtonOnOff;
 import fi.dy.masa.malilib.gui.button.IButtonActionListener;
 import fi.dy.masa.malilib.gui.interfaces.ITextFieldListener;
 import fi.dy.masa.malilib.gui.widgets.WidgetInfoIcon;
+import fi.dy.masa.malilib.gui.wrappers.TextFieldType;
 import fi.dy.masa.malilib.interfaces.ICompletionListener;
 import fi.dy.masa.malilib.util.FileUtils;
 import fi.dy.masa.malilib.util.GuiUtils;
@@ -85,9 +86,9 @@ public class GuiMaterialList extends GuiListBase<MaterialListEntry, WidgetMateri
         this.addLabel(this.getScreenWidth() - w - 56, y + 5, w, 12, 0xFFFFFFFF, str);
 
         GuiTextFieldInteger tf = new GuiTextFieldInteger(this.getScreenWidth() - 52, y + 2, 40, 16, this.font);
-        tf.setTextWrapper(String.valueOf(this.materialList.getMultiplier()));
+        tf.setValueWrapper(String.valueOf(this.materialList.getMultiplier()));
         MultiplierListener listener = new MultiplierListener(this.materialList, this);
-        this.addTextField(tf, listener);
+        this.addTextField(tf, listener, TextFieldType.STRING);
 
         this.addWidget(new WidgetInfoIcon(this.getScreenWidth() - 23, 10, Icons.INFO_11, "litematica.info.material_list"));
 
@@ -452,7 +453,7 @@ public class GuiMaterialList extends GuiListBase<MaterialListEntry, WidgetMateri
         {
             try
             {
-                int multiplier = Integer.parseInt(textField.getTextWrapper());
+                int multiplier = Integer.parseInt(textField.getValueWrapper());
 
                 if (multiplier != this.materialList.getMultiplier())
                 {

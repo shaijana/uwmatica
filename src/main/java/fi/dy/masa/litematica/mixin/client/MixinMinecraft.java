@@ -11,9 +11,9 @@ import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.schematic.placement.PlacementManagerDaemonHandler;
 
 @Mixin(value = Minecraft.class)
-public abstract class MixinMinecraftClient extends ReentrantBlockableEventLoop<Runnable>
+public abstract class MixinMinecraft extends ReentrantBlockableEventLoop<Runnable>
 {
-    public MixinMinecraftClient(String string_1)
+    public MixinMinecraft(String string_1)
     {
         super(string_1);
     }

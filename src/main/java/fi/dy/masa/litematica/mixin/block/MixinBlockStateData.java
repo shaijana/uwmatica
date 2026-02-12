@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import fi.dy.masa.litematica.schematic.conversion.SchematicConversionMaps;
 
 @Mixin(BlockStateData.class)
-public abstract class MixinBlockStateFlattening
+public abstract class MixinBlockStateData
 {
     @Inject(method = "register", at = @At("HEAD"))
     private static void litematica_onAddEntry(int oldIdAndMeta, Dynamic<?> newStateDynamic, Dynamic<?>[] oldStateDynamics, CallbackInfo ci)

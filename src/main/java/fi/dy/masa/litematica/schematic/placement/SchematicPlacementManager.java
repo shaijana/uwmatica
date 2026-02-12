@@ -14,6 +14,7 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -22,6 +23,7 @@ import net.minecraft.util.Util;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 
@@ -183,21 +185,31 @@ public class SchematicPlacementManager
                             if (!this.worldSupplier.get().getChunkSource().hasChunk(cx, cz) &&
                                 DataManager.getSchematicPlacementManager().canHandleChunk(Minecraft.getInstance().level, cx, cz))
                             {
-                                notLoaded.add(cp);
+                                Frustum frustum = Minecraft.getInstance().levelRenderer.getCapturedFrustum();
+
+                                // Check Frustum culling
+                                if (frustum != null)
+                                {
+                                    BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos(cx << 4, Minecraft.getInstance().level.getMinY(), cz << 4);
+                                    int x = pos.getX();
+                                    int y = pos.getY();
+                                    int z = pos.getZ();
+
+                                    AABB bb = new AABB(x, y, z, x + 16, y + Minecraft.getInstance().level.getHeight(), z + 16);
+
+                                    if (frustum.isVisible(bb))
+                                    {
+                                        notLoaded.add(cp);
+                                    }
+                                }
+                                else
+                                {
+                                    notLoaded.add(cp);
+                                }
                             }
                             else if (this.worldSupplier.get().getChunkSource().hasChunk(cx, cz))
                             {
-//                                if (this.worldSupplier.get().getChunkSource().getChunkState(cx, cz).atLeast(ChunkSchematicState.LOADED))
-//                                {
-//                                    if (isFar)
-//                                    {
-//                                        loaded.add(cp);
-//                                    }
-//                                }
-//                                else
-//                                {
-                                    notLoaded.add(cp);
-//                                }
+                                loaded.add(cp);
                             }
                         }
                     }

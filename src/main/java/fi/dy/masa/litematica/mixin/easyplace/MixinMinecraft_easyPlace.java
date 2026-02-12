@@ -14,7 +14,7 @@ import fi.dy.masa.litematica.util.WorldUtils;
  * Post Re-Write code
  */
 @Mixin(value = Minecraft.class)
-public abstract class MixinMinecraftClient_easyPlace
+public abstract class MixinMinecraft_easyPlace
 {
     @Inject(method = "startUseItem()V", at = @At(value = "INVOKE",
                                                  target = "Lnet/minecraft/world/item/ItemStack;getCount()I", ordinal = 0), cancellable = true)

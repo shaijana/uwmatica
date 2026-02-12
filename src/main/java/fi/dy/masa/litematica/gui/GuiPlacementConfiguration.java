@@ -17,6 +17,7 @@ import fi.dy.masa.malilib.gui.button.IButtonActionListener;
 import fi.dy.masa.malilib.gui.interfaces.ISelectionListener;
 import fi.dy.masa.malilib.gui.interfaces.ITextFieldListener;
 import fi.dy.masa.malilib.gui.widgets.WidgetCheckBox;
+import fi.dy.masa.malilib.gui.wrappers.TextFieldType;
 import fi.dy.masa.malilib.util.GuiUtils;
 import fi.dy.masa.malilib.util.StringUtils;
 import fi.dy.masa.malilib.util.position.PositionUtils.CoordinateType;
@@ -67,8 +68,8 @@ public class GuiPlacementConfiguration  extends GuiListBase<SubRegionPlacement, 
 
         this.textFieldRename = new GuiTextFieldGeneric(x, y + 2, width, 16, this.font);
         this.textFieldRename.setMaxLengthWrapper(256);
-        this.textFieldRename.setTextWrapper(this.placement.getName());
-        this.addTextField(this.textFieldRename, null);
+        this.textFieldRename.setValueWrapper(this.placement.getName());
+        this.addTextField(this.textFieldRename, null, TextFieldType.STRING);
         this.createButton(x + width + 4, y, -1, ButtonListener.Type.RENAME_PLACEMENT);
 
         String label = StringUtils.translate("litematica.gui.label.schematic_placement.sub_regions", this.placement.getSubRegionCount());
@@ -176,9 +177,9 @@ public class GuiPlacementConfiguration  extends GuiListBase<SubRegionPlacement, 
         }
 
         GuiTextFieldInteger textField = new GuiTextFieldInteger(x + offset, y + 2, width, 14, this.font);
-        textField.setTextWrapper(text);
+        textField.setValueWrapper(text);
         TextFieldListener listener = new TextFieldListener(type, this.placement, this);
-        this.addTextField(textField, listener);
+        this.addTextField(textField, listener, TextFieldType.STRING);
 
         String hover = StringUtils.translate("litematica.hud.schematic_placement.hover_info.lock_coordinate");
         x = x + offset + width + 20;
@@ -356,7 +357,7 @@ public class GuiPlacementConfiguration  extends GuiListBase<SubRegionPlacement, 
             switch (this.type)
             {
                 case RENAME_PLACEMENT:
-                    this.placement.setName(this.parent.textFieldRename.getTextWrapper());
+                    this.placement.setName(this.parent.textFieldRename.getValueWrapper());
                     break;
 
                 case ROTATE:
@@ -510,7 +511,7 @@ public class GuiPlacementConfiguration  extends GuiListBase<SubRegionPlacement, 
         {
             try
             {
-                int value = Integer.parseInt(textField.getTextWrapper());
+                int value = Integer.parseInt(textField.getValueWrapper());
                 BlockPos posOld = this.placement.getOrigin();
                 this.parent.setNextMessageType(MessageType.ERROR);
 
