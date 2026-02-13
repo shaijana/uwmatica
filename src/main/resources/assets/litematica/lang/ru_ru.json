@@ -647,7 +647,7 @@
     "litematica.gui.button.hover.area_selections.unselect": "Снимает выбор с текущего региона",
     "litematica.gui.button.hover.material_list.clear_cache": "Очищает кэш материалов.\nОбычно это не требуется.\nМожно использовать вместо удаления файла \"material_cache.nbt\"\nв случае, если кэш содержит ошибочные данные вроде\nпредметов, сохранённых для блоков, которые их не имеют\n(например, головка поршня)",
     "litematica.gui.button.hover.material_list.json_hold_shift_for_missing_only": "Hold shift to write the missing raw materials only; and optionally\nhold alt to prioritize crafting recipes over stonecutter recipes\n§6NOTE: Results may differ, depending on if\n§6you have discovered all of the required recipes or not",
-    "litematica.gui.button.hover.material_list.write_hold_shift_for_csv": "Удерживайте Shift для записи в файл .csv\nвместо обычной ASCII-таблицы в текстовом файле.",
+    "litematica.gui.button.hover.material_list.write_hold_shift_for_csv": "Удерживайте Shift для записи в файл .csv\nвместо обычной ASCII-таблицы в текстовом файле.\n§dHold ALT for a JSON export",
     "litematica.gui.button.hover.material_list_shift_to_select_sub_regions": "Удерживайте Shift, чтобы выбрать компоненты для списка материалов",
     "litematica.gui.button.hover.plus_minus_tip": "ЛКМ для увеличения\nПКМ для уменьшения\nShift и/или Alt для увеличения размера шага",
     "litematica.gui.button.hover.plus_minus_tip_ctrl_alt_shift": "ЛКМ для увеличения\nПКМ для уменьшения\nShift/Alt/Ctrl для умножения размера шага",

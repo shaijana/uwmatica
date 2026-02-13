@@ -647,7 +647,7 @@
     "litematica.gui.button.hover.area_selections.unselect": "선택 취소 현재 영역 선택",
     "litematica.gui.button.hover.material_list.clear_cache": "재료 캐시 초기화\n보통의 경우 필요 없을 것입니다.\n이것은 피스톤 헤드와 같이 잘못된 데이터가 캐시에 저장된 경우\n'material_cache.nbt' 파일을 삭제하는 대신 사용할 수 있습니다.",
     "litematica.gui.button.hover.material_list.json_hold_shift_for_missing_only": "결손 원재료만 저장하려면 shift 키를 누르세요. 또한 alt 키를\n누르면 석재 절단기 조합법보다 제작 조합법을 우선시합니다.\n§6참고: 당신이 필요한 조합법을 모두 찾았는지\n§6아닌지에 따라 결과가 달라질 수 있습니다.",
-    "litematica.gui.button.hover.material_list.write_hold_shift_for_csv": "ASCII-art 테이블 텍스트 파일로 저장하는\n대신 CSV 파일로 저장하려면 shift 키를 누르세요.",
+    "litematica.gui.button.hover.material_list.write_hold_shift_for_csv": "ASCII-art 테이블 텍스트 파일로 저장하는\n대신 CSV 파일로 저장하려면 shift 키를 누르세요.\n§dHold ALT for a JSON export",
     "litematica.gui.button.hover.material_list_shift_to_select_sub_regions": "서브-지역에 대한 재료 목록을 선택하려면 shift 키를 누르세요.",
     "litematica.gui.button.hover.plus_minus_tip": "왼쪽 클릭으로 증가\n오른쪽 클릭으로 감소\nShift 및/또는 Alt로 증감폭 증가",
     "litematica.gui.button.hover.plus_minus_tip_ctrl_alt_shift": "왼쪽 클릭으로 증가\n오른쪽 클릭으로 감소\nShift/Altt/Ctrl로 증감폭 증가 (곱셈)",

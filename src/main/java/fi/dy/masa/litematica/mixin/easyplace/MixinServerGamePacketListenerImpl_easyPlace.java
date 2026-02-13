@@ -10,7 +10,7 @@ import fi.dy.masa.litematica.config.Configs;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.world.phys.Vec3;
 
-@Mixin(value = ServerGamePacketListenerImpl.class, priority = 990)
+@Mixin(value = ServerGamePacketListenerImpl.class, priority = 980)
 public class MixinServerGamePacketListenerImpl_easyPlace
 {
     @WrapOperation(method = "handleUseItemOn", require = 0,

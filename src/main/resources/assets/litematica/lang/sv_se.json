@@ -647,7 +647,7 @@
     "litematica.gui.button.hover.area_selections.unselect": "Avmarkerar det aktuella områdesvalet",
     "litematica.gui.button.hover.material_list.clear_cache": "Rensar Materialcache\nNormalt behövs inte detta\nDetta kan användas istället för att ta bort 'material_cache. bt'\nfil om cachen har några fel data, som objekt\nlagrade för block som inte borde ha dem, som kolvhuvuden",
     "litematica.gui.button.hover.material_list.json_hold_shift_for_missing_only": "Hold shift to write the missing raw materials only; and optionally\nhold alt to prioritize crafting recipes over stonecutter recipes\n§6NOTE: Results may differ, depending on if\n§6you have discovered all of the required recipes or not",
-    "litematica.gui.button.hover.material_list.write_hold_shift_for_csv": "Håll skift för att skriva till en CSV-fil,\ni stället för den normala ASCII-art-tabellens textfil",
+    "litematica.gui.button.hover.material_list.write_hold_shift_for_csv": "Håll skift för att skriva till en CSV-fil,\ni stället för den normala ASCII-art-tabellens textfil.\n§dHold ALT for a JSON export",
     "litematica.gui.button.hover.material_list_shift_to_select_sub_regions": "Håll ned skift för att välja de underregioner som används för materiallistan",
     "litematica.gui.button.hover.plus_minus_tip": "Vänsterklicka för att öka\nHögerklicka för att minska\nSkift och/eller Alt för att öka stegstorleken",
     "litematica.gui.button.hover.plus_minus_tip_ctrl_alt_shift": "Vänsterklicka för att öka\nHögerklicka för att minska\nSkift/Alt/Ctrl för att öka stegstorleken (multiplikativ)",

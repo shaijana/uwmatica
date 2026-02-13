@@ -13,7 +13,7 @@ import fi.dy.masa.litematica.util.WorldUtils;
 /**
  * Post Re-Write code
  */
-@Mixin(value = Minecraft.class)
+@Mixin(value = Minecraft.class, priority = 980)
 public abstract class MixinMinecraft_easyPlace
 {
     @Inject(method = "startUseItem()V", at = @At(value = "INVOKE",
@@ -23,11 +23,11 @@ public abstract class MixinMinecraft_easyPlace
         if (Configs.Generic.PLACEMENT_RESTRICTION.getBooleanValue())
         {
             if (Configs.Generic.EASY_PLACE_POST_REWRITE.getBooleanValue()
-                && EasyPlaceUtils.handlePlacementRestriction())
+                    && EasyPlaceUtils.handlePlacementRestriction())
             {
                 ci.cancel();
             }
-            else if (WorldUtils.handlePlacementRestriction((Minecraft)(Object) this))
+            else if (WorldUtils.handlePlacementRestriction((Minecraft) (Object) this))
             {
                 ci.cancel();
             }
@@ -36,11 +36,11 @@ public abstract class MixinMinecraft_easyPlace
 
     @Inject(method = "handleKeybinds",
             at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/client/Minecraft;startUseItem()V"))
+                     target = "Lnet/minecraft/client/Minecraft;startUseItem()V"))
     private void onUseKeyPre(CallbackInfo ci)
     {
         if (Configs.Generic.EASY_PLACE_MODE.getBooleanValue() &&
-            Configs.Generic.EASY_PLACE_POST_REWRITE.getBooleanValue())
+                Configs.Generic.EASY_PLACE_POST_REWRITE.getBooleanValue())
         {
             EasyPlaceUtils.setIsFirstClick();
         }
@@ -50,7 +50,7 @@ public abstract class MixinMinecraft_easyPlace
     private void onUseKeyPost(CallbackInfo ci)
     {
         if (Configs.Generic.EASY_PLACE_MODE.getBooleanValue() &&
-            Configs.Generic.EASY_PLACE_POST_REWRITE.getBooleanValue())
+                Configs.Generic.EASY_PLACE_POST_REWRITE.getBooleanValue())
         {
             if (EasyPlaceUtils.shouldDoEasyPlaceActions())
             {

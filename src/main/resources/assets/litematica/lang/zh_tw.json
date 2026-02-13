@@ -647,7 +647,7 @@
     "litematica.gui.button.hover.area_selections.unselect": "取消選擇目前區域選擇",
     "litematica.gui.button.hover.material_list.clear_cache": "清除材料快取\n通常這不應該需要做的\n這可以用來代替刪除「material_cache.nbt」檔案，以防快取含有一些錯誤的資料，比如一些不應存在的物品（活塞頭）",
     "litematica.gui.button.hover.material_list.json_hold_shift_for_missing_only": "Hold shift to write the missing raw materials only; and optionally\nhold alt to prioritize crafting recipes over stonecutter recipes\n§6NOTE: Results may differ, depending on if\n§6you have discovered all of the required recipes or not",
-    "litematica.gui.button.hover.material_list.write_hold_shift_for_csv": "按住 Shift 寫入 csv 檔案,\n而不是普通的 ASCII-art 文字檔案",
+    "litematica.gui.button.hover.material_list.write_hold_shift_for_csv": "按住 Shift 寫入 csv 檔案,\n而不是普通的 ASCII-art 文字檔案.\n§dHold ALT for a JSON export",
     "litematica.gui.button.hover.material_list_shift_to_select_sub_regions": "按住 Shift 選擇用於材料清單的子區域",
     "litematica.gui.button.hover.plus_minus_tip": "左鍵點擊可增大\n右鍵點擊可減小\nShift/Alt 增加步長",
     "litematica.gui.button.hover.plus_minus_tip_ctrl_alt_shift": "左鍵點擊可增大\n右鍵點擊可減小\nShift/Alt/Ctrl 增加步長（乘法）",

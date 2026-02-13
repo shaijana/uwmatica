@@ -647,7 +647,7 @@
     "litematica.gui.button.hover.area_selections.unselect": "Désélectionne la sélection de la zone actuelle",
     "litematica.gui.button.hover.material_list.clear_cache": "Efface le cache de matériaux\nNormalement, cela ne devrait pas être nécessaire\nCela peut être utilisé à la place de la suppression du fichier 'material_cache.nbt'\nau cas où le cache contiendrait des données erronées, comme des éléments\nstockés pour des blocs qui ne devraient pas en avoir, comme des têtes de piston",
     "litematica.gui.button.hover.material_list.json_hold_shift_for_missing_only": "Hold shift to write the missing raw materials only; and optionally\nhold alt to prioritize crafting recipes over stonecutter recipes\n§6NOTE: Results may differ, depending on if\n§6you have discovered all of the required recipes or not",
-    "litematica.gui.button.hover.material_list.write_hold_shift_for_csv": "Maintenez la touche Maj enfoncée pour écrire dans un fichier CSV,\nau lieu du fichier texte de table ASCII-art normal",
+    "litematica.gui.button.hover.material_list.write_hold_shift_for_csv": "Maintenez la touche Maj enfoncée pour écrire dans un fichier CSV,\nau lieu du fichier texte de table ASCII-art normal.\n§dHold ALT for a JSON export",
     "litematica.gui.button.hover.material_list_shift_to_select_sub_regions": "Maintenez la touche Maj enfoncée pour sélectionner les sous-régions utilisées pour la liste de matériaux",
     "litematica.gui.button.hover.plus_minus_tip": "Clic gauche pour augmenter\nClic droit pour diminuer\nMaj et/ou Alt pour augmenter la taille de l'étape",
     "litematica.gui.button.hover.plus_minus_tip_ctrl_alt_shift": "Clic gauche pour augmenter\nClic droit pour diminuer\nMaj/Alt/Ctrl pour augmenter la taille du pas (multiplicatif)",

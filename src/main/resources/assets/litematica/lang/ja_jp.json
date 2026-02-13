@@ -647,7 +647,7 @@
     "litematica.gui.button.hover.area_selections.unselect": "現在の領域を選択解除する",
     "litematica.gui.button.hover.material_list.clear_cache": "建材のキャッシュを消去する\n通常は必要ない操作だが，キャッシュに誤ったデータが含まれる場合に\n'material_cache.nbt' ファイルを削除する代わりに使用できる．\n(例えば，ピストンヘッド等の本来ブロックとされないもの)",
     "litematica.gui.button.hover.material_list.json_hold_shift_for_missing_only": "Hold shift to write the missing raw materials only; and optionally\nhold alt to prioritize crafting recipes over stonecutter recipes\n§6NOTE: Results may differ, depending on if\n§6you have discovered all of the required recipes or not",
-    "litematica.gui.button.hover.material_list.write_hold_shift_for_csv": "Shiftを押しながらクリックでCSVファイルとして書き出す\n(通常はASCIIアート形式の表でテキストファイルに書き出される)",
+    "litematica.gui.button.hover.material_list.write_hold_shift_for_csv": "Shiftを押しながらクリックでCSVファイルとして書き出す\n(通常はASCIIアート形式の表でテキストファイルに書き出される).\n§dHold ALT for a JSON export",
     "litematica.gui.button.hover.material_list_shift_to_select_sub_regions": "Shiftを押しながらクリックで建材リストを表示する子領域を選択",
     "litematica.gui.button.hover.plus_minus_tip": "左クリックで増やす\n右クリックで減らす\nAltを押しながらで4ずつ\nShiftを押しながらで8ずつ\nShift+Altを押しながらで32ずつ",
     "litematica.gui.button.hover.plus_minus_tip_ctrl_alt_shift": "左クリックで増やす\n右クリックで減らす\nAltを押しながらで5ずつ\nShiftを押しながらで10ずつ\nCtrlを押しながらで100ずつ\n(併用可能)",

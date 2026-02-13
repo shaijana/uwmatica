@@ -647,7 +647,7 @@
     "litematica.gui.button.hover.area_selections.unselect": "Deseleziona l'Area di Selezione attuale",
     "litematica.gui.button.hover.material_list.clear_cache": "Svuota la Cache dei Materiali\nNormalmente non dovrebbe essere necessario\nPuò essere usato invece di eliminare il file 'material_cache.nbt'\nse la cache contiene dati errati, come oggetti\nmemorizzati per blocchi che non dovrebbero averli, come le teste dei pistoni",
     "litematica.gui.button.hover.material_list.json_hold_shift_for_missing_only": "Hold shift to write the missing raw materials only; and optionally\nhold alt to prioritize crafting recipes over stonecutter recipes\n§6NOTE: Results may differ, depending on if\n§6you have discovered all of the required recipes or not",
-    "litematica.gui.button.hover.material_list.write_hold_shift_for_csv": "Tieni premuto Shift per scrivere in un file CSV,\ninvece del normale file di testo con tavola ASCII",
+    "litematica.gui.button.hover.material_list.write_hold_shift_for_csv": "Tieni premuto Shift per scrivere in un file CSV,\ninvece del normale file di testo con tavola ASCII.\n§dHold ALT for a JSON export",
     "litematica.gui.button.hover.material_list_shift_to_select_sub_regions": "Tieni premuto Shift per selezionare le sottoregioni utilizzate per la Lista dei Materiali",
     "litematica.gui.button.hover.plus_minus_tip": "Clic sinistro per aumentare\nClic destro per diminuire\nShift e/o Alt per aumentare la dimensione del passo",
     "litematica.gui.button.hover.plus_minus_tip_ctrl_alt_shift": "Clic sinistro per aumentare\nClic destro per diminuire\nShift/Alt/Ctrl per aumentare la dimensione del passo (moltiplicativo)",

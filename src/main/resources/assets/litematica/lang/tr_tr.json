@@ -647,7 +647,7 @@
     "litematica.gui.button.hover.area_selections.unselect": "Mevcut Alan Seçimini kaldırır",
     "litematica.gui.button.hover.material_list.clear_cache": "Materyal Önbelleğini temizler.\nNormalde buna ihtiyaç duyulmaz.\nAncak önbellekte yanlış veriler varsa (piston başlığı gibi\nbloklarda eşya görünmesi durumu) 'material_cache.nbt'\ndosyası silmek yerine bu düğme kullanılabilir.",
     "litematica.gui.button.hover.material_list.json_hold_shift_for_missing_only": "Sadece eksik ham maddeleri yazmak için Shift tuşuna basın;\nayrıca üretim tariflerini taş kesici tariflerine önceliklendirmek\niçin Alt tuşuna basılı tutun.\n§6NOT: Sonuçlar, gerekli tüm tarifleri keşfedip\n§6etmediğinize bağlı olarak değişebilir.",
-    "litematica.gui.button.hover.material_list.write_hold_shift_for_csv": "Normal tablo metin dosyası yerine bir CSV dosyasına\nyazmak için Shift tuşuna basılı tutun.",
+    "litematica.gui.button.hover.material_list.write_hold_shift_for_csv": "Normal tablo metin dosyası yerine bir CSV dosyasına\nyazmak için Shift tuşuna basılı tutun.\n§dHold ALT for a JSON export",
     "litematica.gui.button.hover.material_list_shift_to_select_sub_regions": "Materyal Listesi için kullanılan alt bölgeleri seçmek için Shift'e basın",
     "litematica.gui.button.hover.plus_minus_tip": "Artırmak için sol tık\nAzaltmak için sağ tık\nArtış miktarını büyütmek için Shift veya Alt tuşuna basın",
     "litematica.gui.button.hover.plus_minus_tip_ctrl_alt_shift": "Artırmak için sol tık\nAzaltmak için sağ tık\nAdım boyutunu katlamak için Shift/Alt/Ctrl tuşlarını kullanın",
