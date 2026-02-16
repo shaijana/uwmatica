@@ -854,7 +854,7 @@
     "litematica.gui.label.schematic_projects.version": "版本：%s（共%s个）",
     "litematica.gui.label.schematic_projects.version_description": "版本描述：",
     "litematica.gui.label.schematic_projects.version_entry": "版本%d - %s",
-    "litematica.gui.label.schematic_projects.version_hover.description": "描述：",
+    "litematica.gui.label.schematic_projects.version_hover.description": "§7描述:§r",
     "litematica.gui.label.schematic_projects.version_hover.entry": "§fVer. §e%d§f - §b%s§r",
     "litematica.gui.label.schematic_projects.version_hover.timestamp": "§7时间戳：§f%s§r",
     "litematica.gui.label.schematic_projects.version_name": "版本名称：",
