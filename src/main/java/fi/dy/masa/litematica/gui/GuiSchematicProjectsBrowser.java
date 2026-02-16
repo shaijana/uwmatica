@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import javax.annotation.Nullable;
 
 import fi.dy.masa.malilib.gui.GuiBase;
+import fi.dy.masa.malilib.gui.GuiConfirmAction;
 import fi.dy.masa.malilib.gui.GuiListBase;
 import fi.dy.masa.malilib.gui.GuiTextInput;
 import fi.dy.masa.malilib.gui.Message.MessageType;
@@ -16,9 +17,11 @@ import fi.dy.masa.malilib.gui.widgets.WidgetDirectoryEntry;
 import fi.dy.masa.malilib.gui.widgets.WidgetFileBrowserBase.DirectoryEntry;
 import fi.dy.masa.malilib.gui.widgets.WidgetFileBrowserBase.DirectoryEntryType;
 import fi.dy.masa.malilib.interfaces.IStringConsumerFeedback;
+import fi.dy.masa.malilib.util.FileDeleter;
 import fi.dy.masa.malilib.util.GuiUtils;
 import fi.dy.masa.malilib.util.InfoUtils;
 import fi.dy.masa.malilib.util.StringUtils;
+import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.gui.GuiMainMenu.ButtonListenerChangeMenu;
 import fi.dy.masa.litematica.gui.widgets.WidgetSchematicProjectBrowser;
@@ -74,6 +77,7 @@ public class GuiSchematicProjectsBrowser extends GuiListBase<DirectoryEntry, Wid
         if (selected != null && FileType.fromFile(selected.getFullPath()) == FileType.JSON)
         {
             x += this.createButton(x, y, false, ButtonListener.Type.LOAD_PROJECT);
+            x += this.createButton(x, y, false, ButtonListener.Type.DELETE_PROJECT);
         }
 
         if (project != null)
@@ -135,6 +139,7 @@ public class GuiSchematicProjectsBrowser extends GuiListBase<DirectoryEntry, Wid
         @Override
         public void actionPerformedWithButton(ButtonBase button, int mouseButton)
         {
+            if (this.gui.getListWidget() == null) return;
             if (this.type == Type.LOAD_PROJECT)
             {
                 DirectoryEntry entry = this.gui.getListWidget().getLastSelectedEntry();
@@ -157,6 +162,16 @@ public class GuiSchematicProjectsBrowser extends GuiListBase<DirectoryEntry, Wid
                             InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, "litematica.error.schematic_projects.failed_to_load_project");
                         }
                     }
+                }
+            }
+            else if (this.type == Type.DELETE_PROJECT)
+            {
+                DirectoryEntry entry = this.gui.getListWidget().getLastSelectedEntry();
+
+                if (entry != null && entry.type() == DirectoryEntryType.FILE)
+                {
+                    FileDeleter deleter = new FileDeleter(entry.getFullPath(), this.gui.getListWidget(), Configs.Generic.DISPLAY_FILE_OPS_FEEDBACK.getBooleanValue());
+                    GuiBase.openGui(new GuiConfirmAction(400, "litematica.gui.title.confirm_file_deletion", deleter, this.gui, "litematica.gui.message.confirm_file_deletion", entry.name()));
                 }
             }
             else if (this.type == Type.CREATE_PROJECT)
@@ -187,7 +202,9 @@ public class GuiSchematicProjectsBrowser extends GuiListBase<DirectoryEntry, Wid
             OPEN_MANAGER_GUI    ("litematica.gui.button.schematic_projects.open_manager_gui"),
             LOAD_PROJECT        ("litematica.gui.button.schematic_projects.load_project"),
             CREATE_PROJECT      ("litematica.gui.button.schematic_projects.create_project"),
-            CLOSE_PROJECT       ("litematica.gui.button.schematic_projects.close_project");
+            CLOSE_PROJECT       ("litematica.gui.button.schematic_projects.close_project"),
+            DELETE_PROJECT      ("litematica.gui.button.schematic_projects.delete_project"),
+            ;
 
             private final String translationKey;
             @Nullable
