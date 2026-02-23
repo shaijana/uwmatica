@@ -1,11 +1,12 @@
 package fi.dy.masa.litematica.schematic.placement;
 
+import java.util.ConcurrentModificationException;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ThreadFactory;
-import org.apache.commons.lang3.tuple.Pair;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.level.ChunkPos;
@@ -14,44 +15,40 @@ import fi.dy.masa.malilib.interfaces.IThreadDaemonHandler;
 import fi.dy.masa.malilib.util.MathUtils;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.Reference;
-import fi.dy.masa.litematica.config.Configs;
-import fi.dy.masa.litematica.data.DataManager;
-import fi.dy.masa.litematica.data.EntitiesDataStorage;
 import fi.dy.masa.litematica.render.LitematicaRenderer;
 
 public class PlacementManagerDaemonHandler implements IThreadDaemonHandler<PlacementManagerTask>
 {
-	private final int threadCount = this.calculateMaxThreads();
-	private final ConcurrentHashMap<String, Pair<Thread, PlacementManagerDaemonExecutor>> threadMap = this.builder();
 	public static final PlacementManagerDaemonHandler INSTANCE = new PlacementManagerDaemonHandler();
-
-	private final ConcurrentLinkedQueue<PlacementManagerTask> queueUnload = new ConcurrentLinkedQueue<>();
-	private final ConcurrentLinkedQueue<PlacementManagerTask> queueRebuild = new ConcurrentLinkedQueue<>();
-	private final ConcurrentLinkedQueue<PlacementManagerTask> queueOther = new ConcurrentLinkedQueue<>();
-	private final ConcurrentLinkedQueue<PlacementManagerTask> deferredQueue = new ConcurrentLinkedQueue<>();
-
-	private static final float taskInterval = 0.75f;
+	private static final int MAX_PLATFORM_THREADS = 1;
+	private boolean useVirtual = false;
+	private final String namePrefix = Reference.MOD_NAME+" Placement Manager ";
+	private static final float TASK_INTERVAL = 2.0F;
+	private final int threadCount = this.calculateMaxThreads();
+	private final ConcurrentHashMap<String, Thread> threadMap = this.builder();
+	private final LinkedBlockingQueue<PlacementManagerTask> queueUnload = new LinkedBlockingQueue<>();
+	private final LinkedBlockingQueue<PlacementManagerTask> queueRebuild = new LinkedBlockingQueue<>();
+	private final LinkedBlockingQueue<PlacementManagerTask> queueOther = new LinkedBlockingQueue<>();
+	private final LinkedBlockingQueue<PlacementManagerTask> deferredQueue = new LinkedBlockingQueue<>();
 	private long lastTick;
 	private boolean processing = false;
 
 	private int calculateMaxThreads()
 	{
-		// Don't use more than 1 / 4 of possible Platform threads for this; or MAX_PLATFORM_THREADS.
-		return Math.clamp((Runtime.getRuntime().availableProcessors() / 4), 1, Reference.MAX_PLATFORM_THREADS);
+		final int result = this.getThreadCountSafe();
+		if (result < 1) { this.useVirtual = true; }
+
+		return MathUtils.clamp(result, 1, MAX_PLATFORM_THREADS);
 	}
 
-	private ConcurrentHashMap<String, Pair<Thread, PlacementManagerDaemonExecutor>> builder()
+	private ConcurrentHashMap<String, Thread> builder()
 	{
-		ConcurrentHashMap<String, Pair<Thread, PlacementManagerDaemonExecutor>> threads = new ConcurrentHashMap<>(Reference.MAX_PLATFORM_THREADS, 0.9f, 1);
-		String prefix = Reference.MOD_NAME+" Placement Manager ";
+		ConcurrentHashMap<String, Thread> threads = new ConcurrentHashMap<>(this.threadCount, 0.9f, 1);
 
 		for (int i = 0; i < this.threadCount; i++)
 		{
-			String name = prefix + (i+1);
-			ThreadFactory FACTORY = Thread.ofPlatform().name(name).daemon(true).factory();
-			PlacementManagerDaemonExecutor executor = new PlacementManagerDaemonExecutor();
-
-			threads.put(name, Pair.of(FACTORY.newThread(executor), executor));
+			String name = this.namePrefix + (i+1);
+			threads.put(name, this.threadFactory(name, this.useVirtual, new PlacementManagerDaemonExecutor()));
 		}
 
 		return threads;
@@ -60,40 +57,75 @@ public class PlacementManagerDaemonHandler implements IThreadDaemonHandler<Place
 	private PlacementManagerDaemonHandler()
 	{
 		this.lastTick = System.currentTimeMillis();
-		this.start();
+	}
+
+	@Override
+	public String getName()
+	{
+		return this.namePrefix;
 	}
 
 	@Override
 	public void start()
 	{
 		Litematica.LOGGER.info("Starting [{}] Placement Manager Daemon threads", this.threadMap.size());
+		Set<String> keys = this.threadMap.keySet();
 
-		synchronized (this.threadMap)
+		for (String key : keys)
 		{
-			this.threadMap.forEach(
-					(name, pair) ->
-					{
-						pair.getLeft().start();
-						pair.getRight().start();
-					}
-			);
+			try
+			{
+				this.safeStart(this.threadMap.get(key));
+			}
+			catch (ConcurrentModificationException cme)
+			{
+				// Busy
+			}
+			catch (IllegalStateException is)
+			{
+				// Terminated
+				Thread entry = this.threadFactory(key, this.useVirtual, new PlacementManagerDaemonExecutor());
+				entry.start();
+
+				synchronized (this.threadMap)
+				{
+					this.threadMap.replace(key, entry);
+				}
+			}
+			catch (RuntimeException re)
+			{
+				// Already Running
+			}
+			catch (Exception ignored) {}
 		}
 	}
 
 	@Override
 	public void stop()
 	{
-		Litematica.debugLog("Stopping [{}] Placement Manager Daemon threads", this.threadMap.size());
+		Litematica.LOGGER.info("Stopping [{}] Placement Manager Daemon threads", this.threadMap.size());
+		Set<String> keys = this.threadMap.keySet();
 
-		synchronized (this.threadMap)
+		for (String key : keys)
 		{
-			this.threadMap.forEach(
-					(name, pair) ->
-					{
-						pair.getRight().stop();
-						pair.getLeft().interrupt();
-					}
-			);
+			try
+			{
+				this.safeStop(this.threadMap.get(key));
+			}
+			catch (ConcurrentModificationException cme)
+			{
+				// Busy
+				Litematica.LOGGER.warn("Thread [{}] is currently busy, and shouldn't be stopped", key);
+			}
+			catch (IllegalStateException is)
+			{
+				// Terminated already
+			}
+			catch (IllegalThreadStateException is)
+			{
+				// Never started
+			}
+			catch (Exception ignored) {}
 		}
 	}
 
@@ -108,15 +140,22 @@ public class PlacementManagerDaemonHandler implements IThreadDaemonHandler<Place
 	{
 		if (this.checkIfTasksAreFull())
 		{
-			this.deferredQueue.add(newTask);
+			this.deferredQueue.offer(newTask);
 			return;
 		}
+
+		final boolean wasEmpty = !this.hasTasks();
 
 		switch (newTask)
 		{
 			case PlacementManagerTaskUnload tU -> this.queueUnload.offer(newTask);
 			case PlacementManagerTaskRebuild tL -> this.queueRebuild.offer(newTask);
 			default -> this.queueOther.offer(newTask);
+		}
+
+		if (wasEmpty)
+		{
+			this.ensureThreadsAreAlive();
 		}
 
 		this.processing = true;
@@ -149,16 +188,22 @@ public class PlacementManagerDaemonHandler implements IThreadDaemonHandler<Place
 	}
 
 	@Override
+	public boolean hasTasks()
+	{
+		return !this.queueUnload.isEmpty() || !this.queueRebuild.isEmpty() || !this.queueOther.isEmpty() || !this.deferredQueue.isEmpty();
+	}
+
+	@Override
 	public long getTaskInterval()
 	{
-		return MathUtils.floor(taskInterval * 1000L);
+		return MathUtils.floor(TASK_INTERVAL * 1000L);
 	}
 
 	private synchronized boolean checkIfTasksAreFull()
 	{
 		final int threadCount = this.threadMap.size();
 		final int total = this.queueUnload.size() + this.queueRebuild.size() + this.queueOther.size();
-		final int calc = MathUtils.clamp((threadCount / 3), 1, threadCount) * 1000;
+		final int calc = MathUtils.clamp((threadCount / 3), 1, threadCount) * 750;
 
 		return total >= calc && total > 0;
 	}
@@ -203,8 +248,6 @@ public class PlacementManagerDaemonHandler implements IThreadDaemonHandler<Place
 		// Scheduled maintenance tasks
 		if ((now - this.lastTick) > this.getTaskInterval())
 		{
-			this.ensureThreadSafety();
-
 			if (this.processing && this.allDone())
 			{
 //				Litematica.LOGGER.warn("PlacementManagerDaemonHandler:  All tasks complete");
@@ -214,47 +257,37 @@ public class PlacementManagerDaemonHandler implements IThreadDaemonHandler<Place
 			}
 
 			// Scheduled updates
+			this.ensureThreadsAreAlive();
 			this.lastTick = now;
 		}
 	}
 
-	// TODO -- is this even necessary?
-	private void ensureThreadSafety()
-			throws RuntimeException
+	private void ensureThreadsAreAlive()
 	{
-		this.threadMap.forEach(
-				(name, pair) ->
+		if (this.hasTasks())
+		{
+			Set<String> keySet = this.threadMap.keySet();
+
+			for (String key : keySet)
+			{
+				try
 				{
-					if (!pair.getLeft().isAlive() || pair.getLeft().isInterrupted())
+					this.safeStart(this.threadMap.get(key));
+				}
+				catch (IllegalStateException is)
+				{
+					// Terminated (Replace)
+					Thread entry = this.threadFactory(key, this.useVirtual, new PlacementManagerDaemonExecutor());
+					entry.start();
+
+					synchronized (this.threadMap)
 					{
-						String err = String.format("'%s' was killed [%s]", name, this.getThreadStatus(pair.getLeft()));
-						this.clearAllTasks();
-						this.stop();
-
-						TemporaryWorldManager.INSTANCE.reset();
-						EntitiesDataStorage.getInstance().reset(true);
-						Configs.saveToFile();
-						DataManager.save(true);
-						DataManager.getInstance().reset(true);
-						DataManager.clear();
-						Litematica.LOGGER.fatal(err);
-
-						throw new RuntimeException(err);
+						this.threadMap.replace(key, entry);
 					}
 				}
-		);
-	}
-
-	private String getThreadStatus(Thread thread)
-	{
-		if (thread == null)
-		{
-			return "<>";
+				catch (RuntimeException ignored) {}
+			}
 		}
-
-		return "(" + thread.threadId() + ')'
-				+ "/"
-				+ thread.getState().name();
 	}
 
 	protected void removeUnloadTasksFor(int x, int z)
@@ -426,12 +459,6 @@ public class PlacementManagerDaemonHandler implements IThreadDaemonHandler<Place
 		this.removeAllOtherTasks();
 		this.removeAllDeferredTasks();
 		this.processing = false;
-	}
-
-	public void endAll()
-	{
-		this.clearAllTasks();
-		this.stop();
 	}
 
 	@Override

@@ -74,8 +74,9 @@ public class SchematicPlacementManager
     protected final Supplier<WorldSchematic> worldSupplier;
     protected ChunkPos lastVisibleChunksSortPos;
     protected boolean visibleChunksNeedsUpdate;
-    private final int tickRate = 5;      // in seconds
+    private final int tickRate = 7;      // in seconds
     private long lastTick;
+    private long lastEmptyCheck;
 
     public SchematicPlacementManager()
     {
@@ -93,6 +94,7 @@ public class SchematicPlacementManager
 
         this.worldSupplier = worldSupplier;
         this.lastTick = System.currentTimeMillis();
+        this.lastEmptyCheck = System.currentTimeMillis();
     }
 
     @Nullable
@@ -117,6 +119,8 @@ public class SchematicPlacementManager
     // This fixes when joining the world, and your placement's aren't being rendered
     public void onWorldJoin()
     {
+        PlacementManagerDaemonHandler.INSTANCE.start();
+
         if (this.schematicPlacements.isEmpty())
         {
             return;
@@ -162,6 +166,26 @@ public class SchematicPlacementManager
     {
         if (mc.level == null) return;
         final ChunkPos cc = mc.getCameraEntity().chunkPosition();
+
+        if (this.schematicPlacements.isEmpty())
+        {
+            long now = System.currentTimeMillis();
+
+            if (this.lastEmptyCheck < 0)
+            {
+                this.lastEmptyCheck = now;
+            }
+
+            // Check with the FIXER at least 1 or 2 times after all Schemas have been unloaded.
+            if ((now - this.lastEmptyCheck) > (this.getTickRateMs() * 2))
+            {
+                return;
+            }
+        }
+        else if (this.lastEmptyCheck > 0)
+        {
+            this.lastEmptyCheck = -1;
+        }
 
         PlacementManagerDaemonHandler.INSTANCE.addTask(
                 new PlacementManagerTaskOther(this.worldSupplier, cc.x, cc.z, () ->
@@ -296,6 +320,12 @@ public class SchematicPlacementManager
 
     public void onClientChunkLoad(int chunkX, int chunkZ)
     {
+        // Don't run tasks if there is nothing to do; let the thread sleep.
+        if (this.schematicPlacements.isEmpty())
+        {
+            return;
+        }
+
         this.markChunkForRebuild(chunkX, chunkZ);
     }
 
@@ -303,6 +333,12 @@ public class SchematicPlacementManager
     {
         if (Configs.Generic.LOAD_ENTIRE_SCHEMATICS.getBooleanValue() == false)
         {
+            // Don't run tasks if there is nothing to do; let the thread sleep.
+            if (this.schematicPlacements.isEmpty() && this.worldSupplier.get().getChunkSource().getLoadedChunksCount() == 0)
+            {
+                return;
+            }
+
             this.markChunkForUnload(chunkX, chunkZ);
         }
     }
