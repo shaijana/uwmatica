@@ -1011,6 +1011,7 @@
     "litematica.message.error.no_placement_selected": "§cРозміщення не вибрано§r",
     "litematica.message.error.only_works_in_single_player": "§cЦя операція працює лише в грі наодинці§r",
     "litematica.message.error.placement_paste_outside_world": "Розміщення не можна вставити в поточну позицію, оскільки воно виходить за межі світу",
+    "litematica.message.error.placement_paste_rendering_disabled": "The selected placement cannot be pasted in it's current position, because rendering is not enabled for it.",
     "litematica.message.error.schematic_paste_failed": "§cНе вдалося вставити схематику§r",
     "litematica.message.error.schematic_save_failed": "Не вдалося зберегти схематику до файлу «%s»",
     "litematica.message.error.schematic_save_interrupted": "Збереження схематики перервано або зупинено",

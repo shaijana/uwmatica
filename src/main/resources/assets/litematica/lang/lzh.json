@@ -1011,6 +1011,7 @@
     "litematica.message.error.no_placement_selected": "§c無置圖爲擇§r",
     "litematica.message.error.only_works_in_single_player": "§c此惟可用於獨戲§r",
     "litematica.message.error.placement_paste_outside_world": "弗能謄布置於此，因其超脫乎世疆",
+    "litematica.message.error.placement_paste_rendering_disabled": "The selected placement cannot be pasted in it's current position, because rendering is not enabled for it.",
     "litematica.message.error.schematic_paste_failed": "§c謄蜃圖於世而未成§r",
     "litematica.message.error.schematic_save_failed": "存蜃圖至案「%s」而未成",
     "litematica.message.error.schematic_save_interrupted": "存蜃圖而乍止",

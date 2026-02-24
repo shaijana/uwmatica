@@ -1011,6 +1011,7 @@
     "litematica.message.error.no_placement_selected": "§c선택된 배치 없음§r",
     "litematica.message.error.only_works_in_single_player": "§c이 작업은 싱글 플레이어에서만 작동합니다.§r",
     "litematica.message.error.placement_paste_outside_world": "배치를 현재 위치에 붙여넣을 수 없습니다. 배치가 월드 경계를 벗어났습니다.",
+    "litematica.message.error.placement_paste_rendering_disabled": "The selected placement cannot be pasted in it's current position, because rendering is not enabled for it.",
     "litematica.message.error.schematic_paste_failed": "§c월드에 스키매틱 붙여넣기 실패§r",
     "litematica.message.error.schematic_save_failed": "스키매틱을 파일로 저장 실패 '%s'",
     "litematica.message.error.schematic_save_interrupted": "스키매틱 저장이 방해받거나 중지되었습니다.",

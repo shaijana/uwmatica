@@ -1011,6 +1011,7 @@
     "litematica.message.error.no_placement_selected": "§c未选择任何放置§r",
     "litematica.message.error.only_works_in_single_player": "§c此操作仅支持单人游戏§r",
     "litematica.message.error.placement_paste_outside_world": "§c无法在当前坐标粘贴：放置区域超出世界边界§r",
+    "litematica.message.error.placement_paste_rendering_disabled": "The selected placement cannot be pasted in it's current position, because rendering is not enabled for it.",
     "litematica.message.error.schematic_paste_failed": "§c原理图粘贴到世界失败§r",
     "litematica.message.error.schematic_save_failed": "§c保存原理图到文件'%s'失败§r",
     "litematica.message.error.schematic_save_interrupted": "§c原理图保存已中断或停止§r",

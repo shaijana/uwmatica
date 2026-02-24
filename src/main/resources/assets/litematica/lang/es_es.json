@@ -1011,6 +1011,7 @@
     "litematica.message.error.no_placement_selected": "§cNo se ha seleccionado ninguna colocación§r",
     "litematica.message.error.only_works_in_single_player": "§cEsta operación solo funciona en un solo jugador§r",
     "litematica.message.error.placement_paste_outside_world": "La colocación no puede pegarse en la posición actual, porque se sale de los límites del mundo",
+    "litematica.message.error.placement_paste_rendering_disabled": "The selected placement cannot be pasted in it's current position, because rendering is not enabled for it.",
     "litematica.message.error.schematic_paste_failed": "§cFalló la Pegado del Esquema en el mundo§r",
     "litematica.message.error.schematic_save_failed": "No se pudo guardar el esquema en el archivo '%s'",
     "litematica.message.error.schematic_save_interrupted": "Guardado de esquema interrumpido o detenido",

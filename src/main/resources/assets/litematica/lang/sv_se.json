@@ -1011,6 +1011,7 @@
     "litematica.message.error.no_placement_selected": "§cIngen placering vald§r",
     "litematica.message.error.only_works_in_single_player": "§cDen här åtgärden fungerar bara i en enda spelare§r",
     "litematica.message.error.placement_paste_outside_world": "Placeringen kan inte klistras in i den nuvarande positionen, eftersom den går utanför världens gränser",
+    "litematica.message.error.placement_paste_rendering_disabled": "The selected placement cannot be pasted in it's current position, because rendering is not enabled for it.",
     "litematica.message.error.schematic_paste_failed": "§cSchematisk klistra in på världen misslyckades§r",
     "litematica.message.error.schematic_save_failed": "Det gick inte att spara schemat till filen '%s'",
     "litematica.message.error.schematic_save_interrupted": "Schematisk sparning avbruten eller stoppad",
