@@ -33,6 +33,7 @@ import fi.dy.masa.litematica.render.infohud.RenderPhase;
 import fi.dy.masa.litematica.scheduler.TaskScheduler;
 import fi.dy.masa.litematica.scheduler.tasks.TaskBase;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
+import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement;
 import fi.dy.masa.litematica.util.*;
 import fi.dy.masa.litematica.world.WorldSchematic;
 
@@ -305,7 +306,7 @@ public class SchematicVerifier extends TaskBase implements IInfoHudRenderer
         this.ignoreBlockRegistry = new IgnoreBlockRegistry();
 
         this.setCompletionListener(completionListener);
-        this.requiredChunks.addAll(schematicPlacement.getTouchedChunks());
+        this.requiredChunks.addAll(schematicPlacement.getTouchedChunks(SubRegionPlacement.RequiredEnabled.ANY));
         this.totalRequiredChunks = this.requiredChunks.size();
         this.verificationStarted = true;
 

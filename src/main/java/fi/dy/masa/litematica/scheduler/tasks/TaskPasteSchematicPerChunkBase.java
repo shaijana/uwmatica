@@ -11,6 +11,7 @@ import fi.dy.masa.malilib.util.LayerRange;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.schematic.placement.PlacementManagerDaemonHandler;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
+import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement;
 import fi.dy.masa.litematica.util.PasteLayerBehavior;
 import fi.dy.masa.litematica.util.PositionUtils;
 import fi.dy.masa.litematica.util.ReplaceBehavior;
@@ -60,8 +61,8 @@ public abstract class TaskPasteSchematicPerChunkBase extends TaskProcessChunkMul
 
     protected void addPlacement(SchematicPlacement placement, LayerRange range)
     {
-        Set<ChunkPos> touchedChunks = placement.getTouchedChunks();
-
+        // Only get chunks with Rendering enabled
+        Set<ChunkPos> touchedChunks = placement.getTouchedChunks(SubRegionPlacement.RequiredEnabled.RENDERING_ENABLED);
 
         for (ChunkPos pos : touchedChunks)
         {

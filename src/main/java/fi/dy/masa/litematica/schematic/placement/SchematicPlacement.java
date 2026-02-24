@@ -537,7 +537,12 @@ public class SchematicPlacement
 
     public Set<String> getRegionsTouchingChunk(int chunkX, int chunkZ)
     {
-        ImmutableMap<String, Box> map = this.getSubRegionBoxes(RequiredEnabled.PLACEMENT_ENABLED);
+        return this.getRegionsTouchingChunk(chunkX, chunkZ, RequiredEnabled.PLACEMENT_ENABLED);
+    }
+
+    public Set<String> getRegionsTouchingChunk(int chunkX, int chunkZ, RequiredEnabled required)
+    {
+        ImmutableMap<String, Box> map = this.getSubRegionBoxes(required);
         final int chunkXMin = chunkX << 4;
         final int chunkZMin = chunkZ << 4;
         final int chunkXMax = chunkXMin + 15;
@@ -565,24 +570,38 @@ public class SchematicPlacement
 
     public ImmutableMap<String, IntBoundingBox> getBoxesWithinChunk(int chunkX, int chunkZ)
     {
-        ImmutableMap<String, Box> subRegions = this.getSubRegionBoxes(RequiredEnabled.PLACEMENT_ENABLED);
+        return this.getBoxesWithinChunk(chunkX, chunkZ, RequiredEnabled.PLACEMENT_ENABLED);
+    }
+
+    public ImmutableMap<String, IntBoundingBox> getBoxesWithinChunk(int chunkX, int chunkZ, RequiredEnabled required)
+    {
+        ImmutableMap<String, Box> subRegions = this.getSubRegionBoxes(required);
         return PositionUtils.getBoxesWithinChunk(chunkX, chunkZ, subRegions);
     }
 
     @Nullable
     public IntBoundingBox getBoxWithinChunkForRegion(String regionName, int chunkX, int chunkZ)
     {
-        Box box = this.getSubRegionBoxFor(regionName, RequiredEnabled.PLACEMENT_ENABLED).get(regionName);
+        return this.getBoxWithinChunkForRegion(regionName, chunkX, chunkZ, RequiredEnabled.PLACEMENT_ENABLED);
+    }
+
+    @Nullable
+    public IntBoundingBox getBoxWithinChunkForRegion(String regionName, int chunkX, int chunkZ, RequiredEnabled required)
+    {
+        Box box = this.getSubRegionBoxFor(regionName, required).get(regionName);
         return box != null ? PositionUtils.getBoundsWithinChunkForBox(box, chunkX, chunkZ) : null;
     }
 
     public Set<ChunkPos> getTouchedChunks()
     {
-        RequiredEnabled re = RequiredEnabled.PLACEMENT_ENABLED;
+        return this.getTouchedChunks(RequiredEnabled.PLACEMENT_ENABLED);
+    }
 
-        if (this.matchesRequirement(re))
+    public Set<ChunkPos> getTouchedChunks(RequiredEnabled required)
+    {
+        if (this.matchesRequirement(required))
         {
-            return PositionUtils.getTouchedChunks(this.getSubRegionBoxes(re));
+            return PositionUtils.getTouchedChunks(this.getSubRegionBoxes(required));
         }
 
         return new HashSet<>();
@@ -590,11 +609,14 @@ public class SchematicPlacement
 
     public Set<ChunkPos> getTouchedChunksForRegion(String regionName)
     {
-        RequiredEnabled re = RequiredEnabled.PLACEMENT_ENABLED;
+        return this.getTouchedChunksForRegion(regionName, RequiredEnabled.PLACEMENT_ENABLED);
+    }
 
-        if (this.matchesRequirement(re))
+    public Set<ChunkPos> getTouchedChunksForRegion(String regionName, RequiredEnabled required)
+    {
+        if (this.matchesRequirement(required))
         {
-            return PositionUtils.getTouchedChunks(this.getSubRegionBoxFor(regionName, re));
+            return PositionUtils.getTouchedChunks(this.getSubRegionBoxFor(regionName, required));
         }
 
         return new HashSet<>();

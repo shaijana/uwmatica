@@ -19,6 +19,7 @@ import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.render.infohud.InfoHud;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
+import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement;
 import fi.dy.masa.litematica.util.PlacementDeletionMode;
 import fi.dy.masa.litematica.util.PositionUtils;
 import fi.dy.masa.malilib.gui.Message.MessageType;
@@ -66,7 +67,8 @@ public class TaskDeleteBlocksByPlacement extends TaskProcessChunkMultiPhase
 
     protected void addPlacement(SchematicPlacement placement, LayerRange range)
     {
-        Set<ChunkPos> touchedChunks = placement.getTouchedChunks();
+        // Only Delete
+        Set<ChunkPos> touchedChunks = placement.getTouchedChunks(SubRegionPlacement.RequiredEnabled.RENDERING_ENABLED);
 
         for (ChunkPos pos : touchedChunks)
         {

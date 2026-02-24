@@ -1229,7 +1229,14 @@ public class WorldRendererSchematic implements IWorldSchematicRenderer
                 BlockPos pos = chunkRenderer.getOrigin();
                 ChunkPos chunkPos = chunkRenderer.getChunkPos();
 //                ChunkPos chunkPos = new ChunkPos(pos.getX() >> 4, pos.getZ() >> 4);
-//                ChunkSchematic chunk = this.world.getChunk(pos.getX() >> 4, pos.getZ() >> 4);
+                ChunkSchematic chunk = this.world.getChunkSource().getChunkIfExists(chunkPos.x, chunkPos.z);
+
+                if (chunk == null || chunk.isEmpty() ||
+                    !DataManager.getSchematicPlacementManager().checkIfChunkShouldRender(chunkPos.x, chunkPos.z))
+                {
+                    continue;
+                }
+
 //                List<Entity> list = chunk.getEntityList();
 //                AABB bb = chunkRenderer.getBoundingBox();
 //                List<Entity> list = this.world.getEntities((Entity) null, bb, fi.dy.masa.litematica.util.EntityUtils.NOT_PLAYER);
@@ -1372,10 +1379,16 @@ public class WorldRendererSchematic implements IWorldSchematicRenderer
             if (!tiles.isEmpty())
             {
                 BlockPos chunkOrigin = chunkRenderer.getOrigin();
-                ChunkSchematic chunk = this.world.getChunkSource().getChunkForLighting(chunkOrigin.getX() >> 4, chunkOrigin.getZ() >> 4);
+                ChunkPos chunkPos = chunkRenderer.getChunkPos();
+                ChunkSchematic chunk = this.world.getChunkSource().getChunkForLighting(chunkPos.x, chunkPos.z);
 
-                if (chunk != null &&
-                    chunk.getState().atLeast(ChunkSchematicState.LOADED) &&
+                if (chunk == null || chunk.isEmpty() ||
+                    !DataManager.getSchematicPlacementManager().checkIfChunkShouldRender(chunkPos.x, chunkPos.z))
+                {
+                    continue;
+                }
+
+                if (chunk.getState().atLeast(ChunkSchematicState.LOADED) &&
                     data.getTimeBuilt() >= chunk.getTimeCreated())
                 {
                     for (BlockEntity te : tiles)
