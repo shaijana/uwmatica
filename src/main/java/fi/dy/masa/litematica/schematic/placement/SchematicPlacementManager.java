@@ -35,7 +35,6 @@ import fi.dy.masa.malilib.interfaces.IConfirmationListener;
 import fi.dy.masa.malilib.network.PacketSplitter;
 import fi.dy.masa.malilib.util.*;
 import fi.dy.masa.litematica.Litematica;
-import fi.dy.masa.litematica.Reference;
 import fi.dy.masa.litematica.command.PmCommand;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.config.Hotkeys;
@@ -77,6 +76,7 @@ public class SchematicPlacementManager
     private final int tickRate = 7;      // in seconds
     private long lastTick;
     private long lastEmptyCheck;
+    private long lastSchematicChange;
 
     public SchematicPlacementManager()
     {
@@ -95,6 +95,7 @@ public class SchematicPlacementManager
         this.worldSupplier = worldSupplier;
         this.lastTick = System.currentTimeMillis();
         this.lastEmptyCheck = System.currentTimeMillis();
+        this.lastSchematicChange = -1L;
     }
 
     @Nullable
@@ -133,6 +134,7 @@ public class SchematicPlacementManager
                             this.addTouchedChunksFor(schematicPlacement)
             );
 
+            this.lastSchematicChange = System.currentTimeMillis();
             this.setVisibleSubChunksNeedsUpdate();
         }
     }
@@ -148,12 +150,45 @@ public class SchematicPlacementManager
 
         if ((now - this.lastTick) > this.getTickRateMs())
         {
-            final int offset = (mc.options.getEffectiveRenderDistance() / 2) + 1;
-
             if (this.hasTimeToExecuteMoreTasks() &&
                 !PlacementManagerDaemonHandler.INSTANCE.hasAnyTasks())
             {
-                this.checkNearbyChunksAreLoaded(mc, offset);
+                // No loaded schematics optimization
+                if (this.schematicPlacements.isEmpty())
+                {
+                    if (this.lastEmptyCheck < 0L)
+                    {
+                        this.lastEmptyCheck = now;
+                    }
+
+                    // Check with the FIXER at least 1 or 2 times after all Schemas have been unloaded.
+                    if ((now - this.lastEmptyCheck) > (this.getTickRateMs() * 2))
+                    {
+                        this.lastTick = now;
+                        return;
+                    }
+                }
+                else if (this.lastEmptyCheck > 0L)
+                {
+                    this.lastEmptyCheck = -1L;
+                }
+
+                // Last Schematic Updated (Load/Unload) Optimization
+                if (this.lastSchematicChange > 0L)
+                {
+                    if ((now - this.lastSchematicChange) > (this.getTickRateMs() * 2.5))
+                    {
+                        this.lastSchematicChange = -1L;
+                    }   // else run Task -->
+                }
+                else
+                {
+                    this.lastTick = now;
+                    return;
+                }
+
+                // Run FIXER task
+                this.checkNearbyChunksAreLoaded(mc, (mc.options.getEffectiveRenderDistance() / 2) + 1);
             }
 
             this.lastTick = now;
@@ -166,26 +201,6 @@ public class SchematicPlacementManager
     {
         if (mc.level == null) return;
         final ChunkPos cc = mc.getCameraEntity().chunkPosition();
-
-        if (this.schematicPlacements.isEmpty())
-        {
-            long now = System.currentTimeMillis();
-
-            if (this.lastEmptyCheck < 0)
-            {
-                this.lastEmptyCheck = now;
-            }
-
-            // Check with the FIXER at least 1 or 2 times after all Schemas have been unloaded.
-            if ((now - this.lastEmptyCheck) > (this.getTickRateMs() * 2))
-            {
-                return;
-            }
-        }
-        else if (this.lastEmptyCheck > 0)
-        {
-            this.lastEmptyCheck = -1;
-        }
 
         PlacementManagerDaemonHandler.INSTANCE.addTask(
                 new PlacementManagerTaskOther(this.worldSupplier, cc.x, cc.z, () ->
@@ -449,6 +464,7 @@ public class SchematicPlacementManager
     protected void onPlacementAdded()
     {
         StatusInfoRenderer.getInstance().startOverrideDelay();
+        this.lastSchematicChange = System.currentTimeMillis();
     }
 
     public void addSchematicPlacement(SchematicPlacement placement, boolean printMessages)
@@ -595,6 +611,7 @@ public class SchematicPlacementManager
         if (removed)
         {
             OverlayRenderer.getInstance().updatePlacementCache();
+            this.lastSchematicChange = System.currentTimeMillis();
         }
     }
 
@@ -672,42 +689,52 @@ public class SchematicPlacementManager
         Set<ChunkPos> chunksPost = placement.getTouchedChunks();
         Set<ChunkPos> toRebuild = new HashSet<>(chunksPost);
         Set<ChunkPos> toUnload = new HashSet<>();
+        final boolean changed = chunksPost.size() != this.chunksPreChange.size();
 
-        //System.out.printf("chunkPre: %s - chunkPost: %s\n", this.chunksPreChange, chunksPost);
+//        Litematica.LOGGER.error("onPostPlacementChange: [START]");
+//        System.out.printf("chunkPre: %d - chunkPost: %d\n", this.chunksPreChange.size(), chunksPost.size());
         this.chunksPreChange.removeAll(chunksPost);
 
         for (ChunkPos pos : this.chunksPreChange)
         {
             this.schematicsTouchingChunk.remove(pos, placement);
             this.updateTouchedBoxesInChunk(pos);
-            //System.out.printf("removing placement from: %s\n", pos);
+//            System.out.printf("removing placement from: %s\n", pos.toString());
 
             if (this.schematicsTouchingChunk.containsKey(pos) == false)
             {
-                //System.out.printf("unloading: %s\n", pos);
+//                System.out.printf("unloading: %s\n", pos.toString());
                 toUnload.add(pos);
             }
             else
             {
-                //System.out.printf("rebuilding: %s\n", pos);
+//                System.out.printf("rebuilding: %s\n", pos.toString());
                 toRebuild.add(pos);
             }
         }
 
         this.markChunksForUnload(toUnload);
         this.markChunksForRebuild(toRebuild);
+//        System.out.printf("toUnload: %d / toRebuild: %d / chunkPost: %d\n", toUnload.size(), toRebuild.size(), chunksPost.size());
 
         for (ChunkPos pos : chunksPost)
         {
             if (this.schematicsTouchingChunk.containsEntry(pos, placement) == false)
             {
+//                System.out.printf("adding placement to: %s\n", pos.toString());
                 this.schematicsTouchingChunk.put(pos, placement);
             }
 
             this.updateTouchedBoxesInChunk(pos);
         }
 
+        if (changed)
+        {
+            this.lastSchematicChange = System.currentTimeMillis();
+        }
+
         this.onPlacementModified(placement);
+//        Litematica.LOGGER.error("onPostPlacementChange: [DONE]");
     }
 
     protected void updateTouchedBoxesInChunk(ChunkPos pos)

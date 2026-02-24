@@ -578,12 +578,26 @@ public class SchematicPlacement
 
     public Set<ChunkPos> getTouchedChunks()
     {
-        return PositionUtils.getTouchedChunks(this.getSubRegionBoxes(RequiredEnabled.PLACEMENT_ENABLED));
+        RequiredEnabled re = RequiredEnabled.PLACEMENT_ENABLED;
+
+        if (this.matchesRequirement(re))
+        {
+            return PositionUtils.getTouchedChunks(this.getSubRegionBoxes(re));
+        }
+
+        return new HashSet<>();
     }
 
     public Set<ChunkPos> getTouchedChunksForRegion(String regionName)
     {
-        return PositionUtils.getTouchedChunks(this.getSubRegionBoxFor(regionName, RequiredEnabled.PLACEMENT_ENABLED));
+        RequiredEnabled re = RequiredEnabled.PLACEMENT_ENABLED;
+
+        if (this.matchesRequirement(re))
+        {
+            return PositionUtils.getTouchedChunks(this.getSubRegionBoxFor(regionName, re));
+        }
+
+        return new HashSet<>();
     }
 
     private void checkAreSubRegionsModified()
