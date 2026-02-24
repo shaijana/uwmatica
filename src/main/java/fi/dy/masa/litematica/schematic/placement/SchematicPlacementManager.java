@@ -203,6 +203,11 @@ public class SchematicPlacementManager
         if (mc.level == null) return;
         final ChunkPos cc = mc.getCameraEntity().chunkPosition();
 
+        if (!Configs.Visuals.ENABLE_RENDERING.getBooleanValue())
+        {
+            return;
+        }
+
         PlacementManagerDaemonHandler.INSTANCE.addTask(
                 new PlacementManagerTaskOther(this.worldSupplier, cc.x, cc.z, () ->
                 {
@@ -328,6 +333,33 @@ public class SchematicPlacementManager
             }));
     }
 
+    public void onToggleMainRendering(boolean toggle)
+    {
+        PlacementManagerDaemonHandler.INSTANCE.clearAllTasks();
+
+        if (!this.schematicPlacements.isEmpty())
+        {
+            this.schematicPlacements.forEach(
+                    pl ->
+                    {
+                        if (toggle)
+                        {
+                            this.addTouchedChunksFor(pl);
+                        }
+                        else
+                        {
+                            this.removeTouchedChunksFor(pl);
+                        }
+                    }
+            );
+        }
+
+        if (!toggle)
+        {
+            this.visibleChunks.clear();
+        }
+    }
+
     public void onClientChunkLoad(int chunkX, int chunkZ)
     {
         // Don't run tasks if there is nothing to do; let the thread sleep.
@@ -353,7 +385,7 @@ public class SchematicPlacementManager
 
     protected boolean checkIfAnyPlacementsShouldRender()
     {
-        if (this.schematicPlacements.isEmpty())
+        if (Configs.Visuals.ENABLE_RENDERING.getBooleanValue() == false || this.schematicPlacements.isEmpty())
         {
             return false;
         }
@@ -397,6 +429,11 @@ public class SchematicPlacementManager
 
     public boolean checkIfChunkShouldRender(int chunkX, int chunkZ)
     {
+        if (Configs.Visuals.ENABLE_RENDERING.getBooleanValue() == false)
+        {
+            return false;
+        }
+
         List<PlacementPart> parts = this.getPlacementPartsInChunk(chunkX, chunkZ);
 
         for (PlacementPart p : parts)

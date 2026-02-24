@@ -208,7 +208,7 @@ public class SchematicPlacement
 	    {
 		    case ANY -> true;
 		    case PLACEMENT_ENABLED -> this.isEnabled();
-		    default -> this.isEnabled() && this.enableRender;
+		    default -> this.isEnabled() && this.enableRender && Configs.Visuals.ENABLE_RENDERING.getBooleanValue();
 	    };
     }
 

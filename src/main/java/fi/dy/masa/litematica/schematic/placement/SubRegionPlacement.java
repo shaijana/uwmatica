@@ -18,6 +18,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import fi.dy.masa.malilib.util.JsonUtils;
 import fi.dy.masa.malilib.util.position.PositionUtils.CoordinateType;
 import fi.dy.masa.litematica.Litematica;
+import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.util.PositionUtils;
 
 public class SubRegionPlacement
@@ -146,7 +147,7 @@ public class SubRegionPlacement
             return this.isEnabled();
         }
 
-        return this.isEnabled() && this.isRenderingEnabled();
+        return this.isEnabled() && this.isRenderingEnabled() && Configs.Visuals.ENABLE_RENDERING.getBooleanValue();
     }
 
     public String getName()

@@ -131,15 +131,23 @@ public class KeyCallbacks
 
     private static class RenderToggle extends KeyCallbackToggleBooleanConfigWithMessage
     {
+        private final boolean isMainToggle;
+
         public RenderToggle(IConfigBoolean config)
         {
             super(config);
+	        this.isMainToggle = config == Configs.Visuals.ENABLE_RENDERING;
         }
 
         @Override
         public boolean onKeyAction(KeyAction action, IKeybind key)
         {
             super.onKeyAction(action, key);
+
+            if (this.isMainToggle)
+            {
+                DataManager.getSchematicPlacementManager().onToggleMainRendering(this.config.getBooleanValue());
+            }
 
             if (this.config.getBooleanValue())
             {
