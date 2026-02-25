@@ -47,7 +47,7 @@ public class PlacementManagerDaemonHandler implements IThreadDaemonHandler<Place
 
 		for (int i = 0; i < this.threadCount; i++)
 		{
-			String name = this.threadCount > 1 ? this.namePrefix+" "+ (i+1) : this.namePrefix;
+			final String name = this.threadCount > 1 ? this.namePrefix+" "+ (i+1) : this.namePrefix;
 			threads.put(name, this.threadFactory(name, this.useVirtual, new PlacementManagerDaemonExecutor()));
 		}
 
