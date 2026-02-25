@@ -396,7 +396,7 @@ public class SchematicPlacementManager
             this.schematicPlacements.forEach(
                     pl ->
                     {
-                        RequiredEnabled re = RequiredEnabled.RENDERING_ENABLED;
+                        RequiredEnabled re = RequiredEnabled.PLACEMENT_ENABLED;
 
                         if (pl.matchesRequirement(re))
                         {
@@ -438,7 +438,7 @@ public class SchematicPlacementManager
 
         for (PlacementPart p : parts)
         {
-            if (p.placement.matchesRequirement(RequiredEnabled.RENDERING_ENABLED))
+            if (p.placement.matchesRequirement(RequiredEnabled.PLACEMENT_ENABLED))
             {
                 return true;
             }
@@ -724,58 +724,52 @@ public class SchematicPlacementManager
 
     protected void addTouchedChunksFor(SchematicPlacement placement)
     {
-//        if (placement.matchesRequirement(RequiredEnabled.PLACEMENT_ENABLED))
-//        {
-            Set<ChunkPos> chunks = placement.getTouchedChunks(RequiredEnabled.PLACEMENT_ENABLED);
+        Set<ChunkPos> chunks = placement.getTouchedChunks(RequiredEnabled.PLACEMENT_ENABLED);
 
-            for (ChunkPos pos : chunks)
+        for (ChunkPos pos : chunks)
+        {
+            if (this.schematicsTouchingChunk.containsEntry(pos, placement) == false)
             {
-                if (this.schematicsTouchingChunk.containsEntry(pos, placement) == false)
-                {
-                    this.schematicsTouchingChunk.put(pos, placement);
-                    this.updateTouchedBoxesInChunk(pos);
-                }
-
-                PlacementManagerDaemonHandler.INSTANCE.removeUnloadTasksFor(pos.x, pos.z);
+                this.schematicsTouchingChunk.put(pos, placement);
+                this.updateTouchedBoxesInChunk(pos);
             }
 
-            this.markChunksForRebuild(placement);
-            this.onPlacementModified(placement);
-//        }
+            PlacementManagerDaemonHandler.INSTANCE.removeUnloadTasksFor(pos.x, pos.z);
+        }
+
+        this.markChunksForRebuild(placement);
+        this.onPlacementModified(placement);
     }
 
     protected void removeTouchedChunksFor(SchematicPlacement placement)
     {
-//        if (placement.matchesRequirement(RequiredEnabled.PLACEMENT_ENABLED))
-//        {
-            Set<ChunkPos> chunks = placement.getTouchedChunks(RequiredEnabled.ANY);
-            Set<ChunkPos> toUnload = new HashSet<>();
+        Set<ChunkPos> chunks = placement.getTouchedChunks(RequiredEnabled.ANY);
+        Set<ChunkPos> toUnload = new HashSet<>();
 
-            for (ChunkPos pos : chunks)
+        for (ChunkPos pos : chunks)
+        {
+            this.schematicsTouchingChunk.remove(pos, placement);
+            this.updateTouchedBoxesInChunk(pos);
+
+            if (this.schematicsTouchingChunk.containsKey(pos) == false)
             {
-                this.schematicsTouchingChunk.remove(pos, placement);
-                this.updateTouchedBoxesInChunk(pos);
-
-                if (this.schematicsTouchingChunk.containsKey(pos) == false)
-                {
-                    toUnload.add(pos);
-                }
+                toUnload.add(pos);
             }
+        }
 
-            this.markChunksForUnload(toUnload);
-            this.markChunksForRebuild(chunks);
-//        }
+        this.markChunksForUnload(toUnload);
+        this.markChunksForRebuild(chunks);
     }
 
     void onPrePlacementChange(SchematicPlacement placement)
     {
         this.chunksPreChange.clear();
-        this.chunksPreChange.addAll(placement.getTouchedChunks(RequiredEnabled.RENDERING_ENABLED));
+        this.chunksPreChange.addAll(placement.getTouchedChunks(RequiredEnabled.PLACEMENT_ENABLED));
     }
 
     void onPostPlacementChange(SchematicPlacement placement)
     {
-        Set<ChunkPos> chunksPost = placement.getTouchedChunks(RequiredEnabled.RENDERING_ENABLED);
+        Set<ChunkPos> chunksPost = placement.getTouchedChunks(RequiredEnabled.PLACEMENT_ENABLED);
         Set<ChunkPos> toRebuild = new HashSet<>(chunksPost);
         Set<ChunkPos> toUnload = new HashSet<>();
         final boolean changed = chunksPost.size() != this.chunksPreChange.size();
@@ -1157,7 +1151,7 @@ public class SchematicPlacementManager
         {
             if (schematicPlacement != null)
             {
-                if (!schematicPlacement.isRenderingEnabled())
+                if (!schematicPlacement.isEnabled())
                 {
                     InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, "litematica.message.error.placement_paste_rendering_disabled");
                     return;

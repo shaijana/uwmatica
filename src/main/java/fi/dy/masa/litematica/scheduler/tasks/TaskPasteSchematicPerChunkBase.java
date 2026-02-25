@@ -62,7 +62,7 @@ public abstract class TaskPasteSchematicPerChunkBase extends TaskProcessChunkMul
     protected void addPlacement(SchematicPlacement placement, LayerRange range)
     {
         // Only get chunks with Rendering enabled
-        Set<ChunkPos> touchedChunks = placement.getTouchedChunks(SubRegionPlacement.RequiredEnabled.RENDERING_ENABLED);
+        Set<ChunkPos> touchedChunks = placement.getTouchedChunks(SubRegionPlacement.RequiredEnabled.PLACEMENT_ENABLED);
 
         for (ChunkPos pos : touchedChunks)
         {

@@ -68,7 +68,7 @@ public class TaskDeleteBlocksByPlacement extends TaskProcessChunkMultiPhase
     protected void addPlacement(SchematicPlacement placement, LayerRange range)
     {
         // Only Delete
-        Set<ChunkPos> touchedChunks = placement.getTouchedChunks(SubRegionPlacement.RequiredEnabled.RENDERING_ENABLED);
+        Set<ChunkPos> touchedChunks = placement.getTouchedChunks(SubRegionPlacement.RequiredEnabled.PLACEMENT_ENABLED);
 
         for (ChunkPos pos : touchedChunks)
         {

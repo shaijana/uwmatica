@@ -22,7 +22,7 @@ public class PlacementManagerDaemonHandler implements IThreadDaemonHandler<Place
 	public static final PlacementManagerDaemonHandler INSTANCE = new PlacementManagerDaemonHandler();
 	private static final int MAX_PLATFORM_THREADS = 1;
 	private boolean useVirtual = false;
-	private final String namePrefix = Reference.MOD_NAME+" Placement Manager ";
+	private final String namePrefix = Reference.MOD_NAME+" Placement Manager";
 	private static final float TASK_INTERVAL = 2.0F;
 	private final int threadCount = this.calculateMaxThreads();
 	private final ConcurrentHashMap<String, Thread> threadMap = this.builder();
@@ -47,7 +47,7 @@ public class PlacementManagerDaemonHandler implements IThreadDaemonHandler<Place
 
 		for (int i = 0; i < this.threadCount; i++)
 		{
-			String name = this.namePrefix + (i+1);
+			String name = this.threadCount > 1 ? this.namePrefix+" "+ (i+1) : this.namePrefix;
 			threads.put(name, this.threadFactory(name, this.useVirtual, new PlacementManagerDaemonExecutor()));
 		}
 

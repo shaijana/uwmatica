@@ -11,17 +11,18 @@ public class PlacementManagerDaemonExecutor implements IThreadDaemonExecutor<Pla
 	private final AtomicBoolean running = new AtomicBoolean(true);
 	private final AtomicBoolean paused = new AtomicBoolean(false);
 	private final long sleepTime;
-	private final float sleepDelay = 15.0F;
+	private final float sleepDelay;
 	private long lastTaskTime;
 
 	public PlacementManagerDaemonExecutor()
 	{
-		this.sleepTime = 300000L;
+		this(600000L);  // 10 min
 	}
 
 	public PlacementManagerDaemonExecutor(long sleepTime)
 	{
-		this.sleepTime = MathUtils.clamp(sleepTime, 50000L, Long.MAX_VALUE);
+		this.sleepTime = MathUtils.clamp(sleepTime, 60000L, Long.MAX_VALUE); // 1 min
+		this.sleepDelay = 15.0F;
 	}
 
 	@Override
