@@ -858,7 +858,8 @@ public class SchematicaSchematic
 
             try
             {
-                CompoundTag nbt = NbtUtils.readNbtFromFileAsPath(file);
+//                CompoundTag nbt = NbtUtils.readNbtFromFileAsPath(file);
+                CompoundTag nbt = NbtUtils.readNbtFromFile(file);
                 return this.readFromNBT(nbt);
             }
             catch (Exception e)

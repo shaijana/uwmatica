@@ -611,7 +611,7 @@ public class WorldUtils
 
         if (closest)
         {
-            pos = RayTraceUtils.getSchematicWorldTraceIfClosest(mc.level, mc.player, getValidBlockRange(mc));
+            pos = RayTraceUtils.getSchematicWorldTraceIfClosestNoFluids(mc.level, mc.player, getValidBlockRange(mc));
         }
         else
         {

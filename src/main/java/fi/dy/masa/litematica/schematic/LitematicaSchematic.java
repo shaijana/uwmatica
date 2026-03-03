@@ -2729,12 +2729,12 @@ public class LitematicaSchematic
             if (downgrade)
             {
                 //NbtIo.writeCompressed(this.writeToNBT_v6(), os);
-                NbtUtils.writeCompressed(this.writeToNBT_v6(), fileSchematic);
+                NbtUtils.writeCompoundTagToCompressedFile(this.writeToNBT_v6(), fileSchematic);
             }
             else
             {
                 //NbtIo.writeCompressed(this.writeToNBT(), os);
-                NbtUtils.writeCompressed(this.writeToNBT(), fileSchematic);
+                NbtUtils.writeCompoundTagToCompressedFile(this.writeToNBT(), fileSchematic);
             }
             //os.close();
 
@@ -2804,7 +2804,8 @@ public class LitematicaSchematic
             return null;
         }
 
-        return NbtUtils.readNbtFromFileAsPath(file);
+//        return NbtUtils.readNbtFromFileAsPath(file);
+        return NbtUtils.readNbtFromFile(file);
     }
 
     public static Path fileFromDirAndName(Path dir, String fileName, FileType schematicType)
