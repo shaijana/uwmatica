@@ -248,16 +248,20 @@ public class PlacementManagerDaemonHandler implements IThreadDaemonHandler<Place
 		// Scheduled maintenance tasks
 		if ((now - this.lastTick) > this.getTaskInterval())
 		{
-			if (this.processing && this.allDone())
+			if (mc.level != null)
 			{
-//				Litematica.LOGGER.warn("PlacementManagerDaemonHandler:  All tasks complete");
-//				DataManager.getSchematicPlacementManager().setVisibleSubChunksNeedsUpdate();
-				LitematicaRenderer.getInstance().getWorldRenderer().markNeedsUpdate();
-				this.processing = false;
+				if (this.processing && this.allDone())
+				{
+//					Litematica.LOGGER.warn("PlacementManagerDaemonHandler:  All tasks complete");
+//					DataManager.getSchematicPlacementManager().setVisibleSubChunksNeedsUpdate();
+					LitematicaRenderer.getInstance().getWorldRenderer().markNeedsUpdate();
+					this.processing = false;
+				}
+
+				// Scheduled updates
+				this.ensureThreadsAreAlive();
 			}
 
-			// Scheduled updates
-			this.ensureThreadsAreAlive();
 			this.lastTick = now;
 		}
 	}
