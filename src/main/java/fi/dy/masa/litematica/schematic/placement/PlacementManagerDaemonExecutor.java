@@ -11,8 +11,6 @@ public class PlacementManagerDaemonExecutor implements IThreadDaemonExecutor<Pla
 	private final AtomicBoolean running = new AtomicBoolean(true);
 	private final AtomicBoolean paused = new AtomicBoolean(false);
 	private final long sleepTime;
-	private final float sleepDelay;
-	private long lastTaskTime;
 
 	public PlacementManagerDaemonExecutor()
 	{
@@ -22,7 +20,6 @@ public class PlacementManagerDaemonExecutor implements IThreadDaemonExecutor<Pla
 	public PlacementManagerDaemonExecutor(long sleepTime)
 	{
 		this.sleepTime = MathUtils.clamp(sleepTime, 60000L, Long.MAX_VALUE); // 1 min
-		this.sleepDelay = 15.0F;
 	}
 
 	@Override
@@ -122,7 +119,6 @@ public class PlacementManagerDaemonExecutor implements IThreadDaemonExecutor<Pla
 	public void run()
 	{
 		if (!this.isCorrectThread()) { return; }
-		this.lastTaskTime = System.currentTimeMillis();
 		Litematica.debugLogError("Executor: Running: [{}/{}]", this.isRunning(), this.isPaused());
 
 		while (this.isRunning())
@@ -150,7 +146,6 @@ public class PlacementManagerDaemonExecutor implements IThreadDaemonExecutor<Pla
 			if (task != null)
 			{
 				this.processTask(task);
-				this.lastTaskTime = System.currentTimeMillis();
 				return false;
 			}
 		}
@@ -164,13 +159,6 @@ public class PlacementManagerDaemonExecutor implements IThreadDaemonExecutor<Pla
 		}
 
 		return this.shouldPause();
-	}
-
-	@Override
-	public boolean shouldPause()
-	{
-		if (this.hasTasks()) { return false; }
-		return (System.currentTimeMillis() - this.lastTaskTime) > (this.sleepDelay * 1000L);
 	}
 
 	@Override
