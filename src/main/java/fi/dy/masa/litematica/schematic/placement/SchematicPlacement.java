@@ -998,8 +998,11 @@ public class SchematicPlacement
                 for (Map.Entry<String, SubRegionPlacement> entry : this.relativeSubRegionPlacements.entrySet())
                 {
                     JsonObject placementObj = new JsonObject();
+                    JsonObject subPlacement = entry.getValue().toJson();
+                    if (subPlacement == null || subPlacement.isEmpty()) { continue; }
+
                     placementObj.add("name", new JsonPrimitive(entry.getKey()));
-                    placementObj.add("placement", entry.getValue().toJson());
+                    placementObj.add("placement", subPlacement);
                     arr.add(placementObj);
                 }
 
@@ -1198,7 +1201,7 @@ public class SchematicPlacement
         {
             CompoundTag entry = subs.getCompoundOrEmpty(key);
 
-            if (!entry.isEmpty())
+            if (!entry.isEmpty() && entry.contains("Pos"))
             {
                 name = entry.getStringOr("Name", "?");
                 origin = NbtUtils.readBlockPosFromArrayTag(entry, "Pos");
@@ -1244,7 +1247,7 @@ public class SchematicPlacement
         {
             CompoundTag entry = subs.getCompoundOrEmpty(key);
 
-            if (!entry.isEmpty())
+            if (!entry.isEmpty() && entry.contains("Pos"))
             {
                 name = entry.getStringOr("Name", "?");
                 origin = NbtUtils.readBlockPosFromArrayTag(entry, "Pos");

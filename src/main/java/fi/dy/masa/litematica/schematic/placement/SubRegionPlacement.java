@@ -247,6 +247,7 @@ public class SubRegionPlacement
     public JsonObject toJson()
     {
         JsonObject obj = new JsonObject();
+        if (this.pos == null) { return obj; }
         JsonArray arr = new JsonArray();
 
         arr.add(this.pos.getX());
@@ -284,7 +285,7 @@ public class SubRegionPlacement
             }
 
             BlockPos pos = new BlockPos(posArr.get(0).getAsInt(), posArr.get(1).getAsInt(), posArr.get(2).getAsInt());
-            SubRegionPlacement placement = new SubRegionPlacement(pos, obj.get("name").getAsString());
+	        SubRegionPlacement placement = new SubRegionPlacement(pos, obj.get("name").getAsString());
             placement.setEnabled(JsonUtils.getBoolean(obj, "enabled"));
             placement.setRenderingEnabled(JsonUtils.getBoolean(obj, "rendering_enabled"));
             placement.ignoreEntities = JsonUtils.getBoolean(obj, "ignore_entities");

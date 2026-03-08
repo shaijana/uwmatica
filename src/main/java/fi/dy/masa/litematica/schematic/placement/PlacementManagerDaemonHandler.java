@@ -187,6 +187,11 @@ public class PlacementManagerDaemonHandler implements IThreadDaemonHandler<Place
 		return null;
 	}
 
+	protected int getTaskCount()
+	{
+		return this.queueRebuild.size() + this.queueUnload.size() + this.queueOther.size() + this.deferredQueue.size();
+	}
+
 	@Override
 	public boolean hasTasks()
 	{
@@ -258,7 +263,7 @@ public class PlacementManagerDaemonHandler implements IThreadDaemonHandler<Place
 					this.processing = false;
 				}
 
-				// Scheduled updates
+				// Scheduled updates if we have tasks
 				this.ensureThreadsAreAlive();
 			}
 
@@ -293,6 +298,22 @@ public class PlacementManagerDaemonHandler implements IThreadDaemonHandler<Place
 			}
 		}
 	}
+
+//	@Override
+//	public void safeStart(Thread t) throws RuntimeException
+//	{
+//		if (t == null) { throw new RuntimeException(); }
+//		Litematica.debugLogError("PlacementManagerDaemonHandler#safeStart: '{}' [State: {}]", t.getName(), t.getState().name());
+//
+//		switch (t.getState())
+//		{
+//			case NEW -> t.start();
+//			case TIMED_WAITING, WAITING -> t.interrupt();
+//			case RUNNABLE -> throw new RuntimeException();
+//			case BLOCKED -> throw new ConcurrentModificationException();
+//			case TERMINATED -> throw new IllegalStateException();
+//		}
+//	}
 
 	protected void removeUnloadTasksFor(int x, int z)
 	{

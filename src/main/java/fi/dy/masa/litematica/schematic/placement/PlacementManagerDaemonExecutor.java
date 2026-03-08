@@ -1,6 +1,9 @@
 package fi.dy.masa.litematica.schematic.placement;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 import fi.dy.masa.malilib.interfaces.IThreadDaemonExecutor;
 import fi.dy.masa.malilib.util.MathUtils;
@@ -10,7 +13,11 @@ public class PlacementManagerDaemonExecutor implements IThreadDaemonExecutor<Pla
 {
 	private final AtomicBoolean running = new AtomicBoolean(true);
 	private final AtomicBoolean paused = new AtomicBoolean(false);
+	private final ReentrantLock lock = new ReentrantLock();
+	private final Condition hasTasks = lock.newCondition();
 	private final long sleepTime;
+	private final float sleepDelay;
+	private long lastTaskTime;
 
 	public PlacementManagerDaemonExecutor()
 	{
@@ -20,6 +27,7 @@ public class PlacementManagerDaemonExecutor implements IThreadDaemonExecutor<Pla
 	public PlacementManagerDaemonExecutor(long sleepTime)
 	{
 		this.sleepTime = MathUtils.clamp(sleepTime, 60000L, Long.MAX_VALUE); // 1 min
+		this.sleepDelay = 10.0F;     // 10-second sleep delay
 	}
 
 	@Override
@@ -48,6 +56,11 @@ public class PlacementManagerDaemonExecutor implements IThreadDaemonExecutor<Pla
 			this.running.set(true);
 		}
 
+		if (this.hasTasks())
+		{
+			this.signalHasTasks();
+		}
+
 		this.run();
 	}
 
@@ -61,6 +74,11 @@ public class PlacementManagerDaemonExecutor implements IThreadDaemonExecutor<Pla
 		if (this.isPaused() || !this.isRunning())
 		{
 			this.resume();
+		}
+
+		if (this.hasTasks())
+		{
+			this.signalHasTasks();
 		}
 	}
 
@@ -119,6 +137,7 @@ public class PlacementManagerDaemonExecutor implements IThreadDaemonExecutor<Pla
 	public void run()
 	{
 		if (!this.isCorrectThread()) { return; }
+		this.lastTaskTime = System.currentTimeMillis();
 		Litematica.debugLogError("Executor: Running: [{}/{}]", this.isRunning(), this.isPaused());
 
 		while (this.isRunning())
@@ -141,11 +160,12 @@ public class PlacementManagerDaemonExecutor implements IThreadDaemonExecutor<Pla
 	{
 		try
 		{
-			PlacementManagerTask task = PlacementManagerDaemonHandler.INSTANCE.getNextTask();
+			PlacementManagerTask task = this.takeNextTask();
 
 			if (task != null)
 			{
 				this.processTask(task);
+				this.lastTaskTime = System.currentTimeMillis();
 				return false;
 			}
 		}
@@ -159,6 +179,62 @@ public class PlacementManagerDaemonExecutor implements IThreadDaemonExecutor<Pla
 		}
 
 		return this.shouldPause();
+	}
+
+	@Override
+	public boolean shouldPause()
+	{
+//		if (this.hasTasks()) { return false; }
+//		return (System.currentTimeMillis() - this.lastTaskTime) > (this.sleepDelay * 1000L);
+		return !this.hasTasks();
+	}
+
+	private void signalHasTasks()
+	{
+		Litematica.debugLogError("Executor: Signal Has Tasks");
+		final ReentrantLock lock = this.lock;
+		lock.lock();
+
+		try
+		{
+			this.hasTasks.signal();
+		}
+		finally
+		{
+			lock.unlock();
+		}
+	}
+
+	private PlacementManagerTask takeNextTask() throws InterruptedException
+	{
+		final PlacementManagerTask task;
+		final int cx;
+		final AtomicInteger count = new AtomicInteger(PlacementManagerDaemonHandler.INSTANCE.getTaskCount());
+		final ReentrantLock lock = this.lock;
+
+		lock.lockInterruptibly();
+
+		try
+		{
+			while (count.get() == 0)
+			{
+				hasTasks.await();
+			}
+
+			task = PlacementManagerDaemonHandler.INSTANCE.getNextTask();
+			cx = count.getAndDecrement();
+
+			if (cx > 1)
+			{
+				hasTasks.signal();
+			}
+		}
+		finally
+		{
+			lock.unlock();
+		}
+
+		return task;
 	}
 
 	@Override

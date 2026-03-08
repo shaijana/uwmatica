@@ -7,6 +7,8 @@ import java.util.function.Predicate;
 import javax.annotation.Nullable;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.ApiStatus;
+
+import com.mojang.authlib.GameProfile;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -164,11 +166,28 @@ public class EntityUtils
         entityDebugRandom2 = rand.nextBoolean();
     }
 
+    private static boolean isGoat(GameProfile profile)
+    {
+        return profile.name().equalsIgnoreCase("docm77");
+    }
+
     public static Pair<String, String> getEntityDebug()
     {
         Minecraft mc = Minecraft.getInstance();
 
-        if (mc.player == null || !entityDebugRandom) return Pair.of("", "");
+        if (mc.player == null)
+        {
+            return Pair.of("", "");
+        }
+        else if (isGoat(mc.player.getGameProfile()))
+        {
+            // Adjusted as per doc -- he wants it always shown ^_^
+            return Pair.of("Goatmatica", "Grind. Optimize. Automate. Thrive.");
+        }
+        else if (!entityDebugRandom)
+        {
+            return Pair.of("", "");
+        }
 
         String name = mc.player.getGameProfile().name().toLowerCase();
 
