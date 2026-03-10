@@ -14,7 +14,7 @@ public class PlacementManagerDaemonExecutor implements IThreadDaemonExecutor<Pla
 	private final AtomicBoolean running = new AtomicBoolean(true);
 	private final AtomicBoolean paused = new AtomicBoolean(false);
 	private final ReentrantLock lock = new ReentrantLock();
-	private final Condition hasTasks = lock.newCondition();
+	private final Condition hasTasks = this.lock.newCondition();
 	private final long sleepTime;
 	private final float sleepDelay;
 	private long lastTaskTime;
@@ -218,7 +218,7 @@ public class PlacementManagerDaemonExecutor implements IThreadDaemonExecutor<Pla
 		{
 			while (count.get() == 0)
 			{
-				hasTasks.await();
+				this.hasTasks.await();
 			}
 
 			task = PlacementManagerDaemonHandler.INSTANCE.getNextTask();
@@ -226,7 +226,7 @@ public class PlacementManagerDaemonExecutor implements IThreadDaemonExecutor<Pla
 
 			if (cx > 1)
 			{
-				hasTasks.signal();
+				this.hasTasks.signal();
 			}
 		}
 		finally
