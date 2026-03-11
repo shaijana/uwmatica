@@ -1,9 +1,6 @@
 package fi.dy.masa.litematica.schematic.placement;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
 
 import fi.dy.masa.malilib.interfaces.IThreadDaemonExecutor;
 import fi.dy.masa.malilib.util.MathUtils;
@@ -13,8 +10,6 @@ public class PlacementManagerDaemonExecutor implements IThreadDaemonExecutor<Pla
 {
 	private final AtomicBoolean running = new AtomicBoolean(true);
 	private final AtomicBoolean paused = new AtomicBoolean(false);
-	private final ReentrantLock lock = new ReentrantLock();
-	private final Condition hasTasks = this.lock.newCondition();
 	private final long sleepTime;
 	private final float sleepDelay;
 	private long lastTaskTime;
@@ -27,7 +22,7 @@ public class PlacementManagerDaemonExecutor implements IThreadDaemonExecutor<Pla
 	public PlacementManagerDaemonExecutor(long sleepTime)
 	{
 		this.sleepTime = MathUtils.clamp(sleepTime, 60000L, Long.MAX_VALUE); // 1 min
-		this.sleepDelay = 10.0F;     // 10-second sleep delay
+		this.sleepDelay = 0.75F;     // <1-second sleep delay (Must not be < 1/2 the tick rate)
 	}
 
 	@Override
@@ -56,11 +51,6 @@ public class PlacementManagerDaemonExecutor implements IThreadDaemonExecutor<Pla
 			this.running.set(true);
 		}
 
-		if (this.hasTasks())
-		{
-			this.signalHasTasks();
-		}
-
 		this.run();
 	}
 
@@ -74,11 +64,6 @@ public class PlacementManagerDaemonExecutor implements IThreadDaemonExecutor<Pla
 		if (this.isPaused() || !this.isRunning())
 		{
 			this.resume();
-		}
-
-		if (this.hasTasks())
-		{
-			this.signalHasTasks();
 		}
 	}
 
@@ -184,57 +169,13 @@ public class PlacementManagerDaemonExecutor implements IThreadDaemonExecutor<Pla
 	@Override
 	public boolean shouldPause()
 	{
-//		if (this.hasTasks()) { return false; }
-//		return (System.currentTimeMillis() - this.lastTaskTime) > (this.sleepDelay * 1000L);
-		return !this.hasTasks();
-	}
-
-	private void signalHasTasks()
-	{
-		Litematica.debugLogError("Executor: Signal Has Tasks");
-		final ReentrantLock lock = this.lock;
-		lock.lock();
-
-		try
-		{
-			this.hasTasks.signal();
-		}
-		finally
-		{
-			lock.unlock();
-		}
+		if (this.hasTasks()) { return false; }
+		return (System.currentTimeMillis() - this.lastTaskTime) > (this.sleepDelay * 1000L);
 	}
 
 	private PlacementManagerTask takeNextTask() throws InterruptedException
 	{
-		final PlacementManagerTask task;
-		final int cx;
-		final AtomicInteger count = new AtomicInteger(PlacementManagerDaemonHandler.INSTANCE.getTaskCount());
-		final ReentrantLock lock = this.lock;
-
-		lock.lockInterruptibly();
-
-		try
-		{
-			while (count.get() == 0)
-			{
-				this.hasTasks.await();
-			}
-
-			task = PlacementManagerDaemonHandler.INSTANCE.getNextTask();
-			cx = count.getAndDecrement();
-
-			if (cx > 1)
-			{
-				this.hasTasks.signal();
-			}
-		}
-		finally
-		{
-			lock.unlock();
-		}
-
-		return task;
+		return PlacementManagerDaemonHandler.INSTANCE.getNextTask();
 	}
 
 	@Override

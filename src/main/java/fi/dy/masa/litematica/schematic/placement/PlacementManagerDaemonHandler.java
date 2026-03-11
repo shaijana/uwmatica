@@ -20,10 +20,10 @@ import fi.dy.masa.litematica.render.LitematicaRenderer;
 public class PlacementManagerDaemonHandler implements IThreadDaemonHandler<PlacementManagerTask>
 {
 	public static final PlacementManagerDaemonHandler INSTANCE = new PlacementManagerDaemonHandler();
-	private static final int MAX_PLATFORM_THREADS = 1;
+	private static final int MAX_PLATFORM_THREADS = 2;
 	private boolean useVirtual = false;
 	private final String namePrefix = Reference.MOD_NAME+" Placement Manager";
-	private static final float TASK_INTERVAL = 2.0F;
+	private static final float TASK_INTERVAL = 1.50F;
 	private final int threadCount = this.calculateMaxThreads();
 	private final ConcurrentHashMap<String, Thread> threadMap = this.builder();
 	private final LinkedBlockingQueue<PlacementManagerTask> queueUnload = new LinkedBlockingQueue<>();
@@ -208,8 +208,7 @@ public class PlacementManagerDaemonHandler implements IThreadDaemonHandler<Place
 	{
 		final int threadCount = this.threadMap.size();
 		final int total = this.queueUnload.size() + this.queueRebuild.size() + this.queueOther.size();
-		final int calc = MathUtils.clamp((threadCount / 3), 1, threadCount) * 750;
-
+		final int calc = MathUtils.clamp((threadCount / 2), 1, threadCount) * 650;
 		return total >= calc && total > 0;
 	}
 

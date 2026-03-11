@@ -162,8 +162,8 @@ public class SchematicPlacementManager
                         this.lastEmptyCheck = now;
                     }
 
-                    // Check with the FIXER at least 1 or 2 times after all Schemas have been unloaded.
-                    if ((now - this.lastEmptyCheck) > (this.getTickRateMs() * 2))
+                    // Check with the FIXER at least 1 or 2 times after all Schems have been unloaded.
+                    if ((now - this.lastEmptyCheck) > (this.getTickRateMs() * 2.5))
                     {
                         this.lastTick = now;
                         return;
@@ -177,7 +177,7 @@ public class SchematicPlacementManager
                 // Last Schematic Updated (Load/Unload) Optimization
                 if (this.lastSchematicChange > 0L)
                 {
-                    if ((now - this.lastSchematicChange) > (this.getTickRateMs() * 2.5))
+                    if ((now - this.lastSchematicChange) > (this.getTickRateMs() * 1.5))
                     {
                         this.lastSchematicChange = -1L;
                     }   // else run Task -->
@@ -188,8 +188,8 @@ public class SchematicPlacementManager
                     return;
                 }
 
-                // Run FIXER task
-                this.checkNearbyChunksAreLoaded(mc, (mc.options.getEffectiveRenderDistance() / 2) + 1);
+                // Run FIXER task //  / 2  + 1 (Needs to be full render distance, unfortunately)
+                this.checkNearbyChunksAreLoaded(mc, mc.options.getEffectiveRenderDistance());
             }
 
             this.lastTick = now;
@@ -921,6 +921,8 @@ public class SchematicPlacementManager
         {
             OverlayRenderer.getInstance().updatePlacementCache();
         }
+
+        this.lastSchematicChange = System.currentTimeMillis();
     }
 
     public boolean changeSelection(Level world, Entity entity, int maxDistance)
