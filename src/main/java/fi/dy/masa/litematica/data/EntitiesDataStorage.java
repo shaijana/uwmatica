@@ -363,14 +363,17 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
             {
                 Pair<Long, Pair<BlockEntity, CompoundData>> pair = this.blockEntityCache.get(pos);
 
-                if (nowTime - pair.getLeft() > blockTimeout || pair.getLeft() > nowTime)
+                if (pair != null)
                 {
-//                    Litematica.debugLog("litematicEntityCache: be at pos [{}] has timed out by [{}] ms", pos.toShortString(), blockTimeout);
-                    this.blockEntityCache.remove(pos);
-                }
-                else
-                {
-                    count++;
+                    if (nowTime - pair.getLeft() > blockTimeout || pair.getLeft() > nowTime)
+                    {
+//                        Litematica.debugLog("litematicEntityCache: be at pos [{}] has timed out by [{}] ms", pos.toShortString(), blockTimeout);
+                        this.blockEntityCache.remove(pos);
+                    }
+                    else
+                    {
+                        count++;
+                    }
                 }
             }
 
@@ -388,14 +391,17 @@ public class EntitiesDataStorage implements IClientTickHandler, IDataSyncer
             {
                 Pair<Long, Pair<Entity, CompoundData>> pair = this.entityCache.get(entityId);
 
-                if (nowTime - pair.getLeft() > entityTimeout || pair.getLeft() > nowTime)
+                if (pair != null)
                 {
-//                    Litematica.debugLog("litematicEntityCache: entity Id [{}] has timed out by [{}] ms", entityId, entityTimeout);
-                    this.entityCache.remove(entityId);
-                }
-                else
-                {
-                    count++;
+                    if (nowTime - pair.getLeft() > entityTimeout || pair.getLeft() > nowTime)
+                    {
+                        Litematica.debugLog("litematicEntityCache: entity Id [{}] has timed out by [{}] ms", entityId, entityTimeout);
+                        this.entityCache.remove(entityId);
+                    }
+                    else
+                    {
+                        count++;
+                    }
                 }
             }
 
