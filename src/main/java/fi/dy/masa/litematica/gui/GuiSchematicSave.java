@@ -112,7 +112,12 @@ public class GuiSchematicSave extends GuiSchematicSaveBase implements ICompletio
             if (this.type == ButtonType.SAVE)
             {
                 Path dir = this.gui.getListWidget().getCurrentDirectory();
-                String fileName = this.gui.getTextFieldText();
+                String fileName = FileNameUtils.generateSimpleUnicodeSafeFileName(this.gui.getTextFieldText());
+
+                if (FileNameUtils.doesFileNameContainIllegalCharacters(fileName))
+                {
+                    fileName = FileNameUtils.generateSafeFileName(fileName);
+                }
 
                 if (!Files.isDirectory(dir))
                 {

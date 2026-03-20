@@ -8,6 +8,7 @@ import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.gui.button.ButtonBase;
 import fi.dy.masa.malilib.gui.button.IButtonActionListener;
 import fi.dy.masa.malilib.gui.widgets.WidgetFileBrowserBase.DirectoryEntryType;
+import fi.dy.masa.malilib.util.FileNameUtils;
 import fi.dy.masa.malilib.util.FileUtils;
 import fi.dy.masa.malilib.util.StringUtils;
 import fi.dy.masa.litematica.data.DataManager;
@@ -59,7 +60,12 @@ public class GuiSchematicSaveImported extends GuiSchematicSaveBase
             if (this.type == ButtonType.SAVE)
             {
                 Path dir = this.gui.getListWidget().getCurrentDirectory();
-                String fileName = this.gui.getTextFieldText();
+                String fileName = FileNameUtils.generateSimpleUnicodeSafeFileName(this.gui.getTextFieldText());
+
+                if (FileNameUtils.doesFileNameContainIllegalCharacters(fileName))
+                {
+                    fileName = FileNameUtils.generateSafeFileName(fileName);
+                }
 
                 if (!Files.isDirectory(dir))
                 {
@@ -76,9 +82,15 @@ public class GuiSchematicSaveImported extends GuiSchematicSaveBase
                 if (this.gui.type == DirectoryEntryType.FILE)
                 {
                     Path inDir = this.gui.dirSource;
-                    String inFile = this.gui.inputFileName;
+                    String inFile = FileNameUtils.generateSimpleUnicodeSafeFileName(this.gui.inputFileName);
                     boolean override = GuiBase.isShiftDown();
                     boolean ignoreEntities = this.gui.checkboxIgnoreEntities.isChecked();
+
+                    if (FileNameUtils.doesFileNameContainIllegalCharacters(inFile))
+                    {
+                        inFile = FileNameUtils.generateSafeFileName(inFile);
+                    }
+
                     FileType fileType = FileType.fromFile(inDir.resolve(inFile));
 
                     if (fileType == FileType.LITEMATICA_SCHEMATIC)

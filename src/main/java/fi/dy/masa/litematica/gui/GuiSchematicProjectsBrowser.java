@@ -17,10 +17,7 @@ import fi.dy.masa.malilib.gui.widgets.WidgetDirectoryEntry;
 import fi.dy.masa.malilib.gui.widgets.WidgetFileBrowserBase.DirectoryEntry;
 import fi.dy.masa.malilib.gui.widgets.WidgetFileBrowserBase.DirectoryEntryType;
 import fi.dy.masa.malilib.interfaces.IStringConsumerFeedback;
-import fi.dy.masa.malilib.util.FileDeleter;
-import fi.dy.masa.malilib.util.GuiUtils;
-import fi.dy.masa.malilib.util.InfoUtils;
-import fi.dy.masa.malilib.util.StringUtils;
+import fi.dy.masa.malilib.util.*;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.gui.GuiMainMenu.ButtonListenerChangeMenu;
@@ -239,7 +236,14 @@ public class GuiSchematicProjectsBrowser extends GuiListBase<DirectoryEntry, Wid
 		@Override
 		public boolean setString(String projectName)
 		{
-			Path file = this.dir.resolve(projectName + ".json");
+            String fileName = FileNameUtils.generateSimpleUnicodeSafeFileName(projectName);
+
+            if (FileNameUtils.doesFileNameContainIllegalCharacters(fileName))
+            {
+                fileName = FileNameUtils.generateSafeFileName(fileName);
+            }
+
+			Path file = this.dir.resolve(fileName + ".json").normalize();
 
 			if (Files.exists(file) == false)
 			{

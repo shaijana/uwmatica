@@ -1239,7 +1239,7 @@ public class SchematicPlacementManager
 
     public void clear()
     {
-        PlacementManagerDaemonHandler.INSTANCE.endAll();
+        PlacementManagerDaemonHandler.INSTANCE.reset();
         this.schematicPlacements.clear();
         this.selectedPlacement = null;
         this.schematicsTouchingChunk.clear();

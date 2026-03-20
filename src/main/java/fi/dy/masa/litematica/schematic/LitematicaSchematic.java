@@ -44,10 +44,7 @@ import net.minecraft.world.ticks.TickPriority;
 
 import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.interfaces.IStringConsumer;
-import fi.dy.masa.malilib.util.FileUtils;
-import fi.dy.masa.malilib.util.InfoUtils;
-import fi.dy.masa.malilib.util.IntBoundingBox;
-import fi.dy.masa.malilib.util.StringUtils;
+import fi.dy.masa.malilib.util.*;
 import fi.dy.masa.malilib.util.data.Constants;
 import fi.dy.masa.malilib.util.data.Schema;
 import fi.dy.masa.malilib.util.nbt.NbtUtils;
@@ -75,6 +72,8 @@ import fi.dy.masa.litematica.schematic.transmit.SchematicBufferManager;
 import fi.dy.masa.litematica.selection.AreaSelection;
 import fi.dy.masa.litematica.selection.Box;
 import fi.dy.masa.litematica.util.*;
+import fi.dy.masa.litematica.util.EntityUtils;
+import fi.dy.masa.litematica.util.WorldUtils;
 import fi.dy.masa.litematica.world.ChunkSchematic;
 import fi.dy.masa.litematica.world.SchematicWorldHandler;
 import fi.dy.masa.litematica.world.WorldSchematic;
@@ -2697,14 +2696,14 @@ public class LitematicaSchematic
 
     public boolean writeToFile(Path dir, String fileNameIn, boolean override, boolean downgrade)
     {
-        String fileName = fileNameIn;
+        String fileName = FileNameUtils.generateSimpleUnicodeSafeFileName(fileNameIn);
 
         if (fileName.endsWith(FILE_EXTENSION) == false)
         {
             fileName = fileName + FILE_EXTENSION;
         }
 
-        Path fileSchematic = dir.resolve(fileName);
+        Path fileSchematic = dir.resolve(FileNameUtils.generateSafeFileName(fileName)).normalize();
 
         try
         {
@@ -2808,14 +2807,21 @@ public class LitematicaSchematic
         return NbtUtils.readNbtFromFile(file);
     }
 
-    public static Path fileFromDirAndName(Path dir, String fileName, FileType schematicType)
+    public static Path fileFromDirAndName(Path dir, String fileNameIn, FileType schematicType)
     {
+        String fileName = FileNameUtils.generateSimpleUnicodeSafeFileName(fileNameIn);
+
+        if (FileNameUtils.doesFileNameContainIllegalCharacters(fileName))
+        {
+            fileName = FileNameUtils.generateSafeFileName(fileName);
+        }
+
         if (fileName.endsWith(FILE_EXTENSION) == false && schematicType == FileType.LITEMATICA_SCHEMATIC)
         {
             fileName = fileName + FILE_EXTENSION;
         }
 
-        return dir.resolve(fileName);
+        return dir.resolve(fileName).normalize();
     }
 
     public static void updateMetadataWithFileTime(Path file, SchematicMetadata metadata)
