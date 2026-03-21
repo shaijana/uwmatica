@@ -35,6 +35,7 @@ import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.interfaces.IConfirmationListener;
 import fi.dy.masa.malilib.network.PacketSplitter;
 import fi.dy.masa.malilib.util.*;
+import fi.dy.masa.malilib.util.data.json.JsonUtils;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.command.PmCommand;
 import fi.dy.masa.litematica.config.Configs;
@@ -53,9 +54,10 @@ import fi.dy.masa.litematica.scheduler.tasks.TaskPasteSchematicPerChunkDirect;
 import fi.dy.masa.litematica.scheduler.tasks.TaskPasteSchematicSetblockToMcfunction;
 import fi.dy.masa.litematica.schematic.LitematicaSchematic;
 import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement.RequiredEnabled;
-import fi.dy.masa.litematica.util.*;
 import fi.dy.masa.litematica.util.EntityUtils;
+import fi.dy.masa.litematica.util.PositionUtils;
 import fi.dy.masa.litematica.util.PositionUtils.ChunkPosDistanceComparator;
+import fi.dy.masa.litematica.util.RayTraceUtils;
 import fi.dy.masa.litematica.util.RayTraceUtils.RayTraceWrapper;
 import fi.dy.masa.litematica.util.RayTraceUtils.RayTraceWrapper.HitType;
 import fi.dy.masa.litematica.util.WorldUtils;
@@ -209,15 +211,15 @@ public class SchematicPlacementManager
         }
 
         PlacementManagerDaemonHandler.INSTANCE.addTask(
-                new PlacementManagerTaskOther(this.worldSupplier, cc.x, cc.z, () ->
+                new PlacementManagerTaskOther(this.worldSupplier, cc.x(), cc.z(), () ->
                 {
                     Set<ChunkPos> loaded = new HashSet<>();
                     Set<ChunkPos> notLoaded = new HashSet<>();
 
-                    final int startcx = cc.x - offset;
-                    final int startcz = cc.z - offset;
-                    final int endcx = cc.x + offset;
-                    final int endcz = cc.z + offset;
+                    final int startcx = cc.x() - offset;
+                    final int startcz = cc.z() - offset;
+                    final int endcx = cc.x() + offset;
+                    final int endcz = cc.z() + offset;
 
                     for (int cx = startcx; cx < endcx; cx++)
                     {
@@ -228,7 +230,7 @@ public class SchematicPlacementManager
                             if (!this.worldSupplier.get().getChunkSource().hasChunk(cx, cz) &&
                                 DataManager.getSchematicPlacementManager().canHandleChunk(Minecraft.getInstance().level, cx, cz))
                             {
-                                Frustum frustum = Minecraft.getInstance().levelRenderer.getCapturedFrustum();
+                                Frustum frustum = Minecraft.getInstance().gameRenderer.getMainCamera().getCapturedFrustum();
 
                                 // Check Frustum culling
                                 if (frustum != null)
@@ -263,13 +265,13 @@ public class SchematicPlacementManager
                         loaded.forEach(c ->
                                        {
                                            PlacementManagerDaemonHandler.INSTANCE.addTask(
-                                                   new PlacementManagerTaskOther(this.worldSupplier, c.x, c.z, () ->
+                                                   new PlacementManagerTaskOther(this.worldSupplier, c.x(), c.z(), () ->
                                                    {
                                                        List<SchematicPlacement> placements = DataManager.getSchematicPlacementManager().getAllSchematicsTouchingChunk(c);
 
                                                        if (placements.isEmpty())
                                                        {
-                                                           DataManager.getSchematicPlacementManager().markChunkForUnload(c.x, c.z);
+                                                           DataManager.getSchematicPlacementManager().markChunkForUnload(c.x(), c.z());
                                                        }
                                                        else
                                                        {
@@ -285,7 +287,7 @@ public class SchematicPlacementManager
 
                                                            if (unload)
                                                            {
-                                                               DataManager.getSchematicPlacementManager().markChunkForUnload(c.x, c.z);
+                                                               DataManager.getSchematicPlacementManager().markChunkForUnload(c.x(), c.z());
                                                            }
                                                        }
                                                    }));
@@ -298,14 +300,14 @@ public class SchematicPlacementManager
                         notLoaded.forEach(c ->
                                           {
                                               PlacementManagerDaemonHandler.INSTANCE.addTask(
-                                                      new PlacementManagerTaskOther(this.worldSupplier, c.x, c.z, () ->
+                                                      new PlacementManagerTaskOther(this.worldSupplier, c.x(), c.z(), () ->
                                                       {
                                                           List<SchematicPlacement> placements = DataManager.getSchematicPlacementManager().getAllSchematicsTouchingChunk(c);
 
                                                           // Load/Rebuild if Chunk is Near, no matter what for Verifier.
                                                           if (c.getChessboardDistance(cc) <= 3)
                                                           {
-                                                              DataManager.getSchematicPlacementManager().markChunkForRebuild(c.x, c.z);
+                                                              DataManager.getSchematicPlacementManager().markChunkForRebuild(c.x(), c.z());
                                                           }
                                                           else
                                                           {
@@ -323,7 +325,7 @@ public class SchematicPlacementManager
 
                                                                   if (rebuild)
                                                                   {
-                                                                      DataManager.getSchematicPlacementManager().markChunkForRebuild(c.x, c.z);
+                                                                      DataManager.getSchematicPlacementManager().markChunkForRebuild(c.x(), c.z());
                                                                   }
                                                               }
                                                           }
@@ -404,7 +406,7 @@ public class SchematicPlacementManager
 
                             for (ChunkPos cp : touchedChunks)
                             {
-                                if (this.canHandleChunk(Minecraft.getInstance().level, cp.x, cp.z))
+                                if (this.canHandleChunk(Minecraft.getInstance().level, cp.x(), cp.z()))
                                 {
                                     shouldRender.set(true);
                                     break;
@@ -424,7 +426,7 @@ public class SchematicPlacementManager
 
     public boolean checkIfChunkShouldRender(ChunkPos chunkPos)
     {
-        return this.checkIfChunkShouldRender(chunkPos.x, chunkPos.z);
+        return this.checkIfChunkShouldRender(chunkPos.x(), chunkPos.z());
     }
 
     public boolean checkIfChunkShouldRender(int chunkX, int chunkZ)
@@ -489,9 +491,9 @@ public class SchematicPlacementManager
 
                     if (range.intersectsBox(minX, minY, minZ, maxX, maxY, maxZ))
                     {
-                        ChunkPos pos = new ChunkPos(posLong);
+                        ChunkPos pos = ChunkPos.unpack(posLong);
 
-                        if (worldSchematic.getChunkSource().getChunkState(pos.x, pos.z).atLeast(ChunkSchematicState.LOADED))
+                        if (worldSchematic.getChunkSource().getChunkState(pos.x(), pos.z()).atLeast(ChunkSchematicState.LOADED))
                         {
                             this.visibleChunks.add(pos);
                         }
@@ -525,17 +527,17 @@ public class SchematicPlacementManager
 
     public List<PlacementPart> getPlacementPartsInChunk(int chunkX, int chunkZ)
     {
-        return this.touchedVolumesInChunk.getOrDefault(ChunkPos.asLong(chunkX, chunkZ), Collections.emptyList());
+        return this.touchedVolumesInChunk.getOrDefault(ChunkPos.pack(chunkX, chunkZ), Collections.emptyList());
     }
 
     public List<PlacementPart> getAllPlacementsTouchingChunk(BlockPos pos)
     {
-        return this.touchedVolumesInChunk.getOrDefault(ChunkPos.asLong(pos.getX() >> 4, pos.getZ() >> 4), Collections.emptyList());
+        return this.touchedVolumesInChunk.getOrDefault(ChunkPos.pack(pos.getX() >> 4, pos.getZ() >> 4), Collections.emptyList());
     }
 
     public int getPlacementPartsInChunkCount(int chunkX, int chunkZ)
     {
-        long longPos = ChunkPos.asLong(chunkX, chunkZ);
+        long longPos = ChunkPos.pack(chunkX, chunkZ);
 
         if (this.touchedVolumesInChunk.containsKey(longPos))
         {
@@ -734,7 +736,7 @@ public class SchematicPlacementManager
                 this.updateTouchedBoxesInChunk(pos);
             }
 
-            PlacementManagerDaemonHandler.INSTANCE.removeUnloadTasksFor(pos.x, pos.z);
+            PlacementManagerDaemonHandler.INSTANCE.removeUnloadTasksFor(pos.x(), pos.z());
         }
 
         this.markChunksForRebuild(placement);
@@ -822,7 +824,7 @@ public class SchematicPlacementManager
 
     protected void updateTouchedBoxesInChunk(ChunkPos pos)
     {
-        long chunkPosLong = pos.toLong();
+        long chunkPosLong = pos.pack();
         this.touchedVolumesInChunk.remove(chunkPosLong);
 
         Collection<SchematicPlacement> placements = this.schematicsTouchingChunk.get(pos);
@@ -836,7 +838,7 @@ public class SchematicPlacementManager
                     continue;
                 }
 
-                Map<String, IntBoundingBox> boxMap = placement.getBoxesWithinChunk(pos.x, pos.z);
+                Map<String, IntBoundingBox> boxMap = placement.getBoxesWithinChunk(pos.x(), pos.z());
 
                 if (boxMap.isEmpty() == false)
                 {
@@ -874,7 +876,7 @@ public class SchematicPlacementManager
 
     public void markChunkForUnload(ChunkPos pos)
     {
-        this.markChunkForUnload(pos.x, pos.z);
+        this.markChunkForUnload(pos.x(), pos.z());
     }
 
     private void markChunksForUnload(Collection<ChunkPos> chunks)
@@ -904,7 +906,7 @@ public class SchematicPlacementManager
 
     public void markChunkForRebuild(ChunkPos pos)
     {
-        this.markChunkForRebuild(pos.x, pos.z);
+        this.markChunkForRebuild(pos.x(), pos.z());
     }
 
     public void markChunkForRebuild(int cx, int cz)
@@ -1086,22 +1088,22 @@ public class SchematicPlacementManager
                 final int partsCount = this.getPlacementPartsInChunkCount(cx, cz);
                 final boolean tasks = PlacementManagerDaemonHandler.INSTANCE.hasAnyTasksFor(cx, cz);
 
-                chat.addMessage(
+                chat.addClientSystemMessage(
                         StringUtils.translateAsText(PmCommand.PREFIX+".display_chunk_debug.base", cx, cz, chunk.getState(), timeCreated)
                 );
-                chat.addMessage(
+                chat.addClientSystemMessage(
                         StringUtils.translateAsText(PmCommand.PREFIX+".display_chunk_debug.entities", entCount, teCount)
                 );
-                chat.addMessage(
+                chat.addClientSystemMessage(
                         StringUtils.translateAsText(PmCommand.PREFIX+".display_chunk_debug.sections", sectCount, height, minY)
                 );
-                chat.addMessage(
+                chat.addClientSystemMessage(
                         StringUtils.translateAsText(PmCommand.PREFIX+".display_chunk_debug.schematics", schemCount, partsCount, tasks)
                 );
             }
             else
             {
-                chat.addMessage(
+                chat.addClientSystemMessage(
                         StringUtils.translateAsText(PmCommand.PREFIX+".display_chunk_debug.not_loaded", cx, cz)
                 );
             }
@@ -1112,7 +1114,7 @@ public class SchematicPlacementManager
     {
         if (this.worldSupplier.get() != null)
         {
-            chat.addMessage(
+            chat.addClientSystemMessage(
                     StringUtils.translateAsText(PmCommand.PREFIX+".mark_chunk_for_rebuild", cx, cz)
             );
 

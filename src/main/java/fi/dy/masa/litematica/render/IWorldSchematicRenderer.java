@@ -1,39 +1,39 @@
 package fi.dy.masa.litematica.render;
 
-import java.util.Collection;
 import java.util.List;
 import org.joml.Matrix4fc;
 import org.jspecify.annotations.Nullable;
 
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.textures.GpuSampler;
-import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
-import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.SubmitNodeCollector;
-import net.minecraft.client.renderer.block.BlockRenderDispatcher;
-import net.minecraft.client.renderer.block.model.BlockModelPart;
-import net.minecraft.client.renderer.block.model.BlockStateModel;
+import net.minecraft.client.renderer.block.BlockAndTintGetter;
+import net.minecraft.client.renderer.block.FluidRenderer;
+import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
+import net.minecraft.client.renderer.block.dispatch.BlockStateModelPart;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayerGroup;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
-import net.minecraft.client.renderer.state.LevelRenderState;
+import net.minecraft.client.renderer.fog.FogRenderer;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
+import net.minecraft.client.renderer.state.level.LevelRenderState;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.util.Brightness;
+import net.minecraft.util.LightCoordsUtil;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.profiling.ProfilerFiller;
-import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.LightLayer;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.Vec3;
 
 import fi.dy.masa.malilib.render.uniform.ChunkFixUniform;
+import fi.dy.masa.litematica.render.schematic.BlockModelRendererSchematic;
+import fi.dy.masa.litematica.render.schematic.IBlockOutputSchematic;
+import fi.dy.masa.litematica.render.schematic.SchematicRenderState;
 import fi.dy.masa.litematica.world.ChunkSchematicState;
 import fi.dy.masa.litematica.world.WorldSchematic;
 
@@ -61,41 +61,45 @@ public interface IWorldSchematicRenderer
 
 	ProfilerFiller getProfiler();
 
-	EntityRenderDispatcher getEntityRenderer();
+	BlockModelRendererSchematic getBlockRenderer();
 
 	BlockEntityRenderDispatcher getBlockEntityRenderer();
+
+	FluidRenderer getFluidRenderer();
+
+	EntityRenderDispatcher getEntityRenderer();
+
+	FogRenderer getFogRenderer();
+
+	SchematicRenderState getSchematicRenderState();
 
 	void setWorldAndLoadRenderers(@Nullable WorldSchematic world);
 
 	void loadRenderers(@Nullable ProfilerFiller profiler);
 
-	void reloadBlockRenderManager(BlockRenderDispatcher dispatcher);
+	void reloadBlockRenderManager();
 
-	ChunkFixUniform getChunkFixUniform();
-
-	void updateCameraState(Camera camera, float tickProgress);
+	void updateCameraState(Camera camera, float tickProgress, CameraRenderState cameraState);
 
 	void setupTerrain(Camera camera, Frustum frustum, int frameCount, boolean playerSpectator, ProfilerFiller profiler);
 
 	void updateChunks(long finishTimeNano, ProfilerFiller profiler);
 
-	void capturePreMainValues(Camera camera, GpuBufferSlice fogBuffer, ProfilerFiller profiler);
+	void capturePreMainValues(CameraRenderState camera, GpuBufferSlice fogBuffer, ProfilerFiller profiler);
+
+	void uploadRemainingBuffers(long finishTimeNano, DeltaTracker deltaTracker, double cameraX, double cameraY, double cameraZ, ProfilerFiller profiler);
 
 	int prepareBlockLayers(Matrix4fc matrix4fc, double cameraX, double cameraY, double cameraZ, ProfilerFiller profiler);
 
 	<T extends Comparable<T>> BlockState getFallbackState(BlockState origState);
 
-	boolean hasQuadsForModel(List<BlockModelPart> modelParts, BlockState state, @Nullable Direction side);
+	@Nullable BlockStateModel getModelForState(BlockState state);
 
-	boolean hasQuadsForModelPart(BlockModelPart modelPart, BlockState state, @Nullable Direction side);
+	List<BlockStateModelPart> getModelParts(BlockPos pos, BlockState state, RandomSource rand);
 
-	BlockStateModel getModelForState(BlockState state);
+	boolean renderBlock(BlockAndTintGetter world, BlockState state, BlockPos pos, Vec3 offset, IBlockOutputSchematic output);
 
-	List<BlockModelPart> getModelParts(BlockPos pos, BlockState state, RandomSource rand);
-
-	boolean renderBlock(BlockAndTintGetter world, BlockState state, BlockPos pos, PoseStack matrices, BufferBuilder bufferBuilderIn);
-
-	void renderFluid(BlockAndTintGetter world, BlockState blockState, FluidState fluidState, BlockPos pos, BufferBuilder bufferBuilderIn);
+	boolean renderFluid(BlockAndTintGetter world, BlockState blockState, FluidState fluidState, BlockPos pos, FluidRenderer.Output output, final float offsetY);
 
 	void drawBlockLayerGroup(ChunkSectionLayerGroup group, @Nullable GpuSampler sampler);
 
@@ -109,7 +113,7 @@ public interface IWorldSchematicRenderer
 
 	void renderBlockEntities(Camera camera, Frustum frustum, PoseStack matrices, LevelRenderState renderStates, SubmitNodeCollector queue, ProfilerFiller profiler);
 
-	void updateBlockEntities(Collection<BlockEntity> toRemove, Collection<BlockEntity> toAdd);
+//	void updateBlockEntities(Collection<BlockEntity> toRemove, Collection<BlockEntity> toAdd);
 
 	void renderBlockOverlays(Camera camera, float lineWidth, ProfilerFiller profiler);
 
@@ -119,7 +123,7 @@ public interface IWorldSchematicRenderer
 
 	void setChunkSchematicState(int chunkX, int chunkZ, ChunkSchematicState state);
 
-	void clearBlockBatchDraw();
+	ChunkFixUniform getChunkFixUniform();
 
 	void clearChunkFixUniform();
 
@@ -138,12 +142,12 @@ public interface IWorldSchematicRenderer
 		}
 
 		int light = getter.packedLight(world, pos);
-		int blockLight = LightTexture.block(light);
+		int blockLight = LightCoordsUtil.block(light);
 		int luminance = state.getLightEmission();
 
 		if (blockLight < luminance)
 		{
-			return LightTexture.pack(luminance, LightTexture.sky(light));
+			return LightCoordsUtil.withBlock(light, luminance);
 		}
 
 		return light;
@@ -153,7 +157,7 @@ public interface IWorldSchematicRenderer
 	interface LightGetter
 	{
 		LightGetter DEFAULT = (world, pos) ->
-				Brightness.pack(world.getBrightness(LightLayer.BLOCK, pos), world.getBrightness(LightLayer.SKY, pos));
+				LightCoordsUtil.pack(world.getBrightness(LightLayer.BLOCK, pos), world.getBrightness(LightLayer.SKY, pos));
 
 		int packedLight(BlockAndTintGetter world, BlockPos pos);
 	}

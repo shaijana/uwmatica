@@ -5,9 +5,12 @@ import javax.annotation.Nullable;
 import org.jspecify.annotations.NonNull;
 
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.block.BlockAndTintGetter;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.world.level.*;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.CardinalLighting;
+import net.minecraft.world.level.ColorResolver;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -32,8 +35,6 @@ public class ChunkCacheSchematic implements BlockAndTintGetter, LightChunkGetter
     public ChunkCacheSchematic(@Nonnull Level worldIn, @Nonnull ClientLevel clientWorld, @Nonnull BlockPos pos, int expand)
     {
         this.world = worldIn;
-        //this.lightingProvider = new FakeLightingProvider(this);
-
         this.worldClient = clientWorld;
         int chunkX = pos.getX() >> 4;
         int chunkZ = pos.getZ() >> 4;
@@ -124,20 +125,20 @@ public class ChunkCacheSchematic implements BlockAndTintGetter, LightChunkGetter
     @Override
     public @Nonnull LevelLightEngine getLightEngine()
     {
-        //return this.lightingProvider;
         return this.world.getLightEngine();
     }
 
     @Override
-    public int getBlockTint(@Nonnull BlockPos pos, ColorResolver colorResolver)
+    public @NonNull CardinalLighting cardinalLighting()
     {
-        return colorResolver.getColor(this.worldClient.getBiome(pos).value(), pos.getX(), pos.getZ());
+        return this.worldClient.cardinalLighting();
     }
 
     @Override
-    public float getShade(@Nonnull Direction direction, boolean bl)
+    public int getBlockTint(final @NonNull BlockPos pos, final @NonNull ColorResolver colorResolver)
     {
-        return this.worldClient.getShade(direction, bl); // AO brightness on face
+//        return colorResolver.getColor(this.worldClient.getBiome(pos).value(), pos.getX(), pos.getZ());
+        return this.worldClient.getBlockTint(pos, colorResolver);
     }
 
     @Override

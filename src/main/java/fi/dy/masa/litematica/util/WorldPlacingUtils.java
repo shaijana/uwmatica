@@ -45,7 +45,7 @@ public class WorldPlacingUtils
     {
         ProtoChunkSchematic filledChunk = null;
         LitematicaSchematic schematic = schematicPlacement.getSchematic();
-        Set<String> regionsTouchingChunk = schematicPlacement.getRegionsTouchingChunk(chunkPos.x, chunkPos.z);
+        Set<String> regionsTouchingChunk = schematicPlacement.getRegionsTouchingChunk(chunkPos.x(), chunkPos.z());
         BlockPos origin = schematicPlacement.getOrigin();
         boolean allSuccess = true;
 
@@ -104,7 +104,8 @@ public class WorldPlacingUtils
                                                               SchematicPlacement schematicPlacement,
                                                               SubRegionPlacement placement)
     {
-        IntBoundingBox bounds = schematicPlacement.getBoxWithinChunkForRegion(regionName, chunkPos.x, chunkPos.z);
+        ReplaceBehavior replace = (ReplaceBehavior) Configs.Generic.PLACEMENT_REPLACE_BEHAVIOR.getOptionListValue();
+        IntBoundingBox bounds = schematicPlacement.getBoxWithinChunkForRegion(regionName, chunkPos.x(), chunkPos.z());
         Vec3i regionSize = schematicPlacement.getSchematic().getAreaSizeAsVec3i(regionName);
 
         if (bounds == null || container == null || blockEntityMap == null || regionSize == null)
@@ -204,7 +205,13 @@ public class WorldPlacingUtils
                     pos = pos.offset(totalRegionPosTransformed);
 
 //                    BlockState stateOld = world.getBlockState(pos);
-//                    BlockState stateOld = chunk.getBlockState(pos);
+                    BlockState stateOld = chunk.getBlockState(pos);
+
+                    if ((replace == ReplaceBehavior.NONE && stateOld.isAir() == false) ||
+                        (replace == ReplaceBehavior.WITH_NON_AIR && state.isAir() == true))
+                    {
+                        continue;
+                    }
 
                     // Fix inventory of adjacent chest sides when mirrored
                     if (state.hasBlockEntity() && state.is(Blocks.CHEST) &&
@@ -314,10 +321,10 @@ public class WorldPlacingUtils
         final int offX = regionPosRelTransformed.getX() + origin.getX();
         final int offY = regionPosRelTransformed.getY() + origin.getY();
         final int offZ = regionPosRelTransformed.getZ() + origin.getZ();
-        final double minX = (chunkPos.x << 4);
-        final double minZ = (chunkPos.z << 4);
-        final double maxX = (chunkPos.x << 4) + 16;
-        final double maxZ = (chunkPos.z << 4) + 16;
+        final double minX = (chunkPos.x() << 4);
+        final double minZ = (chunkPos.z() << 4);
+        final double maxX = (chunkPos.x() << 4) + 16;
+        final double maxZ = (chunkPos.z() << 4) + 16;
 
         final Rotation rotationCombined = schematicPlacement.getRotation().getRotated(placement.getRotation());
         final Mirror mirrorMain = schematicPlacement.getMirror();
