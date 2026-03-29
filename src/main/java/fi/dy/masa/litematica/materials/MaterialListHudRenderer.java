@@ -5,7 +5,7 @@ import java.util.List;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.inventory.Slot;
@@ -27,6 +27,7 @@ import fi.dy.masa.litematica.render.infohud.RenderPhase;
 import fi.dy.masa.litematica.util.InventoryUtils;
 import fi.dy.masa.litematica.util.RayTraceUtils;
 import fi.dy.masa.litematica.world.SchematicWorldHandler;
+import fi.dy.masa.litematica.world.WorldSchematic;
 
 public class MaterialListHudRenderer implements IInfoHudRenderer
 {
@@ -74,12 +75,12 @@ public class MaterialListHudRenderer implements IInfoHudRenderer
     }
 
     @Override
-    public int render(GuiGraphics drawContext, int xOffset, int yOffset, HudAlignment alignment)
+    public int render(GuiGraphicsExtractor graphics, int xOffset, int yOffset, HudAlignment alignment)
     {
         Minecraft mc = Minecraft.getInstance();
         long currentTime = System.currentTimeMillis();
         List<MaterialListEntry> list;
-		GuiContext ctx = (GuiContext) drawContext;
+		GuiContext ctx = GuiContext.fromGuiGraphics(graphics);
 
         if (currentTime - this.lastUpdateTime > 2000)
         {
@@ -247,12 +248,13 @@ public class MaterialListHudRenderer implements IInfoHudRenderer
             if (traceWrapper != null && traceWrapper.getHitType() == RayTraceUtils.RayTraceWrapper.HitType.SCHEMATIC_BLOCK)
             {
                 BlockPos pos = traceWrapper.getBlockHitResult().getBlockPos();
-                BlockState state = SchematicWorldHandler.getSchematicWorld().getBlockState(pos);
+                WorldSchematic world = SchematicWorldHandler.getSchematicWorld();
+                BlockState state = world.getBlockState(pos);
 
                 if (state != lastLookedAtBlock)
                 {
                     lastLookedAtBlock = state;
-                    lastLookedAtBlocksItem = MaterialCache.getInstance().getRequiredBuildItemForState(state);
+                    lastLookedAtBlocksItem = MaterialCache.getInstance().getRequiredBuildItemForState(state, world, pos);
                 }
 
                 Color4f color = Configs.Colors.HIGHTLIGHT_BLOCK_IN_INV_COLOR.getColor();

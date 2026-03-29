@@ -5,19 +5,22 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
-import net.minecraft.client.Minecraft;
-import net.minecraft.core.BlockPos;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import org.apache.commons.lang3.StringUtils;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
+
 import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.interfaces.ICompletionListener;
 import fi.dy.masa.malilib.util.FileUtils;
 import fi.dy.masa.malilib.util.GuiUtils;
 import fi.dy.masa.malilib.util.InfoUtils;
-import fi.dy.masa.malilib.util.JsonUtils;
+import fi.dy.masa.malilib.util.data.json.JsonUtils;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.scheduler.TaskScheduler;
@@ -90,6 +93,12 @@ public class SchematicProject
     {
         SchematicVersion currentVersion = this.getCurrentVersion();
         return currentVersion != null ? currentVersion.getName() : this.getSelection().getName();
+    }
+
+    public String getCurrentVersionDescription()
+    {
+        SchematicVersion currentVersion = this.getCurrentVersion();
+        return currentVersion != null ? currentVersion.getDescription() : "";
     }
 
     public void setName(String name)
@@ -264,7 +273,7 @@ public class SchematicProject
 
                     if (time != version.getTimeStamp())
                     {
-                        version = new SchematicVersion(version.getName(), version.getFileName(), version.getAreaOffset(), version.getVersion(), time);
+                        version = new SchematicVersion(version.getName(), version.getFileName(), version.getDescription(), version.getAreaOffset(), version.getVersion(), time);
                         this.versions.set(this.currentVersionId, version);
                         this.dirty = true;
                     }
@@ -406,7 +415,7 @@ public class SchematicProject
         }
     }
 
-    public boolean commitNewVersion(String name)
+    public boolean commitNewVersion(String name, String description)
     {
         if (this.checkCanSaveOrPrintError())
         {
@@ -418,7 +427,7 @@ public class SchematicProject
             LitematicaSchematic schematic = LitematicaSchematic.createEmptySchematic(selection, author);
             schematic.getMetadata().setName(name);
             BlockPos areaOffset = selection.getEffectiveOrigin().subtract(this.origin);
-            SaveCompletionListener listener = new SaveCompletionListener(name, fileName, areaOffset);
+            SaveCompletionListener listener = new SaveCompletionListener(name, fileName, description, areaOffset);
             LitematicaSchematic.SchematicSaveInfo info = new LitematicaSchematic.SchematicSaveInfo(false, false);
 
             TaskSaveSchematic task = new TaskSaveSchematic(this.directory, fileName, schematic, selection.copy(), info, false);
@@ -471,7 +480,7 @@ public class SchematicProject
 
     public boolean saveToFile()
     {
-        if (this.dirty == false || JsonUtils.writeJsonToFileAsPath(this.toJson(), this.projectFile))
+        if (this.dirty == false || JsonUtils.writeJsonToFile(this.toJson(), this.projectFile))
         {
             this.dirty = false;
             return true;
@@ -511,7 +520,7 @@ public class SchematicProject
     @Nullable
     public static SchematicProject fromJson(JsonObject obj, Path projectFile, boolean createPlacement)
     {
-        BlockPos origin = JsonUtils.blockPosFromJson(obj, "origin");
+        BlockPos origin = JsonUtils.getBlockPos(obj, "origin");
 
         if (JsonUtils.hasString(obj, "name") && JsonUtils.hasInteger(obj, "current_version_id") && origin != null)
         {
@@ -624,13 +633,15 @@ public class SchematicProject
     {
         private final String name;
         private final String fileName;
+        private final String description;
         private final BlockPos areaOffset;
         private final int version;
 
-        private SaveCompletionListener(String name, String fileName, BlockPos areaOffset)
+        private SaveCompletionListener(String name, String fileName, String description, BlockPos areaOffset)
         {
             this.name = name;
             this.fileName = fileName;
+            this.description = StringUtils.abbreviate(description, SchematicVersion.MAX_DESCRIPTION_LENGTH);
             this.areaOffset = areaOffset;
             this.version = SchematicProject.this.versions.size() + 1;
         }
@@ -652,7 +663,7 @@ public class SchematicProject
 
         private void saveVersion()
         {
-            SchematicVersion version = new SchematicVersion(this.name, this.fileName, this.areaOffset, this.version, System.currentTimeMillis());
+            SchematicVersion version = new SchematicVersion(this.name, this.fileName, this.description, this.areaOffset, this.version, System.currentTimeMillis());
             SchematicProject.this.versions.add(version);
             SchematicProject.this.switchVersion(SchematicProject.this.versions.size() - 1, true);
             SchematicProject.this.cacheCurrentAreaFromPlacement();

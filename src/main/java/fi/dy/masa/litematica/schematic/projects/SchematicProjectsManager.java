@@ -4,19 +4,22 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 import javax.annotation.Nullable;
-import net.minecraft.client.Minecraft;
-import net.minecraft.core.BlockPos;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
+
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.util.GuiUtils;
 import fi.dy.masa.malilib.util.InfoUtils;
-import fi.dy.masa.malilib.util.JsonUtils;
+import fi.dy.masa.malilib.util.data.json.JsonUtils;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.gui.GuiSchematicProjectManager;
 import fi.dy.masa.litematica.gui.GuiSchematicProjectsBrowser;
+import fi.dy.masa.litematica.util.FileType;
 
 public class SchematicProjectsManager
 {
@@ -100,18 +103,21 @@ public class SchematicProjectsManager
     @Nullable
     public SchematicProject loadProjectFromFile(Path projectFile, boolean createPlacement)
     {
-        if (projectFile.getFileName().endsWith(".json") && Files.exists(projectFile) && Files.isRegularFile(projectFile) && Files.isReadable(projectFile))
+        if (FileType.fromFile(projectFile) == FileType.JSON &&
+            Files.exists(projectFile) && Files.isRegularFile(projectFile) && Files.isReadable(projectFile))
         {
-            JsonElement el = JsonUtils.parseJsonFileAsPath(projectFile);
+            JsonElement el = JsonUtils.parseJsonFile(projectFile);
 
             if (el != null && el.isJsonObject())
             {
                 SchematicProject project = SchematicProject.fromJson(el.getAsJsonObject(), projectFile, createPlacement);
+
                 if (project != null)
                 {
                     project.checkSelectionModeConfig();
+
+                    return project;
                 }
-                return project;
             }
         }
 
@@ -163,11 +169,11 @@ public class SchematicProjectsManager
         return false;
     }
 
-    public boolean commitNewVersion(String string)
+    public boolean commitNewVersion(String string, String description)
     {
         if (this.currentProject != null)
         {
-            return this.currentProject.commitNewVersion(string);
+            return this.currentProject.commitNewVersion(string, description);
         }
         else
         {

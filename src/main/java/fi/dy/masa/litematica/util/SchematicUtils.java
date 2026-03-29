@@ -29,8 +29,10 @@ import net.minecraft.world.phys.Vec3;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.GuiTextInput;
+import fi.dy.masa.malilib.gui.GuiTextInputStackedMultiLine;
 import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.interfaces.IStringConsumerFeedback;
+import fi.dy.masa.malilib.interfaces.IStringDualConsumerFeedback;
 import fi.dy.masa.malilib.util.GuiUtils;
 import fi.dy.masa.malilib.util.InfoUtils;
 import fi.dy.masa.malilib.util.LayerRange;
@@ -52,6 +54,7 @@ import fi.dy.masa.litematica.schematic.placement.SchematicPlacementManager.Place
 import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement;
 import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement.RequiredEnabled;
 import fi.dy.masa.litematica.schematic.projects.SchematicProject;
+import fi.dy.masa.litematica.schematic.projects.SchematicVersion;
 import fi.dy.masa.litematica.selection.AreaSelection;
 import fi.dy.masa.litematica.selection.Box;
 import fi.dy.masa.litematica.selection.SelectionManager;
@@ -75,7 +78,11 @@ public class SchematicUtils
             {
                 String title = "litematica.gui.title.schematic_projects.save_new_version";
                 SchematicProject project = DataManager.getSchematicProjectsManager().getCurrentProject();
-                GuiTextInput gui = new GuiTextInput(512, title, project.getCurrentVersionName(), GuiUtils.getCurrentScreen(), new SchematicVersionCreator());
+                GuiTextInputStackedMultiLine gui = new GuiTextInputStackedMultiLine(SchematicVersion.MAX_DESCRIPTION_LENGTH, 2, 8,
+                                                                                    title,
+                                                                                    project.getCurrentVersionName(), project.getCurrentVersionDescription(),
+                                                                                    GuiUtils.getCurrentScreen(),
+                                                                                    new SchematicVersionCreator());
                 GuiBase.openGui(gui);
             }
             else if (inMemoryOnly)
@@ -361,7 +368,7 @@ public class SchematicUtils
             posMutable.move(direction);
 
             if (range.isPositionWithinRange(posMutable) == false ||
-                world.getChunkProvider().hasChunk(posMutable.getX() >> 4, posMutable.getZ() >> 4) == false ||
+                world.getChunkSource().hasChunk(posMutable.getX() >> 4, posMutable.getZ() >> 4) == false ||
                 world.getBlockState(posMutable) != stateStart)
             {
                 posMutable.move(direction.getOpposite());
@@ -1160,12 +1167,12 @@ public class SchematicUtils
         }
     }
 
-    public static class SchematicVersionCreator implements IStringConsumerFeedback
+    public static class SchematicVersionCreator implements IStringDualConsumerFeedback
     {
         @Override
-        public boolean setString(String string)
+        public boolean setStrings(String string1, String string2)
         {
-            return DataManager.getSchematicProjectsManager().commitNewVersion(string);
+            return DataManager.getSchematicProjectsManager().commitNewVersion(string1, string2);
         }
     }
 }

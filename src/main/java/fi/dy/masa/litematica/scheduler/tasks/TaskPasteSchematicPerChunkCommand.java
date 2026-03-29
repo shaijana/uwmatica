@@ -31,6 +31,7 @@ import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import com.google.common.collect.Queues;
@@ -42,6 +43,7 @@ import fi.dy.masa.malilib.util.IntBoundingBox;
 import fi.dy.masa.malilib.util.LayerRange;
 import fi.dy.masa.malilib.util.game.BlockUtils;
 import fi.dy.masa.malilib.util.position.PositionUtils;
+import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.mixin.block.IMixinAbstractBlock;
@@ -51,6 +53,7 @@ import fi.dy.masa.litematica.util.EntityUtils;
 import fi.dy.masa.litematica.util.PasteNbtBehavior;
 import fi.dy.masa.litematica.util.ReplaceBehavior;
 import fi.dy.masa.litematica.world.ChunkSchematic;
+import fi.dy.masa.litematica.world.ChunkSchematicState;
 
 public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChunkBase
 {
@@ -63,6 +66,7 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
     protected final String fillCommand;
     protected final String setBlockCommand;
     protected final String summonCommand;
+    protected final String delayCommand;
     protected final int maxBoxVolume;
     protected final boolean useFillCommand;
     protected final boolean useWorldEdit;
@@ -84,6 +88,7 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
         this.fillCommand = Configs.Generic.COMMAND_NAME_FILL.getStringValue();
         this.setBlockCommand = Configs.Generic.COMMAND_NAME_SETBLOCK.getStringValue();
         this.summonCommand = Configs.Generic.COMMAND_NAME_SUMMON.getStringValue();
+        this.delayCommand = "<TICK_DELAY>";
         this.useFillCommand = Configs.Generic.PASTE_USE_FILL_COMMAND.getBooleanValue();
         this.useWorldEdit = Configs.Generic.COMMAND_USE_WORLDEDIT.getBooleanValue();
         this.useStrict = Configs.Generic.COMMAND_USE_STRICT.getBooleanValue() ? " strict" : "";
@@ -160,7 +165,7 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
 
     protected void prepareSummoningEntities(IntBoundingBox box)
     {
-        net.minecraft.world.phys.AABB bb = new net.minecraft.world.phys.AABB(box.minX(), box.minY(), box.minZ(), box.maxX() + 1, box.maxY() + 1, box.maxZ() + 1);
+        AABB bb = new AABB(box.minX(), box.minY(), box.minZ(), box.maxX() + 1, box.maxY() + 1, box.maxZ() + 1);
         this.entityIterator = this.schematicWorld.getEntities((Entity) null, bb, (e) -> true).iterator();
         this.phase = TaskPhase.PROCESS_BOX_ENTITIES;
     }
@@ -170,7 +175,16 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
     {
         while (this.sentCommandsThisTick < this.maxCommandsPerTick && this.queuedCommands.isEmpty() == false)
         {
-            this.sendCommand(this.queuedCommands.poll());
+            String command = this.queuedCommands.poll();
+
+            if (command.equals(this.delayCommand))
+            {
+                this.sentCommandsThisTick = this.maxCommandsPerTick;
+            }
+            else
+            {
+                this.sendCommand(command);
+            }
         }
     }
 
@@ -178,9 +192,9 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
     {
         ChunkPos chunkPos = this.currentChunkPos;
         if (chunkPos == null || this.positionIterator == null || this.mc.level == null) return;
-        ChunkSchematic schematicChunk = this.schematicWorld.getChunkProvider().getChunkForLighting(chunkPos.x, chunkPos.z);
+        ChunkSchematic schematicChunk = this.schematicWorld.getChunkSource().getChunkForLighting(chunkPos.x(), chunkPos.z());
         if (schematicChunk == null || this.currentBox == null) return;
-        ChunkAccess clientChunk = this.mc.level.getChunk(chunkPos.x, chunkPos.z);
+        ChunkAccess clientChunk = this.mc.level.getChunk(chunkPos.x(), chunkPos.z());
         boolean ignoreLimit = Configs.Generic.PASTE_IGNORE_CMD_LIMIT.getBooleanValue();
 
         while (this.positionIterator.hasNext() &&
@@ -210,10 +224,10 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
     {
         ChunkPos chunkPos = this.currentChunkPos;
         if (chunkPos == null || this.currentBox == null || this.mc.level == null) return;
-        final int baseX = chunkPos.x << 4;
-        final int baseZ = chunkPos.z << 4;
-        ChunkSchematic schematicChunk = this.schematicWorld.getChunkProvider().getChunkForLighting(chunkPos.x, chunkPos.z);
-        ChunkAccess clientChunk = this.mc.level.getChunk(chunkPos.x, chunkPos.z);
+        final int baseX = chunkPos.x() << 4;
+        final int baseZ = chunkPos.z() << 4;
+        ChunkSchematic schematicChunk = this.schematicWorld.getChunkSource().getChunkForLighting(chunkPos.x(), chunkPos.z());
+        ChunkAccess clientChunk = this.mc.level.getChunk(chunkPos.x(), chunkPos.z());
 
         while (this.fillVolumes.isEmpty() == false && this.queuedCommands.size() < this.maxCommandsPerTick)
         {
@@ -480,6 +494,8 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
                                                    key,
                                                    placementPos.getX(), placementPos.getY(), placementPos.getZ(),
                                                    key);
+
+                    commandHandler.accept(this.delayCommand);
                     commandHandler.accept(command);
                 }
             }
@@ -635,7 +651,7 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
 
     protected void generateFillVolumes(IntBoundingBox box)
     {
-        ChunkSchematic chunk = this.schematicWorld.getChunkProvider().getChunkForLighting(box.minX() >> 4, box.minZ() >> 4);
+        ChunkSchematic chunk = this.schematicWorld.getChunkSource().getChunkForLighting(box.minX() >> 4, box.minZ() >> 4);
         boolean ignoreBeFromFill = Configs.Generic.PASTE_IGNORE_BE_IN_FILL.getBooleanValue() &&
                                    Configs.Generic.PASTE_NBT_BEHAVIOR.getOptionListValue() != PasteNbtBehavior.NONE;
         

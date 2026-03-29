@@ -131,15 +131,23 @@ public class KeyCallbacks
 
     private static class RenderToggle extends KeyCallbackToggleBooleanConfigWithMessage
     {
+        private final boolean isMainToggle;
+
         public RenderToggle(IConfigBoolean config)
         {
             super(config);
+	        this.isMainToggle = config == Configs.Visuals.ENABLE_RENDERING;
         }
 
         @Override
         public boolean onKeyAction(KeyAction action, IKeybind key)
         {
             super.onKeyAction(action, key);
+
+            if (this.isMainToggle)
+            {
+                DataManager.getSchematicPlacementManager().onToggleMainRendering(this.config.getBooleanValue());
+            }
 
             if (this.config.getBooleanValue())
             {
@@ -150,15 +158,8 @@ public class KeyCallbacks
         }
     }
 
-    private static class KeyCallbackHotkeys implements IHotkeyCallback
+    private record KeyCallbackHotkeys(Minecraft mc) implements IHotkeyCallback
     {
-        private final Minecraft mc;
-
-        public KeyCallbackHotkeys(Minecraft mc)
-        {
-            this.mc = mc;
-        }
-
         @Override
         public boolean onKeyAction(KeyAction action, IKeybind key)
         {
@@ -192,7 +193,7 @@ public class KeyCallbacks
             if (toolEnabled && hasTool)
             {
                 int maxDistance = 200;
-                boolean projectMode =  DataManager.getSchematicProjectsManager().hasProjectOpen();
+                boolean projectMode = DataManager.getSchematicProjectsManager().hasProjectOpen();
 
                 if (isToolPrimary || isToolSecondary)
                 {
@@ -264,12 +265,12 @@ public class KeyCallbacks
 
             if (key == Hotkeys.EASY_PLACE_ACTIVATION.getKeybind())
             {
-                if (Configs.Generic.EASY_PLACE_POST_REWRITE.getBooleanValue() == false)
+                if (Configs.Generic.EASY_PLACE_POST_REWRITE.getBooleanValue())
                 {
-//                    return EasyPlaceUtils.handleEasyPlaceWithMessage();
-//                }
-//                else
-//                {
+                    return EasyPlaceUtils.handleEasyPlaceWithMessage();
+                }
+                else
+                {
                     return WorldUtils.handleEasyPlace(this.mc);
                 }
             }
@@ -553,15 +554,8 @@ public class KeyCallbacks
         }
     }
 
-    private static class KeyCallbackToggleMessage implements IHotkeyCallback
+    private record KeyCallbackToggleMessage(Minecraft mc) implements IHotkeyCallback
     {
-        private final Minecraft mc;
-
-        public KeyCallbackToggleMessage(Minecraft mc)
-        {
-            this.mc = mc;
-        }
-
         @Override
         public boolean onKeyAction(KeyAction action, IKeybind key)
         {
@@ -604,7 +598,10 @@ public class KeyCallbacks
             }
             else if (key == Hotkeys.MOVE_ENTIRE_SELECTION.getKeybind())
             {
-                if (this.mc.player == null) return false;
+                if (this.mc.player == null)
+                {
+                    return false;
+                }
 
                 if (mode.getUsesAreaSelection())
                 {
@@ -634,28 +631,38 @@ public class KeyCallbacks
                     return true;
                 }
             }
-            else if (key == Hotkeys.SCHEMATIC_PLACEMENT_ROTATION.getKeybind()) {
+            else if (key == Hotkeys.SCHEMATIC_PLACEMENT_ROTATION.getKeybind())
+            {
                 SchematicPlacement placement = DataManager.getSchematicPlacementManager().getSelectedSchematicPlacement();
-                if(placement != null) {
+
+                if (placement != null)
+                {
                     Rotation rotation = PositionUtils.cycleRotation(placement.getRotation(), false);
-                    if(placement.isLocked()) {
+                    if (placement.isLocked())
+                    {
                         InfoUtils.showGuiOrActionBarMessage(MessageType.ERROR, "litematica.message.placement.cant_modify_is_locked");
                     }
-                    else {
+                    else
+                    {
                         placement.setRotation(rotation, null);
                         InfoUtils.printActionbarMessage("litematica.message.placement.rotation_set_to", PositionUtils.getRotationNameShort(rotation));
                     }
                     return true;
                 }
             }
-            else if (key == Hotkeys.SCHEMATIC_PLACEMENT_MIRROR.getKeybind()) {
+            else if (key == Hotkeys.SCHEMATIC_PLACEMENT_MIRROR.getKeybind())
+            {
                 SchematicPlacement placement = DataManager.getSchematicPlacementManager().getSelectedSchematicPlacement();
-                if(placement != null) {
+
+                if (placement != null)
+                {
                     Mirror mirror = PositionUtils.cycleMirror(placement.getMirror(), false);
-                    if(placement.isLocked()) {
+                    if (placement.isLocked())
+                    {
                         InfoUtils.showGuiOrActionBarMessage(MessageType.ERROR, "litematica.message.placement.cant_modify_is_locked");
                     }
-                    else {
+                    else
+                    {
                         placement.setMirror(mirror, null);
                         InfoUtils.printActionbarMessage("litematica.message.placement.mirror_set_to", PositionUtils.getMirrorName(mirror));
                     }
@@ -716,24 +723,24 @@ public class KeyCallbacks
                     }
                 }
             }
-			// Requested to be added by Earthcomputer; from Litemoretica
-			else if (key == Hotkeys.SCHEMATIC_EDIT_REPLACE_SELECTION.getKeybind())
-			{
-				AreaSelection selection = DataManager.getSelectionManager().getCurrentSelection();
+            // Requested to be added by Earthcomputer; from Litemoretica
+            else if (key == Hotkeys.SCHEMATIC_EDIT_REPLACE_SELECTION.getKeybind())
+            {
+                AreaSelection selection = DataManager.getSelectionManager().getCurrentSelection();
 
-				if (SchematicUtils.saveAreaSelectionToSchematic(selection, this.mc.level))
-				{
-					BlockPos pos = selection.getEffectiveOrigin();
+                if (SchematicUtils.saveAreaSelectionToSchematic(selection, this.mc.level))
+                {
+                    BlockPos pos = selection.getEffectiveOrigin();
 
-					String posStr = String.format("x: %d, y: %d, z: %d", pos.getX(), pos.getY(), pos.getZ());
-					InfoUtils.showInGameMessage(MessageType.SUCCESS,
-												"litematica.message.schematic_edit_replace_selection", posStr
-					);
-					return true;
-				}
-			}
+                    String posStr = String.format("x: %d, y: %d, z: %d", pos.getX(), pos.getY(), pos.getZ());
+                    InfoUtils.showInGameMessage(MessageType.SUCCESS,
+                                                "litematica.message.schematic_edit_replace_selection", posStr
+                    );
+                    return true;
+                }
+            }
 
-			return false;
+            return false;
         }
     }
 }

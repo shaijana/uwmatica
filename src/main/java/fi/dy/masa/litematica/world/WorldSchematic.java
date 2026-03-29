@@ -1,8 +1,15 @@
 package fi.dy.masa.litematica.world;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
 import java.util.function.Predicate;
 import javax.annotation.Nonnull;
+import com.google.common.collect.ImmutableList;
+import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -19,6 +26,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.util.random.WeightedList;
 import net.minecraft.world.TickRateManager;
 import net.minecraft.world.attribute.EnvironmentAttributeSystem;
+import net.minecraft.world.clock.ClockManager;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragonPart;
@@ -26,6 +34,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.flag.FeatureFlagSet;
 import net.minecraft.world.item.alchemy.PotionBrewing;
 import net.minecraft.world.item.crafting.RecipeAccess;
+import net.minecraft.world.level.CardinalLighting;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.ExplosionDamageCalculator;
 import net.minecraft.world.level.Level;
@@ -53,13 +62,10 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.Scoreboard;
 import net.minecraft.world.ticks.BlackholeTickAccess;
 import net.minecraft.world.ticks.LevelTickAccess;
-import com.google.common.collect.ImmutableList;
-import org.jetbrains.annotations.Nullable;
-import org.jspecify.annotations.NonNull;
 
 import fi.dy.masa.malilib.util.WorldUtils;
 import fi.dy.masa.litematica.Reference;
-import fi.dy.masa.litematica.render.schematic.WorldRendererSchematic;
+import fi.dy.masa.litematica.render.IWorldSchematicRenderer;
 
 public class WorldSchematic extends Level
 {
@@ -67,21 +73,18 @@ public class WorldSchematic extends Level
 
     protected final Minecraft mc;
     protected final ChunkManagerSchematic chunkManagerSchematic;
-    @Nullable protected final WorldRendererSchematic worldRenderer;
+    @Nullable protected final IWorldSchematicRenderer worldRenderer;
     private final TickRateManager tickManager;
     private final Holder<DimensionType> dimensionType;
-    private final HashMap<UUID, ChunkPos> entityMap;
     private final SchematicEntityLookup<Entity> entityLookup;
     protected Holder<Biome> biome;
-//    private DimensionEffects dimensionEffects = new DimensionEffects.Overworld();
     private LevelData.RespawnData properties;
     protected int nextEntityId;
-    protected int entityCount;
 
     public WorldSchematic(WritableLevelData properties,
                           @Nonnull RegistryAccess registryManager,
                           Holder<DimensionType> dimension,
-                          @Nullable WorldRendererSchematic worldRenderer)
+                          @Nullable IWorldSchematicRenderer worldRenderer)
     {
         super(properties, REGISTRY_KEY, !registryManager.equals(RegistryAccess.EMPTY) ? registryManager : SchematicWorldHandler.INSTANCE.getRegistryManager(), dimension, true, false, 0L, 0);
 
@@ -106,8 +109,6 @@ public class WorldSchematic extends Level
         }
 
         this.tickManager = new TickRateManager();
-        this.entityCount = 0;
-        this.entityMap = new HashMap<>();
         this.entityLookup = new SchematicEntityLookup<>();
         this.properties = LevelData.RespawnData.DEFAULT;
     }
@@ -141,6 +142,7 @@ public class WorldSchematic extends Level
 //        this.dimensionEffects = DimensionEffects.byDimensionType(this.dimensionType.value());
     }
 
+    @Deprecated(forRemoval = true)
     public ChunkManagerSchematic getChunkProvider()
     {
         return this.getChunkSource();
@@ -181,7 +183,7 @@ public class WorldSchematic extends Level
 
     public String getEntityDebug()
     {
-        return String.format("eL: %d, eM: %d, cE: %d", this.entityLookup.size(), this.entityMap.size(), this.entityCount);
+        return String.format("%s", this.entityLookup.getDebugString());
     }
 
     @Override
@@ -238,57 +240,71 @@ public class WorldSchematic extends Level
         int chunkX = Mth.floor(entity.getX() / 16.0D);
         int chunkZ = Mth.floor(entity.getZ() / 16.0D);
 
-        if (!this.chunkManagerSchematic.hasChunk(chunkX, chunkZ))
+        if (this.entityLookup.contains(entity.getUUID()))
         {
-            return false;
+            Entity e = this.entityLookup.get(entity.getUUID());
+
+            if (e != null && e.getType().equals(entity.getType()))
+            {
+                if (e.position().equals(entity.position()))
+                {
+                    return false;
+                }
+
+                this.entityLookup.remove(entity.getUUID());
+            }
+            else
+            {
+                return false;
+            }
         }
-        else
+
+        ChunkPos chunkPos = new ChunkPos(chunkX, chunkZ);
+
+        if (this.entityLookup.contains(entity.getId()) ||
+            entity.getId() < 0)
         {
             entity.setId(this.nextEntityId++);
-            // TODO --> MOVE TO SchematicEntityLookup
-            this.chunkManagerSchematic.getChunkForLighting(chunkX, chunkZ).addEntity(entity);
-            ++this.entityCount;
-            this.entityMap.put(entity.getUUID(), new ChunkPos(chunkX, chunkZ));
-            this.entityLookup.put(entity);
-            return true;
         }
+
+        this.entityLookup.put(entity, chunkPos);
+        return true;
     }
 
-    public void unloadedEntities(int count)
+    public void unloadEntitiesByChunk(int chunkX, int chunkZ)
     {
-        this.entityCount -= count;
+        if (!this.hasChunk(chunkX, chunkZ))
+        {
+            return;
+        }
+
+        ChunkPos pos = new ChunkPos(chunkX, chunkZ);
+        int count = this.entityLookup.removeByChunk(pos);
+
+        this.checkForStaleEntities();
     }
 
-    protected void unloadEntitiesByChunk(int chunkX, int chunkZ)
+    private void checkForStaleEntities()
     {
-        List<UUID> list = new ArrayList<>();
-
-        this.entityMap.forEach(
-                (u, cp) ->
-                {
-                    if (cp.x == chunkX && cp.z == chunkZ)
-                    {
-                        list.add(u);
-                    }
-                });
-
-        list.forEach(
-                (uuid) ->
-                {
-                    synchronized (this.entityMap)
-                    {
-                        this.entityMap.remove(uuid);
-                    }
-
-                    this.entityLookup.remove(uuid);
-                });
+        if (this.entityLookup.size() < 1)
+        {
+            this.entityLookup.reset();
+            this.nextEntityId = 0;
+        }
     }
 
     @Nullable
     @Override
     public Entity getEntity(int id)
     {
-        return this.entityLookup.get(id);
+        return this.getEntities().get(id);
+    }
+
+    @Nullable
+    @Override
+    public Entity getEntity(@Nonnull UUID uuid)
+    {
+        return this.getEntities().get(uuid);
     }
 
     protected void closeEntityLookup() throws Exception
@@ -304,8 +320,6 @@ public class WorldSchematic extends Level
         }
         catch (Exception ignored) { }
 
-        this.entityMap.clear();
-        this.entityCount = 0;
         this.nextEntityId = 0;
     }
 
@@ -345,29 +359,38 @@ public class WorldSchematic extends Level
         return this.entityLookup;
     }
 
+    public ImmutableList<Entity> getEntitiesByChunk(int cx, int cz, @Nonnull Predicate<? super Entity> predicate)
+    {
+        if (!this.hasChunk(cx, cz))
+        {
+            return ImmutableList.of();
+        }
+
+        ImmutableList.Builder<Entity> builder = ImmutableList.builder();
+
+	    for (Entity e : this.entityLookup.getAllByChunk(new ChunkPos(cx, cz)))
+	    {
+		    if (e != null && predicate.test(e))
+		    {
+			    builder.add(e);
+		    }
+	    }
+
+        return builder.build();
+    }
+
     @Override
     public @Nonnull List<Entity> getEntities(@Nullable final Entity except, @Nonnull final AABB box, @Nonnull Predicate<? super Entity> predicate)
     {
         final List<Entity> list = new ArrayList<>();
-        List<ChunkSchematic> chunks = this.getChunksWithinBox(box);
 
-        // TODO --> MOVE TO SchematicEntityLookup
-        for (ChunkSchematic chunk : chunks)
+        this.getEntities().get(box, e ->
         {
-            chunk.getEntityList().forEach((e) -> {
-                if (e != except && box.intersects(e.getBoundingBox()) && predicate.test(e)) {
-	                list.add(e);
-                }
-            });
-        }
-
-//        this.entityLookup.forEachIntersects(box, e ->
-//        {
-//            if (e != except && predicate.test(e))
-//            {
-//                list.add(e);
-//            }
-//        });
+            if (e != except && predicate.test(e))
+            {
+                list.add(e);
+            }
+        });
 
         return list;
     }
@@ -377,8 +400,7 @@ public class WorldSchematic extends Level
     {
         ArrayList<T> list = new ArrayList<>();
 
-        // TODO --> MOVE TO SchematicEntityLookup
-        for (Entity e : this.getEntities((Entity) null, box, e -> true))
+        for (Entity e : this.getEntities(arg, box, e -> true))
         {
             T t = arg.tryCast(e);
 
@@ -421,7 +443,7 @@ public class WorldSchematic extends Level
     {
         if (stateNew != stateOld)
         {
-            this.scheduleChunkRenders(pos.getX() >> 4, pos.getZ() >> 4);
+            this.scheduleChunkRenders(pos.getX() >> 4, pos.getZ() >> 4, true);
         }
     }
 
@@ -446,11 +468,16 @@ public class WorldSchematic extends Level
 		// NO-OP
 	}
 
-	public void scheduleChunkRenders(int chunkX, int chunkZ)
+    public void scheduleChunkRenders(int chunkX, int chunkZ)
+    {
+        this.scheduleChunkRenders(chunkX, chunkZ, false);
+    }
+
+	public void scheduleChunkRenders(int chunkX, int chunkZ, boolean immediate)
     {
         if (this.worldRenderer != null)
         {
-            this.worldRenderer.scheduleChunkRenders(chunkX, chunkZ);
+            this.worldRenderer.scheduleChunkRenders(chunkX, chunkZ, immediate);
         }
     }
 
@@ -528,21 +555,21 @@ public class WorldSchematic extends Level
         return this.dimensionType;
     }
 
-    @Override
+//    @Override
     public float getShade(@Nonnull Direction direction, boolean shaded)
     {
-	    DimensionType.CardinalLightType cardinalLightType = this.dimensionType().cardinalLightType();
+        CardinalLighting.Type cardinalLightType = this.dimensionType().cardinalLightType();
 
         if (!shaded)
         {
-            return cardinalLightType == DimensionType.CardinalLightType.NETHER ? 0.9F : 1.0F;
+            return cardinalLightType == CardinalLighting.Type.NETHER ? 0.9F : 1.0F;
         }
         else
         {
             return switch (direction)
             {
-	            case DOWN -> cardinalLightType == DimensionType.CardinalLightType.NETHER ? 0.9F : 0.5F;
-	            case UP -> cardinalLightType == DimensionType.CardinalLightType.NETHER ? 0.9F : 1.0F;
+	            case DOWN -> cardinalLightType == CardinalLighting.Type.NETHER ? 0.9F : 0.5F;
+	            case UP -> cardinalLightType == CardinalLighting.Type.NETHER ? 0.9F : 1.0F;
 	            case NORTH, SOUTH -> 0.8F;
 	            case WEST, EAST -> 0.6F;
             };
@@ -603,7 +630,18 @@ public class WorldSchematic extends Level
         }
     }
 
-	@Override
+    @Override
+    public @NonNull ClockManager clockManager()
+    {
+        if (this.mc != null && this.mc.level != null)
+        {
+            return this.mc.level.clockManager();
+        }
+
+        return null;
+    }
+
+    @Override
 	public @NonNull EnvironmentAttributeSystem environmentAttributes()
 	{
 		if (this.mc != null && this.mc.level != null)
@@ -656,7 +694,8 @@ public class WorldSchematic extends Level
     @Override
     public @Nonnull String gatherChunkSourceStats()
     {
-        return "Chunks[SCH] W: "+this.getChunkSource().gatherStats()+" E: "+this.getRegularEntityCount()+" (eL: "+this.entityLookup.size()+"/"+ this.entityMap.size()+")";
+        // +"/"+ this.entityMap.size()
+        return "Chunks[SCH] W: "+this.getChunkSource().gatherStats()+" E: "+this.getRegularEntityCount()+" (eL: "+this.entityLookup.size()+")";
     }
 
     @Override
