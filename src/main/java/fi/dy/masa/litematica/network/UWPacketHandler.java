@@ -16,8 +16,8 @@ public class UWPacketHandler {
 	private static final Identifier PACKET_IDENTIFIER = Identifier.fromNamespaceAndPath(Reference.MOD_ID, IDENTIFIER_PATH);
 
 	public static void init() {
-		PayloadTypeRegistry.playC2S().register(UWPacket.PACKET_ID, UWPacket.STREAM_CODEC);
-		PayloadTypeRegistry.playS2C().register(UWPacket.PACKET_ID, UWPacket.STREAM_CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(UWPacket.PACKET_ID, UWPacket.STREAM_CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(UWPacket.PACKET_ID, UWPacket.STREAM_CODEC);
 		ClientPlayNetworking.registerGlobalReceiver(UWPacket.PACKET_ID, ((payload, context) -> {
 		}));
 	}

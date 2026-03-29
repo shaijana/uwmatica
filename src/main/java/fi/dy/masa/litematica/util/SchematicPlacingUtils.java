@@ -40,6 +40,8 @@ import fi.dy.masa.litematica.schematic.LitematicaSchematic.EntityInfo;
 import fi.dy.masa.litematica.schematic.container.LitematicaBlockStateContainer;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
 import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement;
+import fi.dy.masa.litematica.world.ChunkSchematic;
+import fi.dy.masa.litematica.world.ChunkSchematicState;
 import fi.dy.masa.litematica.world.WorldSchematic;
 
 public class SchematicPlacingUtils
@@ -52,7 +54,7 @@ public class SchematicPlacingUtils
                                                   boolean notifyNeighbors)
     {
         LitematicaSchematic schematic = schematicPlacement.getSchematic();
-        Set<String> regionsTouchingChunk = schematicPlacement.getRegionsTouchingChunk(chunkPos.x, chunkPos.z);
+        Set<String> regionsTouchingChunk = schematicPlacement.getRegionsTouchingChunk(chunkPos.x(), chunkPos.z());
         BlockPos origin = schematicPlacement.getOrigin();
         boolean allSuccess = true;
 
@@ -127,7 +129,7 @@ public class SchematicPlacingUtils
                                                  PasteLayerBehavior layerBehavior,
                                                  boolean notifyNeighbors)
     {
-        IntBoundingBox bounds = schematicPlacement.getBoxWithinChunkForRegion(regionName, chunkPos.x, chunkPos.z);
+        IntBoundingBox bounds = schematicPlacement.getBoxWithinChunkForRegion(regionName, chunkPos.x(), chunkPos.z());
         Vec3i regionSize = schematicPlacement.getSchematic().getAreaSizeAsVec3i(regionName);
 
         if (bounds == null || container == null || blockEntityMap == null || regionSize == null)
@@ -314,6 +316,14 @@ public class SchematicPlacingUtils
             }
         }
 
+        if (world instanceof WorldSchematic ws)
+        {
+            if (!ws.getChunk(chunkPos.x(), chunkPos.z()).getState().atLeast(ChunkSchematicState.FILLED))
+            {
+                ws.getChunkSource().setChunkState(chunkPos.x(), chunkPos.z(), ChunkSchematicState.FILLED);
+            }
+        }
+
         if (world instanceof ServerLevel serverWorld)
         {
             IntBoundingBox box = new IntBoundingBox(startX, startY, startZ, endX, endY, endZ);
@@ -425,10 +435,10 @@ public class SchematicPlacingUtils
         final int offX = regionPosRelTransformed.getX() + origin.getX();
         final int offY = regionPosRelTransformed.getY() + origin.getY();
         final int offZ = regionPosRelTransformed.getZ() + origin.getZ();
-        final double minX = (chunkPos.x << 4);
-        final double minZ = (chunkPos.z << 4);
-        final double maxX = (chunkPos.x << 4) + 16;
-        final double maxZ = (chunkPos.z << 4) + 16;
+        final double minX = (chunkPos.x() << 4);
+        final double minZ = (chunkPos.z() << 4);
+        final double maxX = (chunkPos.x() << 4) + 16;
+        final double maxZ = (chunkPos.z() << 4) + 16;
 
         final Rotation rotationCombined = schematicPlacement.getRotation().getRotated(placement.getRotation());
         final Mirror mirrorMain = schematicPlacement.getMirror();

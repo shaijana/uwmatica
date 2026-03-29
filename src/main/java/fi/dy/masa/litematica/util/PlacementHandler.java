@@ -96,7 +96,9 @@ public class PlacementHandler
 
         if (protocol == EasyPlaceProtocol.AUTO)
         {
-            if (Minecraft.getInstance().isLocalServer() || EntitiesDataStorage.getInstance().hasServuxServer())
+            if (Minecraft.getInstance().isLocalServer() ||
+                EntitiesDataStorage.getInstance().hasServuxServer() ||
+                DataManager.hasServuxServer())
             {
                 return EasyPlaceProtocol.V3;
             }
@@ -200,7 +202,7 @@ public class PlacementHandler
     {
         int protocolValue = (int) (context.hitVec().x - (double) context.pos().getX()) - 2;
         BlockState oldState = state;
-        //System.out.printf("[PHv3] hit vec.x %s, pos.x: %s\n", context.getHitVec().getX(), context.getPos().getX());
+        //System.out.printf("[PHv3] hit vec.x %s, pos.x: %s\n", context.hitVec().x(), context.pos().getX());
         //System.out.printf("[PHv3] raw protocol value in: 0x%08X\n", protocolValue);
 
         if (protocolValue < 0)
@@ -306,12 +308,10 @@ public class PlacementHandler
                         protocolValue >>>= requiredBits;
                     }
                 }
-                /*
                 else
                 {
-                    System.out.printf("[PHv3] skipping prot val: 0x%08X [Property %s]\n", protocolValue, p.getName());
+                    //System.out.printf("[PHv3] skipping prot val: 0x%08X [Property %s]\n", protocolValue, p.getName());
                 }
-                 */
             }
         }
         catch (Exception e)

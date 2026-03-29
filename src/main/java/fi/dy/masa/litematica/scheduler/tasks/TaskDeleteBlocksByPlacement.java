@@ -19,6 +19,7 @@ import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.render.infohud.InfoHud;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
+import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement;
 import fi.dy.masa.litematica.util.PlacementDeletionMode;
 import fi.dy.masa.litematica.util.PositionUtils;
 import fi.dy.masa.malilib.gui.Message.MessageType;
@@ -66,13 +67,14 @@ public class TaskDeleteBlocksByPlacement extends TaskProcessChunkMultiPhase
 
     protected void addPlacement(SchematicPlacement placement, LayerRange range)
     {
-        Set<ChunkPos> touchedChunks = placement.getTouchedChunks();
+        // Only Delete
+        Set<ChunkPos> touchedChunks = placement.getTouchedChunks(SubRegionPlacement.RequiredEnabled.PLACEMENT_ENABLED);
 
         for (ChunkPos pos : touchedChunks)
         {
             int count = 0;
 
-            for (IntBoundingBox box : placement.getBoxesWithinChunk(pos.x, pos.z).values())
+            for (IntBoundingBox box : placement.getBoxesWithinChunk(pos.x(), pos.z()).values())
             {
                 box = PositionUtils.getClampedBox(box, range);
 
@@ -250,7 +252,7 @@ public class TaskDeleteBlocksByPlacement extends TaskProcessChunkMultiPhase
     @Override
     protected boolean canProcessChunk(ChunkPos pos)
     {
-        if (this.schematicWorld.getChunkProvider().hasChunk(pos.x, pos.z) == false)
+        if (this.schematicWorld.getChunkSource().hasChunk(pos.x(), pos.z()) == false)
         {
             return false;
         }

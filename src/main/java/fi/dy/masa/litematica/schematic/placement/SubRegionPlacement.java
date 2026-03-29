@@ -2,11 +2,6 @@ package fi.dy.masa.litematica.schematic.placement;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import net.minecraft.core.BlockPos;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.world.level.block.Mirror;
-import net.minecraft.world.level.block.Rotation;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
@@ -15,9 +10,16 @@ import io.netty.buffer.ByteBuf;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.PrimitiveCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import fi.dy.masa.malilib.util.JsonUtils;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.world.level.block.Mirror;
+import net.minecraft.world.level.block.Rotation;
+
+import fi.dy.masa.malilib.util.data.json.JsonUtils;
 import fi.dy.masa.malilib.util.position.PositionUtils.CoordinateType;
 import fi.dy.masa.litematica.Litematica;
+import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.util.PositionUtils;
 
 public class SubRegionPlacement
@@ -146,7 +148,7 @@ public class SubRegionPlacement
             return this.isEnabled();
         }
 
-        return this.isEnabled() && this.isRenderingEnabled();
+        return this.isEnabled() && this.isRenderingEnabled() && Configs.Visuals.ENABLE_RENDERING.getBooleanValue();
     }
 
     public String getName()
@@ -246,6 +248,7 @@ public class SubRegionPlacement
     public JsonObject toJson()
     {
         JsonObject obj = new JsonObject();
+        if (this.pos == null) { return obj; }
         JsonArray arr = new JsonArray();
 
         arr.add(this.pos.getX());
@@ -283,7 +286,7 @@ public class SubRegionPlacement
             }
 
             BlockPos pos = new BlockPos(posArr.get(0).getAsInt(), posArr.get(1).getAsInt(), posArr.get(2).getAsInt());
-            SubRegionPlacement placement = new SubRegionPlacement(pos, obj.get("name").getAsString());
+	        SubRegionPlacement placement = new SubRegionPlacement(pos, obj.get("name").getAsString());
             placement.setEnabled(JsonUtils.getBoolean(obj, "enabled"));
             placement.setRenderingEnabled(JsonUtils.getBoolean(obj, "rendering_enabled"));
             placement.ignoreEntities = JsonUtils.getBoolean(obj, "ignore_entities");

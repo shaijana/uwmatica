@@ -13,6 +13,7 @@ import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.data.EntitiesDataStorage;
 import fi.dy.masa.litematica.render.LitematicaDebugHud;
 import fi.dy.masa.litematica.schematic.conversion.SchematicConversionMaps;
+import fi.dy.masa.litematica.schematic.placement.TemporaryWorldManager;
 import fi.dy.masa.litematica.world.SchematicWorldHandler;
 
 public class WorldLoadListener implements IWorldLoadListener
@@ -46,18 +47,21 @@ public class WorldLoadListener implements IWorldLoadListener
         SchematicWorldHandler.INSTANCE.recreateSchematicWorld(worldAfter == null);
         DataManager.getInstance().reset(worldAfter == null);
         EntitiesDataStorage.getInstance().reset(worldAfter == null);
+        TemporaryWorldManager.INSTANCE.reset();
 
         if (worldAfter != null)
         {
-            DataManager.load();
             Litematica.debugLog("onWorldLoadPost(): Init BlockStateFlattening DataFixer [Test: {}]", BlockStateData.upgradeBlock("minecraft:air"));
             SchematicConversionMaps.computeMaps();
+            DataManager.load();
             EntitiesDataStorage.getInstance().onWorldJoin();
             CachedTagManager.startCache();
 	        LitematicaDebugHud.INSTANCE.checkConfig();
+            DataManager.getSchematicPlacementManager().onWorldJoin();
         }
         else
         {
+            TemporaryWorldManager.INSTANCE.clear();
             DataManager.clear();
         }
     }

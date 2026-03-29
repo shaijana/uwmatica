@@ -7,6 +7,8 @@ import java.util.function.Predicate;
 import javax.annotation.Nullable;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.ApiStatus;
+
+import com.mojang.authlib.GameProfile;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -29,6 +31,7 @@ import fi.dy.masa.malilib.util.InventoryUtils;
 import fi.dy.masa.malilib.util.nbt.NbtKeys;
 import fi.dy.masa.malilib.util.nbt.NbtView;
 import fi.dy.masa.litematica.Litematica;
+import fi.dy.masa.litematica.Reference;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.mixin.entity.IMixinEntity;
@@ -38,7 +41,7 @@ import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement;
 
 public class EntityUtils
 {
-    public static final Predicate<Entity> NOT_PLAYER = entity -> (entity instanceof Player) == false;
+    public static final Predicate<Entity> NOT_PLAYER = entity -> !(entity instanceof Player);
 
     public static boolean isCreativeMode(Player player)
     {
@@ -163,11 +166,28 @@ public class EntityUtils
         entityDebugRandom2 = rand.nextBoolean();
     }
 
+    private static boolean isGoat(GameProfile profile)
+    {
+        return profile.name().equalsIgnoreCase("docm77");
+    }
+
     public static Pair<String, String> getEntityDebug()
     {
         Minecraft mc = Minecraft.getInstance();
 
-        if (mc.player == null || !entityDebugRandom) return Pair.of("", "");
+        if (mc.player == null)
+        {
+            return Pair.of("", "");
+        }
+        else if (isGoat(mc.player.getGameProfile()))
+        {
+            // Adjusted as per doc -- he wants it always shown ^_^
+            return Pair.of("Goatmatica", "Grind. Optimize. Automate. Thrive.");
+        }
+        else if (!entityDebugRandom)
+        {
+            return Pair.of("", "");
+        }
 
         String name = mc.player.getGameProfile().name().toLowerCase();
 
@@ -244,8 +264,8 @@ public class EntityUtils
     public static String getEntityId(Entity entity)
     {
         EntityType<?> entitytype = entity.getType();
-        Identifier resourcelocation = EntityType.getKey(entitytype);
-        return entitytype.canSerialize() && resourcelocation != null ? resourcelocation.toString() : null;
+        Identifier id = EntityType.getKey(entitytype);
+        return entitytype.canSerialize() && id != null ? id.toString() : null;
     }
 
     @Nullable
@@ -259,9 +279,24 @@ public class EntityUtils
             if (optional.isPresent())
             {
                 Entity entity = optional.get();
-                entity.setUUID(UUID.randomUUID());
 
-//                Litematica.LOGGER.warn("[EntityUtils] createEntityFromNBTSingle() successful; type: [{}]", entity.getType().getName().getString());
+                if (!nbt.contains("UUID"))
+                {
+                    entity.setUUID(UUID.randomUUID());
+                }
+
+                if (nbt.contains("LastEntityID"))
+                {
+                    entity.setId(nbt.getIntOr("LastEntityID", -1));
+                }
+
+                if (Reference.DEBUG_MODE)
+                {
+                    Litematica.LOGGER.warn("[EntityUtils] createEntityFromNBTSingle() successful; type({}): [{}/{}]",
+                                           entity.getId(),
+                                           entity.getStringUUID(),
+                                           entity.getType().getDescription().getString());
+                }
 
                 return entity;
             }
@@ -403,13 +438,15 @@ public class EntityUtils
         entity.setNoGravity(nbt.getBooleanOr("NoGravity", false));
         entity.setGlowingTag(nbt.getBooleanOr("Glowing", false));
         entity.setTicksFrozen(nbt.getIntOr("TicksFrozen", 0));
-        if (nbt.contains("Tags")) {
-            entity.getTags().clear();
+        if (nbt.contains("Tags"))
+        {
+            entity.entityTags().clear();
             ListTag nbtList4 = nbt.getListOrEmpty("Tags");
             int max = Math.min(nbtList4.size(), 1024);
 
-            for(int i = 0; i < max; ++i) {
-                entity.getTags().add(nbtList4.getStringOr(i, ""));
+            for(int i = 0; i < max; ++i)
+            {
+                entity.entityTags().add(nbtList4.getStringOr(i, ""));
             }
         }
 
@@ -483,8 +520,9 @@ public class EntityUtils
         ItemStack handStack = entity.getItemInHand(tmpHand);
 
 
-        if ((lenient && fi.dy.masa.malilib.util.InventoryUtils.areStacksEqualIgnoreDurability(handStack, stack)) ||
-            (lenient == false && fi.dy.masa.malilib.util.InventoryUtils.areStacksEqual(handStack, stack)))
+        if ((lenient && InventoryUtils.areStacksEqualIgnoreDurability(handStack, stack)) ||
+            (lenient && InventoryUtils.areStacksEqualIgnoreNbt(handStack, stack)) ||
+            (lenient == false && InventoryUtils.areStacksEqual(handStack, stack)))
         {
             hand = tmpHand;
         }

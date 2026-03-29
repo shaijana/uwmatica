@@ -7,17 +7,23 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
+
 import fi.dy.masa.malilib.gui.interfaces.IDirectoryCache;
-import fi.dy.masa.malilib.util.*;
+import fi.dy.masa.malilib.util.FileUtils;
+import fi.dy.masa.malilib.util.InventoryUtils;
+import fi.dy.masa.malilib.util.LayerRange;
+import fi.dy.masa.malilib.util.StringUtils;
+import fi.dy.masa.malilib.util.data.json.JsonUtils;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.Reference;
 import fi.dy.masa.litematica.config.Configs;
@@ -45,12 +51,13 @@ public class DataManager implements IDirectoryCache
     private static final ArrayList<ToBooleanFunction<Component>> CHAT_LISTENERS = new ArrayList<>();
     public static final Identifier CARPET_HELLO = Identifier.fromNamespaceAndPath("carpet", "hello");
 
-    private static ItemStack toolItem = new ItemStack(Items.STICK);
+    private static ItemStack toolItem;
     private ItemStack toolItemComponents = null;
     private static ConfigGuiTab configGuiTab = ConfigGuiTab.GENERIC;
     private static boolean createPlacementOnLoad = true;
     private static boolean canSave;
     private static boolean isCarpetServer;
+    private static boolean hasServuxServer;
     private static long clientTickStart;
     private boolean hasIntegratedServer = false;
 
@@ -110,6 +117,11 @@ public class DataManager implements IDirectoryCache
 
     public static ItemStack getToolItem()
     {
+        if (toolItem == null)
+        {
+             toolItem = new ItemStack(Items.STICK);
+        }
+
         return toolItem;
     }
 
@@ -131,6 +143,16 @@ public class DataManager implements IDirectoryCache
     public static boolean isCarpetServer()
     {
         return isCarpetServer;
+    }
+
+    public static void setHasServuxServer(boolean hasServuxServer)
+    {
+        DataManager.hasServuxServer = hasServuxServer;
+    }
+
+    public static boolean hasServuxServer()
+    {
+        return hasServuxServer;
     }
 
     public boolean hasIntegratedServer() { return this.hasIntegratedServer; }
@@ -281,7 +303,7 @@ public class DataManager implements IDirectoryCache
         getInstance().loadPerDimensionData();
 
         Path file = getCurrentStorageFile(true);
-        JsonElement element = JsonUtils.parseJsonFileAsPath(file);
+        JsonElement element = JsonUtils.parseJsonFile(file);
 
         if (element != null && element.isJsonObject())
         {
@@ -358,7 +380,7 @@ public class DataManager implements IDirectoryCache
         root.add("config_gui_tab", new JsonPrimitive(configGuiTab.name()));
 
         Path file = getCurrentStorageFile(true);
-        JsonUtils.writeJsonToFileAsPath(root, file);
+        JsonUtils.writeJsonToFile(root, file);
 
         canSave = false;
     }
@@ -376,6 +398,7 @@ public class DataManager implements IDirectoryCache
 
         InfoHud.getInstance().reset(); // remove the line providers and clear the data
         setIsCarpetServer(false);
+        setHasServuxServer(false);
     }
 
     private void savePerDimensionData()
@@ -386,7 +409,7 @@ public class DataManager implements IDirectoryCache
         root.add("block_entities", EntitiesDataStorage.getInstance().toJson());
 
         Path file = getCurrentStorageFile(false);
-        JsonUtils.writeJsonToFileAsPath(root, file);
+        JsonUtils.writeJsonToFile(root, file);
     }
 
     private void loadPerDimensionData()
@@ -397,7 +420,7 @@ public class DataManager implements IDirectoryCache
         this.materialList = null;
 
         Path file = getCurrentStorageFile(false);
-        JsonElement element = JsonUtils.parseJsonFileAsPath(file);
+        JsonElement element = JsonUtils.parseJsonFile(file);
 
         if (element != null && element.isJsonObject())
         {
@@ -490,12 +513,12 @@ public class DataManager implements IDirectoryCache
 
     public static Path getDefaultBaseSchematicDirectory()
     {
-        return FileUtils.getRealPathIfPossible(FileUtils.getMinecraftDirectoryAsPath().resolve("schematics"));
+        return FileUtils.getRealPathIfPossible(FileUtils.getMinecraftDirectory().resolve("schematics"));
     }
 
     public static Path getCurrentConfigDirectory()
     {
-        return FileUtils.getConfigDirectoryAsPath().resolve(Reference.MOD_ID);
+        return FileUtils.getConfigDirectory().resolve(Reference.MOD_ID);
     }
 
     public static Path getSchematicsBaseDirectory()

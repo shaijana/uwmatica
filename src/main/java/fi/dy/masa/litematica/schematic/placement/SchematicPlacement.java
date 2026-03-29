@@ -4,26 +4,28 @@ import java.nio.file.Path;
 import java.util.*;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.block.Mirror;
-import net.minecraft.world.level.block.Rotation;
-import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import org.apache.commons.lang3.tuple.Pair;
+
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.block.Mirror;
+import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
+
 import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.gui.interfaces.IMessageConsumer;
 import fi.dy.masa.malilib.interfaces.IStringConsumer;
 import fi.dy.masa.malilib.util.InfoUtils;
 import fi.dy.masa.malilib.util.IntBoundingBox;
-import fi.dy.masa.malilib.util.JsonUtils;
 import fi.dy.masa.malilib.util.LayerRange;
 import fi.dy.masa.malilib.util.data.Color4f;
+import fi.dy.masa.malilib.util.data.json.JsonUtils;
 import fi.dy.masa.malilib.util.nbt.NbtUtils;
 import fi.dy.masa.malilib.util.position.PositionUtils.CoordinateType;
 import fi.dy.masa.litematica.Litematica;
@@ -37,7 +39,9 @@ import fi.dy.masa.litematica.schematic.LitematicaSchematic;
 import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement.RequiredEnabled;
 import fi.dy.masa.litematica.schematic.verifier.SchematicVerifier;
 import fi.dy.masa.litematica.selection.Box;
-import fi.dy.masa.litematica.util.*;
+import fi.dy.masa.litematica.util.BlockInfoListType;
+import fi.dy.masa.litematica.util.FileType;
+import fi.dy.masa.litematica.util.PositionUtils;
 
 public class SchematicPlacement
 {
@@ -208,7 +212,7 @@ public class SchematicPlacement
 	    {
 		    case ANY -> true;
 		    case PLACEMENT_ENABLED -> this.isEnabled();
-		    default -> this.isEnabled() && this.enableRender;
+		    default -> this.isEnabled() && this.enableRender && Configs.Visuals.ENABLE_RENDERING.getBooleanValue();
 	    };
     }
 
@@ -471,6 +475,11 @@ public class SchematicPlacement
 
     public ImmutableMap<String, Box> getSubRegionBoxes(RequiredEnabled required)
     {
+        if (this.matchesRequirement(required) == false)
+        {
+            return ImmutableMap.of();
+        }
+
         ImmutableMap.Builder<String, Box> builder = ImmutableMap.builder();
         Map<String, BlockPos> areaSizes = this.schematic.getAreaSizes();
 
@@ -537,7 +546,12 @@ public class SchematicPlacement
 
     public Set<String> getRegionsTouchingChunk(int chunkX, int chunkZ)
     {
-        ImmutableMap<String, Box> map = this.getSubRegionBoxes(RequiredEnabled.PLACEMENT_ENABLED);
+        return this.getRegionsTouchingChunk(chunkX, chunkZ, RequiredEnabled.PLACEMENT_ENABLED);
+    }
+
+    public Set<String> getRegionsTouchingChunk(int chunkX, int chunkZ, RequiredEnabled required)
+    {
+        ImmutableMap<String, Box> map = this.getSubRegionBoxes(required);
         final int chunkXMin = chunkX << 4;
         final int chunkZMin = chunkZ << 4;
         final int chunkXMax = chunkXMin + 15;
@@ -565,25 +579,56 @@ public class SchematicPlacement
 
     public ImmutableMap<String, IntBoundingBox> getBoxesWithinChunk(int chunkX, int chunkZ)
     {
-        ImmutableMap<String, Box> subRegions = this.getSubRegionBoxes(RequiredEnabled.PLACEMENT_ENABLED);
+        return this.getBoxesWithinChunk(chunkX, chunkZ, RequiredEnabled.PLACEMENT_ENABLED);
+    }
+
+    public ImmutableMap<String, IntBoundingBox> getBoxesWithinChunk(int chunkX, int chunkZ, RequiredEnabled required)
+    {
+        ImmutableMap<String, Box> subRegions = this.getSubRegionBoxes(required);
         return PositionUtils.getBoxesWithinChunk(chunkX, chunkZ, subRegions);
     }
 
     @Nullable
     public IntBoundingBox getBoxWithinChunkForRegion(String regionName, int chunkX, int chunkZ)
     {
-        Box box = this.getSubRegionBoxFor(regionName, RequiredEnabled.PLACEMENT_ENABLED).get(regionName);
+        return this.getBoxWithinChunkForRegion(regionName, chunkX, chunkZ, RequiredEnabled.PLACEMENT_ENABLED);
+    }
+
+    @Nullable
+    public IntBoundingBox getBoxWithinChunkForRegion(String regionName, int chunkX, int chunkZ, RequiredEnabled required)
+    {
+        Box box = this.getSubRegionBoxFor(regionName, required).get(regionName);
         return box != null ? PositionUtils.getBoundsWithinChunkForBox(box, chunkX, chunkZ) : null;
     }
 
     public Set<ChunkPos> getTouchedChunks()
     {
-        return PositionUtils.getTouchedChunks(this.getSubRegionBoxes(RequiredEnabled.PLACEMENT_ENABLED));
+        return this.getTouchedChunks(RequiredEnabled.PLACEMENT_ENABLED);
+    }
+
+    public Set<ChunkPos> getTouchedChunks(RequiredEnabled required)
+    {
+        if (this.matchesRequirement(required))
+        {
+            return PositionUtils.getTouchedChunks(this.getSubRegionBoxes(required));
+        }
+
+        return new HashSet<>();
     }
 
     public Set<ChunkPos> getTouchedChunksForRegion(String regionName)
     {
-        return PositionUtils.getTouchedChunks(this.getSubRegionBoxFor(regionName, RequiredEnabled.PLACEMENT_ENABLED));
+        return this.getTouchedChunksForRegion(regionName, RequiredEnabled.PLACEMENT_ENABLED);
+    }
+
+    public Set<ChunkPos> getTouchedChunksForRegion(String regionName, RequiredEnabled required)
+    {
+        if (this.matchesRequirement(required))
+        {
+            return PositionUtils.getTouchedChunks(this.getSubRegionBoxFor(regionName, required));
+        }
+
+        return new HashSet<>();
     }
 
     private void checkAreSubRegionsModified()
@@ -957,8 +1002,11 @@ public class SchematicPlacement
                 for (Map.Entry<String, SubRegionPlacement> entry : this.relativeSubRegionPlacements.entrySet())
                 {
                     JsonObject placementObj = new JsonObject();
+                    JsonObject subPlacement = entry.getValue().toJson();
+                    if (subPlacement == null || subPlacement.isEmpty()) { continue; }
+
                     placementObj.add("name", new JsonPrimitive(entry.getKey()));
-                    placementObj.add("placement", entry.getValue().toJson());
+                    placementObj.add("placement", subPlacement);
                     arr.add(placementObj);
                 }
 
@@ -1157,7 +1205,7 @@ public class SchematicPlacement
         {
             CompoundTag entry = subs.getCompoundOrEmpty(key);
 
-            if (!entry.isEmpty())
+            if (!entry.isEmpty() && entry.contains("Pos"))
             {
                 name = entry.getStringOr("Name", "?");
                 origin = NbtUtils.readBlockPosFromArrayTag(entry, "Pos");
@@ -1203,7 +1251,7 @@ public class SchematicPlacement
         {
             CompoundTag entry = subs.getCompoundOrEmpty(key);
 
-            if (!entry.isEmpty())
+            if (!entry.isEmpty() && entry.contains("Pos"))
             {
                 name = entry.getStringOr("Name", "?");
                 origin = NbtUtils.readBlockPosFromArrayTag(entry, "Pos");

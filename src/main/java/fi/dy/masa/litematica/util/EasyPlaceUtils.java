@@ -33,6 +33,7 @@ import fi.dy.masa.malilib.registry.Registry;
 import fi.dy.masa.malilib.util.InfoUtils;
 import fi.dy.masa.malilib.util.IntBoundingBox;
 import fi.dy.masa.malilib.util.LayerRange;
+import fi.dy.masa.malilib.util.MessageOutputType;
 import fi.dy.masa.malilib.util.game.BlockUtils;
 import fi.dy.masa.malilib.util.game.PlacementUtils;
 import fi.dy.masa.malilib.util.game.wrap.GameWrap;
@@ -68,7 +69,12 @@ public class EasyPlaceUtils
         isHandling = handling;
     }
 
-    public static void setIsFirstClick()
+	public static double getValidBlockRange(Minecraft mc)
+	{
+		return Configs.Generic.EASY_PLACE_VANILLA_REACH.getBooleanValue() ? mc.player.blockInteractionRange() : mc.player.blockInteractionRange() + 1.0;
+	}
+
+	public static void setIsFirstClick()
     {
         if (shouldDoEasyPlaceActions())
         {
@@ -90,14 +96,14 @@ public class EasyPlaceUtils
             try
             {
                 // TODO FIXME cross-MC-version fragile
-                String name = Block.class.getSimpleName().equals("Block") ? "onUse": "a";
+                String name = Block.class.getSimpleName().equals("Block") ? "useWithoutItem": "a";
                 Method method = block.getClass().getMethod(name, BlockState.class, Level.class, BlockPos.class, Player.class, BlockHitResult.class);
                 Method baseMethod = Block.class.getMethod(name, BlockState.class, Level.class, BlockPos.class, Player.class, BlockHitResult.class);
                 val = method.equals(baseMethod) == false;
             }
             catch (Exception e)
             {
-                Litematica.LOGGER.warn("EasyPlaceUtils: Failed to reflect method Block::onUse", e);
+                Litematica.LOGGER.warn("EasyPlaceUtils: Failed to reflect method Block::useWithoutItem", e);
                 val = false;
             }
 
@@ -150,11 +156,22 @@ public class EasyPlaceUtils
 		// Only print the warning message once per right click
 		if (isFirstClickEasyPlace && result == InteractionResult.FAIL)
 		{
+			MessageOutputType type = (MessageOutputType) Configs.Generic.PLACEMENT_RESTRICTION_WARN.getOptionListValue();
 			//MessageOutput output = Configs.InfoOverlays.EASY_PLACE_WARNINGS.getValue();
 			//MessageDispatcher.warning(1500).type(output).translate("litematica.message.easy_place_fail");
 
-//            InfoUtils.printActionbarMessage("litematica.message.easy_place_fail");
-			InfoUtils.showInGameMessage(Message.MessageType.WARNING, "litematica.message.easy_place_fail");
+			if (type == MessageOutputType.MESSAGE)
+			{
+				InfoUtils.showInGameMessage(Message.MessageType.WARNING, "litematica.message.easy_place_fail");
+			}
+			else if (type == MessageOutputType.ACTIONBAR)
+			{
+                InfoUtils.printActionbarMessage("litematica.message.easy_place_fail");
+			}
+
+			isFirstClickEasyPlace = false;
+
+			return true;
 		}
 
 		isFirstClickEasyPlace = false;
@@ -423,8 +440,24 @@ public class EasyPlaceUtils
         Minecraft mc = Minecraft.getInstance();
         Entity entity = mc.getCameraEntity();
         ClientLevel world = mc.level;
-        double reach = mc.player.blockInteractionRange();
-        RayTraceUtils.RayTraceWrapper traceWrapper = RayTraceUtils.getGenericTrace(world, entity, reach, true, true, true);
+        double reach = getValidBlockRange(mc);
+        RayTraceUtils.RayTraceWrapper traceWrapper;
+
+	    if (Configs.Generic.EASY_PLACE_FIRST.getBooleanValue())
+	    {
+		    boolean targetFluids = Configs.InfoOverlays.INFO_OVERLAYS_TARGET_FLUIDS.getBooleanValue();
+		    traceWrapper = RayTraceUtils.getGenericTrace(world, entity, reach, true, targetFluids, false);
+	    }
+		else
+	    {
+		    traceWrapper = RayTraceUtils.getFurthestSchematicWorldTraceBeforeVanilla(mc.level, mc.player, reach);
+
+		    if (traceWrapper == null && placementRestrictionInEffect())
+		    {
+			    return InteractionResult.FAIL;
+		    }
+	    }
+
 		BlockHitResult targetPosition = getTargetPosition(traceWrapper);
 
 		// No position override, and didn't ray trace to a schematic block
@@ -442,7 +475,7 @@ public class EasyPlaceUtils
 		Level schematicWorld = SchematicWorldHandler.getSchematicWorld();
 		BlockState stateSchematic = schematicWorld.getBlockState(targetBlockPos);
 		BlockState stateClient = world.getBlockState(targetBlockPos);
-		ItemStack requiredStack = MaterialCache.getInstance().getRequiredBuildItemForState(stateSchematic);
+		ItemStack requiredStack = MaterialCache.getInstance().getRequiredBuildItemForState(stateSchematic, schematicWorld, targetBlockPos);
 
 		if (stateSchematic.is(BlockTags.AIR))
 		{
@@ -452,6 +485,7 @@ public class EasyPlaceUtils
 		// The block is correct already, or it was recently placed, or some of the checks failed
 		if (stateSchematic == stateClient || requiredStack.isEmpty() ||
 			easyPlaceIsPositionCached(targetBlockPos) ||
+			easyPlaceIsTooFast() ||
 			canPlaceBlock(targetBlockPos, world, stateSchematic, stateClient) == false)
 		{
 			return InteractionResult.FAIL;
@@ -473,17 +507,17 @@ public class EasyPlaceUtils
 
 		// *** ADDED Easy Place Code from Pre-Rewrite ***
 		// Already placed to that position, possible server sync delay
-		if (EasyPlaceUtils.easyPlaceIsPositionCached(targetBlockPos))
-		{
-			return InteractionResult.FAIL;
-		}
-
-		// *** ADDED Easy Place Code from Pre-Rewrite ***
-		// Ignore action if too fast
-		if (EasyPlaceUtils.easyPlaceIsTooFast())
-		{
-			return InteractionResult.FAIL;
-		}
+//		if (EasyPlaceUtils.easyPlaceIsPositionCached(targetBlockPos))
+//		{
+//			return InteractionResult.FAIL;
+//		}
+//
+//		// *** ADDED Easy Place Code from Pre-Rewrite ***
+//		// Ignore action if too fast
+//		if (EasyPlaceUtils.easyPlaceIsTooFast())
+//		{
+//			return InteractionResult.FAIL;
+//		}
 
 		boolean isSlab = stateSchematic.getBlock() instanceof SlabBlock;
 		boolean usingAdjacentClickPosition = clickPosition.getBlockPos().equals(targetBlockPos) == false;
@@ -730,11 +764,18 @@ public class EasyPlaceUtils
 
         if (cancel && isFirstClickPlacementRestriction)
         {
+	        MessageOutputType type = (MessageOutputType) Configs.Generic.PLACEMENT_RESTRICTION_WARN.getOptionListValue();
             //MessageOutput output = Configs.InfoOverlays.EASY_PLACE_WARNINGS.getValue();
             //MessageDispatcher.warning(1000).type(output).translate("litematica.message.placement_restriction_fail");
 
-//            InfoUtils.printActionbarMessage("litematica.message.placement_restriction_fail");
-			InfoUtils.showInGameMessage(Message.MessageType.WARNING, "litematica.message.placement_restriction_fail");
+	        if (type ==  MessageOutputType.MESSAGE)
+	        {
+		        InfoUtils.showInGameMessage(Message.MessageType.WARNING, "litematica.message.placement_restriction_fail");
+	        }
+			else if (type == MessageOutputType.ACTIONBAR)
+	        {
+		        InfoUtils.printActionbarMessage("litematica.message.placement_restriction_fail");
+	        }
         }
 
         isFirstClickPlacementRestriction = false;
@@ -803,7 +844,7 @@ public class EasyPlaceUtils
             }
 
             BlockState stateSchematic = worldSchematic.getBlockState(pos);
-            ItemStack stack = MaterialCache.getInstance().getRequiredBuildItemForState(stateSchematic);
+            ItemStack stack = MaterialCache.getInstance().getRequiredBuildItemForState(stateSchematic, worldSchematic, pos);
 
             // The player is holding the wrong item for the targeted position
             return stack.isEmpty() || EntityUtils.getUsedHandForItem(mc.player, stack, true) == null;

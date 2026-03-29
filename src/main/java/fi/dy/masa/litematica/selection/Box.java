@@ -2,9 +2,6 @@ package fi.dy.masa.litematica.selection;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import net.minecraft.core.BlockPos;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import io.netty.buffer.ByteBuf;
@@ -12,7 +9,11 @@ import io.netty.buffer.ByteBuf;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.PrimitiveCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import fi.dy.masa.malilib.util.JsonUtils;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+
+import fi.dy.masa.malilib.util.data.json.JsonUtils;
 import fi.dy.masa.malilib.util.position.PositionUtils.CoordinateType;
 import fi.dy.masa.litematica.util.PositionUtils;
 import fi.dy.masa.litematica.util.PositionUtils.Corner;
@@ -190,13 +191,22 @@ public class Box
         this.setPosition(pos, corner);
     }
 
+    @Override
+    public String toString()
+    {
+	    return "Box[name='" + this.name + "',"
+			    + ",pos1={" + (this.pos1 != null ? this.pos1.toString() : "<>") + "},"
+			    + ",pos2={" + (this.pos2 != null ? this.pos2.toString() : "<>") + "}"
+			    + "]";
+    }
+
     @Nullable
     public static Box fromJson(JsonObject obj)
     {
         if (JsonUtils.hasString(obj, "name"))
         {
-            BlockPos pos1 = JsonUtils.blockPosFromJson(obj, "pos1");
-            BlockPos pos2 = JsonUtils.blockPosFromJson(obj, "pos2");
+            BlockPos pos1 = JsonUtils.getBlockPos(obj, "pos1");
+            BlockPos pos2 = JsonUtils.getBlockPos(obj, "pos2");
 
             if (pos1 != null || pos2 != null)
             {
