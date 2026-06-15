@@ -3,6 +3,7 @@ package fi.dy.masa.litematica.gui;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import javax.annotation.Nullable;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
@@ -125,7 +126,7 @@ public class GuiSchematicManager extends GuiSchematicBrowserBase implements ISel
 	        buttonWidth = this.getStringWidth(this.editType.getDisplayName()) + 10;
 	        button = new ConfigButtonOptionList(x, y, buttonWidth, 20, new EditSchematicWrapper());
 
-	        if (this.editType.getHoverText() != null)
+	        if (!this.editType.getHoverText().isEmpty())
 	        {
 		        button.setHoverStrings(this.editType.getHoverText());
 	        }
@@ -135,7 +136,7 @@ public class GuiSchematicManager extends GuiSchematicBrowserBase implements ISel
 		    buttonWidth = this.getStringWidth(this.exportType.getDisplayName()) + 10;
 		    button = new ConfigButtonOptionList(x, y, buttonWidth, 20, new ExportTypeWrapper());
 
-		    if (this.exportType.getHoverText() != null)
+		    if (!this.exportType.getHoverText().isEmpty())
 		    {
 			    button.setHoverStrings(this.exportType.getHoverText());
 		    }
@@ -145,7 +146,7 @@ public class GuiSchematicManager extends GuiSchematicBrowserBase implements ISel
 	        buttonWidth = this.getStringWidth(this.fileOpType.getDisplayName()) + 10;
 	        button = new ConfigButtonOptionList(x, y, buttonWidth, 20, new FileOpsWrapper());
 
-	        if (this.fileOpType.getHoverText() != null)
+	        if (!this.fileOpType.getHoverText().isEmpty())
 	        {
 		        button.setHoverStrings(this.fileOpType.getHoverText());
 	        }
@@ -588,10 +589,10 @@ public class GuiSchematicManager extends GuiSchematicBrowserBase implements ISel
             return StringUtils.translate(this.label);
         }
 
-	    @Nullable
-	    public String getHoverText()
+	    @Override
+	    public List<String> getHoverText()
 	    {
-		    return this.hoverText != null ? StringUtils.translate(this.hoverText) : null;
+		    return this.hoverText != null ? List.of(StringUtils.translate(this.hoverText)) : List.of();
 	    }
 
         @Override
@@ -670,10 +671,10 @@ public class GuiSchematicManager extends GuiSchematicBrowserBase implements ISel
 			return StringUtils.translate(this.label);
 		}
 
-		@Nullable
-		public String getHoverText()
+		@Override
+		public List<String> getHoverText()
 		{
-			return this.hoverText != null ? StringUtils.translate(this.hoverText) : null;
+			return this.hoverText != null ? List.of(StringUtils.translate(this.hoverText)) : List.of();
 		}
 
 		@Override
@@ -752,10 +753,10 @@ public class GuiSchematicManager extends GuiSchematicBrowserBase implements ISel
 			return StringUtils.translate(this.label);
 		}
 
-		@Nullable
-		public String getHoverText()
+		@Override
+		public List<String> getHoverText()
 		{
-			return this.hoverText != null ? StringUtils.translate(this.hoverText) : null;
+			return this.hoverText != null ? List.of(StringUtils.translate(this.hoverText)) : List.of();
 		}
 
 		@Override

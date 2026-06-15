@@ -13,6 +13,7 @@ import net.minecraft.world.level.ChunkPos;
 
 import fi.dy.masa.malilib.interfaces.IThreadDaemonHandler;
 import fi.dy.masa.malilib.util.MathUtils;
+import fi.dy.masa.malilib.util.thread.ThreadExecutorPair;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.Reference;
 import fi.dy.masa.litematica.render.LitematicaRenderer;
@@ -25,7 +26,7 @@ public class PlacementManagerDaemonHandler implements IThreadDaemonHandler<Place
 	private final String namePrefix = Reference.MOD_NAME+" Placement Manager";
 	private static final float TASK_INTERVAL = 1.50F;
 	private final int threadCount = this.calculateMaxThreads();
-	private final ConcurrentHashMap<String, Thread> threadMap = this.builder();
+	private final ConcurrentHashMap<String, ThreadExecutorPair<PlacementManagerTask>> threadMap = this.builder();
 	private final LinkedBlockingQueue<PlacementManagerTask> queueUnload = new LinkedBlockingQueue<>();
 	private final LinkedBlockingQueue<PlacementManagerTask> queueRebuild = new LinkedBlockingQueue<>();
 	private final LinkedBlockingQueue<PlacementManagerTask> queueOther = new LinkedBlockingQueue<>();
@@ -41,9 +42,9 @@ public class PlacementManagerDaemonHandler implements IThreadDaemonHandler<Place
 		return MathUtils.clamp(result, 1, MAX_PLATFORM_THREADS);
 	}
 
-	private ConcurrentHashMap<String, Thread> builder()
+	private ConcurrentHashMap<String, ThreadExecutorPair<PlacementManagerTask>> builder()
 	{
-		ConcurrentHashMap<String, Thread> threads = new ConcurrentHashMap<>(this.threadCount, 0.9f, 1);
+		ConcurrentHashMap<String, ThreadExecutorPair<PlacementManagerTask>> threads = new ConcurrentHashMap<>(this.threadCount, 0.9f, 1);
 
 		for (int i = 0; i < this.threadCount; i++)
 		{
@@ -84,8 +85,8 @@ public class PlacementManagerDaemonHandler implements IThreadDaemonHandler<Place
 			catch (IllegalStateException is)
 			{
 				// Terminated
-				Thread entry = this.threadFactory(key, this.useVirtual, new PlacementManagerDaemonExecutor());
-				entry.start();
+				ThreadExecutorPair<PlacementManagerTask> entry = this.threadFactory(key, this.useVirtual, new PlacementManagerDaemonExecutor());
+				entry.thread().start();
 
 				synchronized (this.threadMap)
 				{
@@ -285,8 +286,8 @@ public class PlacementManagerDaemonHandler implements IThreadDaemonHandler<Place
 				catch (IllegalStateException is)
 				{
 					// Terminated (Replace)
-					Thread entry = this.threadFactory(key, this.useVirtual, new PlacementManagerDaemonExecutor());
-					entry.start();
+					ThreadExecutorPair<PlacementManagerTask> entry = this.threadFactory(key, this.useVirtual, new PlacementManagerDaemonExecutor());
+					entry.thread().start();
 
 					synchronized (this.threadMap)
 					{
