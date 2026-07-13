@@ -42,6 +42,8 @@ public class AllowedFunctionsHandler {
 			Configs.Generic.ENTITY_DATA_SYNC
 	);
 
+	public static final List<IHotkey> ALLOWED_VISUALS_HOTKEYS = Configs.Visuals.HOTKEY_LIST; //Shaijana
+
 	public final static ImmutableList<IConfigBase> ALLOWED_VISUALS_CONFIGS = ImmutableList.of(
 			Configs.Visuals.ENABLE_RENDERING,
 			Configs.Visuals.ENABLE_SCHEMATIC_RENDERING,

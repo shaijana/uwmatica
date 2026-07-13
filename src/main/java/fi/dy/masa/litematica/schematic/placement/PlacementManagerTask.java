@@ -4,10 +4,10 @@ import java.util.function.Supplier;
 
 import net.minecraft.world.level.ChunkPos;
 
-import fi.dy.masa.malilib.interfaces.AbstractThreadTaskBase;
+import fi.dy.masa.malilib.util.thread.ThreadTaskBase;
 import fi.dy.masa.litematica.world.WorldSchematic;
 
-public abstract class PlacementManagerTask extends AbstractThreadTaskBase
+public abstract class PlacementManagerTask extends ThreadTaskBase
 {
 	private final Supplier<WorldSchematic> worldSupplier;
 	private final int chunkX;

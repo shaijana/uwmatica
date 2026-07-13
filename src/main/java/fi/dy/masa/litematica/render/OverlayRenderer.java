@@ -5,23 +5,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
+import com.google.common.collect.ImmutableMap;
+
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.MeshData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.ChestType;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
-import com.google.common.collect.ImmutableMap;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.MeshData;
-import org.joml.Matrix4f;
+
 import fi.dy.masa.malilib.config.HudAlignment;
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.LeftRight;
@@ -36,7 +34,7 @@ import fi.dy.masa.litematica.compat.jade.JadeCompat;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.config.Hotkeys;
 import fi.dy.masa.litematica.data.DataManager;
-import fi.dy.masa.litematica.data.EntitiesDataStorage;
+import fi.dy.masa.litematica.data.EntityDataManager;
 import fi.dy.masa.litematica.gui.widgets.WidgetSchematicVerificationResult.BlockMismatchInfo;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacementManager;
@@ -379,7 +377,7 @@ public class OverlayRenderer
     private void renderSchematicMismatches(List<MismatchRenderPos> posList, @Nullable BlockPos lookPos, ProfilerFiller profiler)
     {
         profiler.push("batched_lines");
-        RenderContext ctx = new RenderContext(() -> "litematica:schematic_mistaches/batched_lines", MaLiLibPipelines.DEBUG_LINES_MASA_SIMPLE_NO_DEPTH_NO_CULL);
+        RenderContext ctx = new RenderContext(() -> "litematica:schematic_mistaches/batched_lines", MaLiLibPipelines.DEBUG_LINES_MASA_SIMPLE_NO_DEPTH_NO_CULL, 0);
         BufferBuilder buffer = ctx.getBuilder();
 		float lineWidth = 2.0f;
 
@@ -389,11 +387,11 @@ public class OverlayRenderer
 
         for (MismatchRenderPos entry : posList)
         {
-            Color4f color = entry.type.getColor();
+            Color4f color = entry.type().getColor();
 
-            if (entry.pos.equals(lookPos) == false)
+            if (entry.pos().equals(lookPos) == false)
             {
-                fi.dy.masa.malilib.render.RenderUtils.drawBlockBoundingBoxOutlinesBatchedLinesSimple(entry.pos, color, 0.002, lineWidth, buffer);
+                fi.dy.masa.malilib.render.RenderUtils.drawBlockBoundingBoxOutlinesBatchedLinesSimple(entry.pos(), color, 0.002, lineWidth, buffer);
             }
             else
             {
@@ -402,7 +400,7 @@ public class OverlayRenderer
 
             if (connections && prevEntry != null)
             {
-                fi.dy.masa.malilib.render.RenderUtils.drawConnectingLineBatchedLines(prevEntry.pos, entry.pos, false, color, lineWidth, buffer);
+                fi.dy.masa.malilib.render.RenderUtils.drawConnectingLineBatchedLines(prevEntry.pos(), entry.pos(), false, color, lineWidth, buffer);
             }
 
             prevEntry = entry;
@@ -412,7 +410,7 @@ public class OverlayRenderer
         {
             if (connections && prevEntry != null)
             {
-                fi.dy.masa.malilib.render.RenderUtils.drawConnectingLineBatchedLines(prevEntry.pos, lookedEntry.pos, false, lookedEntry.type.getColor(), lineWidth, buffer);
+                fi.dy.masa.malilib.render.RenderUtils.drawConnectingLineBatchedLines(prevEntry.pos(), lookedEntry.pos(), false, lookedEntry.type().getColor(), lineWidth, buffer);
             }
 
             try
@@ -431,9 +429,9 @@ public class OverlayRenderer
 
             profiler.popPush("outlines");
 	        lineWidth = 6f;
-            buffer = ctx.start(() -> "litematica:schematic_mistaches/outlines", MaLiLibPipelines.DEBUG_LINES_MASA_SIMPLE_NO_DEPTH_NO_CULL);
+            buffer = ctx.start(() -> "litematica:schematic_mistaches/outlines", MaLiLibPipelines.DEBUG_LINES_MASA_SIMPLE_NO_DEPTH_NO_CULL, 0);
 
-            fi.dy.masa.malilib.render.RenderUtils.drawBlockBoundingBoxOutlinesBatchedLinesSimple(lookPos, lookedEntry.type.getColor(), 0.002, lineWidth, buffer);
+            fi.dy.masa.malilib.render.RenderUtils.drawBlockBoundingBoxOutlinesBatchedLinesSimple(lookPos, lookedEntry.type().getColor(), 0.002, lineWidth, buffer);
         }
 
         try
@@ -453,15 +451,15 @@ public class OverlayRenderer
         profiler.popPush("sides");
         if (Configs.Visuals.RENDER_ERROR_MARKER_SIDES.getBooleanValue())
         {
-            buffer = ctx.start(() -> "litematica:schematic_mistaches/side_quads", MaLiLibPipelines.POSITION_COLOR_TRANSLUCENT_NO_DEPTH_NO_CULL);
+            buffer = ctx.start(() -> "litematica:schematic_mistaches/side_quads", MaLiLibPipelines.POSITION_COLOR_TRANSLUCENT_NO_DEPTH_NO_CULL, 0);
 
             float alpha = (float) Configs.InfoOverlays.VERIFIER_ERROR_HILIGHT_ALPHA.getDoubleValue();
 
             for (MismatchRenderPos entry : posList)
             {
-                Color4f color = entry.type.getColor();
+                Color4f color = entry.type().getColor();
                 color = new Color4f(color.r, color.g, color.b, alpha);
-                fi.dy.masa.malilib.render.RenderUtils.renderAreaSidesBatched(entry.pos, entry.pos, color, 0.002, buffer);
+                fi.dy.masa.malilib.render.RenderUtils.renderAreaSidesBatched(entry.pos(), entry.pos(), color, 0.002, buffer);
             }
 
             try
@@ -571,14 +569,14 @@ public class OverlayRenderer
 
                 if (DataManager.getInstance().hasIntegratedServer() == false)
                 {
-                    EntitiesDataStorage.getInstance().requestBlockEntity(mc.level, pos);
+                    EntityDataManager.getInstance().requestBlockEntityWrapped(this.mc.level, pos);
                 }
 
                 BlockMismatch mismatch = verifier.getMismatchForPosition(pos);
 
                 if (mismatch != null && worldSchematic != null)
                 {
-                    BlockMismatchInfo info = new BlockMismatchInfo(mismatch.stateExpected, mismatch.stateFound);
+                    BlockMismatchInfo info = new BlockMismatchInfo(mismatch.stateExpected(), mismatch.stateFound());
                     BlockInfoAlignment align = (BlockInfoAlignment) Configs.InfoOverlays.BLOCK_INFO_OVERLAY_ALIGNMENT.getOptionListValue();
                     int offY = Configs.InfoOverlays.BLOCK_INFO_OVERLAY_OFFSET_Y.getIntegerValue();
                     int invHeight = RenderUtils.renderInventoryOverlays(ctx, align, offY, worldSchematic, ctx.mc().level, pos);
@@ -652,25 +650,25 @@ public class OverlayRenderer
         }
     }
 
-    public void requestBlockEntityAt(Level world, BlockPos pos)
-    {
-        if (!(world instanceof ServerLevel))
-        {
-            EntitiesDataStorage.getInstance().requestBlockEntity(world, pos);
-
-            BlockState state = world.getBlockState(pos);
-            if (state.getBlock() instanceof ChestBlock)
-            {
-                ChestType type = state.getValue(ChestBlock.TYPE);
-
-                if (type != ChestType.SINGLE)
-                {
-                    BlockPos posAdj = pos.relative(ChestBlock.getConnectedDirection(state));
-                    EntitiesDataStorage.getInstance().requestBlockEntity(world, posAdj);
-                }
-            }
-        }
-    }
+//    public void requestBlockEntityAt(Level world, BlockPos pos)
+//    {
+//        if (!(world instanceof ServerLevel))
+//        {
+//            EntityDataManager.getInstance().requestBlockEntityWrapped(world, fi.dy.masa.malilib.util.position.BlockPos.of(pos));
+//
+//            BlockState state = world.getBlockState(pos);
+//            if (state.getBlock() instanceof ChestBlock)
+//            {
+//                ChestType type = state.getValue(ChestBlock.TYPE);
+//
+//                if (type != ChestType.SINGLE)
+//                {
+//                    BlockPos posAdj = pos.relative(ChestBlock.getConnectedDirection(state));
+//                    EntityDataManager.getInstance().requestBlockEntityWrapped(world, fi.dy.masa.malilib.util.position.BlockPos.of(posAdj));
+//                }
+//            }
+//        }
+//    }
 
     public static int calculateCompatYShift()
     {
@@ -808,7 +806,7 @@ public class OverlayRenderer
         profiler.pop();
     }
 
-    private enum BoxType
+    public enum BoxType
     {
         AREA_SELECTED,
         AREA_UNSELECTED,
