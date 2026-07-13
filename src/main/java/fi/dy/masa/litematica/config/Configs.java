@@ -3,6 +3,7 @@ package fi.dy.masa.litematica.config;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -16,13 +17,20 @@ import fi.dy.masa.malilib.config.IConfigBase;
 import fi.dy.masa.malilib.config.IConfigHandler;
 import fi.dy.masa.malilib.config.options.*;
 import fi.dy.masa.malilib.hotkeys.IHotkey;
+import fi.dy.masa.malilib.registry.Registry;
 import fi.dy.masa.malilib.util.FileUtils;
+import fi.dy.masa.malilib.util.MathUtils;
 import fi.dy.masa.malilib.util.MessageOutputType;
 import fi.dy.masa.malilib.util.data.json.JsonUtils;
+import fi.dy.masa.malilib.util.i18n.i18nConfig;
+import fi.dy.masa.malilib.util.i18n.i18nManager;
+import fi.dy.masa.malilib.util.i18n.i18nMode;
+import fi.dy.masa.malilib.util.i18n.i18nOption;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.Reference;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.render.LitematicaDebugHud;
+import fi.dy.masa.litematica.schematic.placement.PlacementManagerDaemonHandler;
 import fi.dy.masa.litematica.selection.CornerSelectionMode;
 import fi.dy.masa.litematica.selection.SelectionMode;
 import fi.dy.masa.litematica.util.*;
@@ -30,6 +38,7 @@ import fi.dy.masa.litematica.util.*;
 public class Configs implements IConfigHandler
 {
     private static final String CONFIG_FILE_NAME = Reference.MOD_ID + ".json";
+    public static final Optional<i18nManager> LANG = Optional.ofNullable(i18nManager.create(Reference.MOD_ID));
 
     private static final String GENERIC_KEY = Reference.MOD_ID+".config.generic";
     public static class Generic
@@ -65,6 +74,7 @@ public class Configs implements IConfigHandler
         public static final ConfigBoolean       DEBUG_HUD_PM_THREADS        = new ConfigBoolean("debugHudPMThreads", false).apply(GENERIC_KEY);
         public static final ConfigBoolean       DEBUG_HUD_WORLD             = new ConfigBoolean("debugHudWorld", true).apply(GENERIC_KEY);
         public static final ConfigBoolean       DEBUG_LOGGING               = new ConfigBoolean("debugLogging", false).apply(GENERIC_KEY);
+        public static final ConfigBoolean       DEDUPLICATE_SCHEMATIC_ENTITIES= new ConfigBoolean("deduplicateSchematicEntities", false).apply(GENERIC_KEY);
         public static final ConfigOptionList    DATAFIXER_MODE              = new ConfigOptionList("datafixerMode", DataFixerMode.ALWAYS).apply(GENERIC_KEY);
         public static final ConfigInteger       DATAFIXER_DEFAULT_SCHEMA    = new ConfigInteger("datafixerDefaultSchema", 1139, 99, 2724, true).apply(GENERIC_KEY);
 		public static final ConfigBoolean       DISPLAY_FILE_OPS_FEEDBACK   = new ConfigBoolean("displayFileOpsFeedback", false).apply(GENERIC_KEY);
@@ -82,9 +92,10 @@ public class Configs implements IConfigHandler
         public static final ConfigBooleanHotkeyed ENTITY_DATA_SYNC          = new ConfigBooleanHotkeyed("entityDataSync", false, "").apply(GENERIC_KEY);
         public static final ConfigBoolean       ENTITY_DATA_SYNC_BACKUP     = new ConfigBoolean("entityDataSyncBackup", false).apply(GENERIC_KEY);
         public static final ConfigFloat         ENTITY_DATA_SYNC_CACHE_TIMEOUT= new ConfigFloat("entityDataSyncCacheTimeout", 2.75f, 1.0f, 100.0f).apply(GENERIC_KEY);
-        public static final ConfigBoolean       ENTITY_DATA_LOAD_NBT        = new ConfigBoolean("entityDataSyncLoadNbt", true).apply(GENERIC_KEY);
+//        public static final ConfigBoolean       ENTITY_DATA_LOAD_NBT        = new ConfigBoolean("entityDataSyncLoadNbt", true).apply(GENERIC_KEY);
         public static final ConfigBoolean       EXECUTE_REQUIRE_TOOL        = new ConfigBoolean("executeRequireHoldingTool", true).apply(GENERIC_KEY);
         public static final ConfigBoolean       FIX_CHEST_MIRROR            = new ConfigBoolean("fixChestMirror", true).apply(GENERIC_KEY);
+//        public static final ConfigBoolean       FIX_GLAZED_TERRACOTTA_MIRROR= new ConfigBoolean("fixGlazedTerracottaMirror", false).apply(GENERIC_KEY);
         public static final ConfigBoolean       FIX_RAIL_ROTATION           = new ConfigBoolean("fixRailRotation", true).apply(GENERIC_KEY);
         public static final ConfigBoolean       FIX_STAIRS_MIRROR           = new ConfigBoolean("fixStairsMirror", true).apply(GENERIC_KEY);
         public static final ConfigBoolean       GENERATE_LOWERCASE_NAMES    = new ConfigBoolean("generateLowercaseNames", false).apply(GENERIC_KEY);
@@ -92,6 +103,9 @@ public class Configs implements IConfigHandler
         public static final ConfigBoolean       ITEM_USE_PACKET_CHECK_BYPASS= new ConfigBoolean("itemUsePacketCheckBypass", true).apply(GENERIC_KEY);
         public static final ConfigBoolean       LAYER_MODE_DYNAMIC          = new ConfigBoolean("layerModeFollowsPlayer", false).apply(GENERIC_KEY);
         public static final ConfigBoolean       LOAD_ENTIRE_SCHEMATICS      = new ConfigBoolean("loadEntireSchematics", false).apply(GENERIC_KEY);
+        public static final ConfigBoolean       MATERIAL_LIST_CONTAINER_SCAN          = new ConfigBoolean("materialListContainerScan", false).apply(GENERIC_KEY);
+        public static final ConfigBoolean       MATERIAL_LIST_CONTAINER_SCAN_SHULKERS = new ConfigBoolean("materialListContainerScanShulkers", false).apply(GENERIC_KEY);
+        public static final ConfigBoolean       MATERIAL_LIST_CONTAINER_SCAN_BUNDLES  = new ConfigBoolean("materialListContainerScanBundles", false).apply(GENERIC_KEY);
         public static final ConfigBoolean       MATERIAL_LIST_IGNORE_STATE  = new ConfigBoolean("materialListIgnoreState", false).apply(GENERIC_KEY);
         public static final ConfigBoolean       MATERIAL_LIST_RECIPE_DETAILS= new ConfigBoolean("materialListRecipeDetails", true).apply(GENERIC_KEY);
         public static final ConfigBoolean       PASTE_ALWAYS_USE_FILL       = new ConfigBoolean("pasteAlwaysUseFill", false).apply(GENERIC_KEY);
@@ -112,16 +126,25 @@ public class Configs implements IConfigHandler
         public static final ConfigBoolean       PICK_BLOCK_SHULKERS         = new ConfigBoolean("pickBlockShulkers", false).apply(GENERIC_KEY);
         public static final ConfigString        PICK_BLOCKABLE_SLOTS        = new ConfigString( "pickBlockableSlots", "1,2,3,4,5").apply(GENERIC_KEY);
         public static final ConfigBoolean       PLACEMENT_RESTRICTION       = new ConfigBoolean("placementRestriction", false).apply(GENERIC_KEY);
+        public static final ConfigInteger       PLACEMENT_MANAGER_THREAD_COUNT= new ConfigInteger("placementManagerThreadCount", 2, PlacementManagerDaemonHandler.MIN_PLATFORM_THREADS,
+                                                                                                  MathUtils.max(PlacementManagerDaemonHandler.MAX_PLATFORM_THREADS, PlacementManagerDaemonHandler.MIN_PLATFORM_THREADS)).apply(GENERIC_KEY);
+//        public static final ConfigOptionList    PLACEMENT_MANAGER_PROFILE   = new ConfigOptionList("placementManagerProfile", PlacementManagerThreadProfile.DEFAULT).apply(GENERIC_KEY);
         public static final ConfigBoolean       RENDER_MATERIALS_IN_GUI     = new ConfigBoolean("renderMaterialListInGuis", true).apply(GENERIC_KEY);
         public static final ConfigBoolean       RENDER_THREAD_NO_TIMEOUT    = new ConfigBoolean("renderThreadNoTimeout", true).apply(GENERIC_KEY);
+        public static final ConfigBoolean       REVERSE_OP_MODE_DIRECTION   = new ConfigBoolean("reverseOperationModeDirection", false).apply(GENERIC_KEY);
         public static final ConfigInteger       SERVER_NBT_REQUEST_RATE     = new ConfigInteger("serverNbtRequestRate", 2).apply(GENERIC_KEY);
         public static final ConfigBoolean       SIGN_TEXT_PASTE             = new ConfigBoolean("signTextPaste", true).apply(GENERIC_KEY);
         public static final ConfigString        TOOL_ITEM                   = new ConfigString( "toolItem", "minecraft:wooden_sword").apply(GENERIC_KEY); //Shaijana
         public static final ConfigBoolean       TOOL_ITEM_ENABLED           = new ConfigBoolean("toolItemEnabled", false).apply(GENERIC_KEY); //Shaijana
         public static final ConfigString        TOOL_ITEM_COMPONENTS        = new ConfigString( "toolItemComponents", "empty").apply(GENERIC_KEY);
+        public static final ConfigOptionList    TRANSLATION_LANGUAGE        = new ConfigOptionList("translationLanguage", new i18nConfig(LANG.orElseThrow())).apply(GENERIC_KEY);
+        public static final ConfigOptionList    TRANSLATION_MODE            = new ConfigOptionList("translationMode",     i18nMode.FOLLOW_VANILLA).apply(GENERIC_KEY);
         public static final ConfigBoolean       UNHIDE_SCHEMATIC_PROJECTS   = new ConfigBoolean("unhideSchematicVCS", false).apply(GENERIC_KEY);
 
-        public static final ImmutableList<IConfigBase> OPTIONS_DISABLED = ImmutableList.of( //Shaijana
+        public static final ImmutableList<IConfigBase> OPTIONS = ImmutableList.of(
+                PLACEMENT_MANAGER_THREAD_COUNT,
+//                PLACEMENT_MANAGER_PROFILE,
+
                 AREAS_PER_WORLD,
 //				BETTER_RENDER_ORDER,
                 CHANGE_SELECTED_CORNER,
@@ -138,6 +161,7 @@ public class Configs implements IConfigHandler
 				DISPLAY_FILE_OPS_FEEDBACK,
                 DATAFIXER_MODE,
                 DATAFIXER_DEFAULT_SCHEMA,
+                DEDUPLICATE_SCHEMATIC_ENTITIES,
                 EASY_PLACE_CLICK_ADJACENT,
                 EASY_PLACE_FIRST,
                 EASY_PLACE_HOLD_ENABLED,
@@ -152,9 +176,10 @@ public class Configs implements IConfigHandler
                 ENTITY_DATA_SYNC,
                 ENTITY_DATA_SYNC_BACKUP,
                 ENTITY_DATA_SYNC_CACHE_TIMEOUT,
-                ENTITY_DATA_LOAD_NBT,
+//                ENTITY_DATA_LOAD_NBT,
                 EXECUTE_REQUIRE_TOOL,
                 FIX_CHEST_MIRROR,
+//                FIX_GLAZED_TERRACOTTA_MIRROR,
                 FIX_RAIL_ROTATION,
                 FIX_STAIRS_MIRROR,
                 GENERATE_LOWERCASE_NAMES,
@@ -162,6 +187,9 @@ public class Configs implements IConfigHandler
                 ITEM_USE_PACKET_CHECK_BYPASS,
                 LAYER_MODE_DYNAMIC,
                 //LOAD_ENTIRE_SCHEMATICS,
+                MATERIAL_LIST_CONTAINER_SCAN,
+                MATERIAL_LIST_CONTAINER_SCAN_SHULKERS,
+                MATERIAL_LIST_CONTAINER_SCAN_BUNDLES,
                 MATERIAL_LIST_IGNORE_STATE,
                 MATERIAL_LIST_RECIPE_DETAILS,
                 PASTE_ALWAYS_USE_FILL,
@@ -184,6 +212,7 @@ public class Configs implements IConfigHandler
                 PLACEMENT_REPLACE_BEHAVIOR,
                 PLACEMENT_RESTRICTION,
                 PLACEMENT_RESTRICTION_WARN,
+                REVERSE_OP_MODE_DIRECTION,
                 RENDER_MATERIALS_IN_GUI,
                 RENDER_THREAD_NO_TIMEOUT,
                 SERVER_NBT_REQUEST_RATE,
@@ -207,10 +236,12 @@ public class Configs implements IConfigHandler
                 EASY_PLACE_SWAP_INTERVAL,
                 PICK_BLOCKABLE_SLOTS,
                 TOOL_ITEM,
-                TOOL_ITEM_COMPONENTS
+                TOOL_ITEM_COMPONENTS,
+                TRANSLATION_LANGUAGE,
+                TRANSLATION_MODE
         );
 
-        public static final List<IHotkey> HOTKEY_LIST_DISABLED = ImmutableList.of(
+        public static final List<IHotkey> HOTKEY_LIST = ImmutableList.of(
                 ENTITY_DATA_SYNC
         );
     }
@@ -218,60 +249,60 @@ public class Configs implements IConfigHandler
     private static final String VISUALS_KEY = Reference.MOD_ID+".config.visuals";
     public static class Visuals
     {
-        public static final ConfigBoolean       ENABLE_AREA_SELECTION_RENDERING     = new ConfigBoolean("enableAreaSelectionBoxesRendering", true).apply(VISUALS_KEY);
-        public static final ConfigBoolean       ENABLE_PLACEMENT_BOXES_RENDERING    = new ConfigBoolean("enablePlacementBoxesRendering", true).apply(VISUALS_KEY);
-        public static final ConfigBoolean       ENABLE_RENDERING                    = new ConfigBoolean("enableRendering", true).apply(VISUALS_KEY);
-        public static final ConfigBoolean       ENABLE_SCHEMATIC_BLOCKS             = new ConfigBoolean("enableSchematicBlocksRendering",  true).apply(VISUALS_KEY);
-        public static final ConfigBoolean       ENABLE_SCHEMATIC_FLUIDS             = new ConfigBoolean("enableSchematicFluidRendering", true).apply(VISUALS_KEY);
-        public static final ConfigBoolean       ENABLE_SCHEMATIC_OVERLAY            = new ConfigBoolean("enableSchematicOverlay",  true).apply(VISUALS_KEY);
+        public static final ConfigBooleanHotkeyed ENABLE_AREA_SELECTION_RENDERING   = new ConfigBooleanHotkeyed("enableAreaSelectionBoxesRendering", true, "").apply(VISUALS_KEY);
+        public static final ConfigBooleanHotkeyed ENABLE_PLACEMENT_BOXES_RENDERING  = new ConfigBooleanHotkeyed("enablePlacementBoxesRendering", true, "").apply(VISUALS_KEY);
+        public static final ConfigBooleanHotkeyed ENABLE_RENDERING                  = new ConfigBooleanHotkeyed("enableRendering", true, "").apply(VISUALS_KEY);
+        public static final ConfigBooleanHotkeyed ENABLE_SCHEMATIC_BLOCKS           = new ConfigBooleanHotkeyed("enableSchematicBlocksRendering",  true, "").apply(VISUALS_KEY);
+        public static final ConfigBooleanHotkeyed ENABLE_SCHEMATIC_FLUIDS           = new ConfigBooleanHotkeyed("enableSchematicFluidRendering", true, "").apply(VISUALS_KEY);
+        public static final ConfigBooleanHotkeyed ENABLE_SCHEMATIC_OVERLAY          = new ConfigBooleanHotkeyed("enableSchematicOverlay",  true, "").apply(VISUALS_KEY);
         public static final ConfigBooleanHotkeyed ENABLE_SCHEMATIC_OVERLAY_CULLING  = new ConfigBooleanHotkeyed("enableSchematicOverlayCulling", true, "").apply(VISUALS_KEY);
-        public static final ConfigBoolean       ENABLE_SCHEMATIC_RENDERING          = new ConfigBoolean("enableSchematicRendering", true).apply(VISUALS_KEY);
-        public static final ConfigBoolean       ENABLE_SCHEMATIC_FAKE_LIGHTING      = new ConfigBoolean("enableSchematicFakeLighting", true).apply(VISUALS_KEY);
+        public static final ConfigBooleanHotkeyed ENABLE_SCHEMATIC_RENDERING        = new ConfigBooleanHotkeyed("enableSchematicRendering", true, "").apply(VISUALS_KEY);
+        public static final ConfigBooleanHotkeyed ENABLE_SCHEMATIC_ENTITY_HITBOXES  = new ConfigBooleanHotkeyed("enableSchematicEntityHitboxes", true, "").apply(VISUALS_KEY);
+        public static final ConfigBooleanHotkeyed ENABLE_SCHEMATIC_FAKE_LIGHTING    = new ConfigBooleanHotkeyed("enableSchematicFakeLighting", true, "").apply(VISUALS_KEY);
         //public static final ConfigInteger       RENDER_SCHEMATIC_MAX_THREADS        = new ConfigInteger("renderSchematicMaxThreads", 4, 1, 16).apply(VISUALS_KEY);
         public static final ConfigDouble        GHOST_BLOCK_ALPHA                   = new ConfigDouble( "ghostBlockAlpha", 0.5, 0, 1).apply(VISUALS_KEY);
         public static final ConfigBoolean       IGNORE_EXISTING_FLUIDS              = new ConfigBoolean("ignoreExistingFluids", false).apply(VISUALS_KEY);
         public static final ConfigBoolean       IGNORE_EXISTING_BLOCKS              = new ConfigBoolean("ignoreExistingBlocks", false).apply(VISUALS_KEY);
         public static final ConfigStringList    IGNORABLE_EXISTING_BLOCKS           = new ConfigStringList("ignorableExistingBlocks", ImmutableList.of()).apply(VISUALS_KEY);
-        public static final ConfigBoolean       OVERLAY_REDUCED_INNER_SIDES         = new ConfigBoolean("overlayReducedInnerSides", false).apply(VISUALS_KEY);
+        public static final ConfigBooleanHotkeyed OVERLAY_REDUCED_INNER_SIDES       = new ConfigBooleanHotkeyed("overlayReducedInnerSides", false, "").apply(VISUALS_KEY);
         public static final ConfigDouble        PLACEMENT_BOX_SIDE_ALPHA            = new ConfigDouble( "placementBoxSideAlpha", 0.2, 0, 1).apply(VISUALS_KEY);
-        public static final ConfigBoolean       RENDER_AO_MODERN_ENABLE             = new ConfigBoolean("renderAOModernEnable", false).apply(VISUALS_KEY);
+        public static final ConfigBooleanHotkeyed RENDER_AO_MODERN_ENABLE           = new ConfigBooleanHotkeyed("renderAOModernEnable", false, "").apply(VISUALS_KEY);
         public static final ConfigBoolean       RENDER_AREA_SELECTION_BOX_SIDES     = new ConfigBoolean("renderAreaSelectionBoxSides", true).apply(VISUALS_KEY);
-        public static final ConfigBoolean       RENDER_BLOCKS_AS_TRANSLUCENT        = new ConfigBoolean("renderBlocksAsTranslucent", false).apply(VISUALS_KEY);
+        public static final ConfigBooleanHotkeyed RENDER_BLOCKS_AS_TRANSLUCENT      = new ConfigBooleanHotkeyed("renderBlocksAsTranslucent", false, "").apply(VISUALS_KEY);
         public static final ConfigBoolean       RENDER_ENABLE_TRANSLUCENT_RESORTING = new ConfigBoolean("renderEnableTranslucentResorting",  true).apply(VISUALS_KEY);
-        public static final ConfigBoolean       RENDER_COLLIDING_SCHEMATIC_BLOCKS   = new ConfigBoolean("renderCollidingSchematicBlocks", false).apply(VISUALS_KEY);
+        public static final ConfigBooleanHotkeyed RENDER_COLLIDING_SCHEMATIC_BLOCKS = new ConfigBooleanHotkeyed("renderCollidingSchematicBlocks", false, "").apply(VISUALS_KEY);
         public static final ConfigBoolean       RENDER_ERROR_MARKER_CONNECTIONS     = new ConfigBoolean("renderErrorMarkerConnections", false).apply(VISUALS_KEY);
         public static final ConfigBoolean       RENDER_ERROR_MARKER_SIDES           = new ConfigBoolean("renderErrorMarkerSides", true).apply(VISUALS_KEY);
         public static final ConfigInteger       RENDER_FAKE_LIGHTING_LEVEL          = new ConfigInteger("renderFakeLightingLevel", 15, 0, 15).apply(VISUALS_KEY);
         public static final ConfigBoolean       RENDER_PLACEMENT_BOX_SIDES          = new ConfigBoolean("renderPlacementBoxSides", false).apply(VISUALS_KEY);
         public static final ConfigBoolean       RENDER_PLACEMENT_ENCLOSING_BOX      = new ConfigBoolean("renderPlacementEnclosingBox", true).apply(VISUALS_KEY);
         public static final ConfigBoolean       RENDER_PLACEMENT_ENCLOSING_BOX_SIDES= new ConfigBoolean("renderPlacementEnclosingBoxSides", false).apply(VISUALS_KEY);
-        public static final ConfigBoolean       RENDER_SCHEMATIC_ENTITIES           = new ConfigBoolean("renderSchematicEntities", true).apply(VISUALS_KEY);
-        public static final ConfigBoolean       RENDER_SCHEMATIC_TILE_ENTITIES      = new ConfigBoolean("renderSchematicTileEntities", true).apply(VISUALS_KEY);
-        public static final ConfigBoolean       RENDER_TRANSLUCENT_INNER_SIDES      = new ConfigBoolean("renderTranslucentBlockInnerSides", false).apply(VISUALS_KEY);
-        public static final ConfigBoolean       SCHEMATIC_OVERLAY_ENABLE_OUTLINES   = new ConfigBoolean("schematicOverlayEnableOutlines",  true).apply(VISUALS_KEY);
+        public static final ConfigBooleanHotkeyed RENDER_SCHEMATIC_ENTITIES         = new ConfigBooleanHotkeyed("renderSchematicEntities", true, "").apply(VISUALS_KEY);
+        public static final ConfigBooleanHotkeyed RENDER_SCHEMATIC_TILE_ENTITIES    = new ConfigBooleanHotkeyed("renderSchematicTileEntities", true, "").apply(VISUALS_KEY);
+        public static final ConfigBooleanHotkeyed RENDER_TRANSLUCENT_INNER_SIDES      = new ConfigBooleanHotkeyed("renderTranslucentBlockInnerSides", false, "").apply(VISUALS_KEY);
+        public static final ConfigBooleanHotkeyed SCHEMATIC_OVERLAY_ENABLE_OUTLINES   = new ConfigBooleanHotkeyed("schematicOverlayEnableOutlines",  true, "").apply(VISUALS_KEY);
 //        public static final ConfigBoolean       SCHEMATIC_OVERLAY_ENABLE_RESORTING  = new ConfigBoolean("schematicOverlayEnableResorting",  false).apply(VISUALS_KEY);
-        public static final ConfigBoolean       SCHEMATIC_OVERLAY_ENABLE_SIDES      = new ConfigBoolean("schematicOverlayEnableSides",     true).apply(VISUALS_KEY);
-        public static final ConfigBoolean       SCHEMATIC_OVERLAY_MODEL_OUTLINE     = new ConfigBoolean("schematicOverlayModelOutline",    true).apply(VISUALS_KEY);
-        public static final ConfigBoolean       SCHEMATIC_OVERLAY_MODEL_SIDES       = new ConfigBoolean("schematicOverlayModelSides",      true).apply(VISUALS_KEY);
+        public static final ConfigBooleanHotkeyed SCHEMATIC_OVERLAY_ENABLE_SIDES      = new ConfigBooleanHotkeyed("schematicOverlayEnableSides",     true, "").apply(VISUALS_KEY);
+        public static final ConfigBooleanHotkeyed SCHEMATIC_OVERLAY_MODEL_OUTLINE     = new ConfigBooleanHotkeyed("schematicOverlayModelOutline",    true, "").apply(VISUALS_KEY);
+        public static final ConfigBooleanHotkeyed SCHEMATIC_OVERLAY_MODEL_SIDES       = new ConfigBooleanHotkeyed("schematicOverlayModelSides",      true, "").apply(VISUALS_KEY);
         public static final ConfigDouble        SCHEMATIC_OVERLAY_OUTLINE_WIDTH     = new ConfigDouble( "schematicOverlayOutlineWidth",  1.0, 0, 64).apply(VISUALS_KEY);
         public static final ConfigDouble        SCHEMATIC_OVERLAY_OUTLINE_WIDTH_THROUGH = new ConfigDouble("schematicOverlayOutlineWidthThrough",  3.0, 0, 64).apply(VISUALS_KEY);
-        public static final ConfigBoolean       SCHEMATIC_OVERLAY_RENDER_THROUGH    = new ConfigBoolean("schematicOverlayRenderThroughBlocks", false).apply(VISUALS_KEY);
-        public static final ConfigBoolean       SCHEMATIC_OVERLAY_TYPE_DIFF_BLOCK   = new ConfigBoolean("schematicOverlayTypeDiffBlock",   true).apply(VISUALS_KEY);
-        public static final ConfigBoolean       SCHEMATIC_OVERLAY_TYPE_EXTRA        = new ConfigBoolean("schematicOverlayTypeExtra",       true).apply(VISUALS_KEY);
-        public static final ConfigBoolean       SCHEMATIC_OVERLAY_TYPE_MISSING      = new ConfigBoolean("schematicOverlayTypeMissing",     true).apply(VISUALS_KEY);
-        public static final ConfigBoolean       SCHEMATIC_OVERLAY_TYPE_WRONG_BLOCK  = new ConfigBoolean("schematicOverlayTypeWrongBlock",  true).apply(VISUALS_KEY);
-        public static final ConfigBoolean       SCHEMATIC_OVERLAY_TYPE_WRONG_STATE  = new ConfigBoolean("schematicOverlayTypeWrongState",  true).apply(VISUALS_KEY);
+        public static final ConfigBooleanHotkeyed SCHEMATIC_OVERLAY_RENDER_THROUGH    = new ConfigBooleanHotkeyed("schematicOverlayRenderThroughBlocks", false, "").apply(VISUALS_KEY);
+        public static final ConfigBooleanHotkeyed SCHEMATIC_OVERLAY_TYPE_DIFF_BLOCK   = new ConfigBooleanHotkeyed("schematicOverlayTypeDiffBlock",   true, "").apply(VISUALS_KEY);
+        public static final ConfigBooleanHotkeyed SCHEMATIC_OVERLAY_TYPE_EXTRA        = new ConfigBooleanHotkeyed("schematicOverlayTypeExtra",       true, "").apply(VISUALS_KEY);
+        public static final ConfigBooleanHotkeyed SCHEMATIC_OVERLAY_TYPE_MISSING      = new ConfigBooleanHotkeyed("schematicOverlayTypeMissing",     true, "").apply(VISUALS_KEY);
+        public static final ConfigBooleanHotkeyed SCHEMATIC_OVERLAY_TYPE_WRONG_BLOCK  = new ConfigBooleanHotkeyed("schematicOverlayTypeWrongBlock",  true, "").apply(VISUALS_KEY);
+        public static final ConfigBooleanHotkeyed SCHEMATIC_OVERLAY_TYPE_WRONG_STATE  = new ConfigBooleanHotkeyed("schematicOverlayTypeWrongState",  true, "").apply(VISUALS_KEY);
 //        public static final ConfigBoolean       SCHEMATIC_VERIFIER_BLOCK_MODELS     = new ConfigBoolean("schematicVerifierUseBlockModels", false).apply(VISUALS_KEY);
 
-        public static final ImmutableList<IConfigBase> OPTIONS_DISABLED = ImmutableList.of( //Shaijana
+        public static final ImmutableList<IConfigBase> OPTIONS = ImmutableList.of(
                 ENABLE_RENDERING,
                 ENABLE_SCHEMATIC_RENDERING,
-                //RENDER_SCHEMATIC_MAX_THREADS,
-
                 ENABLE_AREA_SELECTION_RENDERING,
                 ENABLE_PLACEMENT_BOXES_RENDERING,
                 ENABLE_SCHEMATIC_BLOCKS,
                 ENABLE_SCHEMATIC_FLUIDS,
+                ENABLE_SCHEMATIC_ENTITY_HITBOXES,
                 ENABLE_SCHEMATIC_FAKE_LIGHTING,
                 ENABLE_SCHEMATIC_OVERLAY,
                 ENABLE_SCHEMATIC_OVERLAY_CULLING,
@@ -310,6 +341,36 @@ public class Configs implements IConfigHandler
                 PLACEMENT_BOX_SIDE_ALPHA,
                 SCHEMATIC_OVERLAY_OUTLINE_WIDTH,
                 SCHEMATIC_OVERLAY_OUTLINE_WIDTH_THROUGH
+        );
+
+        public static final List<IHotkey> HOTKEY_LIST = ImmutableList.of(
+                ENABLE_RENDERING,
+                ENABLE_SCHEMATIC_RENDERING,
+                ENABLE_AREA_SELECTION_RENDERING,
+                ENABLE_PLACEMENT_BOXES_RENDERING,
+                ENABLE_SCHEMATIC_BLOCKS,
+                ENABLE_SCHEMATIC_FLUIDS,
+                ENABLE_SCHEMATIC_ENTITY_HITBOXES,
+                ENABLE_SCHEMATIC_FAKE_LIGHTING,
+                ENABLE_SCHEMATIC_OVERLAY,
+                ENABLE_SCHEMATIC_OVERLAY_CULLING,
+                OVERLAY_REDUCED_INNER_SIDES,
+                RENDER_AO_MODERN_ENABLE,
+                RENDER_BLOCKS_AS_TRANSLUCENT,
+                RENDER_COLLIDING_SCHEMATIC_BLOCKS,
+                RENDER_SCHEMATIC_ENTITIES,
+                RENDER_SCHEMATIC_TILE_ENTITIES,
+                RENDER_TRANSLUCENT_INNER_SIDES,
+                SCHEMATIC_OVERLAY_ENABLE_OUTLINES,
+                SCHEMATIC_OVERLAY_ENABLE_SIDES,
+                SCHEMATIC_OVERLAY_MODEL_OUTLINE,
+                SCHEMATIC_OVERLAY_MODEL_SIDES,
+                SCHEMATIC_OVERLAY_RENDER_THROUGH,
+                SCHEMATIC_OVERLAY_TYPE_DIFF_BLOCK,
+                SCHEMATIC_OVERLAY_TYPE_EXTRA,
+                SCHEMATIC_OVERLAY_TYPE_MISSING,
+                SCHEMATIC_OVERLAY_TYPE_WRONG_BLOCK,
+                SCHEMATIC_OVERLAY_TYPE_WRONG_STATE
         );
     }
 
@@ -394,7 +455,7 @@ public class Configs implements IConfigHandler
         public static final ConfigColor SCHEMATIC_OVERLAY_COLOR_WRONG_BLOCK = new ConfigColor("schematicOverlayColorWrongBlock",    "#4CFF3333").apply(COLORS_KEY);
         public static final ConfigColor SCHEMATIC_OVERLAY_COLOR_WRONG_STATE = new ConfigColor("schematicOverlayColorWrongState",    "#4CFF9010").apply(COLORS_KEY);
 
-        public static final ImmutableList<IConfigBase> OPTIONS_DISABLED = ImmutableList.of( //Shaijana
+        public static final ImmutableList<IConfigBase> OPTIONS = ImmutableList.of(
                 AREA_SELECTION_BOX_SIDE_COLOR,
                 HIGHTLIGHT_BLOCK_IN_INV_COLOR,
                 MATERIAL_LIST_HUD_ITEM_COUNTS,
@@ -427,7 +488,7 @@ public class Configs implements IConfigHandler
                 ConfigUtils.readConfigBase(root, "InfoOverlays", InfoOverlays.OPTIONS);
                 ConfigUtils.readConfigBase(root, "Visuals", AllowedFunctionsHandler.ALLOWED_VISUALS_CONFIGS); //Shaijana
 
-                Litematica.debugLogError("loadFromFile(): Successfully loaded config file '{}'.", configFile.toAbsolutePath());
+                Litematica.debugLog("loadFromFile(): Successfully loaded config file '{}'.", configFile.toAbsolutePath());
             }
             else
             {
@@ -435,8 +496,10 @@ public class Configs implements IConfigHandler
             }
         }
 
+        checkBaseLanguage();
         if (Minecraft.getInstance().level != null)
         {
+            PlacementManagerDaemonHandler.INSTANCE.checkThreadCount(true);
             DataManager.setToolItem(Generic.TOOL_ITEM.getStringValue());
             DataManager.getInstance().setToolItemComponents(Generic.TOOL_ITEM_COMPONENTS.getStringValue(), Minecraft.getInstance().level.registryAccess());
         }
@@ -453,7 +516,7 @@ public class Configs implements IConfigHandler
         if (!Files.exists(dir))
         {
             FileUtils.createDirectoriesIfMissing(dir);
-            Litematica.debugLogError("saveToFile(): Creating directory '{}'.", dir.toAbsolutePath());
+            Litematica.debugLog("saveToFile(): Creating directory '{}'.", dir.toAbsolutePath());
         }
 
         if (Files.isDirectory(dir))
@@ -484,5 +547,86 @@ public class Configs implements IConfigHandler
     public void save()
     {
         saveToFile();
+    }
+
+    @Override
+    public void onLanguageChanged(String newLang)
+    {
+        checkBaseLanguage();
+    }
+
+    // Attempts to load the same language file as MaLiLib; where available -- on occasion
+    public static void checkBaseLanguage()
+    {
+        i18nMode mode = (i18nMode) Generic.TRANSLATION_MODE.getOptionListValue();
+
+        if (mode == i18nMode.FOLLOW_MALILIB)
+        {
+            LANG.ifPresent(
+                    i18nManager ->
+                    {
+                        String baseKey = Registry.TRANSLATION_OVERRIDE_MANAGER.getBaseLanguageCode();
+
+                        // Try setting language if it doesn't match
+                        if (!i18nManager.getLang().getLangCode().equalsIgnoreCase(baseKey))
+                        {
+                            List<i18nOption> list = i18nManager.getLanguageOptions();
+                            boolean found = false;
+
+                            for (i18nOption entry : list)
+                            {
+                                if (entry.getKey().equalsIgnoreCase(baseKey))
+                                {
+                                    i18nManager.setLang(baseKey);
+                                    i18nConfig newConfig = new i18nConfig(i18nManager).fromString(baseKey);
+                                    Generic.TRANSLATION_LANGUAGE.setOptionListValue(newConfig);
+                                    found = true;
+                                    break;
+                                }
+                            }
+
+                            if (!found)
+                            {
+                                i18nManager.resetLangToDefault();
+                                Generic.TRANSLATION_LANGUAGE.resetToDefault();
+                            }
+                        }
+                    }
+            );
+        }
+        else if (mode == i18nMode.FOLLOW_VANILLA)
+        {
+            LANG.ifPresent(
+                    i18nManager ->
+                    {
+                        String vanCode = Registry.TRANSLATION_OVERRIDE_MANAGER.getVanillaLanguageCode();
+
+                        // Try setting language if it doesn't match
+                        if (!i18nManager.getLang().getLangCode().equalsIgnoreCase(vanCode))
+                        {
+                            List<i18nOption> list = i18nManager.getLanguageOptions();
+                            boolean found = false;
+
+                            for (i18nOption entry : list)
+                            {
+                                if (entry.getKey().equalsIgnoreCase(vanCode))
+                                {
+                                    i18nManager.setLang(vanCode);
+                                    i18nConfig newConfig = new i18nConfig(i18nManager).fromString(vanCode);
+                                    Generic.TRANSLATION_LANGUAGE.setOptionListValue(newConfig);
+                                    found = true;
+                                    break;
+                                }
+                            }
+
+                            if (!found)
+                            {
+                                i18nManager.resetLangToDefault();
+                                Generic.TRANSLATION_LANGUAGE.resetToDefault();
+                            }
+                        }
+                    }
+            );
+        }
     }
 }

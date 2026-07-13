@@ -5,12 +5,15 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 import javax.annotation.Nonnull;
 import com.google.common.collect.Iterables;
 import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.util.AbortableIterationConsumer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.entity.EntityAccess;
 import net.minecraft.world.level.entity.EntityTypeTest;
@@ -25,13 +28,13 @@ public class SchematicEntityLookup<T extends EntityAccess> implements LevelEntit
 {
     private final ConcurrentHashMap<Integer, T> entityMap;
     private final ConcurrentHashMap<UUID, Integer> uuidMap;
-    private final ConcurrentHashMap<Long, List<UUID>> chunkMap;
+    private final ConcurrentHashMap<Long, CopyOnWriteArrayList<UUID>> chunkMap;
 
     protected SchematicEntityLookup()
     {
-        this.entityMap = new ConcurrentHashMap<>(128, 0.9f, 1);
-        this.uuidMap = new ConcurrentHashMap<>(128, 0.9f, 1);
-        this.chunkMap = new ConcurrentHashMap<>(128, 0.9f, 1);
+        this.entityMap = new ConcurrentHashMap<>(256, 0.9f, 1);
+        this.uuidMap = new ConcurrentHashMap<>(256, 0.9f, 1);
+        this.chunkMap = new ConcurrentHashMap<>(256, 0.9f, 1);
     }
 
     protected String getDebugString()
@@ -41,93 +44,109 @@ public class SchematicEntityLookup<T extends EntityAccess> implements LevelEntit
         );
     }
 
-    protected synchronized void put(T entity, ChunkPos pos)
+    protected void put(T entity, ChunkPos pos, @Nonnull WorldSchematic world)
     {
         T tmp = this.get(entity.getUUID());
 
         if (tmp != null)
         {
-            this.remove(entity.getUUID());
+            this.remove(entity.getUUID(), world);
         }
 
-        synchronized (this.chunkMap)
+        this.uuidMap.put(entity.getUUID(), entity.getId());
+        this.entityMap.put(entity.getId(), entity);
+
+        // Special case handling for entities potentially larger than a chunk (ie; the Ender Dragon)
+        if (entity instanceof EnderDragon)
         {
-            List<UUID> list = this.chunkMap.getOrDefault(pos.pack(), new ArrayList<>());
+            AABB bb = entity.getBoundingBox();
+            int minChunkX = ((int) Math.floor(bb.minX)) >> 4;
+            int maxChunkX = ((int) Math.floor(bb.maxX)) >> 4;
+            int minChunkZ = ((int) Math.floor(bb.minZ)) >> 4;
+            int maxChunkZ = ((int) Math.floor(bb.maxZ)) >> 4;
 
-            list.add(entity.getUUID());
-            this.chunkMap.put(pos.pack(), list);
-        }
-
-        synchronized (this.uuidMap)
-        {
-            this.uuidMap.put(entity.getUUID(), entity.getId());
-        }
-
-        synchronized (this.entityMap)
-        {
-            this.entityMap.put(entity.getId(), entity);
-        }
-    }
-
-    protected synchronized int size()
-    {
-        return this.entityMap.size();
-    }
-
-    protected synchronized boolean remove(UUID uuid)
-    {
-        Integer key = this.uuidMap.get(uuid);
-
-        synchronized (this.chunkMap)
-        {
-            for (Long longPos : this.chunkMap.keySet())
+            for (int cx = minChunkX; cx <= maxChunkX; cx++)
             {
-                List<UUID> list = this.chunkMap.get(longPos);
-
-                if (list.remove(uuid))
+                for (int cz = minChunkZ; cz <= maxChunkZ; cz++)
                 {
-                    if (list.isEmpty())
+                    final long cp = ChunkPos.pack(cx, cz);
+                    CopyOnWriteArrayList<UUID> list = this.chunkMap.computeIfAbsent(cp, k -> new CopyOnWriteArrayList<>());
+
+                    list.addIfAbsent(entity.getUUID());
+
+                    if (list.size() == 1)
                     {
-                        this.chunkMap.remove(longPos);
+                        this.chunkMap.put(cp, list);
                     }
-                    else
-                    {
-                        this.chunkMap.put(longPos, list);
-                    }
-                }
-            }
-        }
-
-        if (key != null)
-        {
-            synchronized (this.uuidMap)
-            {
-                this.uuidMap.remove(uuid);
-            }
-
-            synchronized (this.entityMap)
-            {
-                T e = this.entityMap.remove(key);
-
-                if (e != null)
-                {
-                    return true;
                 }
             }
         }
         else
         {
-            synchronized (this.entityMap)
-            {
-                for (Integer id : this.entityMap.keySet())
-                {
-                    T e = this.entityMap.get(id);
+            final long cp = pos.pack();
+            CopyOnWriteArrayList<UUID> list = this.chunkMap.computeIfAbsent(cp, k -> new CopyOnWriteArrayList<>());
 
-                    if (e.getUUID().equals(uuid))
-                    {
-                        this.entityMap.remove(id);
-                        return true;
-                    }
+            list.addIfAbsent(entity.getUUID());
+
+            if (list.size() == 1)
+            {
+                this.chunkMap.put(cp, list);
+            }
+        }
+
+        world.onTrackingStart((Entity) entity);
+    }
+
+    protected int size()
+    {
+        return this.entityMap.size();
+    }
+
+    protected boolean remove(UUID uuid, @Nonnull WorldSchematic world)
+    {
+        Integer key = this.uuidMap.get(uuid);
+
+        for (var entry : this.chunkMap.entrySet())
+        {
+            Long longPos = entry.getKey();
+            CopyOnWriteArrayList<UUID> list = entry.getValue();
+
+            if (list.remove(uuid))
+            {
+                if (list.isEmpty())
+                {
+                    this.chunkMap.remove(longPos);
+                }
+//                else
+//                {
+//                    this.chunkMap.put(longPos, list);
+//                }
+            }
+        }
+
+        if (key != null)
+        {
+            this.uuidMap.remove(uuid);
+            T e = this.entityMap.remove(key);
+
+            if (e != null)
+            {
+                world.onTrackingStop((Entity) e);
+                return true;
+            }
+        }
+        else
+        {
+            for (var entry : this.entityMap.entrySet())
+            {
+                Integer id = entry.getKey();
+                T e = entry.getValue();
+
+                if (e.getUUID().equals(uuid))
+                {
+                    this.entityMap.remove(id);
+                    world.onTrackingStop((Entity) e);
+                    return true;
                 }
             }
         }
@@ -135,63 +154,53 @@ public class SchematicEntityLookup<T extends EntityAccess> implements LevelEntit
         return false;
     }
 
-    protected synchronized int removeByChunk(ChunkPos pos)
+    protected int removeByChunk(ChunkPos pos, @Nonnull WorldSchematic world)
     {
         final Long longPos = pos.pack();
         int count = 0;
+        CopyOnWriteArrayList<UUID> list = this.chunkMap.get(longPos);
 
-        synchronized (this.chunkMap)
+        if (list == null || list.isEmpty())
         {
-            List<UUID> list = this.chunkMap.get(longPos);
+            return count;
+        }
 
-            if (list == null || list.isEmpty())
+        for (UUID uuid : list)
+        {
+            Integer key;
+
+            key = this.uuidMap.remove(uuid);
+
+            if (key != null)
             {
-                return count;
+                T entry = this.entityMap.remove(key);
+                world.onTrackingStop((Entity) entry);
+                count++;
             }
-
-            for (UUID uuid : list)
+            else
             {
-                Integer key;
-
-                synchronized (this.uuidMap)
+                for (var entry : this.entityMap.entrySet())
                 {
-                    key = this.uuidMap.remove(uuid);
-                }
+                    Integer id = entry.getKey();
+                    T e = entry.getValue();
 
-                if (key != null)
-                {
-                    synchronized (this.entityMap)
+                    if (e.getUUID().equals(uuid))
                     {
-                        this.entityMap.remove(key);
+                        this.entityMap.remove(id);
+                        world.onTrackingStop((Entity) e);
                         count++;
                     }
                 }
-                else
-                {
-                    synchronized (this.entityMap)
-                    {
-                        for (Integer id : this.entityMap.keySet())
-                        {
-                            T e = this.entityMap.get(id);
-
-                            if (e.getUUID().equals(uuid))
-                            {
-                                this.entityMap.remove(id);
-                                count++;
-                            }
-                        }
-                    }
-                }
             }
-
-            this.chunkMap.remove(longPos);
         }
+
+        this.chunkMap.remove(longPos);
 
         return count;
     }
 
     @Override
-    public synchronized @Nullable T get(int id)
+    public @Nullable T get(int id)
     {
         if (this.entityMap.containsKey(id))
         {
@@ -199,10 +208,7 @@ public class SchematicEntityLookup<T extends EntityAccess> implements LevelEntit
 
             if (!this.uuidMap.containsKey(e.getUUID()))
             {
-                synchronized (this.uuidMap)
-                {
-                    this.uuidMap.put(e.getUUID(), id);
-                }
+                this.uuidMap.put(e.getUUID(), id);
             }
 
             return e;
@@ -212,7 +218,7 @@ public class SchematicEntityLookup<T extends EntityAccess> implements LevelEntit
     }
 
     @Override
-    public synchronized @Nullable T get(@Nonnull UUID uuid)
+    public @Nullable T get(@Nonnull UUID uuid)
     {
         if (this.uuidMap.containsKey(uuid))
         {
@@ -223,26 +229,21 @@ public class SchematicEntityLookup<T extends EntityAccess> implements LevelEntit
                 return this.entityMap.get(key);
             }
 
-            synchronized (this.uuidMap)
-            {
-                this.uuidMap.remove(uuid);
-            }
+            this.uuidMap.remove(uuid);
 
             return null;
         }
 
-        for (Integer id : this.entityMap.keySet())
+        for (var entry : this.entityMap.entrySet())
         {
-            T e = this.entityMap.get(id);
+            Integer id = entry.getKey();
+            T e = entry.getValue();
 
             if (e.getUUID().equals(uuid))
             {
                 if (!this.uuidMap.containsKey(uuid))
                 {
-                    synchronized (this.uuidMap)
-                    {
-                        this.uuidMap.put(uuid, id);
-                    }
+                    this.uuidMap.put(uuid, id);
                 }
 
                 return e;
@@ -252,36 +253,30 @@ public class SchematicEntityLookup<T extends EntityAccess> implements LevelEntit
         return null;
     }
 
-    public synchronized Iterable<T> getAllByChunk(ChunkPos pos)
+    public Iterable<T> getAllByChunk(ChunkPos pos)
     {
-        synchronized (this.chunkMap)
+        final CopyOnWriteArrayList<UUID> list = this.chunkMap.get(pos.pack());
+
+        if (list == null || list.isEmpty())
         {
-            final List<UUID> list = this.chunkMap.get(pos.pack());
-
-            if (list == null || list.isEmpty())
-            {
-                return Collections.emptyList();
-            }
-
-            synchronized (this.entityMap)
-            {
-                return Iterables.unmodifiableIterable(
-                        this.entityMap.values().stream()
-                                      .filter(e -> list.contains(e.getUUID()))
-                                      .toList()
-                );
-            }
+            return Collections.emptyList();
         }
+
+        return Iterables.unmodifiableIterable(
+                this.entityMap.values().stream()
+                              .filter(e -> list.contains(e.getUUID()))
+                              .toList()
+        );
     }
 
     @Override
-    public synchronized @Nonnull Iterable<T> getAll()
+    public @Nonnull Iterable<T> getAll()
     {
         return Iterables.unmodifiableIterable(this.entityMap.values());
     }
 
     @Override
-    public synchronized void get(@Nonnull AABB box, @Nonnull Consumer<T> action)
+    public void get(@Nonnull AABB box, @Nonnull Consumer<T> action)
     {
         AABB adjBox = new AABB(box.minX-2, box.minY-4, box.minZ-2,
                                box.maxX+2, box.maxY+0, box.maxZ+2);
@@ -309,7 +304,7 @@ public class SchematicEntityLookup<T extends EntityAccess> implements LevelEntit
     }
 
     @Override
-    public synchronized <U extends T> void get(@Nonnull EntityTypeTest<T, U> filter, @Nonnull AABB box, @Nonnull AbortableIterationConsumer<U> consumer)
+    public <U extends T> void get(@Nonnull EntityTypeTest<T, U> filter, @Nonnull AABB box, @Nonnull AbortableIterationConsumer<U> consumer)
     {
         AABB adjBox = new AABB(box.minX-2, box.minY-4, box.minZ-2,
                                box.maxX+2, box.maxY+0, box.maxZ+2);
@@ -337,7 +332,7 @@ public class SchematicEntityLookup<T extends EntityAccess> implements LevelEntit
     }
 
     @Override
-    public synchronized <U extends T> void get(@Nonnull EntityTypeTest<T, U> filter, @Nonnull AbortableIterationConsumer<U> consumer)
+    public <U extends T> void get(@Nonnull EntityTypeTest<T, U> filter, @Nonnull AbortableIterationConsumer<U> consumer)
     {
         this.entityMap.forEach(
                 (id, e) ->
@@ -354,37 +349,26 @@ public class SchematicEntityLookup<T extends EntityAccess> implements LevelEntit
                 });
     }
 
-    public synchronized boolean contains(int id)
+    public boolean contains(int id)
     {
         return this.entityMap.containsKey(id);
     }
 
-    public synchronized boolean contains(UUID uuid)
+    public boolean contains(UUID uuid)
     {
         return this.uuidMap.containsKey(uuid);
     }
 
-    public synchronized boolean contains(ChunkPos pos)
+    public boolean contains(ChunkPos pos)
     {
         return this.chunkMap.containsKey(pos.pack());
     }
 
     protected void reset()
     {
-        synchronized (this.entityMap)
-        {
-            this.entityMap.clear();
-        }
-
-        synchronized (this.uuidMap)
-        {
-            this.uuidMap.clear();
-        }
-
-        synchronized (this.chunkMap)
-        {
-            this.chunkMap.clear();
-        }
+        this.entityMap.clear();
+        this.uuidMap.clear();
+        this.chunkMap.clear();
     }
 
     @Override
