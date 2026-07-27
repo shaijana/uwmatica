@@ -2,9 +2,9 @@ package fi.dy.masa.litematica.render.schematic;
 
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.ReentrantLock;
 import javax.annotation.Nullable;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.world.level.ChunkPos;
 
 import fi.dy.masa.litematica.Litematica;
@@ -15,23 +15,23 @@ import fi.dy.masa.litematica.world.WorldSchematic;
 public class ChunkRenderDispatcherSchematic
 {
     protected final ConcurrentHashMap<Long, ChunkRendererSchematicVbo> chunkRenderers;
+    protected final ConcurrentHashMap<Long, Boolean> pendingChunks;
     protected final IWorldSchematicRenderer renderer;
     protected final IChunkRendererFactory chunkRendererFactory;
     protected final WorldSchematic world;
     protected int viewDistanceChunks;
     protected int viewDistanceBlocksSq;
-    private final ReentrantLock lock;
 
     protected ChunkRenderDispatcherSchematic(WorldSchematic world, int viewDistanceChunks,
                                              IWorldSchematicRenderer worldRenderer,
                                              IChunkRendererFactory factory)
     {
         this.chunkRendererFactory = factory;
-        this.chunkRenderers = new ConcurrentHashMap<>(4096, 0.9f, 2);
+        this.chunkRenderers = new ConcurrentHashMap<>(1024, 0.9f, 2);
+        this.pendingChunks = new ConcurrentHashMap<>(1024, 0.9f, 2);
         this.renderer = worldRenderer;
         this.world = world;
         this.setViewDistanceChunks(viewDistanceChunks);
-        this.lock = new ReentrantLock();
     }
 
     protected void setViewDistanceChunks(int viewDistanceChunks)
@@ -43,86 +43,85 @@ public class ChunkRenderDispatcherSchematic
 
     protected void delete()
     {
-        this.lock.lock();
+        RenderSystem.assertOnRenderThread();
 
-        try
+        for (ChunkRendererSchematicVbo cr : this.chunkRenderers.values())
         {
-            for (Long key : this.chunkRenderers.keySet())
+//            ChunkRendererSchematicVbo chunkRenderer = this.chunkRenderers.get(key);
+            if (cr != null)
             {
-                ChunkRendererSchematicVbo chunkRenderer = this.chunkRenderers.get(key);
-
-                if (chunkRenderer != null)
-                {
-                    chunkRenderer.deleteGlResources();
-                }
+                cr.deleteGlResources();
             }
         }
-        finally
-        {
-            this.chunkRenderers.clear();
-            this.lock.unlock();
-        }
+
+        this.chunkRenderers.clear();
     }
 
-    private boolean rendererOutOfRange(ChunkRendererSchematicVbo cr)
+//    private boolean rendererOutOfRange(ChunkRendererSchematicVbo cr)
+//    {
+//        if (cr == null) return false;
+//
+//        if (cr.getDistanceSq() > this.viewDistanceBlocksSq || cr.isEmpty())     // Also remove "Empty" chunks, and clear resources.
+//        {
+//            try
+//            {
+//                cr.deleteGlResources();
+//            }
+//            catch (Exception ignored) {}
+//
+//            return true;
+//        }
+//
+//        return false;
+//    }
+
+    protected void removeOutOfRangeRenderers(@Nullable ChunkRenderGpuDispatcher uploaders)
     {
-        if (cr == null) return false;
+//        RenderSystem.assertOnRenderThread();
 
-        if (cr.getDistanceSq() > this.viewDistanceBlocksSq || cr.isEmpty())     // Also remove "Empty" chunks, and clear resources.
-        {
-            cr.deleteGlResources();
-            return true;
-        }
-
-        return false;
-    }
-
-    protected synchronized void removeOutOfRangeRenderers()
-    {
         if (!this.chunkRenderers.isEmpty())
         {
             int prevCount = this.chunkRenderers.size();
 
             try
             {
-                for (Long key : this.chunkRenderers.keySet())
-                {
-                    this.lock.lock();
-
-                    try
-                    {
-                        synchronized (this.chunkRenderers)
-                        {
-                            ChunkRendererSchematicVbo cr = this.chunkRenderers.get(key);
-
-                            if (this.rendererOutOfRange(cr))
-                            {
-                                try (ChunkRendererSchematicVbo cx = this.chunkRenderers.remove(key))
-                                {
-                                    cr.close();
-                                    cx.close();
-                                }
-                                catch (Exception e)
-                                {
-                                    if (Reference.DEBUG_MODE)
+                this.chunkRenderers.entrySet()
+                                   .removeIf(entry ->
                                     {
-                                        Litematica.debugLogError("removeOutOfRangeRenderers: mapRemove() threw an exception; {}", e.getLocalizedMessage());
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    finally
-                    {
-                        this.lock.unlock();
-                    }
-                }
+                                        ChunkRendererSchematicVbo cr = entry.getValue();
+
+                                        if (cr != null && (cr.getDistanceSq() > this.viewDistanceBlocksSq || cr.isEmpty()))
+                                        {
+                                            if (uploaders != null)
+                                            {
+                                                ChunkPos cp = cr.getChunkPos();
+                                                uploaders.removeUploader(cp.x(), cp.z());
+                                            }
+                                            try
+                                            {
+                                                cr.close();
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                if (Reference.DEBUG_MODE)
+                                                {
+                                                    Litematica.debugLog("removeOutOfRangeRenderers: cr.close() threw an exception; {}", e.getLocalizedMessage());
+                                                }
+                                            }
+
+                                            return true;
+                                        }
+                                        else
+                                        {
+                                            return false;
+                                        }
+                                    });
             }
             catch (Exception e)
             {
                 if (Reference.DEBUG_MODE)
                 {
-                    Litematica.debugLogError("removeOutOfRangeRenderers: keySet() threw an exception; {}", e.getLocalizedMessage());
+                    Litematica.debugLog("removeOutOfRangeRenderers: keySet() threw an exception; {}", e.getLocalizedMessage());
                 }
             }
 
@@ -133,10 +132,37 @@ public class ChunkRenderDispatcherSchematic
         }
     }
 
+    // Do not call getOrCreateChunkRenderer() from the PM Threads.  This is a work-around.
     // `immediate` is only to be used with 'setBlockDirty()`
     protected void scheduleChunkRender(int chunkX, int chunkZ, boolean immediate)
     {
-        this.getOrCreateChunkRenderer(chunkX, chunkZ).ifPresent(cr -> cr.setNeedsUpdate(immediate));
+//        this.getOrCreateChunkRenderer(chunkX, chunkZ).ifPresent(cr -> cr.setNeedsUpdate(immediate));
+        this.addPendingChunkRender(ChunkPos.pack(chunkX, chunkZ), immediate);
+    }
+
+    private void addPendingChunkRender(final Long chunk, boolean immediate)
+    {
+        this.pendingChunks.putIfAbsent(chunk, immediate);
+    }
+
+    private boolean getPendingChunk(final Long chunk)
+    {
+        if (this.pendingChunks.containsKey(chunk))
+        {
+            return this.pendingChunks.get(chunk);
+        }
+
+        return false;
+    }
+
+    private void removePendingChunk(final Long chunk)
+    {
+        this.pendingChunks.remove(chunk);
+    }
+
+    private boolean matchPendingChunk(final Long chunk)
+    {
+        return this.pendingChunks.containsKey(chunk);
     }
 
     protected int getRendererCount()
@@ -144,43 +170,58 @@ public class ChunkRenderDispatcherSchematic
         return this.chunkRenderers.size();
     }
 
+    protected int getPendingChunkCount()
+    {
+        return this.pendingChunks.size();
+    }
+
+    protected boolean hasRenderer(Long chunk)
+    {
+        return this.chunkRenderers.containsKey(chunk);
+    }
+
     protected Optional<ChunkRendererSchematicVbo> getOrCreateChunkRenderer(int chunkX, int chunkZ)
     {
-        long index = ChunkPos.pack(chunkX, chunkZ);
+        final long index = ChunkPos.pack(chunkX, chunkZ);
 
         try
         {
-            this.lock.lock();
-
-            try
+            if (!this.chunkRenderers.containsKey(index))
             {
-                if (!this.chunkRenderers.containsKey(index))
-                {
 //                Litematica.LOGGER.warn("[Dispatch] chunkRenderer[{}, {}] does not exist, factory create -->", chunkX, chunkZ);
-                    ChunkRendererSchematicVbo renderer = this.chunkRendererFactory.create(this.world, this.renderer);
+                ChunkRendererSchematicVbo renderer = this.chunkRendererFactory.create(this.world, this.renderer);
 
-                    renderer.setPosition(chunkX << 4, this.world.getMinY(), chunkZ << 4);
-                    renderer.setChunkPosition(chunkX, chunkZ);
-                    renderer.setNeedsUpdate(false);         // Not an immediate update
+                renderer.setPosition(chunkX << 4, this.world.getMinY(), chunkZ << 4);
+                renderer.setChunkPosition(chunkX, chunkZ);
 
-                    synchronized (this.chunkRenderers)
-                    {
-                        this.chunkRenderers.put(index, renderer);
-                    }
+                if (this.matchPendingChunk(index))
+                {
+                    renderer.setNeedsUpdate(this.getPendingChunk(index));
+                    this.removePendingChunk(index);
                 }
-            }
-            finally
-            {
-                this.lock.unlock();
+                else
+                {
+                    renderer.setNeedsUpdate(false);         // Not an immediate update
+                }
+
+                this.chunkRenderers.put(index, renderer);
             }
 
-            return Optional.of(this.chunkRenderers.get(index));
+            ChunkRendererSchematicVbo renderer = this.chunkRenderers.get(index);
+
+            if (renderer != null && this.matchPendingChunk(index))
+            {
+                renderer.setNeedsUpdate(this.getPendingChunk(index));
+                this.removePendingChunk(index);
+            }
+
+            return Optional.ofNullable(renderer);
         }
         catch (Exception e)
         {
             if (Reference.DEBUG_MODE)
             {
-                Litematica.debugLogError("getOrCreateChunkRenderer: Exception obtaining a Chunk Renderer; {}", e.getLocalizedMessage());
+                Litematica.debugLog("getOrCreateChunkRenderer: Exception obtaining a Chunk Renderer; {}", e.getLocalizedMessage());
             }
         }
 

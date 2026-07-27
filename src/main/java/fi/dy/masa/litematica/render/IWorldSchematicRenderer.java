@@ -24,6 +24,7 @@ import net.minecraft.client.renderer.state.level.LevelRenderState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.LightCoordsUtil;
 import net.minecraft.util.RandomSource;
+import net.minecraft.util.debug.DebugValueAccess;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.state.BlockState;
@@ -31,9 +32,8 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.Vec3;
 
 import fi.dy.masa.malilib.render.uniform.ChunkFixUniform;
-import fi.dy.masa.litematica.render.schematic.BlockModelRendererSchematic;
-import fi.dy.masa.litematica.render.schematic.IBlockOutputSchematic;
-import fi.dy.masa.litematica.render.schematic.SchematicRenderState;
+import fi.dy.masa.litematica.render.schematic.*;
+import fi.dy.masa.litematica.util.invoker.IEntityHitboxDebugRendererInvoker;
 import fi.dy.masa.litematica.world.ChunkSchematicState;
 import fi.dy.masa.litematica.world.WorldSchematic;
 
@@ -61,11 +61,9 @@ public interface IWorldSchematicRenderer
 
 	ProfilerFiller getProfiler();
 
-	BlockModelRendererSchematic getBlockRenderer();
+	ChunkRenderGpuDispatcher getChunkRendererGpuDispatcher();
 
 	BlockEntityRenderDispatcher getBlockEntityRenderer();
-
-	FluidRenderer getFluidRenderer();
 
 	EntityRenderDispatcher getEntityRenderer();
 
@@ -97,9 +95,9 @@ public interface IWorldSchematicRenderer
 
 	List<BlockStateModelPart> getModelParts(BlockPos pos, BlockState state, RandomSource rand);
 
-	boolean renderBlock(BlockAndTintGetter world, BlockState state, BlockPos pos, Vec3 offset, IBlockOutputSchematic output);
+	boolean renderBlock(BlockModelRendererSchematic renderer, BlockAndTintGetter world, BlockState state, BlockPos pos, Vec3 offset, IBlockOutputSchematic output);
 
-	boolean renderFluid(BlockAndTintGetter world, BlockState blockState, FluidState fluidState, BlockPos pos, FluidRenderer.Output output, final float offsetY);
+	boolean renderFluid(FluidModelRendererSchematic renderer, BlockAndTintGetter world, BlockState blockState, FluidState fluidState, BlockPos pos, FluidRenderer.Output output, final float offsetY);
 
 	void drawBlockLayerGroup(ChunkSectionLayerGroup group, @Nullable GpuSampler sampler);
 
@@ -125,9 +123,19 @@ public interface IWorldSchematicRenderer
 
 	ChunkFixUniform getChunkFixUniform();
 
+//	LegacyTerrainFixUniform getLegacyTerrainFixUniform();
+
+	GpuSampler getGpuSampler();
+
+	void closeGpuSampler();
+
 	void clearChunkFixUniform();
 
+//	void clearLegacyTerrainFixUniform();
+
 	void clearWorldRenderStates();
+
+	void renderEntityDebugHitboxes(IEntityHitboxDebugRendererInvoker invoker, double cameraX, double cameraY, double cameraZ, DebugValueAccess debugValueAccess, Frustum frustum, float ticks);
 
 	static int getLightmap(BlockAndTintGetter world, BlockPos pos)
 	{
@@ -136,7 +144,7 @@ public interface IWorldSchematicRenderer
 
 	static int getLightmap(LightGetter getter, BlockAndTintGetter world, BlockState state, BlockPos pos)
 	{
-		if (state.emissiveRendering(world, pos))
+		if (state.emissiveRendering())
 		{
 			return 15728880;
 		}

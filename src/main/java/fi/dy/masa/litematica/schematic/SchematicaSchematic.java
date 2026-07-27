@@ -14,7 +14,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.boss.enderdragon.EnderDragonPart;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.Mirror;
@@ -39,7 +39,10 @@ import fi.dy.masa.litematica.schematic.container.LitematicaBlockStateContainer;
 import fi.dy.masa.litematica.schematic.conversion.SchematicConversionFixers.IStateFixer;
 import fi.dy.masa.litematica.schematic.conversion.SchematicConversionMaps;
 import fi.dy.masa.litematica.schematic.conversion.SchematicConverter;
-import fi.dy.masa.litematica.util.*;
+import fi.dy.masa.litematica.util.DataFixerMode;
+import fi.dy.masa.litematica.util.EntityUtils;
+import fi.dy.masa.litematica.util.FileType;
+import fi.dy.masa.litematica.util.PositionUtils;
 import fi.dy.masa.litematica.world.ChunkSchematic;
 import fi.dy.masa.litematica.world.ChunkSchematicState;
 import fi.dy.masa.litematica.world.WorldSchematic;
@@ -417,10 +420,11 @@ public class SchematicaSchematic
     private void readEntitiesFromWorld(Level world, BlockPos posStart, BlockPos size)
     {
         this.entities.clear();
-        List<Entity> entities = world.getEntities((Entity) null, PositionUtils.createEnclosingAABB(posStart, posStart.offset(size)), (e) -> (e instanceof Player) == false);
+        List<Entity> entities = world.getEntities((Entity) null, PositionUtils.createEnclosingAABB(posStart, posStart.offset(size)), EntityUtils.NOT_PLAYER);
 
         for (Entity entity : entities)
         {
+            if (entity instanceof EnderDragonPart) { continue; }
             NbtView view = NbtView.getWriter(world.registryAccess());
             entity.saveWithoutId(view.getWriter());
             CompoundTag nbt = view.readNbt();
@@ -451,13 +455,6 @@ public class SchematicaSchematic
         }
 
         return schematic;
-    }
-
-    @Deprecated
-    @Nullable
-    public static SchematicaSchematic createFromFile(File file)
-    {
-        return createFromFile(file.toPath());
     }
 
     @Nullable
