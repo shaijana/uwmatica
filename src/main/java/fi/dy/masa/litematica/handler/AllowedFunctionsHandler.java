@@ -130,6 +130,36 @@ public class AllowedFunctionsHandler {
 			Hotkeys.UNLOAD_CURRENT_SCHEMATIC
 	);
 
+	public static final List<IHotkey> ALLOWED_VISUALS_HOTKEYS = ImmutableList.of( //Shaijana
+			Configs.Visuals.ENABLE_RENDERING,
+			Configs.Visuals.ENABLE_SCHEMATIC_RENDERING,
+			Configs.Visuals.ENABLE_AREA_SELECTION_RENDERING,
+			Configs.Visuals.ENABLE_PLACEMENT_BOXES_RENDERING,
+			Configs.Visuals.ENABLE_SCHEMATIC_BLOCKS,
+			Configs.Visuals.ENABLE_SCHEMATIC_FLUIDS,
+			Configs.Visuals.ENABLE_SCHEMATIC_ENTITY_HITBOXES,
+			Configs.Visuals.ENABLE_SCHEMATIC_FAKE_LIGHTING,
+			Configs.Visuals.ENABLE_SCHEMATIC_OVERLAY,
+			Configs.Visuals.ENABLE_SCHEMATIC_OVERLAY_CULLING,
+			Configs.Visuals.OVERLAY_REDUCED_INNER_SIDES,
+			Configs.Visuals.RENDER_AO_MODERN_ENABLE,
+			Configs.Visuals.RENDER_BLOCKS_AS_TRANSLUCENT,
+			Configs.Visuals.RENDER_COLLIDING_SCHEMATIC_BLOCKS,
+			Configs.Visuals.RENDER_SCHEMATIC_ENTITIES,
+			Configs.Visuals.RENDER_SCHEMATIC_TILE_ENTITIES,
+			Configs.Visuals.RENDER_TRANSLUCENT_INNER_SIDES,
+			Configs.Visuals.SCHEMATIC_OVERLAY_ENABLE_OUTLINES,
+			Configs.Visuals.SCHEMATIC_OVERLAY_ENABLE_SIDES,
+			Configs.Visuals.SCHEMATIC_OVERLAY_MODEL_OUTLINE,
+			Configs.Visuals.SCHEMATIC_OVERLAY_MODEL_SIDES,
+			Configs.Visuals.SCHEMATIC_OVERLAY_RENDER_THROUGH,
+			Configs.Visuals.SCHEMATIC_OVERLAY_TYPE_DIFF_BLOCK,
+			Configs.Visuals.SCHEMATIC_OVERLAY_TYPE_EXTRA,
+			Configs.Visuals.SCHEMATIC_OVERLAY_TYPE_MISSING,
+			Configs.Visuals.SCHEMATIC_OVERLAY_TYPE_WRONG_BLOCK,
+			Configs.Visuals.SCHEMATIC_OVERLAY_TYPE_WRONG_STATE
+	);
+
 	private static final HashSet<Block> forbiddenBlocks = new HashSet<>(Arrays.asList(
 			Blocks.DIAMOND_ORE,
 			Blocks.IRON_ORE,

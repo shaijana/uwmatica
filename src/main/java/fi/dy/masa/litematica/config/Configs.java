@@ -40,7 +40,7 @@ public class Configs implements IConfigHandler
     private static final String CONFIG_FILE_NAME = Reference.MOD_ID + ".json";
     public static final Optional<i18nManager> LANG = Optional.ofNullable(i18nManager.create(Reference.MOD_ID));
 
-    private static final String GENERIC_KEY = Reference.MOD_ID+".config.generic";
+    private static final String GENERIC_KEY = Reference.LITEMATICA_MOD_ID+".config.generic"; //Shaijana
     public static class Generic
     {
 	    public static final ConfigOptionList    DEBUG_HUD_MODE              = new ConfigOptionList("debugHudMode", DebugHudMode.DEFAULT).apply(GENERIC_KEY);
@@ -246,7 +246,7 @@ public class Configs implements IConfigHandler
         );
     }
 
-    private static final String VISUALS_KEY = Reference.MOD_ID+".config.visuals";
+    private static final String VISUALS_KEY = Reference.LITEMATICA_MOD_ID+".config.visuals"; //Shaijana
     public static class Visuals
     {
         public static final ConfigBooleanHotkeyed ENABLE_AREA_SELECTION_RENDERING   = new ConfigBooleanHotkeyed("enableAreaSelectionBoxesRendering", true, "").apply(VISUALS_KEY);
@@ -374,7 +374,7 @@ public class Configs implements IConfigHandler
         );
     }
 
-    private static final String INFO_OVERLAYS_KEY = Reference.MOD_ID+".config.info_overlays";
+    private static final String INFO_OVERLAYS_KEY = Reference.LITEMATICA_MOD_ID+".config.info_overlays"; //Shaijana
     public static class InfoOverlays
     {
         public static final ConfigOptionList    BLOCK_INFO_LINES_ALIGNMENT          = new ConfigOptionList("blockInfoLinesAlignment", HudAlignment.TOP_RIGHT).apply(INFO_OVERLAYS_KEY);
@@ -440,7 +440,7 @@ public class Configs implements IConfigHandler
         );
     }
 
-    private static final String COLORS_KEY = Reference.MOD_ID+".config.colors";
+    private static final String COLORS_KEY = Reference.LITEMATICA_MOD_ID+".config.colors"; //Shaijana
     public static class Colors
     {
         public static final ConfigColor AREA_SELECTION_BOX_SIDE_COLOR       = new ConfigColor("areaSelectionBoxSideColor",          "#30FFFFFF").apply(COLORS_KEY);

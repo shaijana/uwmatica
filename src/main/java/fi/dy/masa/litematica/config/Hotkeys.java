@@ -8,7 +8,7 @@ import fi.dy.masa.litematica.Reference;
 
 public class Hotkeys
 {
-    private static final String HOTKEYS_KEY = Reference.MOD_ID+".config.hotkeys";
+    private static final String HOTKEYS_KEY = Reference.LITEMATICA_MOD_ID+".config.hotkeys"; //Shaijana
 
     public static final ConfigHotkey ADD_SELECTION_BOX                  = new ConfigHotkey("addSelectionBox",                   "M,A").apply(HOTKEYS_KEY);
     public static final ConfigHotkey CLONE_SELECTION                    = new ConfigHotkey("cloneSelection",                    "").apply(HOTKEYS_KEY);
