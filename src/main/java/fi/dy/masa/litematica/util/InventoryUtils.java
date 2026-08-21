@@ -2,7 +2,11 @@ package fi.dy.masa.litematica.util;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import javax.annotation.Nullable;
+import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.ApiStatus;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
@@ -22,19 +26,22 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import fi.dy.masa.malilib.render.InventoryOverlayContext;
-import fi.dy.masa.malilib.render.InventoryOverlayRefresher;
-import fi.dy.masa.malilib.util.data.tag.CompoundData;
-import fi.dy.masa.malilib.util.data.tag.converter.DataConverterNbt;
-import org.apache.commons.lang3.tuple.Pair;
-import org.jetbrains.annotations.ApiStatus;
+
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.render.InventoryOverlay;
+import fi.dy.masa.malilib.render.InventoryOverlayContext;
+import fi.dy.masa.malilib.render.InventoryOverlayRefresher;
 import fi.dy.masa.malilib.util.EquipmentUtils;
 import fi.dy.masa.malilib.util.InfoUtils;
+import fi.dy.masa.malilib.util.data.tag.CompoundData;
+import fi.dy.masa.malilib.util.data.tag.ListData;
+import fi.dy.masa.malilib.util.data.tag.converter.DataConverterNbt;
+import fi.dy.masa.malilib.util.game.BlockUtils;
+import fi.dy.masa.malilib.util.nbt.NbtInventory;
+import fi.dy.masa.malilib.util.nbt.NbtKeys;
 import fi.dy.masa.litematica.config.Configs;
-import fi.dy.masa.litematica.data.EntitiesDataStorage;
+import fi.dy.masa.litematica.data.EntityDataManager;
 import fi.dy.masa.litematica.world.WorldSchematic;
 
 public class InventoryUtils
@@ -254,7 +261,7 @@ public class InventoryUtils
                 if (GuiBase.isCtrlDown() && te != null && mc.level.isEmptyBlock(pos))
                 {
                     //te.setStackNbt(stack, schematicWorld.getRegistryManager());
-                    fi.dy.masa.malilib.util.game.BlockUtils.setStackNbt(stack, te, schematicWorld.registryAccess());
+                    BlockUtils.setStackNbt(stack, te, schematicWorld.registryAccess());
                     //stack.set(DataComponentTypes.LORE, new LoreComponent(ImmutableList.of(Text.of("(+NBT)"))));
                 }
 
@@ -305,7 +312,6 @@ public class InventoryUtils
         return (Configs.Generic.PICK_BLOCK_AVOID_DAMAGEABLE.getBooleanValue() == false ||
                 stack.isDamageableItem() == false) &&
                (Configs.Generic.PICK_BLOCK_AVOID_TOOLS.getBooleanValue() == false ||
-                //(stack.getItem() instanceof MiningToolItem) == false);
                 (EquipmentUtils.isRegularTool(stack)) == false);
     }
 
@@ -433,6 +439,15 @@ public class InventoryUtils
 
         if (blockTmp instanceof EntityBlock)
         {
+			Optional<NbtInventory> combinedInv = getCombinedInventory(world, pos);
+			ListData list = null;
+
+			if (combinedInv.isPresent())
+			{
+				NbtInventory inventory = combinedInv.get();
+				list = inventory.sorted().toDataList(world.registryAccess());
+			}
+
             if (world instanceof ServerLevel || world instanceof WorldSchematic)
             {
                 be = world.getChunkAt(pos).getBlockEntity(pos);
@@ -440,20 +455,32 @@ public class InventoryUtils
                 if (be != null)
                 {
 					data = DataConverterNbt.fromVanillaCompound(be.saveWithFullMetadata(world.registryAccess()));
+
+					if (list != null && !list.isEmpty())
+					{
+						data.remove(NbtKeys.ITEMS);
+						data.put(NbtKeys.ITEMS, list);
+					}
                 }
             }
             else
             {
-                Pair<BlockEntity, CompoundData> pair = EntitiesDataStorage.getInstance().requestBlockEntity(world, pos);
+                Pair<BlockEntity, CompoundData> pair = EntityDataManager.getInstance().requestBlockEntityWrapped(world, pos);
 
                 if (pair != null)
                 {
 					data = pair.getRight();
                     be = pair.getLeft();
+
+	                if (list != null && !list.isEmpty())
+	                {
+		                data.remove(NbtKeys.ITEMS);
+		                data.put(NbtKeys.ITEMS, list);
+	                }
                 }
             }
 
-//            Litematica.LOGGER.warn("getTarget():2: pos [{}], be [{}], nbt [{}]", pos.toShortString(), be != null, nbt != null);
+//            Litematica.LOGGER.warn("getTarget():2: pos [{}], be [{}], nbt [{}]", pos.toShortString(), be != null, data != null);
             InventoryOverlayContext ctx = getTargetInventoryFromBlock(world, pos, be, data);
 
             if (world instanceof WorldSchematic)
@@ -496,7 +523,7 @@ public class InventoryUtils
         {
             if (data.isEmpty())
             {
-                Pair<BlockEntity, CompoundData> pair = EntitiesDataStorage.getInstance().requestBlockEntity(world, pos);
+                Pair<BlockEntity, CompoundData> pair = EntityDataManager.getInstance().requestBlockEntityWrapped(world, pos);
 
                 if (pair != null)
                 {
@@ -504,7 +531,7 @@ public class InventoryUtils
                 }
             }
 
-            inv = EntitiesDataStorage.getInstance().getBlockInventory(world, pos, false);
+            inv = EntityDataManager.getInstance().getBlockInventoryWrapped(world, pos, true);
         }
 
         if (data != null && !data.isEmpty())
@@ -517,8 +544,22 @@ public class InventoryUtils
             }
         }
 
-//        Litematica.LOGGER.warn("getTarget(): [SchematicWorld? {}] pos [{}], inv [{}], be [{}], nbt [{}]", world instanceof WorldSchematic ? "YES" : "NO", pos.toShortString(), inv != null, be != null, nbt != null ? nbt.getString("id") : new NbtCompound());
+//        Litematica.LOGGER.warn("getTarget(): [SchematicWorld? {}] pos [{}], inv [{}], be [{}], nbt [{}]", world instanceof WorldSchematic ? "YES" : "NO", pos.toShortString(), inv != null, be != null, data != null ? data.getString("id") : new CompoundData());
 
+	    if (be == null)
+	    {
+		    be = world.getBlockEntity(pos);
+
+		    if (inv == null || inv.isEmpty())
+		    {
+			    if (be instanceof Container cc)
+			    {
+				    inv = cc;
+			    }
+		    }
+	    }
+
+		// Continue showing nothing when null
         if (inv == null || data == null)
         {
             return null;
@@ -552,66 +593,88 @@ public class InventoryUtils
         }
     }
 
-    /**
-     * Converts an NbtCompound representation of an ItemStack into a '/give' compatible string.
-     * This is the format used by the ItemStringReader(), including Data Components.
-     *
-     * @param nbt (Nbt Input, must be valid ItemStack.encode() format)
-     * @return (The String Result | NULL if the NBT is invalid)
-     */
-    @Nullable
-    public static String convertItemNbtToString(CompoundTag nbt)
-    {
-        StringBuilder result = new StringBuilder();
+	public static Optional<NbtInventory> getCombinedInventory(Level world, BlockPos pos)
+	{
+		Container inv;
 
-        if (nbt.isEmpty())
-        {
-            return null;
-        }
+		if (world instanceof ServerLevel || world instanceof WorldSchematic)
+		{
+			inv = fi.dy.masa.malilib.util.InventoryUtils.getInventory(world, pos);
+		}
+		else
+		{
+			inv = EntityDataManager.getInstance().getBlockInventoryWrapped(world, pos, false);
+		}
 
-        if (nbt.contains("id"))
-        {
-            result.append(nbt.getStringOr("id", "?"));
-        }
-        else
-        {
-            return null;
-        }
-        if (nbt.contains("components"))
-        {
-            CompoundTag components = nbt.getCompoundOrEmpty("components");
-            int count = 0;
+		if (inv != null && inv.getContainerSize() >= NbtInventory.DEFAULT_SIZE)
+		{
+			return Optional.of(NbtInventory.fromInventory(inv));
+		}
 
-            result.append("[");
+		return Optional.empty();
+	}
 
-            for (String key : components.keySet())
-            {
-                if (count > 0)
-                {
-                    result.append(", ");
-                }
+	/**
+	 * Converts an NbtCompound representation of an ItemStack into a '/give' compatible string.
+	 * This is the format used by the ItemStringReader(), including Data Components.
+	 *
+	 * @param nbt (Nbt Input, must be valid ItemStack.encode() format)
+	 * @return (The String Result | NULL if the NBT is invalid)
+	 */
+	@Deprecated(forRemoval = true)
+	@Nullable
+	public static String convertItemNbtToString(CompoundTag nbt)
+	{
+		StringBuilder result = new StringBuilder();
 
-                result.append(key);
-                result.append("=");
-                result.append(components.get(key));
-                count++;
-            }
+		if (nbt.isEmpty())
+		{
+			return null;
+		}
 
-            result.append("]");
-        }
-        if (nbt.contains("count"))
-        {
-            int count = nbt.getIntOr("count", 1);
+		if (nbt.contains("id"))
+		{
+			result.append(nbt.getStringOr("id", "?"));
+		}
+		else
+		{
+			return null;
+		}
+		if (nbt.contains("components"))
+		{
+			CompoundTag components = nbt.getCompoundOrEmpty("components");
+			int count = 0;
 
-            if (count > 1)
-            {
-                result.append(" ");
-                result.append(count);
-            }
-        }
+			result.append("[");
 
-        return result.toString();
-    }
+			for (String key : components.keySet())
+			{
+				if (count > 0)
+				{
+					result.append(", ");
+				}
+
+				result.append(key);
+				result.append("=");
+				result.append(components.get(key));
+				count++;
+			}
+
+			result.append("]");
+		}
+		if (nbt.contains("count"))
+		{
+			int count = nbt.getIntOr("count", 1);
+
+			if (count > 1)
+			{
+				result.append(" ");
+				result.append(count);
+			}
+		}
+
+		return result.toString();
+	}
 
     /**
      * Post Re-Write Code

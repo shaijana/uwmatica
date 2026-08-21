@@ -5,9 +5,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.apache.logging.log4j.Logger;
+import org.jspecify.annotations.NonNull;
 
+import com.mojang.blaze3d.IndexType;
 import com.mojang.blaze3d.vertex.MeshData;
-import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.chunk.VisGraph;
 import net.minecraft.client.renderer.chunk.VisibilitySet;
@@ -32,9 +33,69 @@ public class ChunkMeshDataSchematic implements AutoCloseable
 	public static final ChunkMeshDataSchematic EMPTY = new ChunkMeshDataSchematic()
 	{
 		@Override
+		protected void saveMeshData(ChunkSectionLayer layer, @NonNull MeshData meshData)
+		{
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		protected void saveMeshData(OverlayRenderType type, @NonNull MeshData meshData)
+		{
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
 		public boolean canSeeEachOther(final Direction direction1, final Direction direction2)
 		{
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public boolean isEmpty()
+		{
 			return true;
+		}
+
+		@Override
+		protected void addBlockEntity(BlockEntity be)
+		{
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		protected void addNoCullBlockEntity(BlockEntity be)
+		{
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		protected void setTransparentSortingDataForBlockLayer(ChunkSectionLayer layer, MeshData.@NonNull SortState transparentSortingData)
+		{
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		protected void setTransparentSortingDataForOverlay(OverlayRenderType type, MeshData.@NonNull SortState transparentSortingData)
+		{
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		protected void compileLayerDrawStates(Set<ChunkSectionLayer> blockLayersUsed)
+		{
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		protected void compileOverlayDrawStates(Set<OverlayRenderType> overlaysUsed)
+		{
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		protected void updateVisibility(VisGraph visGraph)
+		{
+			throw new UnsupportedOperationException();
 		}
 	};
 
@@ -346,7 +407,7 @@ public class ChunkMeshDataSchematic implements AutoCloseable
 		this.clearAll();
 	}
 
-	public record DrawState(int indexCount, VertexFormat.IndexType indexType, boolean hasIndexBuffer)
+	public record DrawState(int indexCount, IndexType indexType, boolean hasIndexBuffer)
 	{
 	}
 

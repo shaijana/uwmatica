@@ -8,6 +8,9 @@
 	"authors": [
 		"shaijana"
 	],
+	"contributors": [
+		"Sakura-Ryoko"
+	],
 	"contact": {
 		"homepage": "https://unlimitedworld.de/members/shaijana.7644/",
 		"issues": "https://github.com/shaijana/uwmatica/issues",
@@ -33,12 +36,10 @@
     "accessWidener": "litematica.accesswidener",
 
 	"depends": {
-		"minecraft": "26.1",
-		"malilib": ">=0.28.1- <0.29.0-"
+		"minecraft": "~26.2-",
+		"malilib": ">=0.29.4- <0.30.0-"
 	},
 	"breaks": {
-		"malilib": "<0.28.1-",
-		"sodium": "<0.8.7-",
-		"iris": "<1.10.8-"
+		"malilib": "<0.29.4-"
 	}
 }

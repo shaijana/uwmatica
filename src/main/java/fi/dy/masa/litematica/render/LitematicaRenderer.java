@@ -1,6 +1,7 @@
 package fi.dy.masa.litematica.render;
 
 import javax.annotation.Nullable;
+import org.apache.logging.log4j.Logger;
 import org.joml.Matrix4fc;
 
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
@@ -15,20 +16,23 @@ import net.minecraft.client.renderer.chunk.ChunkSectionLayerGroup;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.state.level.LevelRenderState;
+import net.minecraft.util.debug.DebugValueAccess;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.phys.Vec3;
 
 import fi.dy.masa.malilib.compat.iris.IrisCompat;
+import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.Reference;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.config.Hotkeys;
 import fi.dy.masa.litematica.render.schematic.WorldRendererSchematic;
+import fi.dy.masa.litematica.util.invoker.IEntityHitboxDebugRendererInvoker;
 import fi.dy.masa.litematica.world.WorldSchematic;
 
 public class LitematicaRenderer
 {
     private static final LitematicaRenderer INSTANCE = new LitematicaRenderer();
-//    private static final Logger LOGGER = Litematica.LOGGER;
+    private static final Logger LOGGER = Litematica.LOGGER;
 
     private Minecraft mc;
     private IWorldSchematicRenderer worldRenderer;
@@ -41,6 +45,7 @@ public class LitematicaRenderer
     private boolean renderPiecewiseBlocks;
     private boolean renderPiecewiseEntities;
     private boolean renderPiecewiseTileEntities;
+    private boolean renderEntityDebugHitboxes;
 
     public static LitematicaRenderer getInstance()
     {
@@ -79,6 +84,11 @@ public class LitematicaRenderer
     public void onSchematicWorldChanged(@Nullable WorldSchematic worldClient)
     {
         this.getWorldRenderer().setWorldAndLoadRenderers(worldClient);
+
+        if (worldClient != null)
+        {
+            this.onResourcePackReload();
+        }
     }
 
 	public void onResourcePackReload()
@@ -106,15 +116,38 @@ public class LitematicaRenderer
 
     public void onEndFrame()
     {
+//        Litematica.LOGGER.error("LitematicaRenderer.onEndFrame()");
         // Don't initialize early.
         if (this.worldRenderer == null) { return; }
-        if (this.getWorldRenderer().getChunkFixUniform() == null) { return; }
-        this.getWorldRenderer().getChunkFixUniform().endFrame();
+
+        if (this.getWorldRenderer().getChunkFixUniform() != null)
+        {
+            this.getWorldRenderer().getChunkFixUniform().endFrame();
+        }
+//        if (this.getWorldRenderer().getLegacyTerrainFixUniform() != null)
+//        {
+//            this.getWorldRenderer().getLegacyTerrainFixUniform().endFrame();
+//        }
+
+        // Why Iris?
+        if (IrisCompat.isShaderActive())
+        {
+            this.getWorldRenderer().getFogRenderer().endFrame();        // (This is fixing the Vanilla Fog Renderer, btw)
+        }
     }
 
     public void onClose()
     {
+//        Litematica.LOGGER.error("LitematicaRenderer.onClose()");
         this.getWorldRenderer().clearChunkFixUniform();
+//        this.getWorldRenderer().clearLegacyTerrainFixUniform();
+        this.getWorldRenderer().closeGpuSampler();
+
+        // Why Iris?
+        if (IrisCompat.isShaderActive())
+        {
+            this.getWorldRenderer().getFogRenderer().close();           // (This is fixing the Vanilla Fog Renderer, btw)
+        }
     }
 
     public void renderSchematicOverlays(Camera camera, ProfilerFiller profiler)
@@ -144,9 +177,31 @@ public class LitematicaRenderer
 		this.getWorldRenderer().updateCameraState(camera, tickProgress, cameraState);
 	}
 
+    public void updateConfigState()
+    {
+        boolean render = Configs.Visuals.ENABLE_RENDERING.getBooleanValue();
+        this.renderPiecewiseSchematic = false;
+        this.renderPiecewiseBlocks = false;
+        this.renderPiecewiseEntities = false;
+        this.renderPiecewiseTileEntities = false;
+        this.camera = null;
+        this.frustum = null;
+
+        if (render)
+        {
+            boolean invert = Hotkeys.INVERT_GHOST_BLOCK_RENDER_STATE.getKeybind().isKeybindHeld();
+            this.renderPiecewiseSchematic = Configs.Visuals.ENABLE_SCHEMATIC_RENDERING.getBooleanValue() != invert;
+            this.renderPiecewiseBlocks = this.renderPiecewiseSchematic && Configs.Visuals.ENABLE_SCHEMATIC_BLOCKS.getBooleanValue();
+//            this.renderCollidingSchematicBlocks = Configs.Visuals.RENDER_COLLIDING_SCHEMATIC_BLOCKS.getBooleanValue();
+            this.renderPiecewiseEntities = this.renderPiecewiseSchematic && Configs.Visuals.RENDER_SCHEMATIC_ENTITIES.getBooleanValue();
+            this.renderPiecewiseTileEntities = this.renderPiecewiseSchematic && Configs.Visuals.RENDER_SCHEMATIC_TILE_ENTITIES.getBooleanValue();
+            this.renderEntityDebugHitboxes = this.renderPiecewiseEntities && Configs.Visuals.ENABLE_SCHEMATIC_ENTITY_HITBOXES.getBooleanValue();
+        }
+    }
+
     public void piecewisePrepare(Frustum frustum, ProfilerFiller profiler)
     {
-        //LOGGER.error("[LR] piecewisePrepare()");
+//        LOGGER.error("[LR] piecewisePrepare()");
 		// Configs.Generic.BETTER_RENDER_ORDER.getBooleanValue() &&
         boolean render = Configs.Visuals.ENABLE_RENDERING.getBooleanValue() &&
                          this.mc.getCameraEntity() != null;
@@ -166,6 +221,7 @@ public class LitematicaRenderer
 //            this.renderCollidingSchematicBlocks = Configs.Visuals.RENDER_COLLIDING_SCHEMATIC_BLOCKS.getBooleanValue();
             this.renderPiecewiseEntities = this.renderPiecewiseSchematic && Configs.Visuals.RENDER_SCHEMATIC_ENTITIES.getBooleanValue();
             this.renderPiecewiseTileEntities = this.renderPiecewiseSchematic && Configs.Visuals.RENDER_SCHEMATIC_TILE_ENTITIES.getBooleanValue();
+            this.renderEntityDebugHitboxes = this.renderPiecewiseEntities && Configs.Visuals.ENABLE_SCHEMATIC_ENTITY_HITBOXES.getBooleanValue();
 
             if (this.renderPiecewiseSchematic)
             {
@@ -179,6 +235,14 @@ public class LitematicaRenderer
 //                profiler.popPush(Reference.MOD_ID+"_update_chunks");
 //                worldRenderer.updateChunks(this.finishTimeNano, profiler);
 
+//                if (IrisCompat.isShaderActive())
+//                {
+//                    profiler.popPush(Reference.MOD_ID+"_update_chunks");
+//                    worldRenderer.updateChunks(this.finishTimeNano, profiler);
+//                    profiler.popPush(Reference.MOD_ID + "_schedule_translucent_sorting");
+//                    worldRenderer.scheduleTranslucentSorting(this.getCamera().position(),  profiler);
+//                }
+
                 profiler.pop();
 
                 this.frustum = frustum;
@@ -188,7 +252,7 @@ public class LitematicaRenderer
 
     public void piecewiseUpdate(Camera camera, ProfilerFiller profiler)
     {
-        //LOGGER.error("[LR] piecewiseUpdate()");
+//        LOGGER.error("[LR] piecewiseUpdate()");
         if (this.renderPiecewiseSchematic)
         {
             profiler.push(Reference.MOD_ID+"_update_chunks");
@@ -211,7 +275,6 @@ public class LitematicaRenderer
     public void scheduleTranslucentSorting(Vec3 camera, ProfilerFiller profiler)
     {
         //LOGGER.error("[LR] scheduleTranslucentSorting()");
-
         if (this.renderPiecewiseBlocks)
         {
             profiler.push(Reference.MOD_ID + "_schedule_translucent_sorting");
@@ -327,11 +390,21 @@ public class LitematicaRenderer
         this.cleanup();
     }
 
+    public void renderEntityDebugHitboxes(IEntityHitboxDebugRendererInvoker invoker, double cameraX, double cameraY, double cameraZ, DebugValueAccess debugValueAccess, Frustum frustum, float ticks, ProfilerFiller profiler)
+    {
+        if (this.renderEntityDebugHitboxes || Configs.Visuals.ENABLE_SCHEMATIC_ENTITY_HITBOXES.getBooleanValue())
+        {
+            profiler.push(Reference.MOD_ID+"_render_entity_hitboxes");
+            this.getWorldRenderer().renderEntityDebugHitboxes(invoker, cameraX, cameraY, cameraZ, debugValueAccess, frustum, ticks);
+            profiler.pop();
+        }
+    }
+
     private Camera getCamera()
     {
 	    if (this.camera == null)
         {
-            this.camera = this.mc.gameRenderer.getMainCamera();
+            this.camera = this.mc.gameRenderer.mainCamera();
         }
 
         return this.camera;
@@ -349,5 +422,6 @@ public class LitematicaRenderer
         this.renderPiecewiseBlocks = false;
         this.renderPiecewiseEntities = false;
         this.renderPiecewiseTileEntities = false;
+        this.renderEntityDebugHitboxes = false;
     }
 }

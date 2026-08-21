@@ -1,9 +1,10 @@
 plugins {
-	id 'net.fabricmc.fabric-loom' version '1.15.+'
+	id 'net.fabricmc.fabric-loom' version '1.17.+'
 	id 'maven-publish'
 }
 
 repositories {
+	mavenLocal()
 	maven { url = "https://masa.dy.fi/maven/sakura-ryoko"
 		content {includeGroupAndSubgroups("fi.dy.masa")}
 	}
@@ -21,7 +22,6 @@ repositories {
 
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-//    mappings loom.officialMojangMappings()
 	implementation "net.fabricmc:fabric-loader:${project.fabric_loader_version}"
 	implementation "com.google.code.findbugs:jsr305:3.0.2"
 //	implementation "org.jspecify:jspecify:1.0.0"

@@ -31,13 +31,17 @@ public record ChunkRenderLayers()
         map.put(ChunkSectionLayer.SOLID,         Pair.of(MaLiLibPipelines.LEGACY_SOLID_TERRAIN,         MaLiLibPipelines.LEGACY_SOLID_TERRAIN_OFFSET));
         map.put(ChunkSectionLayer.CUTOUT,        Pair.of(MaLiLibPipelines.LEGACY_CUTOUT_TERRAIN,        MaLiLibPipelines.LEGACY_CUTOUT_TERRAIN_OFFSET));
         map.put(ChunkSectionLayer.TRANSLUCENT,   Pair.of(MaLiLibPipelines.LEGACY_TRANSLUCENT,           MaLiLibPipelines.LEGACY_TRANSLUCENT_OFFSET));
+//        map.put(ChunkSectionLayer.SOLID,         Pair.of(LitematicaPipelines.LEGACY_SOLID_TERRAIN,          LitematicaPipelines.LEGACY_SOLID_TERRAIN_OFFSET));
+//        map.put(ChunkSectionLayer.CUTOUT,        Pair.of(LitematicaPipelines.LEGACY_CUTOUT_TERRAIN,         LitematicaPipelines.LEGACY_CUTOUT_TERRAIN_OFFSET));
+//        map.put(ChunkSectionLayer.TRANSLUCENT,   Pair.of(LitematicaPipelines.LEGACY_TRANSLUCENT,            LitematicaPipelines.LEGACY_TRANSLUCENT_OFFSET));
 
         return map;
     }
 
     public static Pair<RenderPipeline, RenderPipeline> getWireframe()
     {
-        return Pair.of(MaLiLibPipelines.WIREFRAME, MaLiLibPipelines.WIREFRAME_OFFSET);
+        return Pair.of(MaLiLibPipelines.LEGACY_WIREFRAME, MaLiLibPipelines.LEGACY_WIREFRAME_OFFSET);
+//        return Pair.of(LitematicaPipelines.LEGACY_WIREFRAME, LitematicaPipelines.LEGACY_WIREFRAME_OFFSET);
     }
 
     private static List<OverlayRenderType> getTypes()
@@ -61,12 +65,12 @@ public record ChunkRenderLayers()
             {
                 results2 = results1[0].split("\\[");
 
-                return layer.mode().name() + "/" + results2[1];
+                return layer.format() + "/" + results2[1];
             }
 
-            return layer.mode().name() + "/" + results1[0];
+            return layer.format() + "/" + results1[0];
         }
 
-        return layer.mode().name() + "/" + base;
+        return layer.format() + "/" + base;
     }
 }

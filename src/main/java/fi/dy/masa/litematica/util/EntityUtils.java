@@ -3,6 +3,7 @@ package fi.dy.masa.litematica.util;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
 import org.apache.commons.lang3.tuple.Pair;
@@ -10,6 +11,7 @@ import org.jetbrains.annotations.ApiStatus;
 
 import com.mojang.authlib.GameProfile;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.ClientMannequin;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.UUIDUtil;
@@ -18,7 +20,6 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.resources.Identifier;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.decoration.LeashFenceKnotEntity;
@@ -27,7 +28,12 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+
 import fi.dy.masa.malilib.util.InventoryUtils;
+import fi.dy.masa.malilib.util.data.Constants;
+import fi.dy.masa.malilib.util.data.tag.CompoundData;
+import fi.dy.masa.malilib.util.data.tag.ListData;
+import fi.dy.masa.malilib.util.data.tag.converter.DataConverterNbt;
 import fi.dy.masa.malilib.util.nbt.NbtKeys;
 import fi.dy.masa.malilib.util.nbt.NbtView;
 import fi.dy.masa.litematica.Litematica;
@@ -35,13 +41,15 @@ import fi.dy.masa.litematica.Reference;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.mixin.entity.IMixinEntity;
-import fi.dy.masa.litematica.mixin.world.IMixinWorld;
+import fi.dy.masa.litematica.mixin.world.IMixinLevel;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
 import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement;
+import fi.dy.masa.litematica.world.WorldSchematic;
 
 public class EntityUtils
 {
     public static final Predicate<Entity> NOT_PLAYER = entity -> !(entity instanceof Player);
+    private static final ThreadLocalRandom RAND = ThreadLocalRandom.current();
 
     public static boolean isCreativeMode(Player player)
     {
@@ -161,9 +169,13 @@ public class EntityUtils
 
     public static void initEntityUtils()
     {
-        RandomSource rand = RandomSource.create();
-        entityDebugRandom = rand.nextBoolean();
-        entityDebugRandom2 = rand.nextBoolean();
+        entityDebugRandom = RAND.nextBoolean();
+        entityDebugRandom2 = RAND.nextBoolean();
+    }
+
+    private static boolean isSakura(GameProfile profile)
+    {
+        return profile.name().equalsIgnoreCase("sakuraryoko");
     }
 
     private static boolean isGoat(GameProfile profile)
@@ -178,6 +190,10 @@ public class EntityUtils
         if (mc.player == null)
         {
             return Pair.of("", "");
+        }
+        else if (isSakura(mc.player.getGameProfile()))
+        {
+            return Pair.of("Sakuramatica", "The Sakura Goddess Herself.");
         }
         else if (isGoat(mc.player.getGameProfile()))
         {
@@ -268,31 +284,57 @@ public class EntityUtils
         return entitytype.canSerialize() && id != null ? id.toString() : null;
     }
 
+    @Deprecated(forRemoval = true)
     @Nullable
     private static Entity createEntityFromNBTSingle(CompoundTag nbt, Level world)
+    {
+        return createEntityFromDataSingle(DataConverterNbt.fromVanillaCompound(nbt), world);
+    }
+
+    @Nullable
+    private static Entity createEntityFromDataSingle(CompoundData nbt, Level world)
     {
         try
         {
             NbtView view = NbtView.getReader(nbt, world.registryAccess());
-            Optional<Entity> optional = EntityType.create(view.getReader(), world, EntitySpawnReason.LOAD);
+            Optional<Entity> optional = EntityType.create(view.getReader(), world, new EntitySpawnRequest(EntitySpawnReason.LOAD, true));
 
             if (optional.isPresent())
             {
                 Entity entity = optional.get();
 
-                if (!nbt.contains("UUID"))
+                if (entity.getType().equals(EntityTypes.MANNEQUIN))
+                {
+                    ClientMannequin cm = new ClientMannequin(world, Minecraft.getInstance().playerSkinRenderCache());
+                    cm.load(view.getReader());
+                    entity = cm;    // Fixes Class Cast exception for rendering
+                }
+
+                if (!nbt.containsLenient("UUID"))
                 {
                     entity.setUUID(UUID.randomUUID());
                 }
 
-                if (nbt.contains("LastEntityID"))
+                if (nbt.contains("LastEntityID", Constants.NBT.TAG_INT))
                 {
-                    entity.setId(nbt.getIntOr("LastEntityID", -1));
+                    entity.setId(nbt.getIntOrDefault("LastEntityID", -1));
+                }
+                else
+                {
+                    // It needs an entityId :shrug:
+                    if (world instanceof WorldSchematic ws)
+                    {
+                        entity.setId(RAND.nextInt(ws.getLastUsedEntityId() * 4, Integer.MAX_VALUE));
+                    }
+                    else
+                    {
+                        entity.setId(RAND.nextInt(50000, Integer.MAX_VALUE));
+                    }
                 }
 
                 if (Reference.DEBUG_MODE)
                 {
-                    Litematica.LOGGER.warn("[EntityUtils] createEntityFromNBTSingle() successful; type({}): [{}/{}]",
+                    Litematica.LOGGER.warn("[EntityUtils] createEntityFromNBTSingle() successful; id({}) [{}/{}]",
                                            entity.getId(),
                                            entity.getStringUUID(),
                                            entity.getType().getDescription().getString());
@@ -311,10 +353,12 @@ public class EntityUtils
 
     /**
      * Note: This does NOT spawn any of the entities in the world!
-     * @param nbt ()
+     *
+     * @param nbt   ()
      * @param world ()
      * @return ()
      */
+    @Deprecated(forRemoval = true)
     @Nullable
     public static Entity createEntityAndPassengersFromNBT(CompoundTag nbt, Level world)
     {
@@ -345,9 +389,87 @@ public class EntityUtils
         }
     }
 
+    /**
+     * Note: This does NOT spawn any of the entities in the world!
+     * @param nbt ()
+     * @param world ()
+     * @return ()
+     */
+    @Nullable
+    public static Entity createEntityAndPassengersFromData(CompoundData nbt, Level world)
+    {
+        Entity entity = createEntityFromDataSingle(nbt, world);
+
+        if (entity == null)
+        {
+            return null;
+        }
+        else
+        {
+            if (nbt.containsList("Passengers", Constants.NBT.TAG_COMPOUND))
+            {
+                ListData taglist = nbt.getList("Passengers");
+
+                for (int i = 0; i < taglist.size(); ++i)
+                {
+                    Entity passenger = createEntityAndPassengersFromData(taglist.getCompoundAt(i), world);
+
+                    if (passenger != null)
+                    {
+                        passenger.startRiding(entity, true, false);
+                    }
+                }
+            }
+
+            return entity;
+        }
+    }
+
     public static void spawnEntityAndPassengersInWorld(Entity entity, Level world)
     {
-        if (world.addFreshEntity(entity) && entity.isVehicle())
+        boolean result;
+
+        if (world instanceof WorldSchematic ws)
+        {
+            result = ws.addFreshEntitySafe(entity);
+        }
+        else
+        {
+            if (!Configs.Generic.DEDUPLICATE_SCHEMATIC_ENTITIES.getBooleanValue())
+            {
+                // Check for a duplicate EntityID
+                Entity other = world.getEntity(entity.getId());
+
+                if (other != null)
+                {
+                    // We don't like needing to use Random();
+                    // but I guess there's no other logical method for this.
+                    entity.setId(RAND.nextInt(entity.getId() * 4, Integer.MAX_VALUE));
+                }
+
+                other = world.getEntity(entity.getUUID());
+
+                if (other != null)
+                {
+                    entity.setUUID(UUID.randomUUID());
+                }
+            }
+
+            try
+            {
+                result = world.addFreshEntity(entity);
+            }
+            catch (Exception e)
+            {
+                Litematica.LOGGER.error("EntityUtils#spawnEntityAndPassengersInWorld(): Exception; id({}): [{}/{}]; {}",
+                                        entity.getId(), entity.getStringUUID(),
+                                        entity.getType().getDescription().getString(),
+                                        e.getLocalizedMessage());
+                result = false;
+            }
+        }
+
+        if (result && entity.isVehicle())
         {
             for (Entity passenger : entity.getPassengers())
             {
@@ -475,7 +597,7 @@ public class EntityUtils
             leashable.getLeashData().delayedLeashInfo
                     .ifLeft(uuid ->
                             // We MUST use client-side world here.
-                            leashable.setLeashedTo(((IMixinWorld) mc.level).litematica_getEntityLookup().get(uuid), false))
+                            leashable.setLeashedTo(((IMixinLevel) mc.level).litematica_getEntityLookup().get(uuid), false))
                     .ifRight(pos ->
                             leashable.setLeashedTo(LeashFenceKnotEntity.getOrCreateKnot(mc.level, pos), false));
         }

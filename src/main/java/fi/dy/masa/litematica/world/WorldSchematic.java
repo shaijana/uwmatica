@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import javax.annotation.Nonnull;
 import com.google.common.collect.ImmutableList;
@@ -22,6 +25,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.AbortableIterationConsumer;
 import net.minecraft.util.Mth;
 import net.minecraft.util.random.WeightedList;
 import net.minecraft.world.TickRateManager;
@@ -29,6 +33,7 @@ import net.minecraft.world.attribute.EnvironmentAttributeSystem;
 import net.minecraft.world.clock.ClockManager;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragonPart;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.flag.FeatureFlagSet;
@@ -65,6 +70,7 @@ import net.minecraft.world.ticks.LevelTickAccess;
 
 import fi.dy.masa.malilib.util.WorldUtils;
 import fi.dy.masa.litematica.Reference;
+import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.render.IWorldSchematicRenderer;
 
 public class WorldSchematic extends Level
@@ -77,9 +83,10 @@ public class WorldSchematic extends Level
     private final TickRateManager tickManager;
     private final Holder<DimensionType> dimensionType;
     private final SchematicEntityLookup<Entity> entityLookup;
+    private final ConcurrentHashMap<UUID, EnderDragonPart> dragonParts;
     protected Holder<Biome> biome;
     private LevelData.RespawnData properties;
-    protected int nextEntityId;
+    protected AtomicInteger nextEntityId;
 
     public WorldSchematic(WritableLevelData properties,
                           @Nonnull RegistryAccess registryManager,
@@ -98,6 +105,7 @@ public class WorldSchematic extends Level
         this.worldRenderer = worldRenderer;
         this.chunkManagerSchematic = new ChunkManagerSchematic(this);
         this.dimensionType = dimension;
+        this.dragonParts = new ConcurrentHashMap<>(12, 0.9f, 2);
 
         if (!registryManager.equals(RegistryAccess.EMPTY))
         {
@@ -111,6 +119,7 @@ public class WorldSchematic extends Level
         this.tickManager = new TickRateManager();
         this.entityLookup = new SchematicEntityLookup<>();
         this.properties = LevelData.RespawnData.DEFAULT;
+        this.nextEntityId = new AtomicInteger(0);
     }
 
     @Override
@@ -235,40 +244,59 @@ public class WorldSchematic extends Level
     }
 
     @Override
-    public boolean addFreshEntity(Entity entity)
+    public boolean addFreshEntity(@NonNull Entity entity)
+    {
+        return this.addFreshEntitySafe(entity);
+    }
+
+    // Added so that other mods do not interfere with the Schematic Worlds' Entity Spawning.
+    // There is Zero need for them to "Track" it.
+    public boolean addFreshEntitySafe(@NonNull Entity entity)
     {
         int chunkX = Mth.floor(entity.getX() / 16.0D);
         int chunkZ = Mth.floor(entity.getZ() / 16.0D);
 
         if (this.entityLookup.contains(entity.getUUID()))
         {
-            Entity e = this.entityLookup.get(entity.getUUID());
-
-            if (e != null && e.getType().equals(entity.getType()))
+            if (Configs.Generic.DEDUPLICATE_SCHEMATIC_ENTITIES.getBooleanValue())
             {
-                if (e.position().equals(entity.position()))
+                Entity e = this.entityLookup.get(entity.getUUID());
+
+                if (e != null && e.getType().equals(entity.getType()))
+                {
+                    if (e.position().equals(entity.position()))
+                    {
+                        return false;
+                    }
+
+                    this.entityLookup.remove(entity.getUUID(), this);
+                }
+                else
                 {
                     return false;
                 }
-
-                this.entityLookup.remove(entity.getUUID());
             }
             else
             {
-                return false;
+                // Entity UUID's *MUST* be unique
+                entity.setUUID(UUID.randomUUID());
             }
         }
 
         ChunkPos chunkPos = new ChunkPos(chunkX, chunkZ);
 
-        if (this.entityLookup.contains(entity.getId()) ||
-            entity.getId() < 0)
+        while (this.entityLookup.contains(entity.getId()) || entity.getId() < 0)
         {
-            entity.setId(this.nextEntityId++);
+            entity.setId(this.nextEntityId.incrementAndGet());
         }
 
-        this.entityLookup.put(entity, chunkPos);
+        this.entityLookup.put(entity, chunkPos, this);
         return true;
+    }
+
+    public int getLastUsedEntityId()
+    {
+        return this.nextEntityId.get();
     }
 
     public void unloadEntitiesByChunk(int chunkX, int chunkZ)
@@ -279,7 +307,7 @@ public class WorldSchematic extends Level
         }
 
         ChunkPos pos = new ChunkPos(chunkX, chunkZ);
-        int count = this.entityLookup.removeByChunk(pos);
+        int count = this.entityLookup.removeByChunk(pos, this);
 
         this.checkForStaleEntities();
     }
@@ -289,7 +317,8 @@ public class WorldSchematic extends Level
         if (this.entityLookup.size() < 1)
         {
             this.entityLookup.reset();
-            this.nextEntityId = 0;
+            this.dragonParts.clear();
+            this.nextEntityId.set(1);
         }
     }
 
@@ -310,6 +339,7 @@ public class WorldSchematic extends Level
     protected void closeEntityLookup() throws Exception
     {
         this.entityLookup.close();
+        this.dragonParts.clear();
     }
 
     public void clearEntities()
@@ -320,13 +350,13 @@ public class WorldSchematic extends Level
         }
         catch (Exception ignored) { }
 
-        this.nextEntityId = 0;
+        this.nextEntityId.set(1);
     }
 
     @Override
     public @Nonnull Collection<EnderDragonPart> dragonParts()
     {
-        return List.of();
+        return this.dragonParts.values();
     }
 
     @Override
@@ -354,7 +384,8 @@ public class WorldSchematic extends Level
     }
 
     @Override
-    protected @Nonnull LevelEntityGetter<Entity> getEntities()
+    @Nonnull
+    public LevelEntityGetter<Entity> getEntities()
     {
         return this.entityLookup;
     }
@@ -392,25 +423,124 @@ public class WorldSchematic extends Level
             }
         });
 
-        return list;
-    }
-
-    @Override
-    public @Nonnull <T extends Entity> List<T> getEntities(@Nonnull EntityTypeTest<Entity, T> arg, @Nonnull AABB box, @Nonnull Predicate<? super T> predicate)
-    {
-        ArrayList<T> list = new ArrayList<>();
-
-        for (Entity e : this.getEntities(arg, box, e -> true))
+        // We don't have any dragon, but why not check anyway? :/
+        for (EnderDragonPart part : this.dragonParts())
         {
-            T t = arg.tryCast(e);
-
-            if (t != null && predicate.test(t))
+            if (part != except && part.parentMob != except
+                && predicate.test(part)
+                && box.intersects(part.getBoundingBox()))
             {
-                list.add(t);
+                list.add(part);
             }
         }
 
         return list;
+    }
+
+    @Override
+    public @Nonnull <T extends Entity> List<T> getEntities(@Nonnull EntityTypeTest<Entity, T> filter, @Nonnull AABB box, @Nonnull Predicate<? super T> predicate)
+    {
+        ArrayList<T> list = new ArrayList<>();
+        this.getEntities(filter, box, predicate, list);
+        return list;
+    }
+
+    public <T extends Entity> void getEntities(@Nonnull EntityTypeTest<Entity, T> filter, @Nonnull AABB box, @Nonnull Predicate<? super T> predicate, @NonNull List<? super T> list)
+    {
+        this.getEntities(filter, box, predicate, list, Integer.MAX_VALUE);
+    }
+
+    public <T extends Entity> void getEntities(@Nonnull EntityTypeTest<Entity, T> filter, @Nonnull AABB box, @Nonnull Predicate<? super T> predicate, @NonNull List<? super T> list, int max)
+    {
+        this.getEntities().get(filter, box, e ->
+        {
+            if (predicate.test(e))
+            {
+                list.add(e);
+
+                if (list.size() >= max)
+                {
+                    return AbortableIterationConsumer.Continuation.ABORT;
+                }
+            }
+
+            if (e instanceof EnderDragon ed)
+            {
+                for (EnderDragonPart part : ed.getSubEntities())
+                {
+                    T entity = filter.tryCast(part);
+
+                    if (entity != null && predicate.test(entity))
+                    {
+                        list.add(entity);
+
+                        if (list.size() >= max)
+                        {
+                            return AbortableIterationConsumer.Continuation.ABORT;
+                        }
+                    }
+                }
+            }
+
+            return AbortableIterationConsumer.Continuation.CONTINUE;
+        });
+    }
+
+    public <T extends Entity> boolean hasEntities(@Nonnull EntityTypeTest<Entity, T> filter, @Nonnull AABB box, @Nonnull Predicate<? super T> predicate)
+    {
+        AtomicBoolean result = new AtomicBoolean(false);
+
+        this.getEntities().get(filter, box, e ->
+        {
+            if (predicate.test(e))
+            {
+                result.set(true);
+                return AbortableIterationConsumer.Continuation.ABORT;
+            }
+            else
+            {
+                if (e instanceof EnderDragon ed)
+                {
+                    for (EnderDragonPart part : ed.getSubEntities())
+                    {
+                        T entity = filter.tryCast(part);
+
+                        if (entity != null && predicate.test(entity))
+                        {
+                            result.set(true);
+                            return AbortableIterationConsumer.Continuation.ABORT;
+                        }
+                    }
+                }
+
+                return AbortableIterationConsumer.Continuation.CONTINUE;
+            }
+        });
+
+        return result.get();
+    }
+
+    // In case someone decides to give us a Dragon for some reason ...
+    public void onTrackingStart(Entity entity)
+    {
+        if (entity instanceof EnderDragon ed)
+        {
+            for (EnderDragonPart part : ed.getSubEntities())
+            {
+                this.dragonParts.put(part.getUUID(), part);
+            }
+        }
+    }
+
+    public void onTrackingStop(Entity entity)
+    {
+        if (entity instanceof EnderDragon ed)
+        {
+            for (EnderDragonPart part : ed.getSubEntities())
+            {
+                this.dragonParts.remove(part.getUUID(), part);
+            }
+        }
     }
 
     public List<ChunkSchematic> getChunksWithinBox(AABB box)

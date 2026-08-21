@@ -21,9 +21,9 @@ import net.minecraft.world.item.Items;
 import fi.dy.masa.malilib.gui.interfaces.IDirectoryCache;
 import fi.dy.masa.malilib.util.FileUtils;
 import fi.dy.masa.malilib.util.InventoryUtils;
-import fi.dy.masa.malilib.util.LayerRange;
 import fi.dy.masa.malilib.util.StringUtils;
 import fi.dy.masa.malilib.util.data.json.JsonUtils;
+import fi.dy.masa.malilib.util.position.LayerRange;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.Reference;
 import fi.dy.masa.litematica.config.Configs;
@@ -406,7 +406,7 @@ public class DataManager implements IDirectoryCache
         this.schematicProjectsManager.saveCurrentProject();
         JsonObject root = this.toJson();
 
-        root.add("block_entities", EntitiesDataStorage.getInstance().toJson());
+        root.add("block_entities", EntityDataManager.getInstance().toJson());
 
         Path file = getCurrentStorageFile(false);
         JsonUtils.writeJsonToFile(root, file);
@@ -429,7 +429,7 @@ public class DataManager implements IDirectoryCache
 
             if (JsonUtils.hasObject(root, "block_entities"))
             {
-                EntitiesDataStorage.getInstance().fromJson(JsonUtils.getNestedObject(root, "block_entities", false));
+                EntityDataManager.getInstance().fromJson(JsonUtils.getNestedObject(root, "block_entities", false));
             }
         }
     }

@@ -48,7 +48,8 @@ public class PlacementManagerTaskRebuild extends PlacementManagerTask
 			{
 //				manager.removePendingRebuildFor(this.pos());
 				PlacementManagerDaemonHandler.INSTANCE.removeAllTasksFor(this.cx(), this.cz());
-				manager.markChunkForUnload(this.cx(), this.cz());
+//				manager.markChunkForUnload(this.cx(), this.cz());
+				worldSchematic.getChunkSource().unloadChunk(this.cx(), this.cz());
 				return;
 			}
 
@@ -90,7 +91,7 @@ public class PlacementManagerTaskRebuild extends PlacementManagerTask
 
 				protoChunk.clear();
 
-				PlacementManagerDaemonHandler.INSTANCE.removeUnloadTasksFor(this.cx(), this.cz());
+//				PlacementManagerDaemonHandler.INSTANCE.removeUnloadTasksFor(this.cx(), this.cz());
 				PlacementManagerDaemonHandler.INSTANCE.removeRebuildTasksFor(this.cx(), this.cz());
 
 				worldSchematic.scheduleChunkRenders(this.cx(), this.cz());

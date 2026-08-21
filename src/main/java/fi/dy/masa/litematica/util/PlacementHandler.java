@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nullable;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import net.minecraft.client.Minecraft;
@@ -28,7 +29,7 @@ import fi.dy.masa.malilib.util.game.BlockUtils;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
-import fi.dy.masa.litematica.data.EntitiesDataStorage;
+import fi.dy.masa.litematica.data.EntityDataManager;
 
 public class PlacementHandler
 {
@@ -85,9 +86,9 @@ public class PlacementHandler
     /**
      * BlackList for Block States.  Entries here will be reset to their default value.
      */
-    public static final ImmutableSet<Property<?>> BLACKLISTED_PROPERTIES = ImmutableSet.of(
-            BlockStateProperties.WATERLOGGED,
-            BlockStateProperties.POWERED
+    public static final ImmutableMap<Property<?>, ? extends Comparable<?>> BLACKLISTED_PROPERTIES = ImmutableMap.of(
+            BlockStateProperties.WATERLOGGED,       Boolean.FALSE,
+            BlockStateProperties.POWERED,           Boolean.FALSE
     );
 
     public static EasyPlaceProtocol getEffectiveProtocolVersion()
@@ -97,7 +98,7 @@ public class PlacementHandler
         if (protocol == EasyPlaceProtocol.AUTO)
         {
             if (Minecraft.getInstance().isLocalServer() ||
-                EntitiesDataStorage.getInstance().hasServuxServer() ||
+                EntityDataManager.getInstance().hasServuxServer() ||
                 DataManager.hasServuxServer())
             {
                 return EasyPlaceProtocol.V3;
@@ -263,7 +264,7 @@ public class PlacementHandler
                     continue;
                 }
                 else if (WHITELISTED_PROPERTIES.contains(p) &&
-                        !BLACKLISTED_PROPERTIES.contains(p))
+                        !BLACKLISTED_PROPERTIES.containsKey(p))
                 {
                     @SuppressWarnings("unchecked")
                     Property<T> prop = (Property<T>) p;
@@ -321,15 +322,15 @@ public class PlacementHandler
 
         // Strip Blacklisted properties, and use the Block's default state.
         // This needs to be done after the initial loop, or it breaks compatibility
-        for (Property<?> p : BLACKLISTED_PROPERTIES)
+        for (Property<?> p : BLACKLISTED_PROPERTIES.keySet())
         {
             if (state.hasProperty(p))
             {
                 @SuppressWarnings("unchecked")
                 Property<T> prop = (Property<T>) p;
-                BlockState def = state.getBlock().defaultBlockState();
-                state = state.setValue(prop, def.getValue(prop));
-                //System.out.printf("[PHv3] blacklisted state [%s] found, setting default value\n", prop.getName());
+//                BlockState def = state.getBlock().defaultBlockState();
+                state = state.setValue(prop, (T) BLACKLISTED_PROPERTIES.get(p));
+                //System.out.printf("[PHv3] blacklisted state [%s] found, setting value\n", prop.getName());
             }
         }
 

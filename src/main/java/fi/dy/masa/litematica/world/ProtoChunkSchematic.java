@@ -6,47 +6,49 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.jspecify.annotations.Nullable;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.chunk.ImposterProtoChunk;
 
+import fi.dy.masa.malilib.util.data.tag.CompoundData;
 import fi.dy.masa.litematica.util.WorldPlacingUtils;
 
 /**
  * Used when building chunks from {@link WorldPlacingUtils}
  * Also temporarily holds references to entity spawning positions
  */
-public class ProtoChunkSchematic extends ImposterProtoChunk
+public class ProtoChunkSchematic
 {
-	private final CopyOnWriteArrayList<Pair<WorldPlacingUtils.EntityPosAndRot, CompoundTag>> entities = new  CopyOnWriteArrayList<>();
+	private final CopyOnWriteArrayList<Pair<WorldPlacingUtils.EntityPosAndRot, CompoundData>> entities = new  CopyOnWriteArrayList<>();
+	private final ChunkSchematic wrapped;
 
 	public ProtoChunkSchematic(@Nonnull ChunkSchematic chunk)
 	{
-		super(chunk,true);
+		this.wrapped = chunk;
 	}
 
-	@Override
 	public @Nonnull ChunkSchematic getWrapped()
 	{
-		return (ChunkSchematic) super.getWrapped();
+		return this.wrapped;
 	}
 
-	@Override
 	public @Nonnull BlockState getBlockState(@Nonnull BlockPos pos)
 	{
 		return this.getWrapped().getBlockState(pos);
 	}
 
-	@Override
 	public BlockState setBlockState(@Nonnull BlockPos pos, @Nonnull BlockState newState, @Block.UpdateFlags int flags)
 	{
 		return this.getWrapped().setBlockState(pos, newState, flags);
 	}
 
-	@Override
+	@Nullable
+	public BlockEntity getBlockEntity(@Nonnull BlockPos pos)
+	{
+		return this.getWrapped().getBlockEntity(pos);
+	}
+
 	public void setBlockEntity(@Nonnull BlockEntity te)
 	{
 		this.getWrapped().setBlockEntity(te);
@@ -68,7 +70,7 @@ public class ProtoChunkSchematic extends ImposterProtoChunk
 		this.getWrapped().setState(state);
 	}
 
-	public synchronized void addEntityPairForLater(Pair<WorldPlacingUtils.EntityPosAndRot, CompoundTag> entity)
+	public synchronized void addEntityPairForLater(Pair<WorldPlacingUtils.EntityPosAndRot, CompoundData> entity)
 	{
 		this.entities.add(entity);
 	}

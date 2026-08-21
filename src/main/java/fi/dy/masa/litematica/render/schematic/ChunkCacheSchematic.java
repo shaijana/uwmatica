@@ -115,6 +115,14 @@ public class ChunkCacheSchematic implements BlockAndTintGetter, LightChunkGetter
         return this.chunkArray[i][j].getBlockEntity(pos, type);
     }
 
+    public void addBlockEntity(BlockPos pos, final BlockEntity te)
+    {
+        int i = (pos.getX() >> 4) - this.chunkStartX;
+        int j = (pos.getZ() >> 4) - this.chunkStartZ;
+
+        this.chunkArray[i][j].addAndRegisterBlockEntity(te);
+    }
+
     @Override
     public @Nonnull FluidState getFluidState(@Nonnull BlockPos pos)
     {
@@ -137,7 +145,6 @@ public class ChunkCacheSchematic implements BlockAndTintGetter, LightChunkGetter
     @Override
     public int getBlockTint(final @NonNull BlockPos pos, final @NonNull ColorResolver colorResolver)
     {
-//        return colorResolver.getColor(this.worldClient.getBiome(pos).value(), pos.getX(), pos.getZ());
         return this.worldClient.getBlockTint(pos, colorResolver);
     }
 

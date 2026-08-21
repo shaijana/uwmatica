@@ -3,7 +3,6 @@ package fi.dy.masa.litematica.schematic.conversion;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.RegistryAccess;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.DyeColor;
@@ -17,6 +16,8 @@ import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.block.state.properties.RedstoneSide;
 
 import fi.dy.masa.malilib.util.StringUtils;
+import fi.dy.masa.malilib.util.data.Constants;
+import fi.dy.masa.malilib.util.data.tag.CompoundData;
 import fi.dy.masa.litematica.mixin.block.IMixinFenceGateBlock;
 import fi.dy.masa.litematica.mixin.block.IMixinRedstoneWireBlock;
 import fi.dy.masa.litematica.mixin.block.IMixinStairsBlock;
@@ -40,12 +41,12 @@ public class SchematicConversionFixers
                           .setValue(RedStoneWireBlock.WEST, RedstoneSide.SIDE);
 
     public static final IStateFixer FIXER_BANNER = (reader, state, pos) -> {
-        CompoundTag tag = reader.getBlockEntityData(pos);
+        CompoundData tag = reader.getBlockEntityData(pos);
 
-        if (tag != null && tag.contains("Base"))
+        if (tag != null && tag.contains("Base", Constants.NBT.TAG_INT))
         {
             DyeColor colorOrig = ((AbstractBannerBlock) state.getBlock()).getColor();
-            DyeColor colorFromData = DyeColor.byId(15 - tag.getIntOr("Base", 0));
+            DyeColor colorFromData = DyeColor.byId(15 - tag.getIntOrDefault("Base", 0));
 
             if (colorOrig != colorFromData)
             {
@@ -53,22 +54,22 @@ public class SchematicConversionFixers
 
                 switch (colorFromData)
                 {
-                    case WHITE:         state = Blocks.WHITE_BANNER.defaultBlockState();      break;
-                    case ORANGE:        state = Blocks.ORANGE_BANNER.defaultBlockState();     break;
-                    case MAGENTA:       state = Blocks.MAGENTA_BANNER.defaultBlockState();    break;
-                    case LIGHT_BLUE:    state = Blocks.LIGHT_BLUE_BANNER.defaultBlockState(); break;
-                    case YELLOW:        state = Blocks.YELLOW_BANNER.defaultBlockState();     break;
-                    case LIME:          state = Blocks.LIME_BANNER.defaultBlockState();       break;
-                    case PINK:          state = Blocks.PINK_BANNER.defaultBlockState();       break;
-                    case GRAY:          state = Blocks.GRAY_BANNER.defaultBlockState();       break;
-                    case LIGHT_GRAY:    state = Blocks.LIGHT_GRAY_BANNER.defaultBlockState(); break;
-                    case CYAN:          state = Blocks.CYAN_BANNER.defaultBlockState();       break;
-                    case PURPLE:        state = Blocks.PURPLE_BANNER.defaultBlockState();     break;
-                    case BLUE:          state = Blocks.BLUE_BANNER.defaultBlockState();       break;
-                    case BROWN:         state = Blocks.BROWN_BANNER.defaultBlockState();      break;
-                    case GREEN:         state = Blocks.GREEN_BANNER.defaultBlockState();      break;
-                    case RED:           state = Blocks.RED_BANNER.defaultBlockState();        break;
-                    case BLACK:         state = Blocks.BLACK_BANNER.defaultBlockState();      break;
+                    case WHITE:         state = Blocks.BANNER.white().defaultBlockState();      break;
+                    case ORANGE:        state = Blocks.BANNER.orange().defaultBlockState();     break;
+                    case MAGENTA:       state = Blocks.BANNER.magenta().defaultBlockState();    break;
+                    case LIGHT_BLUE:    state = Blocks.BANNER.lightBlue().defaultBlockState(); break;
+                    case YELLOW:        state = Blocks.BANNER.yellow().defaultBlockState();     break;
+                    case LIME:          state = Blocks.BANNER.lime().defaultBlockState();       break;
+                    case PINK:          state = Blocks.BANNER.pink().defaultBlockState();       break;
+                    case GRAY:          state = Blocks.BANNER.gray().defaultBlockState();       break;
+                    case LIGHT_GRAY:    state = Blocks.BANNER.lightGray().defaultBlockState(); break;
+                    case CYAN:          state = Blocks.BANNER.cyan().defaultBlockState();       break;
+                    case PURPLE:        state = Blocks.BANNER.purple().defaultBlockState();     break;
+                    case BLUE:          state = Blocks.BANNER.blue().defaultBlockState();       break;
+                    case BROWN:         state = Blocks.BANNER.brown().defaultBlockState();      break;
+                    case GREEN:         state = Blocks.BANNER.green().defaultBlockState();      break;
+                    case RED:           state = Blocks.BANNER.red().defaultBlockState();        break;
+                    case BLACK:         state = Blocks.BANNER.black().defaultBlockState();      break;
                 }
 
                 state = state.setValue(BannerBlock.ROTATION, rotation);
@@ -79,12 +80,12 @@ public class SchematicConversionFixers
     };
 
     public static final IStateFixer FIXER_BANNER_WALL = (reader, state, pos) -> {
-        CompoundTag tag = reader.getBlockEntityData(pos);
+        CompoundData tag = reader.getBlockEntityData(pos);
 
-        if (tag != null && tag.contains("Base"))
+        if (tag != null && tag.contains("Base", Constants.NBT.TAG_INT))
         {
             DyeColor colorOrig = ((AbstractBannerBlock) state.getBlock()).getColor();
-            DyeColor colorFromData = DyeColor.byId(15 - tag.getIntOr("Base", 0));
+            DyeColor colorFromData = DyeColor.byId(15 - tag.getIntOrDefault("Base", 0));
 
             if (colorOrig != colorFromData)
             {
@@ -92,22 +93,22 @@ public class SchematicConversionFixers
 
                 switch (colorFromData)
                 {
-                    case WHITE:         state = Blocks.WHITE_WALL_BANNER.defaultBlockState();      break;
-                    case ORANGE:        state = Blocks.ORANGE_WALL_BANNER.defaultBlockState();     break;
-                    case MAGENTA:       state = Blocks.MAGENTA_WALL_BANNER.defaultBlockState();    break;
-                    case LIGHT_BLUE:    state = Blocks.LIGHT_BLUE_WALL_BANNER.defaultBlockState(); break;
-                    case YELLOW:        state = Blocks.YELLOW_WALL_BANNER.defaultBlockState();     break;
-                    case LIME:          state = Blocks.LIME_WALL_BANNER.defaultBlockState();       break;
-                    case PINK:          state = Blocks.PINK_WALL_BANNER.defaultBlockState();       break;
-                    case GRAY:          state = Blocks.GRAY_WALL_BANNER.defaultBlockState();       break;
-                    case LIGHT_GRAY:    state = Blocks.LIGHT_GRAY_WALL_BANNER.defaultBlockState(); break;
-                    case CYAN:          state = Blocks.CYAN_WALL_BANNER.defaultBlockState();       break;
-                    case PURPLE:        state = Blocks.PURPLE_WALL_BANNER.defaultBlockState();     break;
-                    case BLUE:          state = Blocks.BLUE_WALL_BANNER.defaultBlockState();       break;
-                    case BROWN:         state = Blocks.BROWN_WALL_BANNER.defaultBlockState();      break;
-                    case GREEN:         state = Blocks.GREEN_WALL_BANNER.defaultBlockState();      break;
-                    case RED:           state = Blocks.RED_WALL_BANNER.defaultBlockState();        break;
-                    case BLACK:         state = Blocks.BLACK_WALL_BANNER.defaultBlockState();      break;
+                    case WHITE:         state = Blocks.WALL_BANNER.white().defaultBlockState();      break;
+                    case ORANGE:        state = Blocks.WALL_BANNER.orange().defaultBlockState();     break;
+                    case MAGENTA:       state = Blocks.WALL_BANNER.magenta().defaultBlockState();    break;
+                    case LIGHT_BLUE:    state = Blocks.WALL_BANNER.lightBlue().defaultBlockState(); break;
+                    case YELLOW:        state = Blocks.WALL_BANNER.yellow().defaultBlockState();     break;
+                    case LIME:          state = Blocks.WALL_BANNER.lime().defaultBlockState();       break;
+                    case PINK:          state = Blocks.WALL_BANNER.pink().defaultBlockState();       break;
+                    case GRAY:          state = Blocks.WALL_BANNER.gray().defaultBlockState();       break;
+                    case LIGHT_GRAY:    state = Blocks.WALL_BANNER.lightGray().defaultBlockState(); break;
+                    case CYAN:          state = Blocks.WALL_BANNER.cyan().defaultBlockState();       break;
+                    case PURPLE:        state = Blocks.WALL_BANNER.purple().defaultBlockState();     break;
+                    case BLUE:          state = Blocks.WALL_BANNER.blue().defaultBlockState();       break;
+                    case BROWN:         state = Blocks.WALL_BANNER.brown().defaultBlockState();      break;
+                    case GREEN:         state = Blocks.WALL_BANNER.green().defaultBlockState();      break;
+                    case RED:           state = Blocks.WALL_BANNER.red().defaultBlockState();        break;
+                    case BLACK:         state = Blocks.WALL_BANNER.black().defaultBlockState();      break;
                 }
 
                 state = state.setValue(WallBannerBlock.FACING, facing);
@@ -118,33 +119,33 @@ public class SchematicConversionFixers
     };
 
     public static final IStateFixer FIXER_BED = (reader, state, pos) -> {
-        CompoundTag tag = reader.getBlockEntityData(pos);
+        CompoundData tag = reader.getBlockEntityData(pos);
 
-        if (tag != null && tag.contains("color"))
+        if (tag != null && tag.contains("color", Constants.NBT.TAG_INT))
         {
-            int colorId = tag.getIntOr("color", -1);
+            int colorId = tag.getIntOrDefault("color", -1);
             Direction facing = state.getValue(BedBlock.FACING);
             BedPart part = state.getValue(BedBlock.PART);
             Boolean occupied = state.getValue(BedBlock.OCCUPIED);
 
             switch (colorId)
             {
-                case  0: state = Blocks.WHITE_BED.defaultBlockState(); break;
-                case  1: state = Blocks.ORANGE_BED.defaultBlockState(); break;
-                case  2: state = Blocks.MAGENTA_BED.defaultBlockState(); break;
-                case  3: state = Blocks.LIGHT_BLUE_BED.defaultBlockState(); break;
-                case  4: state = Blocks.YELLOW_BED.defaultBlockState(); break;
-                case  5: state = Blocks.LIME_BED.defaultBlockState(); break;
-                case  6: state = Blocks.PINK_BED.defaultBlockState(); break;
-                case  7: state = Blocks.GRAY_BED.defaultBlockState(); break;
-                case  8: state = Blocks.LIGHT_GRAY_BED.defaultBlockState(); break;
-                case  9: state = Blocks.CYAN_BED.defaultBlockState(); break;
-                case 10: state = Blocks.PURPLE_BED.defaultBlockState(); break;
-                case 11: state = Blocks.BLUE_BED.defaultBlockState(); break;
-                case 12: state = Blocks.BROWN_BED.defaultBlockState(); break;
-                case 13: state =  Blocks.GREEN_BED.defaultBlockState(); break;
-                case 14: state = Blocks.RED_BED.defaultBlockState(); break;
-                case 15: state = Blocks.BLACK_BED.defaultBlockState(); break;
+                case  0: state = Blocks.BED.white().defaultBlockState(); break;
+                case  1: state = Blocks.BED.orange().defaultBlockState(); break;
+                case  2: state = Blocks.BED.magenta().defaultBlockState(); break;
+                case  3: state = Blocks.BED.lightBlue().defaultBlockState(); break;
+                case  4: state = Blocks.BED.yellow().defaultBlockState(); break;
+                case  5: state = Blocks.BED.lime().defaultBlockState(); break;
+                case  6: state = Blocks.BED.pink().defaultBlockState(); break;
+                case  7: state = Blocks.BED.gray().defaultBlockState(); break;
+                case  8: state = Blocks.BED.lightGray().defaultBlockState(); break;
+                case  9: state = Blocks.BED.cyan().defaultBlockState(); break;
+                case 10: state = Blocks.BED.purple().defaultBlockState(); break;
+                case 11: state = Blocks.BED.blue().defaultBlockState(); break;
+                case 12: state = Blocks.BED.brown().defaultBlockState(); break;
+                case 13: state = Blocks.BED.green().defaultBlockState(); break;
+                case 14: state = Blocks.BED.red().defaultBlockState(); break;
+                case 15: state = Blocks.BED.black().defaultBlockState(); break;
                 default: return state;
             }
 
@@ -241,15 +242,15 @@ public class SchematicConversionFixers
     };
 
     public static final IStateFixer FIXER_FLOWER_POT = (reader, state, pos) -> {
-        CompoundTag tag = reader.getBlockEntityData(pos);
+        CompoundData tag = reader.getBlockEntityData(pos);
 
-        if (tag != null && tag.contains("Item"))
+        if (tag != null && tag.contains("Item", Constants.NBT.TAG_STRING))
         {
-            String itemName = tag.getStringOr("Item", "");
+            String itemName = tag.getStringOrDefault("Item", "");
 
-            if (itemName.length() > 0 && tag.contains("Data"))
+            if (itemName.length() > 0 && tag.contains("Data", Constants.NBT.TAG_INT))
             {
-                int meta = tag.getIntOr("Data", 0);
+                int meta = tag.getIntOrDefault("Data", 0);
 
                 switch (itemName)
                 {
@@ -290,13 +291,13 @@ public class SchematicConversionFixers
     };
 
     public static final IStateFixer FIXER_NOTE_BLOCK = (reader, state, pos) -> {
-        CompoundTag tag = reader.getBlockEntityData(pos);
+        CompoundData tag = reader.getBlockEntityData(pos);
 
         if (tag != null)
         {
             state = state
-                        .setValue(NoteBlock.POWERED, tag.getBooleanOr("powered", false))
-                        .setValue(NoteBlock.NOTE, Mth.clamp(tag.getByteOr("note", (byte) 0), 0, 24))
+                        .setValue(NoteBlock.POWERED, tag.getBooleanOrDefault("powered", false))
+                        .setValue(NoteBlock.NOTE, Mth.clamp(tag.getByteOrDefault("note", (byte) 0), 0, 24))
                         .setValue(NoteBlock.INSTRUMENT, reader.getBlockState(pos.below()).instrument());
         }
 
@@ -341,10 +342,13 @@ public class SchematicConversionFixers
     };
 
     public static final IStateFixer FIXER_SIGN = (reader, state, pos) -> {
-        CompoundTag tag = reader.getBlockEntityData(pos);
+        CompoundData tag = reader.getBlockEntityData(pos);
 
         if (tag != null &&
-	        (tag.contains("Text1") || tag.contains("Text2") || tag.contains("Text3") || tag.contains("Text4")))
+	        (tag.contains("Text1", Constants.NBT.TAG_STRING) ||
+             tag.contains("Text2", Constants.NBT.TAG_STRING) ||
+             tag.contains("Text3", Constants.NBT.TAG_STRING) ||
+             tag.contains("Text4", Constants.NBT.TAG_STRING)))
         {
 	        Component text1 = Component.empty();
 	        Component text2 = Component.empty();
@@ -354,20 +358,20 @@ public class SchematicConversionFixers
 	        try
 	        {
 		        RegistryAccess registry = SchematicWorldHandler.INSTANCE.getRegistryManager();
-		        text1 = tag.contains("Text1") ? StringUtils.legacyTextSerializer(tag.getStringOr("Text1", ""), registry) : Component.empty();
-		        text2 = tag.contains("Text2") ? StringUtils.legacyTextSerializer(tag.getStringOr("Text2", ""), registry) : Component.empty();
-		        text3 = tag.contains("Text3") ? StringUtils.legacyTextSerializer(tag.getStringOr("Text3", ""), registry) : Component.empty();
-		        text4 = tag.contains("Text4") ? StringUtils.legacyTextSerializer(tag.getStringOr("Text4", ""), registry) : Component.empty();
+		        text1 = tag.contains("Text1", Constants.NBT.TAG_STRING) ? StringUtils.legacyTextSerializer(tag.getStringOrDefault("Text1", ""), registry) : Component.empty();
+		        text2 = tag.contains("Text2", Constants.NBT.TAG_STRING) ? StringUtils.legacyTextSerializer(tag.getStringOrDefault("Text2", ""), registry) : Component.empty();
+		        text3 = tag.contains("Text3", Constants.NBT.TAG_STRING) ? StringUtils.legacyTextSerializer(tag.getStringOrDefault("Text3", ""), registry) : Component.empty();
+		        text4 = tag.contains("Text4", Constants.NBT.TAG_STRING) ? StringUtils.legacyTextSerializer(tag.getStringOrDefault("Text4", ""), registry) : Component.empty();
 	        }
 	        catch (Exception ignored) { }
 
-			DyeColor color = DyeColor.byName(tag.getStringOr("Color", ""), DyeColor.BLACK);
-			boolean glowing = tag.getBooleanOr("GlowingText", false);
+			DyeColor color = DyeColor.byName(tag.getStringOrDefault("Color", ""), DyeColor.BLACK);
+			boolean glowing = tag.getBooleanOrDefault("GlowingText", false);
 	        SignText frontText = new SignText(new Component[]{text1, text2, text3, text4},
 	                                          new Component[]{Component.empty(), Component.empty(), Component.empty(), Component.empty()},
 	                                          color, glowing);
 
-	        tag.store("front_text", SignText.DIRECT_CODEC, frontText);
+	        tag.putCodec("front_text", SignText.DIRECT_CODEC, frontText);
 
             tag.remove("Color");
             tag.remove("GlowingText");
@@ -381,11 +385,11 @@ public class SchematicConversionFixers
     };
 
     public static final IStateFixer FIXER_SKULL = (reader, state, pos) -> {
-        CompoundTag tag = reader.getBlockEntityData(pos);
+        CompoundData tag = reader.getBlockEntityData(pos);
 
-        if (tag != null && tag.contains("SkullType"))
+        if (tag != null && tag.contains("SkullType", Constants.NBT.TAG_BYTE))
         {
-            int id = Mth.clamp(tag.getByteOr("SkullType", (byte) 0), 0, 5);
+            int id = Mth.clamp(tag.getByteOrDefault("SkullType", (byte) 0), 0, 5);
 
             // ;_; >_> <_<
             if (id == 2) { id = 3; } else if (id == 3) { id = 2; }
@@ -421,18 +425,18 @@ public class SchematicConversionFixers
                 }
             }
 
-            state = state.setValue(BannerBlock.ROTATION, Mth.clamp(tag.getByteOr("Rot", (byte) 0), 0, 15));
+            state = state.setValue(BannerBlock.ROTATION, Mth.clamp(tag.getByteOrDefault("Rot", (byte) 0), 0, 15));
         }
 
         return state;
     };
 
     public static final IStateFixer FIXER_SKULL_WALL = (reader, state, pos) -> {
-        CompoundTag tag = reader.getBlockEntityData(pos);
+        CompoundData tag = reader.getBlockEntityData(pos);
 
-        if (tag != null && tag.contains("SkullType"))
+        if (tag != null && tag.contains("SkullType", Constants.NBT.TAG_BYTE))
         {
-            int id = Mth.clamp(tag.getByteOr("SkullType", (byte) 0), 0, 5);
+            int id = Mth.clamp(tag.getByteOrDefault("SkullType", (byte) 0), 0, 5);
 
             // ;_; >_> <_<
             if (id == 2) { id = 3; } else if (id == 3) { id = 2; }

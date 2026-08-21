@@ -48,6 +48,11 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
         {
             manager.addKeybindToMap(hotkey.getKeybind());
         }
+
+        for (IHotkey hotkey : AllowedFunctionsHandler.ALLOWED_VISUALS_HOTKEYS) //Shaijana
+        {
+            manager.addKeybindToMap(hotkey.getKeybind());
+        }
     }
 
     @Override
@@ -55,6 +60,7 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
     {
         manager.addHotkeysForCategory(Reference.MOD_NAME, Reference.MOD_ID+ ".hotkeys.category.generic_hotkeys", AllowedFunctionsHandler.ALLOWED_HOTKEYS); //Shaijana
         manager.addHotkeysForCategory(Reference.MOD_NAME, Reference.MOD_ID+ ".hotkeys.category.config_generic_hotkeys", AllowedFunctionsHandler.ALLOWED_CONFIG_HOTKEYS); //Shaijana
+        manager.addHotkeysForCategory(Reference.MOD_NAME, Reference.MOD_ID+ ".hotkeys.category.config_visuals_hotkeys", AllowedFunctionsHandler.ALLOWED_VISUALS_HOTKEYS); //Shaijana
     }
 
     @Override
@@ -168,7 +174,15 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
 
         if (Hotkeys.OPERATION_MODE_CHANGE_MODIFIER.getKeybind().isKeybindHeld())
         {
-            DataManager.setToolMode(DataManager.getToolMode().cycle(mc.player, amount < 0));
+            boolean forward = amount < 0;
+            boolean reverseOperationModeDirection = Configs.Generic.REVERSE_OP_MODE_DIRECTION.getBooleanValue();
+
+            if (reverseOperationModeDirection)
+            {
+                forward = !forward;
+            }
+
+            DataManager.setToolMode(DataManager.getToolMode().cycle(mc.player, forward));
             return true;
         }
 
@@ -309,7 +323,7 @@ public class InputHandler implements IKeybindProvider, IKeyboardInputHandler, IM
                 }
                 else
                 {
-                    return WorldUtils.handlePlacementRestriction(mc);
+                    return EasyPlaceUtils.handlePlacementRestriction(mc);
                 }
             }
         }

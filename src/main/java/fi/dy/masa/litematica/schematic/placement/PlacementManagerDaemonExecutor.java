@@ -12,17 +12,21 @@ public class PlacementManagerDaemonExecutor implements IThreadDaemonExecutor<Pla
 	private final AtomicBoolean paused = new AtomicBoolean(false);
 	private final long sleepTime;
 	private final float sleepDelay;
+	private final long maxTicks;
 	private long lastTaskTime;
+	private long ticks;
 
 	public PlacementManagerDaemonExecutor()
 	{
-		this(600000L);  // 10 min
+		this(1800000L);  // 30 min
 	}
 
 	public PlacementManagerDaemonExecutor(long sleepTime)
 	{
 		this.sleepTime = MathUtils.clamp(sleepTime, 60000L, Long.MAX_VALUE); // 1 min
-		this.sleepDelay = 0.75F;     // <1-second sleep delay (Must not be < 1/2 the tick rate)
+		this.sleepDelay = 0.75F;        // <1-second sleep delay (Must not be < 1/2 the tick rate)
+		this.maxTicks = 64L;            // Cap how many ticks per an interrupt cycle without tasks to do
+		this.ticks = 0L;
 	}
 
 	@Override
@@ -40,24 +44,28 @@ public class PlacementManagerDaemonExecutor implements IThreadDaemonExecutor<Pla
 	@Override
 	public void start()
 	{
+		if (PlacementManagerDaemonHandler.INSTANCE.isForceStop())
+		{
+			this.stop();
+			return;
+		}
+
 		if (!this.isRunning())
 		{
-			Litematica.debugLogError("Executor: Starting");
+			Litematica.debugLog("Executor: Starting");
 			if (this.isPaused())
 			{
 				this.paused.set(false);
 			}
 
-			this.running.set(true);
+			this.run();
 		}
-
-		this.run();
 	}
 
 	@Override
 	public void interrupt(InterruptedException interrupt)
 	{
-		Litematica.debugLogError("Executor: Interrupt Signal: {}",
+		Litematica.debugLog("Executor: Interrupt Signal: {}",
 		                        interrupt.getLocalizedMessage() != null
 		                        ? interrupt.getLocalizedMessage()  // This is null sometimes?
 		                        : "received interrupt signal");
@@ -70,16 +78,22 @@ public class PlacementManagerDaemonExecutor implements IThreadDaemonExecutor<Pla
 	@Override
 	public void pause()
 	{
-		Litematica.debugLogError("Executor: Pausing");
+		Litematica.debugLog("Executor: Pausing");
 		this.paused.set(true);
 	}
 
 	@Override
 	public void resume()
 	{
+		if (PlacementManagerDaemonHandler.INSTANCE.isForceStop())
+		{
+			this.stop();
+			return;
+		}
+
 		if (this.isPaused())
 		{
-			Litematica.debugLogError("Executor: Resuming");
+			Litematica.debugLog("Executor: Paused; Resuming");
 			this.paused.set(false);
 		}
 
@@ -89,7 +103,7 @@ public class PlacementManagerDaemonExecutor implements IThreadDaemonExecutor<Pla
 	@Override
 	public void stop()
 	{
-		Litematica.debugLogError("Executor: Stopping");
+		Litematica.debugLog("Executor: Stopping");
 		if (!this.isPaused())
 		{
 			this.paused.set(true);
@@ -115,15 +129,25 @@ public class PlacementManagerDaemonExecutor implements IThreadDaemonExecutor<Pla
 	@Override
 	public boolean hasTasks()
 	{
-		return PlacementManagerDaemonHandler.INSTANCE.hasTasks();
+		return PlacementManagerDaemonHandler.INSTANCE.hasActiveTasks();
 	}
 
 	@Override
 	public void run()
 	{
 		if (!this.isCorrectThread()) { return; }
+
+		if (PlacementManagerDaemonHandler.INSTANCE.isForceStop())
+		{
+			this.stop();
+			return;
+		}
+
+		this.running.set(true);
+//		this.maxTicks = PlacementManagerDaemonHandler.INSTANCE.getProfile().maxTicks();
 		this.lastTaskTime = System.currentTimeMillis();
-		Litematica.debugLogError("Executor: Running: [{}/{}]", this.isRunning(), this.isPaused());
+		this.ticks = 0L;
+		Litematica.debugLog("Executor: Running: [{}/{}]", this.isRunning(), this.isPaused());
 
 		while (this.isRunning())
 		{
@@ -134,15 +158,26 @@ public class PlacementManagerDaemonExecutor implements IThreadDaemonExecutor<Pla
 			else if (!this.isPaused() && this.loopSafe())
 			{
 				this.paused.set(true);
+				this.ticks = 0L;
 				this.sleep();
+				// calls this.resume() when sleep is interrupt() or times out.
+			}
+
+			if (PlacementManagerDaemonHandler.INSTANCE.isForceStop())
+			{
+				this.stop();
 				return;
 			}
 		}
+
+		Litematica.debugLog("Executor: Stopped: [{}/{}]", this.isRunning(), this.isPaused());
 	}
 
 	@Override
 	public boolean loopSafe()
 	{
+		this.ticks++;
+
 		try
 		{
 			PlacementManagerTask task = this.takeNextTask();
@@ -151,7 +186,6 @@ public class PlacementManagerDaemonExecutor implements IThreadDaemonExecutor<Pla
 			{
 				this.processTask(task);
 				this.lastTaskTime = System.currentTimeMillis();
-				return false;
 			}
 		}
 		catch (InterruptedException e)
@@ -160,7 +194,7 @@ public class PlacementManagerDaemonExecutor implements IThreadDaemonExecutor<Pla
 		}
 		catch (Exception err)
 		{
-			Litematica.debugLogError("PlacementManagerDaemonExecutor#loopSafe: Exception: {}", err.getLocalizedMessage());
+			Litematica.debugLog("PlacementManagerDaemonExecutor#loopSafe: Exception: {}", err.getLocalizedMessage());
 		}
 
 		return this.shouldPause();
@@ -170,6 +204,12 @@ public class PlacementManagerDaemonExecutor implements IThreadDaemonExecutor<Pla
 	public boolean shouldPause()
 	{
 		if (this.hasTasks()) { return false; }
+		if (this.ticks > this.maxTicks) { return true; }
+		return this.checkTaskTime();
+	}
+
+	private boolean checkTaskTime()
+	{
 		return (System.currentTimeMillis() - this.lastTaskTime) > (this.sleepDelay * 1000L);
 	}
 

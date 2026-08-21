@@ -2,7 +2,6 @@ package fi.dy.masa.litematica;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.ApiStatus;
 
 import net.fabricmc.api.ModInitializer;
 
@@ -22,21 +21,10 @@ public class Litematica implements ModInitializer
 
     public static void debugLog(String msg, Object... args)
     {
-        if (Configs.Generic.DEBUG_LOGGING.getBooleanValue())
+        if (Configs.Generic.DEBUG_LOGGING.getBooleanValue() || Reference.DEBUG_MODE)
         {
-            Litematica.LOGGER.info(msg, args);
-        }
-    }
-
-    /**
-     * Only meant for more "visible" debug messages.
-     */
-    @ApiStatus.Internal
-    public static void debugLogError(String msg, Object... args)
-    {
-        if (Configs.Generic.DEBUG_LOGGING.getBooleanValue())
-        {
-            Litematica.LOGGER.error(msg, args);
+            String message = "[DEBUG] "+msg;
+            Litematica.LOGGER.info(message, args);
         }
     }
 }

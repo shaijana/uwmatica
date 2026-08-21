@@ -59,10 +59,10 @@ public class BlockModelCacheSchematic
 	private SpriteGetter spriteGetter;
 	private PlayerSkinRenderCache skinCache;
 
-	private BlockModelRendererSchematic blockModelRenderer;
+//	private BlockModelRendererSchematic blockModelRenderer;
 	private BlockEntityRenderDispatcher blockEntityRenderDispatcher;
 	private EntityRenderDispatcher entityRenderDispatcher;
-	private FluidRenderer fluidRenderer;
+//	private FluidModelRendererSchematic fluidRenderer;
 	private FogRenderer fogRenderer;
 
 	private BlockModelCacheSchematic()
@@ -107,7 +107,7 @@ public class BlockModelCacheSchematic
 	{
 		if (this.blockColors == null)
 		{
-			this.blockColors = this.mc.getBlockColors();
+			this.blockColors = BlockColors.createDefault();
 		}
 
 		return this.blockColors;
@@ -133,15 +133,15 @@ public class BlockModelCacheSchematic
 		return this.skinCache;
 	}
 
-	protected BlockModelRendererSchematic blockModelRenderer()
-	{
-		if (this.blockModelRenderer == null)
-		{
-			this.blockModelRenderer = new BlockModelRendererSchematic();
-		}
-
-		return this.blockModelRenderer;
-	}
+//	protected BlockModelRendererSchematic blockModelRenderer()
+//	{
+//		if (this.blockModelRenderer == null)
+//		{
+//			this.blockModelRenderer = new BlockModelRendererSchematic();
+//		}
+//
+//		return this.blockModelRenderer;
+//	}
 
 	protected BlockEntityRenderDispatcher blockEntityRenderer()
 	{
@@ -163,15 +163,15 @@ public class BlockModelCacheSchematic
 		return this.entityRenderDispatcher;
 	}
 
-	protected FluidRenderer fluidRenderer()
-	{
-		if (this.fluidRenderer == null)
-		{
-			this.fluidRenderer = new FluidRenderer(this.fluidStateModelSet);
-		}
-
-		return this.fluidRenderer;
-	}
+//	protected FluidModelRendererSchematic fluidRenderer()
+//	{
+//		if (this.fluidRenderer == null)
+//		{
+//			this.fluidRenderer = new FluidModelRendererSchematic(this.fluidStateModelSet);
+//		}
+//
+//		return this.fluidRenderer;
+//	}
 
 	protected FogRenderer fogRenderer()
 	{
@@ -185,17 +185,22 @@ public class BlockModelCacheSchematic
 
 	private void refresh()
 	{
+		Litematica.LOGGER.info("BlockModelCacheSchematic: refreshing model cache");
 		this.modelManager = this.mc.getModelManager();
-		this.blockModelResolver = ((IMixinMinecraft) this.mc).litematica_getBlockModelResolver();
+		this.blockModelResolver = ((IMixinEntityRenderDispatcher) this.mc.getEntityRenderDispatcher()).litematica_getBlockModelResolver();
 		this.itemModelResolver = ((IMixinMinecraft) this.mc).litematica_getItemModelResolver();
 		this.blockStateModelSet = this.modelManager.getBlockStateModelSet();
 		this.blockModelSet = this.modelManager.getBlockModelSet();
-		this.blockColors = this.mc.getBlockColors();
+		this.blockColors = BlockColors.createDefault();
 		this.fluidStateModelSet = this.modelManager.getFluidStateModelSet();
 		this.entityModelSet = this.modelManager.entityModels().get();
 		this.spriteGetter = ((IMixinModelManager) this.modelManager).litematica_getAtlasManager();
 		this.skinCache = ((IMixinModelManager) this.modelManager).litematica_getPlayerSkinRenderCache();
+		this.rebuildCache();
+	}
 
+	private void rebuildCache()
+	{
 		synchronized (this.blockStateModelCache)
 		{
 			this.blockStateModelCache.clear();
@@ -217,10 +222,10 @@ public class BlockModelCacheSchematic
 
 	private void refreshRenderers()
 	{
-		this.blockModelRenderer = new BlockModelRendererSchematic();
+//		this.blockModelRenderer = new BlockModelRendererSchematic();
 		this.entityRenderDispatcher = this.mc.getEntityRenderDispatcher();
 		this.blockEntityRenderDispatcher = this.mc.getBlockEntityRenderDispatcher();
-		this.fluidRenderer = new FluidRenderer(this.fluidStateModelSet);
+//		this.fluidRenderer = new FluidModelRendererSchematic(this.fluidStateModelSet);
 		this.fogRenderer = ((IMixinGameRenderer) this.mc.gameRenderer).litematica_getFogRenderer();
 	}
 
@@ -234,7 +239,7 @@ public class BlockModelCacheSchematic
 		this.refreshRenderers();
 	}
 
-	protected void onReloadResources()
+	public void onReloadResources()
 	{
 		this.refresh();
 	}
@@ -257,24 +262,7 @@ public class BlockModelCacheSchematic
 	@Nullable
 	public BlockStateModel fetchBlockStateModel(BlockState state)
 	{
-		BlockStateModel model;
-
-		if (this.blockStateModelCache.containsKey(state))
-		{
-			synchronized (this.blockStateModelCache)
-			{
-				model = this.blockStateModelCache.get(state);
-			}
-		}
-		else
-		{
-			model = this.blockStateModelSet.get(state);
-
-			synchronized (this.blockStateModelCache)
-			{
-				this.blockStateModelCache.put(state, model);
-			}
-		}
+		BlockStateModel model = this.blockStateModelCache.computeIfAbsent(state, k -> this.blockStateModelSet.get(k));
 
 		if (model != null && this.checkBlockStateModel(model))
 		{
@@ -328,24 +316,7 @@ public class BlockModelCacheSchematic
 	@Nullable
 	public BlockModel fetchBlockModel(BlockState state)
 	{
-		BlockModel model;
-
-		if (this.blockModelCache.containsKey(state))
-		{
-			synchronized (this.blockModelCache)
-			{
-				model = this.blockModelCache.get(state);
-			}
-		}
-		else
-		{
-			model = this.blockModelSet.get(state);
-
-			synchronized (this.blockModelCache)
-			{
-				this.blockModelCache.put(state, model);
-			}
-		}
+		BlockModel model = this.blockModelCache.computeIfAbsent(state, k -> this.blockModelSet.get(k));
 
 		if (model != null)
 		{
@@ -386,25 +357,8 @@ public class BlockModelCacheSchematic
 	@Nullable
 	public FluidModel fetchFluidModel(FluidState state)
 	{
-		FluidModel model;
 		final Fluid fluid = state.getType();
-
-		if (this.fluidModelCache.containsKey(fluid))
-		{
-			synchronized (this.fluidModelCache)
-			{
-				model = this.fluidModelCache.get(fluid);
-			}
-		}
-		else
-		{
-			model = this.fluidStateModelSet.get(state);
-
-			synchronized (this.fluidModelCache)
-			{
-				this.fluidModelCache.put(fluid, model);
-			}
-		}
+		FluidModel model = this.fluidModelCache.computeIfAbsent(fluid, k -> this.fluidStateModelSet.get(state));
 
 		if (model != null)
 		{

@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import fi.dy.masa.litematica.render.LitematicaRenderer;
 
 @Mixin(GameRenderer.class)
-public class MixinGameRenderer
+public abstract class MixinGameRenderer
 {
 	@Shadow @Final private Camera mainCamera;
 
@@ -24,6 +24,8 @@ public class MixinGameRenderer
 	private void litematica_updateCameraState(DeltaTracker deltaTracker, float worldPartialTicks, float cameraEntityPartialTicks, CallbackInfo ci,
 	                                          @Local(name = "cameraState") CameraRenderState cameraState)
 	{
+		// Why Iris?
+//		if (IrisCompat.isShaderActive()) { return; }
 		LitematicaRenderer.getInstance().updateCameraState(this.mainCamera, cameraEntityPartialTicks, cameraState);
 	}
 }
