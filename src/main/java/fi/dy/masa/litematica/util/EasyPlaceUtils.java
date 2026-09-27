@@ -33,7 +33,6 @@ import fi.dy.masa.malilib.util.InfoUtils;
 import fi.dy.masa.malilib.util.MessageOutputType;
 import fi.dy.masa.malilib.util.game.BlockUtils;
 import fi.dy.masa.malilib.util.game.PlacementUtils;
-import fi.dy.masa.malilib.util.game.wrap.GameWrap;
 import fi.dy.masa.malilib.util.position.IntBoundingBox;
 import fi.dy.masa.malilib.util.position.LayerRange;
 import fi.dy.masa.litematica.Litematica;
@@ -71,7 +70,7 @@ public class EasyPlaceUtils
 
 	public static double getValidBlockRange(Minecraft mc)
 	{
-		return Configs.Generic.EASY_PLACE_VANILLA_REACH.getBooleanValue() ? mc.player.blockInteractionRange() : mc.player.blockInteractionRange() + 1.0;
+		return Configs.Generic.EASY_PLACE_VANILLA_REACH.getBooleanValue() ? mc.player.blockInteractionRange() : mc.player.blockInteractionRange() + 1.0f;
 	}
 
 	public static void setIsFirstClick()
@@ -117,7 +116,7 @@ public class EasyPlaceUtils
     {
         return Configs.Generic.EASY_PLACE_MODE.getBooleanValue() &&
 				Configs.Generic.EASY_PLACE_POST_REWRITE.getBooleanValue() &&
-				GameWrap.getClientPlayer() != null &&
+				Minecraft.getInstance().player != null &&
 				DataManager.getToolMode() != ToolMode.REBUILD &&
 				Hotkeys.EASY_PLACE_ACTIVATION.getKeybind().isKeybindHeld();
     }

@@ -243,7 +243,7 @@ public class SchematicConversionMaps
 			// Store the id + meta => state maps before renaming the block for the state <=> state maps
 //			BlockState state = net.minecraft.nbt.NbtUtils.readBlockState(lookup, DataConverterNbt.toVanillaCompound(newStateTag));
 			BlockState state = DataTypeUtils.readBlockStateFromTag(newStateTag, SchematicWorldHandler.INSTANCE.getRegistryManager());
-			System.out.printf("id: %5d, state: %s, tag: %s\n", idMeta, state, newStateTag);
+//			System.out.printf("id: %5d, state: %s, tag: %s\n", idMeta, state, newStateTag);
 			ID_META_TO_BLOCKSTATE.putIfAbsent(idMeta, state);
 
 			// Don't override the id and meta for air, which is what unrecognized blocks will turn into
@@ -296,7 +296,7 @@ public class SchematicConversionMaps
 			// Store the id + meta => state maps before renaming the block for the state <=> state maps
 //			BlockState state = net.minecraft.nbt.NbtUtils.readBlockState(lookup, DataConverterNbt.toVanillaCompound(newStateTag));
 			BlockState state = DataTypeUtils.readBlockStateFromTag(newStateTag, SchematicWorldHandler.INSTANCE.getRegistryManager());
-			System.out.printf("id: %5d, state: %s, tag: %s\n", idMeta, state, newStateTag);
+//			System.out.printf("id: %5d, state: %s, tag: %s\n", idMeta, state, newStateTag);
 			ID_META_TO_BLOCKSTATE.putIfAbsent(idMeta, state);
 
 			// Don't override the id and meta for air, which is what unrecognized blocks will turn into
@@ -507,7 +507,7 @@ public class SchematicConversionMaps
 			if (!oldName.equalsIgnoreCase(blockName))
 			{
 				oldBlockState.putString(BlockUtils.BLOCK_STATE_NAME, blockName);
-				Litematica.LOGGER.error("updateBlockName: [{}] -> [{}]", oldName, blockName);
+//				Litematica.LOGGER.error("updateBlockName: [{}] -> [{}]", oldName, blockName);
 			}
 		}
 
