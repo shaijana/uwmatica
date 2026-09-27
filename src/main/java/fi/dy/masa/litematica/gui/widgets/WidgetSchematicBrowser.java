@@ -100,7 +100,7 @@ public class WidgetSchematicBrowser extends WidgetFileBrowserBase
 
         FileType type = FileType.fromName(entry.getName());
         boolean matType = type == FileType.JSON || type == FileType.TEXT;
-        boolean schemType = type == FileType.LITEMATICA_SCHEMATIC || type == FileType.SPONGE_SCHEMATIC || type == FileType.VANILLA_STRUCTURE;
+        boolean schemType = type == FileType.LITEMATICA_SCHEMATIC || type == FileType.SPONGE_SCHEMATIC || type == FileType.VANILLA_STRUCTURE || type == FileType.SCHEMATICA_SCHEMATIC;
         Pair<SchematicSchema, SchematicMetadata> metaPair = schemType ? this.getSchematicVersionAndMetadata(entry) : null;
         MaterialListPreview listData = matType ? this.getMaterialListPreview(entry) : null;
         SchematicMetadata meta = null;
