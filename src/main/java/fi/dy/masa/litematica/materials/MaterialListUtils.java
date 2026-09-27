@@ -11,10 +11,7 @@ import net.minecraft.core.NonNullList;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.Vec3i;
 import net.minecraft.world.Container;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySpawnReason;
-import net.minecraft.world.entity.EntitySpawnRequest;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.block.ShulkerBoxBlock;
@@ -23,6 +20,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 
 import fi.dy.masa.malilib.registry.Registry;
 import fi.dy.masa.malilib.util.InventoryUtils;
+import fi.dy.masa.malilib.util.data.DataEntityUtils;
 import fi.dy.masa.malilib.util.data.ItemType;
 import fi.dy.masa.malilib.util.data.tag.CompoundData;
 import fi.dy.masa.malilib.util.nbt.NbtInventory;
@@ -254,7 +252,26 @@ public class MaterialListUtils
 
             if (pickStack != null && !pickStack.isEmpty())
             {
+                EntityType<?> type = DataEntityUtils.getEntityType(entry.data());
+
+                addEntityTypeOverrides(type, itemTypesOut, pickStack, count);
+
                 itemTypesOut.addTo(new ItemType(pickStack, true, false), count * pickStack.getCount());
+            }
+        }
+    }
+
+    private static void addEntityTypeOverrides(EntityType<?> type, Object2IntOpenHashMap<ItemType> itemTypesOut, ItemStack pickStack, int count)
+    {
+        if (type != null)
+        {
+            if (type.equals(EntityTypes.ITEM_FRAME) && pickStack != null && !pickStack.is(Items.ITEM_FRAME))
+            {
+                itemTypesOut.addTo(new ItemType(new ItemStack(Items.ITEM_FRAME), true, false), count);
+            }
+            else if (type.equals(EntityTypes.GLOW_ITEM_FRAME) && pickStack != null && !pickStack.is(Items.GLOW_ITEM_FRAME))
+            {
+                itemTypesOut.addTo(new ItemType(new ItemStack(Items.GLOW_ITEM_FRAME), true, false), count);
             }
         }
     }
