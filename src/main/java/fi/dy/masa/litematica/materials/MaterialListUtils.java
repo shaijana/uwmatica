@@ -3,14 +3,18 @@ package fi.dy.masa.litematica.materials;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import javax.annotation.Nullable;
+import java.util.Optional;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.NonNullList;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.Vec3i;
 import net.minecraft.world.Container;
-import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntitySpawnRequest;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.block.ShulkerBoxBlock;
@@ -20,10 +24,15 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import fi.dy.masa.malilib.registry.Registry;
 import fi.dy.masa.malilib.util.InventoryUtils;
 import fi.dy.masa.malilib.util.data.ItemType;
+import fi.dy.masa.malilib.util.data.tag.CompoundData;
 import fi.dy.masa.malilib.util.nbt.NbtInventory;
+import fi.dy.masa.malilib.util.nbt.NbtView;
+import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.schematic.LitematicaSchematic;
 import fi.dy.masa.litematica.schematic.container.LitematicaBlockStateContainer;
+import fi.dy.masa.litematica.world.SchematicWorldHandler;
+import fi.dy.masa.litematica.world.WorldSchematic;
 
 public class MaterialListUtils
 {
@@ -96,10 +105,12 @@ public class MaterialListUtils
     public static List<MaterialListEntry> createMaterialListFor(LitematicaSchematic schematic, Collection<String> subRegions)
     {
         Object2IntOpenHashMap<BlockState> countsTotal = new Object2IntOpenHashMap<>();
+        Object2IntOpenHashMap<MaterialListEntityInfo> entitiesTotal = new Object2IntOpenHashMap<>();
 
         for (String regionName : subRegions)
         {
             LitematicaBlockStateContainer container = schematic.getSubRegionContainer(regionName);
+            List<LitematicaSchematic.EntityInfo> entities = schematic.getEntityListForRegion(regionName);
 
             if (container != null)
             {
@@ -120,17 +131,54 @@ public class MaterialListUtils
                     }
                 }
             }
+
+            if (entities != null && !entities.isEmpty())
+            {
+                for (LitematicaSchematic.EntityInfo info : entities)
+                {
+                    CompoundData data = info.nbt();
+                    WorldSchematic world = SchematicWorldHandler.INSTANCE.getWorld();
+                    RegistryAccess registry = SchematicWorldHandler.INSTANCE.getRegistryManager();
+                    ItemStack pickStack = null;
+                    Entity entity = null;
+
+                    if (registry != null && world != null)
+                    {
+                        NbtView view = NbtView.getReader(data, registry);
+                        Optional<Entity> opt = EntityType.create(view.getReader(), world, new EntitySpawnRequest(EntitySpawnReason.LOAD, true));
+
+                        if (opt.isPresent())
+                        {
+                            entity = opt.get();
+                            pickStack = entity.getPickResult();
+
+                            // Ignore entities without a Pick Stack (i.e. Only read Cushions, Item Frames, Paintings, etc.)
+                            if (pickStack != null && !pickStack.isEmpty())
+                            {
+                                entitiesTotal.addTo(new MaterialListEntityInfo(info.posVec(), data, pickStack.copy()), 1);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         Minecraft mc = Minecraft.getInstance();
 
-        return getMaterialList(countsTotal, countsTotal.clone(), new Object2IntOpenHashMap<>(), mc.player);
+        Litematica.debugLog("createMaterialListFor():Schematic: totalBlocks: {}, totalEntities: {}", countsTotal.size(), entitiesTotal.size());
+
+        return getMaterialList(countsTotal, countsTotal.clone(), new Object2IntOpenHashMap<>(),
+                               entitiesTotal, entitiesTotal.clone(), new Object2IntOpenHashMap<>(),
+                               mc.player);
     }
 
     public static List<MaterialListEntry> getMaterialList(
             Object2IntOpenHashMap<BlockState> countsTotal,
             Object2IntOpenHashMap<BlockState> countsMissing,
             Object2IntOpenHashMap<BlockState> countsMismatch,
+            Object2IntOpenHashMap<MaterialListEntityInfo> entitiesTotal,
+            Object2IntOpenHashMap<MaterialListEntityInfo> entitiesMissing,
+            Object2IntOpenHashMap<MaterialListEntityInfo> entitiesMismatch,
             Player player)
     {
         List<MaterialListEntry> list = new ArrayList<>();
@@ -145,6 +193,10 @@ public class MaterialListUtils
             convertStatesToStacks(countsTotal, itemTypesTotal, cache);
             convertStatesToStacks(countsMissing, itemTypesMissing, cache);
             convertStatesToStacks(countsMismatch, itemTypesMismatch, cache);
+
+            convertEntitiesToStacks(entitiesTotal, itemTypesTotal, cache);
+            convertEntitiesToStacks(entitiesMissing, itemTypesMissing, cache);
+            convertEntitiesToStacks(entitiesMismatch, itemTypesMismatch, cache);
 
             if (player != null)
             {
@@ -188,6 +240,23 @@ public class MaterialListUtils
         }
 
         return list;
+    }
+
+    private static void convertEntitiesToStacks(
+            Object2IntOpenHashMap<MaterialListEntityInfo> entitiesIn,
+            Object2IntOpenHashMap<ItemType> itemTypesOut,
+            MaterialCache cache)
+    {
+        for (MaterialListEntityInfo entry : entitiesIn.keySet())
+        {
+            int count = entitiesIn.getInt(entry);
+            ItemStack pickStack = cache.getRequiredBuildItemForEntity(entry);
+
+            if (pickStack != null && !pickStack.isEmpty())
+            {
+                itemTypesOut.addTo(new ItemType(pickStack, true, false), count * pickStack.getCount());
+            }
+        }
     }
 
     private static void convertStatesToStacks(

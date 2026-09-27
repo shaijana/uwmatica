@@ -477,7 +477,7 @@ public class GuiMaterialList extends GuiListBase<MaterialListEntry, WidgetMateri
 
         private DataDump getMaterialListDump(MaterialListBase materialList, boolean csv)
         {
-            DataDump dump = new DataDump(4, csv ? DataDump.Format.CSV : DataDump.Format.ASCII);
+            DataDump dump = new DataDump(6, csv ? DataDump.Format.CSV : DataDump.Format.ASCII);
             int multiplier = materialList.getMultiplier();
 
             ArrayList<MaterialListEntry> list = new ArrayList<>(materialList.getMaterialsFiltered(false));
@@ -485,18 +485,26 @@ public class GuiMaterialList extends GuiListBase<MaterialListEntry, WidgetMateri
 
             for (MaterialListEntry entry : list)
             {
+                int stackSize = entry.getStack().getMaxStackSize();
                 int total = entry.getCountTotal() * multiplier;
                 int missing = multiplier > 1 ? total : entry.getCountMissing();
                 int available = entry.getCountAvailable();
-                dump.addData(entry.getStack().getHoverName().getString(), String.valueOf(total), String.valueOf(missing), String.valueOf(available));
+                double boxTotal = (double) total / (27D * stackSize);
+                double boxMissing = (double) missing / (27D * stackSize);
+                dump.addData(entry.getStack().getHoverName().getString(),
+                             String.valueOf(total), String.valueOf(missing), String.valueOf(available),
+                             String.format("%.02f SB", boxTotal), String.format("%.02f SB", boxMissing)
+                );
             }
 
             String titleTotal = multiplier > 1 ? String.format("Total (x%d)", multiplier) : "Total";
-            dump.addTitle("Item", titleTotal, "Missing", "Available");
+            dump.addTitle("Item", titleTotal, "Missing", "Available", "Total (sb)", "Missing (sb)");
             dump.addHeader(materialList.getTitle());
             dump.setColumnProperties(1, DataDump.Alignment.RIGHT, true); // total
             dump.setColumnProperties(2, DataDump.Alignment.RIGHT, true); // missing
             dump.setColumnProperties(3, DataDump.Alignment.RIGHT, true); // available
+            dump.setColumnProperties(4, DataDump.Alignment.RIGHT, false); // boxTotal
+            dump.setColumnProperties(5, DataDump.Alignment.RIGHT, false); // boxMissing
             dump.setSort(false);
             dump.setUseColumnSeparator(true);
 
