@@ -10,6 +10,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.AxisDirection;
 import net.minecraft.core.Vec3i;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
@@ -263,6 +264,14 @@ public class SchematicPlacingUtils
                             {
                                 teNBT = blockEntityMap.getOrDefault(posAdj, teNBT).copy();
                             }
+                        }
+                    }
+
+                    if (Configs.Generic.PASTE_ALWAYS_USE_PERSISTENT.getBooleanValue() && state.is(BlockTags.LEAVES))
+                    {
+                        if (state.getValue(LeavesBlock.PERSISTENT) == false)
+                        {
+                            state.setValue(LeavesBlock.PERSISTENT, true);
                         }
                     }
 

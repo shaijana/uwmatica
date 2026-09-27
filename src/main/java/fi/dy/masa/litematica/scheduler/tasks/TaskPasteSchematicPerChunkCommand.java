@@ -26,6 +26,7 @@ import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.entity.SignTextSlot;
@@ -306,7 +307,7 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
 
     protected boolean useSpecialPasting(BlockState state)
     {
-        return this.useWorldEdit == false && state.is(BlockTags.ALL_SIGNS);
+        return this.useWorldEdit == false && (state.is(BlockTags.ALL_SIGNS) || state.is(BlockTags.LEAVES));
     }
 
     protected boolean shouldSetBlock(BlockState stateSchematic, BlockState stateClient)
@@ -604,6 +605,20 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
         {
             this.specialPasteSignBlock(pos, state, schematicWorld, commandHandler);
         }
+        else if (state.is(BlockTags.LEAVES))
+        {
+            this.specialPasteLeavesBlock(pos, state, schematicWorld, commandHandler);
+        }
+    }
+
+    private void specialPasteLeavesBlock(BlockPos pos, BlockState state, Level schematicWorld, Consumer<String> commandHandler)
+    {
+        if (Configs.Generic.PASTE_ALWAYS_USE_PERSISTENT.getBooleanValue() && state.getValue(LeavesBlock.PERSISTENT) == false)
+        {
+            state.setValue(LeavesBlock.PERSISTENT, true);
+        }
+
+        this.queueSetBlockCommand(pos.getX(), pos.getY(), pos.getZ(), state, commandHandler);
     }
 
     protected void specialPasteSignBlock(BlockPos pos, BlockState state, Level schematicWorld, Consumer<String> commandHandler)
