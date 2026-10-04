@@ -60,7 +60,7 @@ public class FallbackBlocks
 
 	private static Identifier registerBasic(String name, Block block)
 	{
-		Identifier id = Identifier.fromNamespaceAndPath(Reference.MOD_ID, name);
+		Identifier id = Identifier.fromNamespaceAndPath(Reference.LITEMATICA_MOD_ID, name); //Shaijana
 
 		BLOCK_TO_ID.put(block, id);
 		ID_TO_BLOCK.put(id, block);
@@ -72,7 +72,7 @@ public class FallbackBlocks
 	private static Identifier registerHorizontalConnecting(String name, Block block)
 	{
 		StateDefinition.Builder<Block, BlockState> builder = new StateDefinition.Builder<>(block);
-		Identifier id = Identifier.fromNamespaceAndPath(Reference.MOD_ID, name);
+		Identifier id = Identifier.fromNamespaceAndPath(Reference.LITEMATICA_MOD_ID, name); //Shaijana
 
 		BLOCK_TO_ID.put(block, id);
 		ID_TO_BLOCK.put(id, block);

@@ -38,7 +38,7 @@ import fi.dy.masa.litematica.util.*;
 public class Configs implements IConfigHandler
 {
     private static final String CONFIG_FILE_NAME = Reference.MOD_ID + ".json";
-    public static final Optional<i18nManager> LANG = Optional.ofNullable(i18nManager.create(Reference.MOD_ID));
+    public static final Optional<i18nManager> LANG = Optional.ofNullable(i18nManager.create(Reference.LITEMATICA_MOD_ID)); //Shaijana
 
     private static final String GENERIC_KEY = Reference.LITEMATICA_MOD_ID+".config.generic"; //Shaijana
     public static class Generic

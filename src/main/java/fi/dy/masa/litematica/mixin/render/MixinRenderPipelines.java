@@ -36,7 +36,7 @@ public abstract class MixinRenderPipelines
 	@Unique
 	private static Identifier getId(String id)
 	{
-		return Identifier.fromNamespaceAndPath(Reference.MOD_ID, id);
+		return Identifier.fromNamespaceAndPath(Reference.LITEMATICA_MOD_ID, id); //Shaijana
 	}
 
 	@Inject(method = "<clinit>", at = @At("TAIL"))
