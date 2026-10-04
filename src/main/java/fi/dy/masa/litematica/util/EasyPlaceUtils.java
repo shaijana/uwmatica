@@ -15,6 +15,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.SwingAnimation;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.ClipContext;
@@ -32,7 +33,6 @@ import fi.dy.masa.malilib.util.InfoUtils;
 import fi.dy.masa.malilib.util.MessageOutputType;
 import fi.dy.masa.malilib.util.game.BlockUtils;
 import fi.dy.masa.malilib.util.game.PlacementUtils;
-import fi.dy.masa.malilib.util.game.wrap.GameWrap;
 import fi.dy.masa.malilib.util.position.IntBoundingBox;
 import fi.dy.masa.malilib.util.position.LayerRange;
 import fi.dy.masa.litematica.Litematica;
@@ -70,7 +70,7 @@ public class EasyPlaceUtils
 
 	public static double getValidBlockRange(Minecraft mc)
 	{
-		return Configs.Generic.EASY_PLACE_VANILLA_REACH.getBooleanValue() ? mc.player.blockInteractionRange() : mc.player.blockInteractionRange() + 1.0;
+		return Configs.Generic.EASY_PLACE_VANILLA_REACH.getBooleanValue() ? mc.player.blockInteractionRange() : mc.player.blockInteractionRange() + 1.0f;
 	}
 
 	public static void setIsFirstClick()
@@ -116,7 +116,7 @@ public class EasyPlaceUtils
     {
         return Configs.Generic.EASY_PLACE_MODE.getBooleanValue() &&
 				Configs.Generic.EASY_PLACE_POST_REWRITE.getBooleanValue() &&
-				GameWrap.getClientPlayer() != null &&
+				Minecraft.getInstance().player != null &&
 				DataManager.getToolMode() != ToolMode.REBUILD &&
 				Hotkeys.EASY_PLACE_ACTIVATION.getKeybind().isKeybindHeld();
     }
@@ -627,13 +627,14 @@ public class EasyPlaceUtils
 
 		if (result == InteractionResult.PASS)
 		{
-			if (InteractionResult.SUCCESS.swingSource().equals(InteractionResult.SwingSource.CLIENT) &&
+			if (InteractionResult.SUCCESS.shouldSwing() &&
 				Configs.Generic.EASY_PLACE_SWING_HAND.getBooleanValue())
 			{
-				player.swing(hand);
+				player.swing(hand, SwingAnimation.DEFAULT, true);
 			}
-			//GameWrap.getClient().entityRenderer.itemRenderer.resetEquippedProgress(hand);
-			mc.getEntityRenderDispatcher().getItemInHandRenderer().itemUsed(hand);
+
+//			mc.getEntityRenderDispatcher().getItemInHandRenderer().itemUsed(hand);
+			mc.player.itemUsed(hand);
 
 			if (isSlab && stateSchematic.getValue(SlabBlock.TYPE).equals(SlabType.DOUBLE))
 			{

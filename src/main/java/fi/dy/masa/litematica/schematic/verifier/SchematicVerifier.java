@@ -309,7 +309,7 @@ public class SchematicVerifier extends TaskBase implements IInfoHudRenderer
         this.ignoreBlockRegistry = new IgnoreBlockRegistry();
 
         this.setCompletionListener(completionListener);
-        this.requiredChunks.addAll(schematicPlacement.getTouchedChunks(SubRegionPlacement.RequiredEnabled.ANY));
+        this.requiredChunks.addAll(schematicPlacement.getTouchedChunks(SubRegionPlacement.RequiredEnabled.PLACEMENT_ENABLED));
         this.totalRequiredChunks = this.requiredChunks.size();
         this.verificationStarted = true;
 
@@ -703,6 +703,19 @@ public class SchematicVerifier extends TaskBase implements IInfoHudRenderer
 
         if (stateClient != stateSchematic && (stateClient.isAir() == false || stateSchematic.isAir() == false) && AllowedFunctionsHandler.isAllowed(stateClient.getBlock())) //Shaijana
         {
+            if (Configs.Visuals.IGNORE_CROP_AGE.getBooleanValue() &&
+                BlockUtils.areStatesEqualIgnoringAge(stateSchematic, stateClient))
+            {
+                ItemUtils.setItemForBlock(this.worldClient, pos, stateClient);
+                this.correctStateCounts.addTo(stateClient, 1);
+
+                if (stateSchematic.isAir() == false)
+                {
+                    ++this.correctStatesCount;
+                }
+                return;
+            }
+
             MUTABLE_PAIR.setLeft(stateSchematic);
             MUTABLE_PAIR.setRight(stateClient);
 

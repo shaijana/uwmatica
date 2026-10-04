@@ -115,7 +115,8 @@ public class ChunkSchematic extends LevelChunk
 
             if (blockOld != blockNew)
             {
-                this.getLevel().removeBlockEntity(pos);
+//                this.getLevel().removeBlockEntity(pos);
+                this.removeBlockEntity(pos);
             }
 
             if (section.getBlockState(x, y, z).getBlock() != blockNew)

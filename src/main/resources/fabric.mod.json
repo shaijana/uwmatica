@@ -21,25 +21,25 @@
 	"license": "LGPLv3",
 	"icon": "assets/uwmatica/icon.png",
 
-	"environment": "client",
-	"entrypoints": {
-		"main": [
-			"fi.dy.masa.litematica.Litematica"
-		],
-		"modmenu": [
-			"fi.dy.masa.litematica.compat.modmenu.ModMenuImpl"
-		]
-	},
-	"mixins": [
-		"mixins.litematica.json"
-	],
+    "environment": "client",
+    "entrypoints": {
+        "main": [
+            "fi.dy.masa.litematica.Litematica"
+        ],
+        "modmenu": [
+            "fi.dy.masa.litematica.compat.modmenu.ModMenuImpl"
+        ]
+    },
+    "mixins": [
+        "mixins.litematica.json"
+    ],
     "accessWidener": "litematica.accesswidener",
 
-	"depends": {
-		"minecraft": "~26.2-",
-		"malilib": ">=0.29.4- <0.30.0-"
-	},
-	"breaks": {
-		"malilib": "<0.29.4-"
-	}
+    "depends": {
+        "minecraft": ">=26.3 <26.4",
+        "malilib": ">=0.30.2- <0.31.0-"
+    },
+    "breaks": {
+        "malilib": "<0.30.2-"
+    }
 }

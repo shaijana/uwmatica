@@ -16,10 +16,13 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
+import net.minecraft.network.chat.Component;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.SwingAnimation;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
@@ -28,6 +31,7 @@ import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.entity.SignText;
+import net.minecraft.world.level.block.entity.SignTextSlot;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.SlabType;
 import net.minecraft.world.level.chunk.ChunkAccess;
@@ -51,7 +55,6 @@ import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.config.Hotkeys;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.materials.MaterialCache;
-import fi.dy.masa.litematica.mixin.entity.IMixinSignBlockEntity;
 import fi.dy.masa.litematica.schematic.LitematicaSchematic;
 import fi.dy.masa.litematica.schematic.SchematicMetadata;
 import fi.dy.masa.litematica.schematic.SchematicaSchematic;
@@ -75,7 +78,7 @@ public class WorldUtils
 {
     public static double getValidBlockRange(Minecraft mc)
     {
-        return Configs.Generic.EASY_PLACE_VANILLA_REACH.getBooleanValue() ? mc.player.blockInteractionRange() : mc.player.blockInteractionRange() + 1.0;
+        return Configs.Generic.EASY_PLACE_VANILLA_REACH.getBooleanValue() ? mc.player.blockInteractionRange() : mc.player.blockInteractionRange() + 1.0f;
     }
 
     public static boolean shouldPreventBlockUpdates(Level world)
@@ -110,7 +113,8 @@ public class WorldUtils
         }
 
 //        WorldSchematic world = SchematicWorldHandler.createSchematicWorld(null);
-        BlockPos size = new BlockPos(origSchematic.getTotalSize());
+        Vec3i totalSize = origSchematic.getTotalSize();
+        BlockPos size = new BlockPos(totalSize.getX(), totalSize.getY(), totalSize.getZ());
         TemporaryWorldHolder holder = TemporaryWorldManager.INSTANCE.getTemporaryWorld("sponge_to_litematica", BlockPos.ZERO, size);
 //        List<Pair<Integer, Integer>> tempChunks = loadChunksSchematicWorld(world, BlockPos.ZERO, size);
         SchematicPlacement schematicPlacement = SchematicPlacement.createForSchematicConversion(origSchematic, BlockPos.ZERO);
@@ -245,8 +249,9 @@ public class WorldUtils
         subRegionName = area.createNewSubRegionBox(BlockPos.ZERO, subRegionName);
         area.setSelectedSubRegionBox(subRegionName);
         Box box = area.getSelectedSubRegionBox();
+        Vec3i size = schematic.getSize();
         area.setSubRegionCornerPos(box, Corner.CORNER_1, BlockPos.ZERO);
-        area.setSubRegionCornerPos(box, Corner.CORNER_2, (new BlockPos(schematic.getSize())).offset(-1, -1, -1));
+        area.setSubRegionCornerPos(box, Corner.CORNER_2, (new BlockPos(size.getX(), size.getY(), size.getZ())).offset(-1, -1, -1));
         LitematicaSchematic.SchematicSaveInfo info = new LitematicaSchematic.SchematicSaveInfo(false, false);
 
         LitematicaSchematic newSchematic = LitematicaSchematic.createFromWorld(holder.world(), area, info, "?", feedback);
@@ -294,7 +299,8 @@ public class WorldUtils
         }
 
 //        WorldSchematic world = SchematicWorldHandler.createSchematicWorld(null);
-        BlockPos size = new BlockPos(origStructure.getTotalSize());
+        Vec3i totalSize = origStructure.getTotalSize();
+        BlockPos size = new BlockPos(totalSize.getX(), totalSize.getY(), totalSize.getZ());
 //        List<Pair<Integer, Integer>> tempChunks = loadChunksSchematicWorld(world, BlockPos.ZERO, size);
         TemporaryWorldHolder holder = TemporaryWorldManager.INSTANCE.getTemporaryWorld("structure_to_litematica", BlockPos.ZERO, size);
         SchematicPlacement schematicPlacement = SchematicPlacement.createForSchematicConversion(origStructure, BlockPos.ZERO);
@@ -451,8 +457,8 @@ public class WorldUtils
         }
 
 //        WorldSchematic world = SchematicWorldHandler.createSchematicWorld(null);
-
-        BlockPos size = new BlockPos(litematicaSchematic.getTotalSize());
+        Vec3i totalSize = litematicaSchematic.getTotalSize();
+        BlockPos size = new BlockPos(totalSize.getX(), totalSize.getY(), totalSize.getZ());
 //        List<Pair<Integer, Integer>> tempChunks = loadChunksSchematicWorld(world, BlockPos.ZERO, size);
         SchematicPlacement schematicPlacement = SchematicPlacement.createForSchematicConversion(litematicaSchematic, BlockPos.ZERO);
         TemporaryWorldHolder holder = TemporaryWorldManager.INSTANCE.getTemporaryWorld("litematic_to_structure", BlockPos.ZERO, size);
@@ -652,7 +658,7 @@ public class WorldUtils
         return false;
     }
 
-    public static void insertSignTextFromSchematic(SignBlockEntity beClient, String[] screenTextArr, boolean front)
+    public static void insertSignTextFromSchematic(SignBlockEntity beClient, String[] screenTextArr, SignTextSlot slot)
     {
         WorldSchematic worldSchematic = SchematicWorldHandler.getSchematicWorld();
 
@@ -662,16 +668,21 @@ public class WorldUtils
 
             if (beSchem instanceof SignBlockEntity)
             {
-                IMixinSignBlockEntity beMixinSchem = (IMixinSignBlockEntity) beSchem;
-                SignText textSchematic = front ? beMixinSchem.litematica_getFrontText() : beMixinSchem.litematica_getBackText();
+//                IMixinSignBlockEntity beMixinSchem = (IMixinSignBlockEntity) beSchem;
+//                SignText textSchematic = front ? beMixinSchem.litematica_getFrontText() : beMixinSchem.litematica_getBackText();
+                SignText textSchematic = ((SignBlockEntity) beSchem).getText(slot);
 
                 if (textSchematic != null)
                 {
+                    List<Component> texts = textSchematic.getMessages(false);
+
                     for (int i = 0; i < screenTextArr.length; ++i)
                     {
-                        screenTextArr[i] = textSchematic.getMessage(i, false).getString();
+//                        screenTextArr[i] = textSchematic.getMessage(i, false).getString();
+                        screenTextArr[i] = texts.get(i).getString();
                     }
-                    beClient.setText(textSchematic, front);
+
+                    beClient.setText(textSchematic, slot);
                 }
             }
         }
@@ -764,138 +775,136 @@ public class WorldUtils
             BlockPos pos = trace.getBlockPos();
             Level world = SchematicWorldHandler.getSchematicWorld();
             BlockState stateSchematic = world.getBlockState(pos);
+            BlockState stateClient = mc.level.getBlockState(pos);
             ItemStack stack = MaterialCache.getInstance().getRequiredBuildItemForState(stateSchematic, world, pos);
 
+            if (stateSchematic.is(BlockTags.AIR))
+            {
+                return InteractionResult.FAIL;
+            }
+
             // Already placed to that position, possible server sync delay
-            if (EasyPlaceUtils.easyPlaceIsPositionCached(pos))
+            if (stateSchematic == stateClient ||
+                EasyPlaceUtils.easyPlaceIsPositionCached(pos) ||
+                EasyPlaceUtils.easyPlaceIsTooFast() ||
+                stack.isEmpty())
             {
                 return InteractionResult.FAIL;
             }
 
-            // Ignore action if too fast
-            if (EasyPlaceUtils.easyPlaceIsTooFast())
+            // Abort if there is already a block in the target position
+            if (EasyPlaceUtils.easyPlaceBlockChecksCancel(stateSchematic, stateClient, mc.player, traceVanilla, stack))
             {
                 return InteractionResult.FAIL;
             }
 
-            if (stack.isEmpty() == false)
+            InventoryUtils.schematicWorldPickBlock(stack, pos, world, mc);
+            InteractionHand hand = EntityUtils.getUsedHandForItem(mc.player, stack);
+
+            // Abort if a wrong item is in the player's hand
+            if (hand == null)
             {
-                BlockState stateClient = mc.level.getBlockState(pos);
+                return InteractionResult.FAIL;
+            }
 
-                if (stateSchematic == stateClient)
+            Vec3 hitPos = trace.getLocation();
+            Direction sideOrig = trace.getDirection();
+            EasyPlaceProtocol protocol = PlacementHandler.getEffectiveProtocolVersion();
+
+            if (protocol == EasyPlaceProtocol.NONE || protocol == EasyPlaceProtocol.SLAB_ONLY)
+            {
+                // If there is a block in the world right behind the targeted schematic block, then use
+                // that block as the click position
+                if (traceVanilla != null && traceVanilla.getType() == HitResult.Type.BLOCK)
                 {
-                    return InteractionResult.FAIL;
-                }
+                    BlockHitResult hitResult = (BlockHitResult) traceVanilla;
+                    BlockPos posVanilla = hitResult.getBlockPos();
+                    Direction sideVanilla = hitResult.getDirection();
+                    BlockState stateVanilla = mc.level.getBlockState(posVanilla);
+                    Vec3 hit = traceVanilla.getLocation();
+                    BlockPlaceContext ctx = new BlockPlaceContext(new UseOnContext(mc.player, hand, hitResult));
 
-                // Abort if there is already a block in the target position
-                if (EasyPlaceUtils.easyPlaceBlockChecksCancel(stateSchematic, stateClient, mc.player, traceVanilla, stack))
-                {
-                    return InteractionResult.FAIL;
-                }
-
-                InventoryUtils.schematicWorldPickBlock(stack, pos, world, mc);
-                InteractionHand hand = EntityUtils.getUsedHandForItem(mc.player, stack);
-
-                // Abort if a wrong item is in the player's hand
-                if (hand == null)
-                {
-                    return InteractionResult.FAIL;
-                }
-
-                Vec3 hitPos = trace.getLocation();
-                Direction sideOrig = trace.getDirection();
-                EasyPlaceProtocol protocol = PlacementHandler.getEffectiveProtocolVersion();
-
-                if (protocol == EasyPlaceProtocol.NONE || protocol == EasyPlaceProtocol.SLAB_ONLY)
-                {
-                    // If there is a block in the world right behind the targeted schematic block, then use
-                    // that block as the click position
-                    if (traceVanilla != null && traceVanilla.getType() == HitResult.Type.BLOCK)
+                    if (stateVanilla.canBeReplaced(ctx) == false)
                     {
-                        BlockHitResult hitResult = (BlockHitResult) traceVanilla;
-                        BlockPos posVanilla = hitResult.getBlockPos();
-                        Direction sideVanilla = hitResult.getDirection();
-                        BlockState stateVanilla = mc.level.getBlockState(posVanilla);
-                        Vec3 hit = traceVanilla.getLocation();
-                        BlockPlaceContext ctx = new BlockPlaceContext(new UseOnContext(mc.player, hand, hitResult));
+                        posVanilla = posVanilla.relative(sideVanilla);
 
-                        if (stateVanilla.canBeReplaced(ctx) == false)
+                        if (pos.equals(posVanilla))
                         {
-                            posVanilla = posVanilla.relative(sideVanilla);
-
-                            if (pos.equals(posVanilla))
-                            {
-                                hitPos = hit;
-                                sideOrig = sideVanilla;
-                            }
+                            hitPos = hit;
+                            sideOrig = sideVanilla;
                         }
                     }
                 }
+            }
 
 //                System.out.printf("doEasyPlaceAction - stateSchematic [%s] // sideOrig [%s]\n", stateSchematic.toString(), sideOrig.getName());
 
-                Direction side = EasyPlaceUtils.applyPlacementFacing(stateSchematic, sideOrig, stateClient);
+            Direction side = EasyPlaceUtils.applyPlacementFacing(stateSchematic, sideOrig, stateClient);
 
-                // Support for special cases
-                EasyPlaceUtils.PlacementProtocolData placementData = EasyPlaceUtils.applyPlacementProtocolAll(pos, stateSchematic, hitPos);
+            // Support for special cases
+            EasyPlaceUtils.PlacementProtocolData placementData = EasyPlaceUtils.applyPlacementProtocolAll(pos, stateSchematic, hitPos);
 
-                if (placementData.mustFail)
+            if (placementData.mustFail)
+            {
+                return InteractionResult.FAIL; //disallowed cases (e.g. trying to place torch with no support block)
+            }
+
+            if (placementData.handled)
+            {
+                pos = placementData.pos;
+                side = placementData.side;
+                hitPos = placementData.hitVec;
+            }
+
+            if (protocol == EasyPlaceProtocol.V3)
+            {
+                hitPos = EasyPlaceUtils.applyPlacementProtocolV3(pos, stateSchematic, hitPos);
+            }
+            else if (protocol == EasyPlaceProtocol.V2)
+            {
+                // Carpet Accurate Block Placement protocol support, plus slab support
+                hitPos = EasyPlaceUtils.applyCarpetProtocolHitVec(pos, stateSchematic, hitPos);
+            }
+            else if (protocol == EasyPlaceProtocol.SLAB_ONLY)
+            {
+                // Slab support only
+                hitPos = EasyPlaceUtils.applyBlockSlabProtocol(pos, stateSchematic, hitPos);
+            }
+
+            // Mark that this position has been handled (use the non-offset position that is checked above)
+            EasyPlaceUtils.cacheEasyPlacePosition(pos);
+
+            BlockHitResult hitResult = new BlockHitResult(hitPos, side, pos, false);
+
+            if (hitResult == null)
+            {
+                return InteractionResult.FAIL;
+            }
+
+            //System.out.printf("interact -> pos: %s side: %s, hit: %s\n", pos, side, hitPos);
+            // pos, side, hitPos
+            InteractionResult result = mc.gameMode.useItemOn(mc.player, hand, hitResult);
+
+            // swing hand fix, see MinecraftClient#doItemUse
+            if (InteractionResult.SUCCESS.shouldSwing() &&
+                Configs.Generic.EASY_PLACE_SWING_HAND.getBooleanValue())
+            {
+                mc.player.swing(hand, SwingAnimation.DEFAULT, true);
+            }
+
+            if (stateSchematic.getBlock() instanceof SlabBlock && stateSchematic.getValue(SlabBlock.TYPE) == SlabType.DOUBLE)
+            {
+                stateClient = mc.level.getBlockState(pos);
+
+                if (stateClient.getBlock() instanceof SlabBlock && stateClient.getValue(SlabBlock.TYPE) != SlabType.DOUBLE)
                 {
-                    return InteractionResult.FAIL; //disallowed cases (e.g. trying to place torch with no support block)
-                }
-
-                if (placementData.handled)
-                {
-                    pos = placementData.pos;
-                    side = placementData.side;
-                    hitPos = placementData.hitVec;
-                }
-
-                if (protocol == EasyPlaceProtocol.V3)
-                {
-                    hitPos = EasyPlaceUtils.applyPlacementProtocolV3(pos, stateSchematic, hitPos);
-                }
-                else if (protocol == EasyPlaceProtocol.V2)
-                {
-                    // Carpet Accurate Block Placement protocol support, plus slab support
-                    hitPos = EasyPlaceUtils.applyCarpetProtocolHitVec(pos, stateSchematic, hitPos);
-                }
-                else if (protocol == EasyPlaceProtocol.SLAB_ONLY)
-                {
-                    // Slab support only
-                    hitPos = EasyPlaceUtils.applyBlockSlabProtocol(pos, stateSchematic, hitPos);
-                }
-
-                // Mark that this position has been handled (use the non-offset position that is checked above)
-                EasyPlaceUtils.cacheEasyPlacePosition(pos);
-
-                BlockHitResult hitResult = new BlockHitResult(hitPos, side, pos, false);
-
-                //System.out.printf("interact -> pos: %s side: %s, hit: %s\n", pos, side, hitPos);
-                // pos, side, hitPos
-                InteractionResult result = mc.gameMode.useItemOn(mc.player, hand, hitResult);
-
-                // swing hand fix, see MinecraftClient#doItemUse
-                if (InteractionResult.SUCCESS.swingSource().equals(InteractionResult.SwingSource.CLIENT) &&
-                    Configs.Generic.EASY_PLACE_SWING_HAND.getBooleanValue())
-                {
-                    mc.player.swing(hand);
-                }
-
-                if (stateSchematic.getBlock() instanceof SlabBlock && stateSchematic.getValue(SlabBlock.TYPE) == SlabType.DOUBLE)
-                {
-                    stateClient = mc.level.getBlockState(pos);
-
-                    if (stateClient.getBlock() instanceof SlabBlock && stateClient.getValue(SlabBlock.TYPE) != SlabType.DOUBLE)
-                    {
-                        side = EasyPlaceUtils.applyPlacementFacing(stateSchematic, sideOrig, stateClient);
-                        hitResult = new BlockHitResult(hitPos, side, pos, false);
-                        mc.gameMode.useItemOn(mc.player, hand, hitResult);
-                    }
+                    side = EasyPlaceUtils.applyPlacementFacing(stateSchematic, sideOrig, stateClient);
+                    hitResult = new BlockHitResult(hitPos, side, pos, false);
+                    result = mc.gameMode.useItemOn(mc.player, hand, hitResult);
                 }
             }
 
-            return InteractionResult.SUCCESS;
+            return result;
         }
         else if (traceWrapper.getHitType() == HitType.VANILLA_BLOCK)
         {

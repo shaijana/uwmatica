@@ -5,14 +5,17 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import javax.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
+
+import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
-import fi.dy.masa.litematica.config.Configs;
-import fi.dy.masa.malilib.util.*;
+
 import fi.dy.masa.malilib.config.IConfigOptionList;
 import fi.dy.masa.malilib.config.IConfigOptionListEntry;
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.GuiConfirmAction;
+import fi.dy.masa.malilib.gui.GuiConfirmFileDrop;
 import fi.dy.masa.malilib.gui.GuiTextInputFeedback;
 import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.gui.button.ButtonBase;
@@ -22,10 +25,18 @@ import fi.dy.masa.malilib.gui.button.IButtonActionListener;
 import fi.dy.masa.malilib.gui.interfaces.ISelectionListener;
 import fi.dy.masa.malilib.gui.widgets.WidgetFileBrowserBase.DirectoryEntry;
 import fi.dy.masa.malilib.interfaces.IStringConsumerFeedback;
-import com.mojang.blaze3d.platform.NativeImage;
+import fi.dy.masa.malilib.util.InfoUtils;
+import fi.dy.masa.malilib.util.StringUtils;
+import fi.dy.masa.malilib.util.file_ops.FileCopier;
+import fi.dy.masa.malilib.util.file_ops.FileCopierMulti;
+import fi.dy.masa.malilib.util.file_ops.FileDeleter;
+import fi.dy.masa.malilib.util.file_ops.FileRenamer;
+import fi.dy.masa.malilib.util.input.ScanCodes;
 import fi.dy.masa.litematica.Litematica;
+import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.gui.GuiMainMenu.ButtonListenerChangeMenu;
+import fi.dy.masa.litematica.gui.widgets.WidgetSchematicBrowser;
 import fi.dy.masa.litematica.materials.MaterialListCustom;
 import fi.dy.masa.litematica.schematic.LitematicaSchematic;
 import fi.dy.masa.litematica.util.FileType;
@@ -194,6 +205,38 @@ public class GuiSchematicManager extends GuiSchematicBrowserBase implements ISel
         return previewGenerator != null;
     }
 
+	@Override
+	public boolean onMouseDropFiles(@NonNull List<Path> files)
+	{
+		if (this.getListWidget() != null)
+		{
+			Path dest;
+
+			if (this.getListWidget().getLastSelectedEntry() != null && Files.isDirectory(this.getListWidget().getLastSelectedEntry().getFullPath()))
+			{
+				dest = this.getListWidget().getLastSelectedEntry().getFullPath();
+			}
+			else if (this.getListWidget().getCurrentDirectory() != null && Files.isDirectory(this.getListWidget().getCurrentDirectory()))
+			{
+				dest = this.getListWidget().getCurrentDirectory();
+			}
+			else
+			{
+				return false;
+			}
+
+			if (Files.isDirectory(dest) && Files.isWritable(dest))
+			{
+				FileCopierMulti copier = new FileCopierMulti(dest, this.getListWidget(), Configs.Generic.DISPLAY_FILE_OPS_FEEDBACK.getBooleanValue());
+				GuiBase.openGui(new GuiConfirmFileDrop<>(256, "malilib.gui.title.file_drop_confirm", files, copier, WidgetSchematicBrowser.SCHEMATIC_FILTER, this,
+				                                         "malilib.message.file_drop_confirm", files.size(), dest.toAbsolutePath().toString()));
+				return true;
+			}
+		}
+
+		return false;
+	}
+
     private class ExportTypeWrapper implements IConfigOptionList
     {
         @Override
@@ -268,8 +311,8 @@ public class GuiSchematicManager extends GuiSchematicBrowserBase implements ISel
 		@Override
 		public void actionPerformedWithButton(ButtonBase button, int mouseButton)
 		{
-			if (this.type == Type.EDIT_SCHEMATIC && this.gui.editType == EditType.SET_PREVIEW
-				&& mouseButton == 1)
+			if (this.type == Type.EDIT_SCHEMATIC && this.gui.editType == EditType.SET_PREVIEW &&
+				mouseButton == ScanCodes.OFFSET_MOUSE_RIGHT)
 			{
 				if (previewGenerator != null)
 				{

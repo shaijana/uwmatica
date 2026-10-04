@@ -3,22 +3,34 @@ package fi.dy.masa.litematica.materials;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.NonNullList;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.Vec3i;
 import net.minecraft.world.Container;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.block.ShulkerBoxBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 
+import fi.dy.masa.malilib.registry.Registry;
 import fi.dy.masa.malilib.util.InventoryUtils;
+import fi.dy.masa.malilib.util.data.DataEntityUtils;
 import fi.dy.masa.malilib.util.data.ItemType;
+import fi.dy.masa.malilib.util.data.tag.CompoundData;
+import fi.dy.masa.malilib.util.nbt.NbtInventory;
+import fi.dy.masa.malilib.util.nbt.NbtView;
+import fi.dy.masa.litematica.Litematica;
+import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.schematic.LitematicaSchematic;
 import fi.dy.masa.litematica.schematic.container.LitematicaBlockStateContainer;
+import fi.dy.masa.litematica.world.SchematicWorldHandler;
+import fi.dy.masa.litematica.world.WorldSchematic;
 
 public class MaterialListUtils
 {
@@ -47,17 +59,33 @@ public class MaterialListUtils
         }
 
         Object2IntOpenHashMap<ItemType> playerInvItems = null;
+        Object2IntOpenHashMap<ItemType> enderItems = null;
 
         if (player != null)
         {
             playerInvItems = getInventoryItemCounts(player.getInventory());
+            NbtInventory ender = Registry.ENTITY_DATA_REGISTRY.chestTracker().getEnderCache();
+
+            if (Configs.Generic.MATERIAL_LIST_COUNT_ENDER_CACHE.getBooleanValue() && ender != null)
+            {
+                Container ec = ender.toInventory(NbtInventory.DEFAULT_SIZE);
+
+                if (ec != null)
+                {
+                    enderItems = getInventoryItemCounts(ec);
+                }
+            }
         }
 
         for (java.util.Map.Entry<ItemType, Integer> entry : items.entrySet())
         {
             ItemType type = entry.getKey();
             int count = entry.getValue();
-            int countAvailable = playerInvItems != null ? playerInvItems.getInt(type) : 0;
+            int countAvailable = playerInvItems != null
+                                 ? playerInvItems.getInt(type)
+                                 : 0;
+
+            countAvailable += enderItems != null ? enderItems.getInt(type) : 0;
 
             // For custom item lists, total = missing (no placement state to compare against)
             list.add(new MaterialListEntry(
@@ -75,10 +103,12 @@ public class MaterialListUtils
     public static List<MaterialListEntry> createMaterialListFor(LitematicaSchematic schematic, Collection<String> subRegions)
     {
         Object2IntOpenHashMap<BlockState> countsTotal = new Object2IntOpenHashMap<>();
+        Object2IntOpenHashMap<MaterialListEntityInfo> entitiesTotal = new Object2IntOpenHashMap<>();
 
         for (String regionName : subRegions)
         {
             LitematicaBlockStateContainer container = schematic.getSubRegionContainer(regionName);
+            List<LitematicaSchematic.EntityInfo> entities = schematic.getEntityListForRegion(regionName);
 
             if (container != null)
             {
@@ -99,17 +129,54 @@ public class MaterialListUtils
                     }
                 }
             }
+
+            if (entities != null && !entities.isEmpty())
+            {
+                for (LitematicaSchematic.EntityInfo info : entities)
+                {
+                    CompoundData data = info.nbt();
+                    WorldSchematic world = SchematicWorldHandler.INSTANCE.getWorld();
+                    RegistryAccess registry = SchematicWorldHandler.INSTANCE.getRegistryManager();
+                    ItemStack pickStack = null;
+                    Entity entity = null;
+
+                    if (registry != null && world != null)
+                    {
+                        NbtView view = NbtView.getReader(data, registry);
+                        Optional<Entity> opt = EntityType.create(view.getReader(), world, new EntitySpawnRequest(EntitySpawnReason.LOAD, true));
+
+                        if (opt.isPresent())
+                        {
+                            entity = opt.get();
+                            pickStack = entity.getPickResult();
+
+                            // Ignore entities without a Pick Stack (i.e. Only read Cushions, Item Frames, Paintings, etc.)
+                            if (pickStack != null && !pickStack.isEmpty())
+                            {
+                                entitiesTotal.addTo(new MaterialListEntityInfo(info.posVec(), data, pickStack.copy()), 1);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         Minecraft mc = Minecraft.getInstance();
 
-        return getMaterialList(countsTotal, countsTotal.clone(), new Object2IntOpenHashMap<>(), mc.player);
+        Litematica.debugLog("createMaterialListFor():Schematic: totalBlocks: {}, totalEntities: {}", countsTotal.size(), entitiesTotal.size());
+
+        return getMaterialList(countsTotal, countsTotal.clone(), new Object2IntOpenHashMap<>(),
+                               entitiesTotal, entitiesTotal.clone(), new Object2IntOpenHashMap<>(),
+                               mc.player);
     }
 
     public static List<MaterialListEntry> getMaterialList(
             Object2IntOpenHashMap<BlockState> countsTotal,
             Object2IntOpenHashMap<BlockState> countsMissing,
             Object2IntOpenHashMap<BlockState> countsMismatch,
+            Object2IntOpenHashMap<MaterialListEntityInfo> entitiesTotal,
+            Object2IntOpenHashMap<MaterialListEntityInfo> entitiesMissing,
+            Object2IntOpenHashMap<MaterialListEntityInfo> entitiesMismatch,
             Player player)
     {
         List<MaterialListEntry> list = new ArrayList<>();
@@ -125,17 +192,36 @@ public class MaterialListUtils
             convertStatesToStacks(countsMissing, itemTypesMissing, cache);
             convertStatesToStacks(countsMismatch, itemTypesMismatch, cache);
 
+            convertEntitiesToStacks(entitiesTotal, itemTypesTotal, cache);
+            convertEntitiesToStacks(entitiesMissing, itemTypesMissing, cache);
+            convertEntitiesToStacks(entitiesMismatch, itemTypesMismatch, cache);
+
             if (player != null)
             {
                 Object2IntOpenHashMap<ItemType> playerInvItems = getInventoryItemCounts(player.getInventory());
+                Object2IntOpenHashMap<ItemType> enderItems = null;
+                NbtInventory ender = Registry.ENTITY_DATA_REGISTRY.chestTracker().getEnderCache();
+
+                if (Configs.Generic.MATERIAL_LIST_COUNT_ENDER_CACHE.getBooleanValue() && ender != null)
+                {
+                    Container ec = ender.toInventory(NbtInventory.DEFAULT_SIZE);
+
+                    if (ec != null)
+                    {
+                        enderItems = getInventoryItemCounts(ec);
+                    }
+                }
 
                 for (ItemType type : itemTypesTotal.keySet())
                 {
+                    final int enderCount = enderItems != null ? enderItems.getInt(type) : 0;
+
                     list.add(new MaterialListEntry(type.getStack().copy(),
                                                    itemTypesTotal.getInt(type),
                                                    itemTypesMissing.getInt(type),
                                                    itemTypesMismatch.getInt(type),
-                                                   playerInvItems.getInt(type)));
+                                                   playerInvItems.getInt(type) + enderCount
+                    ));
                 }
             }
             else
@@ -152,6 +238,42 @@ public class MaterialListUtils
         }
 
         return list;
+    }
+
+    private static void convertEntitiesToStacks(
+            Object2IntOpenHashMap<MaterialListEntityInfo> entitiesIn,
+            Object2IntOpenHashMap<ItemType> itemTypesOut,
+            MaterialCache cache)
+    {
+        for (MaterialListEntityInfo entry : entitiesIn.keySet())
+        {
+            int count = entitiesIn.getInt(entry);
+            ItemStack pickStack = cache.getRequiredBuildItemForEntity(entry);
+
+            if (pickStack != null && !pickStack.isEmpty())
+            {
+                EntityType<?> type = DataEntityUtils.getEntityType(entry.data());
+
+                addEntityTypeOverrides(type, itemTypesOut, pickStack, count);
+
+                itemTypesOut.addTo(new ItemType(pickStack, true, false), count * pickStack.getCount());
+            }
+        }
+    }
+
+    private static void addEntityTypeOverrides(EntityType<?> type, Object2IntOpenHashMap<ItemType> itemTypesOut, ItemStack pickStack, int count)
+    {
+        if (type != null)
+        {
+            if (type.equals(EntityTypes.ITEM_FRAME) && pickStack != null && !pickStack.is(Items.ITEM_FRAME))
+            {
+                itemTypesOut.addTo(new ItemType(new ItemStack(Items.ITEM_FRAME), true, false), count);
+            }
+            else if (type.equals(EntityTypes.GLOW_ITEM_FRAME) && pickStack != null && !pickStack.is(Items.GLOW_ITEM_FRAME))
+            {
+                itemTypesOut.addTo(new ItemType(new ItemStack(Items.GLOW_ITEM_FRAME), true, false), count);
+            }
+        }
     }
 
     private static void convertStatesToStacks(
@@ -196,11 +318,25 @@ public class MaterialListUtils
     {
         if (player == null) return;
         Object2IntOpenHashMap<ItemType> playerInvItems = getInventoryItemCounts(player.getInventory());
+        Object2IntOpenHashMap<ItemType> enderItems = null;
+        NbtInventory ender = Registry.ENTITY_DATA_REGISTRY.chestTracker().getEnderCache();
+
+        if (Configs.Generic.MATERIAL_LIST_COUNT_ENDER_CACHE.getBooleanValue() && ender != null)
+        {
+            Container ec = ender.toInventory(NbtInventory.DEFAULT_SIZE);
+
+            if (ec != null)
+            {
+                enderItems = getInventoryItemCounts(ec);
+            }
+        }
 
         for (MaterialListEntry entry : list)
         {
             ItemType type = new ItemType(entry.getStack(), true, false);
-            int countAvailable = playerInvItems.getInt(type);
+            int countAvailable = enderItems != null
+                                 ? playerInvItems.getInt(type) + enderItems.getInt(type)
+                                 : playerInvItems.getInt(type);
             entry.setCountAvailable(countAvailable);
         }
     }
@@ -256,6 +392,7 @@ public class MaterialListUtils
     {
         Object2IntOpenHashMap<ItemType> map = new Object2IntOpenHashMap<>();
         NonNullList<ItemStack> items = InventoryUtils.getStoredItems(stackShulkerBox);
+		int multiplier = stackShulkerBox.getCount();
 
         for (ItemStack boxStack : items)
         {
@@ -271,8 +408,8 @@ public class MaterialListUtils
                         bundleMap.forEach(map::addTo);
                     }
                 }
-
-                map.addTo(new ItemType(boxStack, false, false), boxStack.getCount());
+				
+                map.addTo(new ItemType(boxStack, false, false), boxStack.getCount() * multiplier);
             }
         }
 

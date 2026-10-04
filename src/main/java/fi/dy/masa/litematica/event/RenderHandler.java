@@ -1,11 +1,10 @@
 package fi.dy.masa.litematica.event;
 
 import java.util.function.Supplier;
-import org.joml.Matrix4fc;
 import org.joml.Vector4f;
 
-import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.pipeline.RenderTarget;
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -21,7 +20,6 @@ import fi.dy.masa.litematica.Reference;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.gui.GuiSchematicManager;
-import fi.dy.masa.litematica.render.LitematicaRenderer;
 import fi.dy.masa.litematica.render.OverlayRenderer;
 import fi.dy.masa.litematica.render.infohud.InfoHud;
 import fi.dy.masa.litematica.render.infohud.ToolHud;
@@ -36,7 +34,7 @@ public class RenderHandler implements IRenderer
     }
 
     @Override
-    public void onRenderWorldLast(RenderTarget fb, Matrix4fc modelViewMatrix, CameraRenderState cameraState, Frustum culling, RenderBuffers buffers, GpuBufferSlice terrainFog, Vector4f fogColor, ProfilerFiller profiler)
+    public void onRenderWorldLast(RenderTarget fb, CameraRenderState cameraState, Frustum culling, RenderBuffers buffers, GpuBufferSlice terrainFog, Vector4f fogColor, ProfilerFiller profiler)
     {
         Minecraft mc = Minecraft.getInstance();
 
@@ -57,10 +55,10 @@ public class RenderHandler implements IRenderer
                 OverlayRenderer.getInstance().renderSchematicRebuildTargetingOverlay(profiler);
             }
 
-            // Schematic Overlay Rendering
-            profiler.popPush("schematic_overlay");
-            LitematicaRenderer.getInstance().piecewiseRenderOverlay(profiler);
-            profiler.pop();
+//            // Schematic Overlay Rendering
+//            profiler.popPush("schematic_overlay");
+//            LitematicaRenderer.getInstance().piecewiseRenderOverlay(profiler);
+//            profiler.pop();
         }
     }
 

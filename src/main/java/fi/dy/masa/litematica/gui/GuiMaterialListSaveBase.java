@@ -16,8 +16,8 @@ import fi.dy.masa.malilib.gui.widgets.WidgetFileBrowserBase.DirectoryEntry;
 import fi.dy.masa.malilib.gui.widgets.WidgetFileBrowserBase.DirectoryEntryType;
 import fi.dy.masa.malilib.render.GuiContext;
 import fi.dy.masa.malilib.util.FileNameUtils;
-import fi.dy.masa.malilib.util.KeyCodes;
 import fi.dy.masa.malilib.util.StringUtils;
+import fi.dy.masa.malilib.util.input.ScanCodes;
 import fi.dy.masa.litematica.materials.MaterialListCustom;
 
 public abstract class GuiMaterialListSaveBase extends GuiMaterialListBrowserBase implements ISelectionListener<DirectoryEntry>
@@ -41,7 +41,7 @@ public abstract class GuiMaterialListSaveBase extends GuiMaterialListBrowserBase
     @Override
     public int getBrowserHeight()
     {
-        return this.getScreenHeight() - 80;
+        return this.getScreenHeight() - 100;
     }
 
     @Override
@@ -164,7 +164,7 @@ public abstract class GuiMaterialListSaveBase extends GuiMaterialListBrowserBase
             this.getListWidget().clearSelection();
             return true;
         }
-        else if (input.key() == KeyCodes.KEY_TAB)
+        else if (input.key() == ScanCodes.SCAN_TAB)
         {
             this.textField.setFocusedWrapper(! this.textField.isFocusedWrapper());
             return true;
@@ -191,7 +191,7 @@ public abstract class GuiMaterialListSaveBase extends GuiMaterialListBrowserBase
 
         private final String labelKey;
 
-        private ButtonType(String labelKey)
+        ButtonType(String labelKey)
         {
             this.labelKey = labelKey;
         }

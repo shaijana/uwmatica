@@ -1,8 +1,8 @@
 package fi.dy.masa.litematica.schematic.conversion;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
@@ -11,8 +11,6 @@ import com.mojang.datafixers.DataFixUtils;
 import com.mojang.serialization.Dynamic;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.HolderGetter;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.StringTag;
@@ -20,7 +18,6 @@ import net.minecraft.nbt.TagParser;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.datafix.DataFixers;
 import net.minecraft.util.datafix.fixes.References;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.RotatedPillarBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -31,6 +28,7 @@ import fi.dy.masa.malilib.util.data.tag.ListData;
 import fi.dy.masa.malilib.util.data.tag.converter.DataConverterNbt;
 import fi.dy.masa.malilib.util.data.tag.util.DataOps;
 import fi.dy.masa.malilib.util.data.tag.util.DataTypeUtils;
+import fi.dy.masa.malilib.util.game.BlockUtils;
 import fi.dy.masa.litematica.Litematica;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.schematic.LitematicaSchematic;
@@ -42,10 +40,10 @@ public class SchematicConversionMaps
 	private static final Int2ObjectOpenHashMap<String> ID_META_TO_UPDATED_NAME = new Int2ObjectOpenHashMap<>();
 	private static final Object2IntOpenHashMap<BlockState> BLOCKSTATE_TO_ID_META = DataFixUtils.make(new Object2IntOpenHashMap<>(), (map) -> map.defaultReturnValue(-1));
 	private static final Int2ObjectOpenHashMap<BlockState> ID_META_TO_BLOCKSTATE = new Int2ObjectOpenHashMap<>();
-	private static final HashMap<String, String> OLD_NAME_TO_NEW_NAME = new HashMap<>();
-	private static final HashMap<String, String> NEW_NAME_TO_OLD_NAME = new HashMap<>();
-	private static final HashMap<CompoundData, CompoundData> OLD_STATE_TO_NEW_STATE = new HashMap<>();
-	private static final HashMap<CompoundData, CompoundData> NEW_STATE_TO_OLD_STATE = new HashMap<>();
+	private static final ConcurrentHashMap<String, String> OLD_NAME_TO_NEW_NAME = new ConcurrentHashMap<>();
+	private static final ConcurrentHashMap<String, String> NEW_NAME_TO_OLD_NAME = new ConcurrentHashMap<>();
+	private static final ConcurrentHashMap<CompoundData, CompoundData> OLD_STATE_TO_NEW_STATE = new ConcurrentHashMap<>();
+	private static final ConcurrentHashMap<CompoundData, CompoundData> NEW_STATE_TO_OLD_STATE = new ConcurrentHashMap<>();
 	private static final ArrayList<ConversionData> CACHED_DATA = new ArrayList<>();
 	private static final ArrayList<ConversionDynamic> CACHED_DYNAMIC = new ArrayList<>();
 
@@ -99,7 +97,7 @@ public class SchematicConversionMaps
 
 					if (oldStateTag != null)
 					{
-						String name = oldStateTag.getStringOrDefault("Name", "");
+						String name = oldStateTag.getStringOrDefault(BlockUtils.BLOCK_STATE_NAME, "");
 						OLD_BLOCK_NAME_TO_SHIFTED_BLOCK_ID.putIfAbsent(name, data.idMeta & 0xFFF0);
 					}
 				}
@@ -126,7 +124,7 @@ public class SchematicConversionMaps
 			{
 				if (!entry.oldStates().isEmpty())
 				{
-					String oldName = entry.oldStates().getFirst().get("Name").asString("");
+					String oldName = entry.oldStates().getFirst().get(BlockUtils.BLOCK_STATE_NAME).asString("");
 
 					if (!oldName.isEmpty())
 					{
@@ -231,20 +229,21 @@ public class SchematicConversionMaps
 		{
 			// The flattening map actually has outdated names for some blocks...
 			// Ie. some blocks were renamed after the flattening, so we need to handle those here.
-			String newName = newStateTag.getStringOrDefault("Name", "");
+			String newName = newStateTag.getStringOrDefault(BlockUtils.BLOCK_STATE_NAME, "");
 			String overriddenName = ID_META_TO_UPDATED_NAME.get(idMeta);
 
 			if (overriddenName != null)
 			{
 				newName = overriddenName;
-				newStateTag.putString("Name", newName);
+				newStateTag.putString(BlockUtils.BLOCK_STATE_NAME, newName);
 			}
 
 			//RegistryEntryLookup<Block> lookup = Registries.BLOCK.getReadOnlyWrapper();
-			HolderGetter<Block> lookup = SchematicWorldHandler.INSTANCE.getRegistryManager().lookupOrThrow(Registries.BLOCK);
+//			HolderGetter<Block> lookup = SchematicWorldHandler.INSTANCE.getRegistryManager().lookupOrThrow(Registries.BLOCK);
 			// Store the id + meta => state maps before renaming the block for the state <=> state maps
-			BlockState state = net.minecraft.nbt.NbtUtils.readBlockState(lookup, DataConverterNbt.toVanillaCompound(newStateTag));
-			//System.out.printf("id: %5d, state: %s, tag: %s\n", idMeta, state, newStateTag);
+//			BlockState state = net.minecraft.nbt.NbtUtils.readBlockState(lookup, DataConverterNbt.toVanillaCompound(newStateTag));
+			BlockState state = DataTypeUtils.readBlockStateFromTag(newStateTag, SchematicWorldHandler.INSTANCE.getRegistryManager());
+//			System.out.printf("id: %5d, state: %s, tag: %s\n", idMeta, state, newStateTag);
 			ID_META_TO_BLOCKSTATE.putIfAbsent(idMeta, state);
 
 			// Don't override the id and meta for air, which is what unrecognized blocks will turn into
@@ -253,13 +252,13 @@ public class SchematicConversionMaps
 			if (oldStateStrings.length > 0)
 			{
 				CompoundData oldStateTag = getStateTagFromString(oldStateStrings[0]);
-				String oldName = oldStateTag.getStringOrDefault("Name", "");
+				String oldName = oldStateTag.getStringOrDefault(BlockUtils.BLOCK_STATE_NAME, "");
 
 				// Don't run the vanilla block rename for overridden names
 				if (overriddenName == null)
 				{
 					newName = updateBlockName(newName, Configs.Generic.DATAFIXER_DEFAULT_SCHEMA.getIntegerValue());
-					newStateTag.putString("Name", newName);
+					newStateTag.putString(BlockUtils.BLOCK_STATE_NAME, newName);
 				}
 
 				if (oldName.equals(newName) == false)
@@ -283,20 +282,21 @@ public class SchematicConversionMaps
 		{
 			// The flattening map actually has outdated names for some blocks...
 			// Ie. some blocks were renamed after the flattening, so we need to handle those here.
-			String newName = newStateTag.getStringOrDefault("Name", "");
+			String newName = newStateTag.getStringOrDefault(BlockUtils.BLOCK_STATE_NAME, "");
 			String overriddenName = ID_META_TO_UPDATED_NAME.get(idMeta);
 
 			if (overriddenName != null)
 			{
 				newName = overriddenName;
-				newStateTag.putString("Name", newName);
+				newStateTag.putString(BlockUtils.BLOCK_STATE_NAME, newName);
 			}
 
 			//RegistryEntryLookup<Block> lookup = Registries.BLOCK.getReadOnlyWrapper();
-			HolderGetter<Block> lookup = SchematicWorldHandler.INSTANCE.getRegistryManager().lookupOrThrow(Registries.BLOCK);
+//			HolderGetter<Block> lookup = SchematicWorldHandler.INSTANCE.getRegistryManager().lookupOrThrow(Registries.BLOCK);
 			// Store the id + meta => state maps before renaming the block for the state <=> state maps
-			BlockState state = net.minecraft.nbt.NbtUtils.readBlockState(lookup, DataConverterNbt.toVanillaCompound(newStateTag));
-			//System.out.printf("id: %5d, state: %s, tag: %s\n", idMeta, state, newStateTag);
+//			BlockState state = net.minecraft.nbt.NbtUtils.readBlockState(lookup, DataConverterNbt.toVanillaCompound(newStateTag));
+			BlockState state = DataTypeUtils.readBlockStateFromTag(newStateTag, SchematicWorldHandler.INSTANCE.getRegistryManager());
+//			System.out.printf("id: %5d, state: %s, tag: %s\n", idMeta, state, newStateTag);
 			ID_META_TO_BLOCKSTATE.putIfAbsent(idMeta, state);
 
 			// Don't override the id and meta for air, which is what unrecognized blocks will turn into
@@ -304,13 +304,13 @@ public class SchematicConversionMaps
 
 			if (!oldStates.isEmpty())
 			{
-				String oldName = oldStates.getFirst().get("Name").asString("");
+				String oldName = oldStates.getFirst().get(BlockUtils.BLOCK_STATE_NAME).asString("");
 
 				// Don't run the vanilla block rename for overridden names
 				if (overriddenName == null)
 				{
 					newName = updateBlockName(newName, Configs.Generic.DATAFIXER_DEFAULT_SCHEMA.getIntegerValue());
-					newStateTag.putString("Name", newName);
+					newStateTag.putString(BlockUtils.BLOCK_STATE_NAME, newName);
 				}
 
 				if (!oldName.equals(newName))
@@ -354,7 +354,7 @@ public class SchematicConversionMaps
 				// FIXME Is this going to be correct for everything?
 				if (oldStateTag != null && newStateTagIn.getKeys().equals(oldStateTag.getKeys()))
 				{
-					String oldBlockName = oldStateTag.getStringOrDefault("Name", "");
+					String oldBlockName = oldStateTag.getStringOrDefault(BlockUtils.BLOCK_STATE_NAME, "");
 					String newBlockName = OLD_NAME_TO_NEW_NAME.get(oldBlockName);
 
 					if (newBlockName != null && newBlockName.equals(oldBlockName) == false)
@@ -366,7 +366,7 @@ public class SchematicConversionMaps
 							if (oldStateTag != null)
 							{
 								CompoundData newTag = oldStateTag.copy();
-								newTag.putString("Name", newBlockName);
+								newTag.putString(BlockUtils.BLOCK_STATE_NAME, newBlockName);
 
 								OLD_STATE_TO_NEW_STATE.putIfAbsent(oldStateTag, newTag);
 								NEW_STATE_TO_OLD_STATE.putIfAbsent(newTag, oldStateTag);
@@ -426,7 +426,7 @@ public class SchematicConversionMaps
 				// FIXME Is this going to be correct for everything?
 				if (oldStateTag != null && newStateTagIn.getKeys().equals(oldStateTag.getKeys()))
 				{
-					String oldBlockName = oldStateTag.getStringOrDefault("Name", "");
+					String oldBlockName = oldStateTag.getStringOrDefault(BlockUtils.BLOCK_STATE_NAME, "");
 					String newBlockName = OLD_NAME_TO_NEW_NAME.get(oldBlockName);
 
 					if (newBlockName != null && !newBlockName.equals(oldBlockName))
@@ -447,7 +447,7 @@ public class SchematicConversionMaps
 							if (oldStateTag != null)
 							{
 								CompoundData newTag = oldStateTag.copy();
-								newTag.putString("Name", newBlockName);
+								newTag.putString(BlockUtils.BLOCK_STATE_NAME, newBlockName);
 
 								OLD_STATE_TO_NEW_STATE.putIfAbsent(oldStateTag, newTag);
 								NEW_STATE_TO_OLD_STATE.putIfAbsent(newTag, oldStateTag);
@@ -501,12 +501,12 @@ public class SchematicConversionMaps
 		// Don't update the name yet if block is pre-flattening
 		if (oldVersion >= LitematicaSchematic.MINECRAFT_DATA_VERSION_1_13_2)
 		{
-			String oldName = oldBlockState.getStringOrDefault("Name", "");
+			String oldName = oldBlockState.getStringOrDefault(BlockUtils.BLOCK_STATE_NAME, "");
 			String blockName = updateBlockName(oldName, oldVersion);
 
 			if (!oldName.equalsIgnoreCase(blockName))
 			{
-				oldBlockState.putString("Name", blockName);
+				oldBlockState.putString(BlockUtils.BLOCK_STATE_NAME, blockName);
 //				Litematica.LOGGER.error("updateBlockName: [{}] -> [{}]", oldName, blockName);
 			}
 		}
@@ -526,7 +526,7 @@ public class SchematicConversionMaps
 		catch (Exception e)
 		{
 			Litematica.LOGGER.warn("updateBlockStates: failed to update Block State [{}], preserving original state (data may become lost)",
-			                       oldBlockState.getStringOrDefault("Name", "?"));
+			                       oldBlockState.getStringOrDefault(BlockUtils.BLOCK_STATE_NAME, "?"));
 			return oldBlockState;
 		}
 	}
@@ -572,7 +572,7 @@ public class SchematicConversionMaps
 	}
 
 	// Fix missing "id" tags.  This seems to be an issue with 1.19.x litematics.
-	public static CompoundData checkForIdTag(CompoundData tags)
+	public static CompoundData checkForIdTag(CompoundData tags, int minecraftDataVersion)
 	{
 		if (tags.contains("id", Constants.NBT.TAG_STRING))
 		{
@@ -687,7 +687,7 @@ public class SchematicConversionMaps
 		// Fix any erroneous Items tags with the null "tag" tag.
 		if (tags.containsList("Items", Constants.NBT.TAG_COMPOUND))
 		{
-			ListData items = fixItemsTag(tags.getList("Items"));
+			ListData items = fixItemsTag(tags.getList("Items"), minecraftDataVersion);
 			tags.put("Items", items);
 		}
 
@@ -695,13 +695,13 @@ public class SchematicConversionMaps
 	}
 
 	// Fix null 'tag' entries.  This seems to be an issue with 1.19.x litematics.
-	private static ListData fixItemsTag(ListData items)
+	private static ListData fixItemsTag(ListData items, int minecraftDataVersion)
 	{
 		ListData newList = new ListData();
 
 		for (int i = 0; i < items.size(); i++)
 		{
-			CompoundData itemEntry = fixItemTypesFrom1_21_2(items.getCompoundAt(i));
+			CompoundData itemEntry = fixItemTypesFrom1_21_2(items.getCompoundAt(i), minecraftDataVersion);
 
 			if (itemEntry.contains("tag", Constants.NBT.TAG_COMPOUND))
 			{
@@ -728,7 +728,7 @@ public class SchematicConversionMaps
 
 						if (entityEntry.containsList("Items", Constants.NBT.TAG_COMPOUND))
 						{
-							ListData nestedItems = fixItemsTag(entityEntry.getList("Items"));
+							ListData nestedItems = fixItemsTag(entityEntry.getList("Items"), minecraftDataVersion);
 							entityEntry.put("Items", nestedItems);
 						}
 
@@ -745,7 +745,7 @@ public class SchematicConversionMaps
 		return newList;
 	}
 
-	private static CompoundData fixItemTypesFrom1_21_2(CompoundData nbt)
+	private static CompoundData fixItemTypesFrom1_21_2(CompoundData nbt, int minecraftDataVersion)
 	{
 		if (!nbt.contains("id", Constants.NBT.TAG_STRING))
 		{
@@ -757,8 +757,10 @@ public class SchematicConversionMaps
 
 		switch (id)
 		{
-			case "minecraft:pale_oak_boat" -> newId = Identifier.withDefaultNamespace("oak_boat");
-			case "minecraft:pale_oak_chest_boat" -> newId = Identifier.withDefaultNamespace("oak_chest_boat");
+			case "minecraft:pale_oak_boat", "minecraft:poplar_boat" ->
+					newId = Identifier.withDefaultNamespace("oak_boat");
+			case "minecraft:pale_oak_chest_boat", "minecraft:poplar_chest_boat" ->
+					newId = Identifier.withDefaultNamespace("oak_chest_boat");
 		}
 
 		if (newId != null)
@@ -769,7 +771,7 @@ public class SchematicConversionMaps
 		return nbt;
 	}
 
-	public static CompoundData fixEntityTypesFrom1_21_2(CompoundData nbt)
+	public static CompoundData fixEntityTypesFrom1_21_2(CompoundData nbt, int minecraftDataVersion)
 	{
 		if (!nbt.contains("id", Constants.NBT.TAG_STRING))
 		{
@@ -779,7 +781,7 @@ public class SchematicConversionMaps
 		// Fix any erroneous Items tags with the null "tag" tag.
 		if (nbt.containsList("Items", Constants.NBT.TAG_COMPOUND))
 		{
-			ListData items = fixItemsTag(nbt.getList("Items"));
+			ListData items = fixItemsTag(nbt.getList("Items"), minecraftDataVersion);
 			nbt.put("Items", items);
 		}
 

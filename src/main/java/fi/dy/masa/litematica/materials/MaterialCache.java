@@ -1,10 +1,15 @@
 package fi.dy.masa.litematica.materials;
 
 import java.util.IdentityHashMap;
+import java.util.Optional;
 import javax.annotation.Nullable;
 import com.google.common.collect.ImmutableList;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntitySpawnRequest;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.alchemy.PotionContents;
@@ -16,7 +21,9 @@ import net.minecraft.world.level.block.state.properties.BedPart;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.block.state.properties.SlabType;
 
+import fi.dy.masa.malilib.util.nbt.NbtView;
 import fi.dy.masa.litematica.mixin.block.IMixinAbstractBlock;
+import fi.dy.masa.litematica.util.ItemUtils;
 
 public class MaterialCache
 {
@@ -24,6 +31,8 @@ public class MaterialCache
 
     protected final IdentityHashMap<BlockState, ItemStack> buildItemsForStates = new IdentityHashMap<>();
     protected final IdentityHashMap<BlockState, ItemStack> displayItemsForStates = new IdentityHashMap<>();
+    protected final IdentityHashMap<MaterialListEntityInfo, ItemStack> buildItemsForEntities = new IdentityHashMap<>();
+    protected final IdentityHashMap<MaterialListEntityInfo, ItemStack> displayItemsForEntities = new IdentityHashMap<>();
 
     private MaterialCache() { }
 
@@ -36,13 +45,15 @@ public class MaterialCache
     {
         this.buildItemsForStates.clear();
         this.displayItemsForStates.clear();
+        this.buildItemsForEntities.clear();
+        this.displayItemsForEntities.clear();
     }
 
     public ItemStack getRequiredBuildItemForState(BlockState state)
     {
         ItemStack stack = this.buildItemsForStates.get(state);
 
-        if (stack == null)
+        if (stack == null || ItemUtils.isStale(stack))
         {
             stack = this.getItemForStateFromWorld(state, true);
         }
@@ -54,9 +65,26 @@ public class MaterialCache
     {
         ItemStack stack = this.buildItemsForStates.get(state);
 
-        if (stack == null)
+        if (stack == null || ItemUtils.isStale(stack))
         {
             stack = this.getItemForStateFromWorld(state, world, pos, true);
+        }
+
+        return stack;
+    }
+
+    public ItemStack getRequiredBuildItemForEntity(MaterialListEntityInfo info)
+    {
+        return this.getRequiredBuildItemForEntity(info, null);
+    }
+
+    public ItemStack getRequiredBuildItemForEntity(MaterialListEntityInfo info, @Nullable Level world)
+    {
+        ItemStack stack = this.buildItemsForEntities.get(info);
+
+        if (stack == null || ItemUtils.isStale(stack))
+        {
+            stack = this.getItemForEntityFromWorld(info, world, true);
         }
 
         return stack;
@@ -66,9 +94,21 @@ public class MaterialCache
     {
         ItemStack stack = this.displayItemsForStates.get(state);
 
-        if (stack == null)
+        if (stack == null || ItemUtils.isStale(stack))
         {
             stack = this.getItemForStateFromWorld(state, false);
+        }
+
+        return stack;
+    }
+
+    public ItemStack getItemForDisplayNameForEntity(MaterialListEntityInfo info)
+    {
+        ItemStack stack = this.displayItemsForEntities.get(info);
+
+        if (stack == null || ItemUtils.isStale(stack))
+        {
+            stack = this.getItemForEntityFromWorld(info, false);
         }
 
         return stack;
@@ -111,6 +151,53 @@ public class MaterialCache
         else
         {
             this.displayItemsForStates.put(state, stack);
+        }
+
+        return stack;
+    }
+
+    protected ItemStack getItemForEntityFromWorld(MaterialListEntityInfo info, boolean isBuildItem)
+    {
+        return this.getItemForEntityFromWorld(info, null, isBuildItem);
+    }
+
+    protected ItemStack getItemForEntityFromWorld(MaterialListEntityInfo info, @Nullable Level world, boolean isBuildItem)
+    {
+        ItemStack stack = null;
+
+        if (world == null)
+        {
+            stack = info.pickStack().copy();
+        }
+        else
+        {
+            NbtView view = NbtView.getReader(info.data(), world.registryAccess());
+            Optional<Entity> opt = EntityType.create(view.getReader(), world, new EntitySpawnRequest(EntitySpawnReason.LOAD, true));
+
+            if (opt.isPresent())
+            {
+                Entity entity = opt.get();
+                stack = entity.getPickResult();
+
+                if (stack != null && !stack.isEmpty())
+                {
+                    info = new MaterialListEntityInfo(info.pos(), info.data(), stack.copy());
+                }
+            }
+        }
+
+        if (stack == null || stack.isEmpty())
+        {
+            stack = ItemStack.EMPTY;
+        }
+
+        if (isBuildItem)
+        {
+            this.buildItemsForEntities.put(info, stack);
+        }
+        else
+        {
+            this.displayItemsForEntities.put(info, stack);
         }
 
         return stack;

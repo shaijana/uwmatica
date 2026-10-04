@@ -26,8 +26,10 @@ import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
+import net.minecraft.world.level.block.entity.SignTextSlot;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunk;
@@ -305,7 +307,7 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
 
     protected boolean useSpecialPasting(BlockState state)
     {
-        return this.useWorldEdit == false && state.is(BlockTags.ALL_SIGNS);
+        return this.useWorldEdit == false && (state.is(BlockTags.ALL_SIGNS) || state.is(BlockTags.LEAVES));
     }
 
     protected boolean shouldSetBlock(BlockState stateSchematic, BlockState stateClient)
@@ -603,6 +605,20 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
         {
             this.specialPasteSignBlock(pos, state, schematicWorld, commandHandler);
         }
+        else if (state.is(BlockTags.LEAVES))
+        {
+            this.specialPasteLeavesBlock(pos, state, schematicWorld, commandHandler);
+        }
+    }
+
+    private void specialPasteLeavesBlock(BlockPos pos, BlockState state, Level schematicWorld, Consumer<String> commandHandler)
+    {
+        if (Configs.Generic.PASTE_ALWAYS_USE_PERSISTENT.getBooleanValue() && state.getValue(LeavesBlock.PERSISTENT) == false)
+        {
+            state.setValue(LeavesBlock.PERSISTENT, true);
+        }
+
+        this.queueSetBlockCommand(pos.getX(), pos.getY(), pos.getZ(), state, commandHandler);
     }
 
     protected void specialPasteSignBlock(BlockPos pos, BlockState state, Level schematicWorld, Consumer<String> commandHandler)
@@ -617,7 +633,7 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
             if (tag != null)
             {
                 // Remove redundant tags to save on the command string length
-                if (signBe.getFrontText().hasMessage(this.mc.player) == false)
+                if (signBe.getText(SignTextSlot.FRONT).hasMessage(false) == false)
                 {
                     tag.remove("front_text");
                 }
@@ -625,11 +641,11 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
                 {
                     CompoundTag frontText = tag.getCompoundOrEmpty("front_text");
 
-                    if (signBe.getFrontText().hasGlowingText() == false)
+                    if (signBe.getText(SignTextSlot.FRONT).hasGlowingText() == false)
                     {
                         frontText.remove("has_glowing_text");
                     }
-                    if (signBe.getFrontText().getColor() == DyeColor.BLACK)
+                    if (signBe.getText(SignTextSlot.FRONT).getColor() == DyeColor.BLACK)
                     {
                         frontText.remove("color");
                     }
@@ -637,7 +653,7 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
                     tag.put("front_text", frontText);
                 }
 
-                if (signBe.getBackText().hasMessage(this.mc.player) == false)
+                if (signBe.getText(SignTextSlot.BACK).hasMessage(false) == false)
                 {
                     tag.remove("back_text");
                 }
@@ -645,11 +661,11 @@ public class TaskPasteSchematicPerChunkCommand extends TaskPasteSchematicPerChun
                 {
                     CompoundTag backText = tag.getCompoundOrEmpty("back_text");
 
-                    if (signBe.getBackText().hasGlowingText() == false)
+                    if (signBe.getText(SignTextSlot.BACK).hasGlowingText() == false)
                     {
                         backText.remove("has_glowing_text");
                     }
-                    if (signBe.getBackText().getColor() == DyeColor.BLACK)
+                    if (signBe.getText(SignTextSlot.BACK).getColor() == DyeColor.BLACK)
                     {
                         backText.remove("color");
                     }

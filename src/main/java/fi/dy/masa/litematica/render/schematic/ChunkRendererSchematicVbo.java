@@ -8,9 +8,6 @@ import javax.annotation.Nullable;
 import org.apache.logging.log4j.Logger;
 
 import com.mojang.authlib.minecraft.client.MinecraftClient;
-import com.mojang.blaze3d.buffers.GpuBuffer;
-import com.mojang.blaze3d.systems.CommandEncoder;
-import com.mojang.blaze3d.systems.GpuDevice;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
@@ -83,6 +80,7 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
 	protected Color4f overlayColor;
 	protected boolean hasOverlay;
 	private boolean ignoreClientWorldFluids;
+	private boolean ignoreCropAge;
 	private IgnoreBlockRegistry ignoreBlockRegistry;
 
 	protected ChunkCacheSchematic schematicWorldView;
@@ -403,6 +401,7 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
 				{
 					boolean translucent = Configs.Visuals.RENDER_BLOCKS_AS_TRANSLUCENT.getBooleanValue();
 					ChunkSectionLayer layer = translucent ? ChunkSectionLayer.TRANSLUCENT : quad.materialInfo().layer();
+//					LOGGER.error("blockOutput: layer: {}", layer.label());
 					BufferBuilder builder = this.preRenderBlocks(pack, layer);
 
 					if (!data.isBlockLayerStarted(layer))
@@ -518,6 +517,8 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
 		{
 			chunkMeshData.setTimeBuilt(this.world.getGameTime());
 			data.setTimeBuilt(this.world.getGameTime());
+			data.setPos(this.getChunkPos());
+			data.setOrigin(this.getOrigin());
 
 			if (!chunkMeshData.isEmpty())
 			{
@@ -1092,6 +1093,11 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
 
 					return OverlayType.WRONG_BLOCK;
 				}
+				// Same block, but states differ
+				else if (this.ignoreCropAge && fi.dy.masa.litematica.util.BlockUtils.areStatesEqualIgnoringAge(stateSchematic, stateClient))
+				{
+					return OverlayType.NONE;
+				}
 				// Wrong state
 				else
 				{
@@ -1216,10 +1222,8 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
 				}
 			}
 
-//            if (this.builderCache.hasBuilder(layer))
 			if (pack.builderCache().hasBuilder(layer))
 			{
-//                BufferBuilder builder = this.builder(layer);
 				BufferBuilder builder = pack.getBuilder(layer);
 				meshData = builder.build();
 
@@ -1610,6 +1614,7 @@ public class ChunkRendererSchematicVbo implements AutoCloseable
 		synchronized (this.boxes)
 		{
 			this.ignoreClientWorldFluids = Configs.Visuals.IGNORE_EXISTING_FLUIDS.getBooleanValue();
+			this.ignoreCropAge = Configs.Visuals.IGNORE_CROP_AGE.getBooleanValue();
 			this.ignoreBlockRegistry = new IgnoreBlockRegistry();
 			ClientLevel worldClient = Minecraft.getInstance().level;
 			assert worldClient != null;
